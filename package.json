@@ -10,33 +10,51 @@
     "drizzle:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "vike": "^0.4.223",
+    "@hono/node-server": "^1.13.8",
+    "@radix-ui/react-slot": "^1.1.2",
+    "@tailwindcss/vite": "^4.0.10",
+    "@trpc/client": "^10.45.2",
+    "@trpc/server": "^10.45.2",
+    "@universal-middleware/core": "^0.4.0",
+    "@universal-middleware/hono": "^0.4.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "better-sqlite3": "^11.8.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dotenv": "^16.4.7",
     "drizzle-kit": "^0.30.4",
     "drizzle-orm": "^0.39.3",
-    "dotenv": "^16.4.7",
-    "better-sqlite3": "^11.8.1",
-    "@hono/node-server": "^1.13.8",
-    "@universal-middleware/hono": "^0.4.0",
     "hono": "^4.7.2",
-    "@vitejs/plugin-react": "^4.3.4",
+    "lucide-react": "^0.477.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "vike-react": "^0.5.13",
-    "@universal-middleware/core": "^0.4.0",
-    "@trpc/server": "^10.45.2",
-    "@trpc/client": "^10.45.2"
+    "tailwind-merge": "^3.0.2",
+    "tailwindcss": "^4.0.10",
+    "tailwindcss-animate": "^1.0.7",
+    "vike": "^0.4.223",
+    "vike-react": "^0.5.13"
   },
   "devDependencies": {
-    "typescript": "^5.7.3",
-    "vite": "^6.1.1",
     "@biomejs/biome": "1.9.4",
-    "@types/better-sqlite3": "^7.6.12",
     "@hono/vite-dev-server": "^0.18.2",
+    "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^18.19.76",
-    "tsx": "^4.19.3",
-    "cross-env": "^7.0.3",
     "@types/react": "^19.0.10",
-    "@types/react-dom": "^19.0.4"
+    "@types/react-dom": "^19.0.4",
+    "cross-env": "^7.0.3",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.1"
   },
-  "type": "module"
+  "type": "module",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@biomejs/biome",
+      "better-sqlite3",
+      "esbuild"
+    ]
+  },
+  "imports": {
+    "#root/*": "./*"
+  }
 }

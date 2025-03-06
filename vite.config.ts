@@ -2,6 +2,7 @@ import react from "@vitejs/plugin-react";
 import devServer from "@hono/vite-dev-server";
 import { defineConfig } from "vite";
 import vike from "vike/plugin";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [
@@ -21,9 +22,15 @@ export default defineConfig({
 
       injectClientScript: false,
     }),
-    react({}),
+    react(),
+    tailwindcss(),
   ],
   build: {
     target: "es2022",
+  },
+  resolve: {
+    alias: {
+      "#root/*": "./*",
+    },
   },
 });

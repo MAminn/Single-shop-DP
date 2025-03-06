@@ -7,10 +7,10 @@ if (!process.env.DATABASE_URL) {
 
 export default defineConfig({
   dialect: "sqlite",
-  schema: "./database/drizzle/schema/*",
-  out: "./database/migrations",
+  schema: "./shared/database/drizzle/schema/*",
+  out: "./shared/database/migrations",
 
   dbCredentials: {
-    url: process.env.DATABASE_URL!,
+    url: process.env.DATABASE_URL,
   },
 });

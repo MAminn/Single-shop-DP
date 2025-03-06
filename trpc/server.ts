@@ -1,6 +1,6 @@
 import { initTRPC } from "@trpc/server";
-import * as drizzleQueries from "../database/drizzle/queries/todos";
-import type { dbSqlite } from "../database/drizzle/db";
+import * as drizzleQueries from "#root/shared/database/drizzle/queries/todos";
+import type { dbSqlite } from "#root/shared/database/drizzle/db";
 
 /**
  * Initialization of tRPC backend
