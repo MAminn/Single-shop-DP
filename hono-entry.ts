@@ -1,22 +1,15 @@
 import "dotenv/config";
-
-import { vikeHandler } from "./server/vike-handler";
 import { Hono } from "hono";
-import { createHandler, createMiddleware } from "@universal-middleware/hono";
-import { dbMiddleware } from "./server/db-middleware";
-import { trpcHandler } from "./server/trpc-handler";
+import { vikeHonoMiddleware } from "./server/vike-handler";
+import { dbHonoMiddleware } from "./shared/database/middleware";
+import { trpcHonoMiddleware } from "./shared/trpc/middleware";
 
-const app = new Hono();
+const app = new Hono<HonoContext.Env>();
 
-app.use(createMiddleware(dbMiddleware)());
+app.use(dbHonoMiddleware);
 
-app.use("/api/trpc/*", createHandler(trpcHandler)("/api/trpc"));
+app.use("/api/trpc/*", trpcHonoMiddleware({ endpoint: "/api/trpc" }));
 
-/**
- * Vike route
- *
- * @link {@see https://vike.dev}
- **/
-app.all("*", createHandler(vikeHandler)());
+app.all("*", vikeHonoMiddleware);
 
 export default app;

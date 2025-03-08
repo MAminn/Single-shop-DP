@@ -5,3 +5,5 @@ export function dbSqlite() {
   const sqlite = new Database(process.env.DATABASE_URL);
   return drizzleSqlite(sqlite);
 }
+
+export type DatabaseClient = ReturnType<typeof dbSqlite>;
