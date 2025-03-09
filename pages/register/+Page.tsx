@@ -16,8 +16,8 @@ export default function Page() {
       threshold={0.2}
     >
       <section className="w-full h-full flex justify-center items-center">
-        <div className="w-full gap-8 h-[700px] mt-12 bg-white rounded-3xl flex flex-col lg:flex-row justify-around items-start">
-          <div className="w-full h-full px-4 lg:py-12 lg:pl-8 flex flex-col gap-16 max-lg:order-2 ">
+        <div className="w-full lg:w-[900px] gap-8 h-[700px] mt-12 bg-white rounded-3xl flex flex-col lg:flex-row justify-around items-start">
+          <div className="w-full h-full px-4 pb-12 lg:py-12 lg:pl-8 flex flex-col gap-16 order-2 lg:order-1">
             <h1 className="text-2xl md:text-4xl text-center font-semibold mb-6 mt-10">
               Register An Account
             </h1>
@@ -54,6 +54,7 @@ export default function Page() {
                   placeholder="Repeat Password"
                   className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-accent-lb"
                 />
+                
                 <Button
                   type="submit"
                   className="bg-accent-lb text-white py-2 rounded-lg hover:bg-[#021E43] transition-all duration-300"

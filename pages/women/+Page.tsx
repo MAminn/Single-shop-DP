@@ -73,6 +73,7 @@ const Page: React.FC<Props> = ({ lang = "en" }: Props) => {
     ],
   };
 
+
   return (
     <section className=" w-full h-full flex flex-col justify-center items-center">
       <section className=" w-full h-full">
