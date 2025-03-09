@@ -1,9 +1,16 @@
-import { dbSqlite } from "./database/drizzle/db";
+import type { DatabaseClient } from "./shared/database/drizzle/db";
 
 declare global {
   namespace Vike {
     interface PageContext {
-      db: ReturnType<typeof dbSqlite>;
+      db: DatabaseClient;
+    }
+  }
+  namespace HonoContext {
+    interface Env {
+      Variables: {
+        db: DatabaseClient;
+      };
     }
   }
 }

@@ -1,7 +1,13 @@
-import Database from "better-sqlite3";
-import { drizzle as drizzleSqlite } from "drizzle-orm/better-sqlite3";
+import { drizzle } from "drizzle-orm/node-postgres";
 
-export function dbSqlite() {
-  const sqlite = new Database(process.env.DATABASE_URL);
-  return drizzleSqlite(sqlite);
+export function db() {
+  const dbUrl = process.env.DATABASE_URL;
+
+  if (!dbUrl) {
+    throw new Error("DATABASE_URL is not set");
+  }
+
+  return drizzle(dbUrl);
 }
+
+export type DatabaseClient = ReturnType<typeof db>;
