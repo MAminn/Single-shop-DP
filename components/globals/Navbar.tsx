@@ -19,6 +19,9 @@ import {
 } from "#root/components/ui/navigation-menu";
 import { Link } from "../Link";
 import logoImage from "#root/assets/Lebsy-Logo-Light.svg";
+import type { Session } from "#root/shared/database/drizzle/schema/user.js";
+import { trpc } from "#root/shared/trpc/client.js";
+import { reload } from "vike/client/router";
 
 interface NavLink {
   label: string;
@@ -27,10 +30,12 @@ interface NavLink {
 }
 
 interface NavbarProps {
+  session?: Session | null;
   navLinks?: NavLink[];
   logoUrl?: string;
   cartItemCount?: number;
   sheetDescription?: string;
+  onLogOut?: () => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -55,13 +60,30 @@ const Navbar: React.FC<NavbarProps> = ({
     },
     { label: "Become a vendor!", to: "/vendor" },
   ],
+  session,
   cartItemCount = 0,
   sheetDescription = "Navigation menu",
   logoUrl = "",
+  onLogOut,
 }) => {
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(false);
 
   const handleCloseSheet = () => setIsSheetOpen(false);
+
+  const logLinks: NavLink[] = [
+    { label: "Login", to: "/login" },
+    { label: "Register", to: "/register" },
+  ];
+
+  const logoutLinks: NavLink[] = [
+    { label: "Logout", to: "/logout" },
+    { label: "Profile", to: "/profile" },
+  ];
+
+  async function terminateSession() {
+    localStorage.removeItem("token");
+    onLogOut?.();
+  }
 
   return (
     <nav className=" shadow-md sticky py-6 top-0 z-10 bg-background">
@@ -113,6 +135,27 @@ const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         <div className="flex items-center gap-4">
+          {!session ? (
+            logLinks.map((link) => (
+              <Link
+                key={link.to}
+                href={link.to}
+                className="text-gray-700 hover:text-gray-900"
+              >
+                {link.label}
+              </Link>
+            ))
+          ) : (
+            <>
+              <button
+                onClick={terminateSession}
+                type="submit"
+                className="text-gray-700 hover:text-gray-900 cursor-pointer"
+              >
+                Logout
+              </button>
+            </>
+          )}
           <Button
             variant="ghost"
             size="icon"

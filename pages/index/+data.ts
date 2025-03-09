@@ -5,12 +5,11 @@ import { DatabaseClientService } from "#root/shared/database/drizzle/db.js";
 import { Effect } from "effect";
 
 export const data = async (pageContext: Vike.PageContext) => {
-  await Effect.runPromise(
-    login("test@example.com", "test1234").pipe(
-      Effect.flatMap((token) => me(token)),
-      Effect.provideService(DatabaseClientService, pageContext.db)
-    )
-  ).then(console.log);
+  // await Effect.runPromise(
+  //   register("boody@example.com", "test1234").pipe(
+  //     Effect.provideService(DatabaseClientService, pageContext.db)
+  //   ))
+  // ).then(console.log);
 
   return {};
 };
