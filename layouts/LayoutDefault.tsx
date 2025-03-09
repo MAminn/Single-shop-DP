@@ -1,7 +1,5 @@
+import Navbar from "#root/components/globals/Navbar.jsx";
 import "./style.css";
-
-import logoUrl from "../assets/logo.svg";
-import { Link } from "../components/Link.js";
 
 export default function LayoutDefault({
   children,
@@ -11,5 +9,13 @@ export default function LayoutDefault({
   return <Content>{children}</Content>;
 }
 function Content({ children }: { children: React.ReactNode }) {
-  return <div id="page-content">{children}</div>;
+  return (
+    <main
+      id="page-content"
+      className=" bg-background h-full text-foreground w-full font-poppins"
+    >
+      <Navbar />
+      {children}
+    </main>
+  );
 }

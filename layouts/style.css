@@ -1,3 +1,5 @@
+@import "@fontsource/poppins/400.css";
+@import "@fontsource-variable/roboto-flex";
 @import "tailwindcss";
 
 @plugin "tailwindcss-animate";
@@ -35,7 +37,8 @@ body.page-is-transitioning #page-content {
 }
 
 :root {
-  --background: oklch(1 0 0);
+  --accent-lb: oklch(41.95% 0.0862 232.96);
+  --background: oklch(97.69% 0.0105 106.59);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -119,6 +122,7 @@ body.page-is-transitioning #page-content {
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
+  --color-accent-lb: var(--accent-lb);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
@@ -142,6 +146,33 @@ body.page-is-transitioning #page-content {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@theme {
+  --font-poppins: "Poppins", sans-serif;
+  --font-roboto-flex: "Roboto Flex Variable", sans-serif;
+}
+
+.men-section-image {
+  background-image: url("../assets/men-section.png");
+}
+.women-section-image {
+  background-image: url("../assets/women-section.png");
+}
+.img1 {
+  background-image: url("../assets/img1.png");
+}
+
+.header {
+  font-size: 1rem;
+  line-height: 2rem;
+  font-weight: 600;
+  text-align: center;
+
+  @media (min-width: 768px) {
+    font-size: 1.5rem;
+    line-height: 2.5rem;
+  }
 }
 
 @layer base {

@@ -1,7 +1,4 @@
-// https://vike.dev/Head
-
-import React from "react";
-import logoUrl from "../assets/logo.svg";
+import logoUrl from "../assets/lebsy-favicon.png";
 
 export default function HeadDefault() {
   return (
