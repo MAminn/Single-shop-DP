@@ -1,4 +1,3 @@
-import type { dbSqlite } from "./database/drizzle/db";
 import type { DatabaseClient } from "./shared/database/drizzle/db";
 
 declare global {
