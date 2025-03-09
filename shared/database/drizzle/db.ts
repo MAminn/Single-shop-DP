@@ -1,4 +1,5 @@
 import { drizzle } from "drizzle-orm/node-postgres";
+import { Context, Effect, pipe } from "effect";
 
 export function db() {
   const dbUrl = process.env.DATABASE_URL;
@@ -10,4 +11,20 @@ export function db() {
   return drizzle(dbUrl);
 }
 
+export class DatabaseClientService extends Context.Tag("DatabaseClientService")<
+  DatabaseClientService,
+  DatabaseClient
+>() {}
+
 export type DatabaseClient = ReturnType<typeof db>;
+
+export const query = <A>(fn: (db: DatabaseClient) => Promise<A>) =>
+  pipe(
+    DatabaseClientService,
+    Effect.flatMap((db) =>
+      Effect.tryPromise({
+        try: async () => await fn(db),
+        catch: (err) => new Error("Failed to query database", { cause: err }),
+      })
+    )
+  );

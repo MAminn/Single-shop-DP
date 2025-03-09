@@ -60,7 +60,7 @@ const Hero: React.FC<HeroProps> = ({ lang = "en" }: HeroProps) => {
         <h1 className=" text-3xl md:text-6xl font-bold text-white uppercase">
           Men
         </h1>
-        <Link href="/man/new-arrivals">
+        <Link href="/men">
           <Button className=" w-full h-full md:py-4 md:px-6 py-2 px-4 mt-4 text-sm md:text-xl bg-accent-lb transition-all duration-300">
             Shop
           </Button>
@@ -70,7 +70,7 @@ const Hero: React.FC<HeroProps> = ({ lang = "en" }: HeroProps) => {
         <h1 className=" text-3xl md:text-6xl font-bold text-white uppercase">
           Women
         </h1>
-        <Link href="/man/new-arrivals">
+        <Link href="/women">
           <Button className=" w-full h-full md:py-4 md:px-6 py-2 px-4 mt-4 text-sm md:text-xl bg-accent-lb transition-all duration-300">
             Shop
           </Button>

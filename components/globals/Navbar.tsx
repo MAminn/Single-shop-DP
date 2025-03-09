@@ -19,49 +19,180 @@ import {
 } from "#root/components/ui/navigation-menu";
 import { Link } from "../Link";
 import logoImage from "#root/assets/Lebsy-Logo-Light.svg";
-
-interface NavLink {
-  label: string;
-  to: string;
-  subLinks?: NavLink[];
-}
+import type { Session } from "#root/shared/database/drizzle/schema/user.js";
+import { trpc } from "#root/shared/trpc/client.js";
+import { reload } from "vike/client/router";
 
 interface NavbarProps {
-  navLinks?: NavLink[];
+  lang: string;
+  session?: Session | null;
   logoUrl?: string;
   cartItemCount?: number;
   sheetDescription?: string;
+  onLogOut?: () => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
-  navLinks = [
-    {
-      label: "Men",
-      to: "/man",
-      subLinks: [
-        { label: "New Arrivals", to: "/man/new-arrivals" },
-        { label: "Clothing", to: "/man/clothing" },
-        { label: "Accessories", to: "/man/accessories" },
-      ],
-    },
-    {
-      label: "Women",
-      to: "/women",
-      subLinks: [
-        { label: "New Arrivals", to: "/women/new-arrivals" },
-        { label: "Clothing", to: "/women/clothing" },
-        { label: "Accessories", to: "/women/accessories" },
-      ],
-    },
-    { label: "Become a vendor!", to: "/vendor" },
-  ],
+  lang = "en",
+  session,
   cartItemCount = 0,
   sheetDescription = "Navigation menu",
   logoUrl = "",
-}) => {
+  onLogOut,
+}: NavbarProps) => {
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(false);
 
   const handleCloseSheet = () => setIsSheetOpen(false);
+
+  const logLinks = [
+    { label: "Login", to: "/login" },
+    { label: "Register", to: "/register" },
+  ];
+
+  const navLinks = {
+    en: [
+      {
+        label: "Men",
+        to: "/man",
+        subLinks: [
+          {
+            label: "Shirts",
+            to: "",
+          },
+          {
+            label: "T-Shirts",
+            to: "",
+          },
+          {
+            label: "Sweaters & Hoodies",
+            to: "",
+          },
+          {
+            label: "Pants",
+            to: "",
+          },
+          {
+            label: "Accessories",
+            to: "",
+          },
+          {
+            label: "Shorts",
+            to: "",
+          },
+          {
+            label: "Jackets",
+            to: "",
+          },
+          {
+            label: "Shoes",
+            to: "",
+          },
+        ],
+      },
+      {
+        label: "Women",
+        to: "/women",
+        subLinks: [
+          {
+            label: "Accessories",
+            to: "/assets/w.accessories.png",
+          },
+          {
+            label: "Blouses",
+            to: "/assets/w.blouses.png",
+          },
+          {
+            label: "Body Suits",
+            to: "/assets/w.body suit.png",
+          },
+          {
+            label: "Dresses",
+            to: "/assets/w.dress.png",
+          },
+          {
+            label: "Hoodies",
+            to: "/assets/w.hoodie.png",
+          },
+          {
+            label: "Jackets",
+            to: "/assets/w.jackets.png",
+          },
+          {
+            label: "Pants",
+            to: "/assets/w.pants.png",
+          },
+          {
+            label: "Shirts",
+            to: "/assets/W.shirts.png",
+          },
+          {
+            label: "Shoes",
+            to: "/assets/W.shoes.png",
+          },
+          {
+            label: "Shorts",
+            to: "/assets/W.SHORTS.png",
+          },
+          {
+            label: "Skirts",
+            to: "/assets/w.skirts.png",
+          },
+          {
+            label: "T-Shirts",
+            to: "/assets/W.TSHIRT.png",
+          },
+        ],
+      },
+      { label: "Become a vendor!", to: "/vendor" },
+    ],
+    ar: [
+      {
+        label: "رجال",
+        to: "/man",
+        subLinks: [
+          {
+            label: "شيرتات",
+            to: "",
+          },
+          {
+            label: "تي شيرت",
+            to: "",
+          },
+          {
+            label: "سويترز و هودي",
+            to: "",
+          },
+          {
+            label: "بنطلونات",
+            to: "",
+          },
+          {
+            label: "اكسسوارات",
+            to: "",
+          },
+          {
+            label: "شورتات",
+            to: "",
+          },
+          {
+            label: "جاكيت",
+            to: "",
+          },
+          {
+            label: "احذية",
+            to: "",
+          },
+        ],
+      },
+    ],
+  };
+
+  const links = lang === "en" || lang === "ar" ? navLinks[lang] : [];
+
+  async function terminateSession() {
+    localStorage.removeItem("token");
+    onLogOut?.();
+  }
 
   return (
     <nav className=" shadow-md sticky py-6 top-0 z-10 bg-background">
@@ -74,18 +205,18 @@ const Navbar: React.FC<NavbarProps> = ({
           <div className="hidden md:flex gap-6 ">
             <NavigationMenu>
               <NavigationMenuList>
-                {navLinks.map((link) => (
+                {links.map((link) => (
                   <NavigationMenuItem key={link.to} className="relative  ">
                     {link.subLinks ? (
                       <>
                         <NavigationMenuTrigger className=" transition-all duration-300 ">
                           {link.label}
                         </NavigationMenuTrigger>
-                        <NavigationMenuContent className="absolute mt-10 bg-foreground rounded-2xl">
+                        <NavigationMenuContent className="absolute mt-10 bg-white text-black rounded-2xl">
                           <ul className="grid gap-3 p-4 w-[200px]">
                             {link.subLinks.map((subLink) => (
                               <li key={subLink.to}>
-                                <NavigationMenuLink className="  text-white">
+                                <NavigationMenuLink className="  text-black">
                                   <Link href={subLink.to} className="block ">
                                     {subLink.label}
                                   </Link>
@@ -113,6 +244,29 @@ const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         <div className="flex items-center gap-4">
+          <div className=" hidden md:flex justify-center items-center gap-4">
+            {!session ? (
+              logLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  href={link.to}
+                  className="text-red-700 hover:text-red-900 bg-green-500 px-6 py-3 rounded-3xl hover:bg-red-500 transition-all duration-300 cursor-pointer"
+                >
+                  {link.label}
+                </Link>
+              ))
+            ) : (
+              <>
+                <button
+                  onClick={terminateSession}
+                  type="submit"
+                  className="text-gray-700 hover:text-gray-900 cursor-pointer"
+                >
+                  Logout
+                </button>
+              </>
+            )}
+          </div>
           <Button
             variant="ghost"
             size="icon"
@@ -149,14 +303,10 @@ const Navbar: React.FC<NavbarProps> = ({
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-64 bg-white">
-                <SheetTitle className="sr-only">Navigation menu</SheetTitle>
-                <SheetDescription className="sr-only">
-                  {sheetDescription}
-                </SheetDescription>
-
                 <div className="p-4 h-full">
                   <nav className="space-y-4 flex flex-col justify-center items-center h-full">
-                    {navLinks.map((link) => (
+                    <SheetTitle className="">Navigation menu</SheetTitle>
+                    {links.map((link) => (
                       <Link
                         key={link.to}
                         href={link.to}
@@ -166,6 +316,29 @@ const Navbar: React.FC<NavbarProps> = ({
                         {link.label}
                       </Link>
                     ))}
+                    <div className=" md:hidden flex justify-center items-center gap-4">
+                      {!session ? (
+                        logLinks.map((link) => (
+                          <Link
+                            key={link.to}
+                            href={link.to}
+                            className="text-red-700 hover:text-red-900 bg-green-500 px-6 py-3 rounded-3xl hover:bg-red-500 transition-all duration-300 cursor-pointer"
+                          >
+                            {link.label}
+                          </Link>
+                        ))
+                      ) : (
+                        <>
+                          <button
+                            onClick={terminateSession}
+                            type="submit"
+                            className="text-gray-700 hover:text-gray-900 cursor-pointer"
+                          >
+                            Logout
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </nav>
                 </div>
               </SheetContent>
