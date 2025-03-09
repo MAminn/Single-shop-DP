@@ -1,12 +1,11 @@
 import { initTRPC } from "@trpc/server";
-import * as drizzleQueries from "#root/shared/database/drizzle/queries/todos";
 import type { DatabaseClient } from "#root/shared/database/drizzle/db";
 
 /**
  * Initialization of tRPC backend
  * Should be done only once per backend!
  */
-const t = initTRPC.context<{ db: DatabaseClient }>().create();
+export const t = initTRPC.context<{ db: DatabaseClient }>().create();
 
 /**
  * Export reusable router and procedure helpers
@@ -14,21 +13,3 @@ const t = initTRPC.context<{ db: DatabaseClient }>().create();
  */
 export const router = t.router;
 export const publicProcedure = t.procedure;
-
-export const appRouter = router({
-  demo: publicProcedure.query(async () => {
-    return { demo: true };
-  }),
-  onNewTodo: publicProcedure
-    .input((value): string => {
-      if (typeof value === "string") {
-        return value;
-      }
-      throw new Error("Input is not a string");
-    })
-    .mutation(async (opts) => {
-      await drizzleQueries.insertTodo(opts.ctx.db, opts.input);
-    }),
-});
-
-export type AppRouter = typeof appRouter;

@@ -1,9 +1,16 @@
-import { todoTable } from "#root/shared/database/drizzle/schema/todos.js";
+import { login } from "#root/backend/auth/login/login.js";
+import { me } from "#root/backend/auth/me/me.js";
+import { register } from "#root/backend/auth/register/register.js";
+import { DatabaseClientService } from "#root/shared/database/drizzle/db.js";
+import { Effect } from "effect";
 
 export const data = async (pageContext: Vike.PageContext) => {
-  const db = pageContext.db;
+  await Effect.runPromise(
+    login("test@example.com", "test1234").pipe(
+      Effect.flatMap((token) => me(token)),
+      Effect.provideService(DatabaseClientService, pageContext.db)
+    )
+  ).then(console.log);
 
-  const todos = await db.select().from(todoTable);
-  console.log(todos);
   return {};
 };
