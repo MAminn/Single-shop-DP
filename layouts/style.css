@@ -44,8 +44,8 @@ body.page-is-transitioning #page-content {
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: oklch(41.95% 0.0862 232.96);
+  --primary-foreground: oklch(97.69% 0.0105 106.59);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -63,7 +63,7 @@ body.page-is-transitioning #page-content {
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
+  --sidebar: oklch(95.05% 0.0541 63.32);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
   --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -98,7 +98,7 @@ body.page-is-transitioning #page-content {
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: oklch(97.69% 0.0105 106.59);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -173,6 +173,23 @@ body.page-is-transitioning #page-content {
     font-size: 1.5rem;
     line-height: 2.5rem;
   }
+}
+
+.navLink {
+  font-size: medium;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  border-radius: 1.5rem;
+  color: #374151;
+  transition-property: all;
+  transition-duration: 300ms;
+  cursor: pointer;
+}
+.navLink:hover {
+  color: #111827;
+  background-color: #e5e7eb;
 }
 
 @layer base {
