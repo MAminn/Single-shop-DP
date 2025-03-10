@@ -1,4 +1,4 @@
-import HeroImg from "#root/assets/Women_s_banner.png";
+import HeroImg from "#root/assets/Men_s_Page_banner_1.png";
 import { Link } from "#root/components/Link.jsx";
 import Magnet from "#root/components/Magnet.jsx";
 
@@ -9,70 +9,64 @@ const Page: React.FC<Props> = ({ lang = "en" }: Props) => {
   const categoryCards = {
     en: [
       {
-        title: "Accessories",
-        imgUrl: "/assets/w.accessories.png",
-      },
-      {
-        title: "Blouses",
-        imgUrl: "/assets/w.blouses.png",
-      },
-      {
-        title: "Body Suits",
-        imgUrl: "/assets/w.body suit.png",
-      },
-      {
-        title: "Dresses",
-        imgUrl: "/assets/w.dress.png",
-      },
-      {
-        title: "Hoodies",
-        imgUrl: "/assets/w.hoodie.png",
-      },
-      {
-        title: "Jackets",
-        imgUrl: "/assets/w.jackets.png",
-      },
-      {
-        title: "Pants",
-        imgUrl: "/assets/w.pants.png",
-      },
-      {
         title: "Shirts",
-        imgUrl: "/assets/W.shirts.png",
-      },
-      {
-        title: "Shoes",
-        imgUrl: "/assets/W.shoes.png",
-      },
-      {
-        title: "Shorts",
-        imgUrl: "/assets/W.SHORTS.png",
-      },
-      {
-        title: "Skirts",
-        imgUrl: "/assets/w.skirts.png",
+        imgUrl: "/assets/men_s shirt.png",
+        to: "/featured/men/categories/shirts",
       },
       {
         title: "T-Shirts",
-        imgUrl: "/assets/W.TSHIRT.png",
+        imgUrl: "/assets/Men_s T-shirt.png",
+        to: "/featured/men/categories/t-shirts",
+      },
+      {
+        title: "Sweaters & Hoodies",
+        imgUrl: "/assets/Men_s hoodie.png",
+        to: "/featured/men/categories/hoodies",
+      },
+      {
+        title: "Pants",
+        imgUrl: "/assets/Men_s pants.png",
+        to: "/featured/men/categories/pants",
+      },
+      {
+        title: "Accessories",
+        imgUrl: "/assets/Men_s accessories.png",
+        to: "/featured/men/categories/accessories",
+      },
+      {
+        title: "Shorts",
+        imgUrl: "/assets/Men_s shorts.png",
+        to: "/featured/men/categories/shorts",
+      },
+      {
+        title: "Jackets",
+        imgUrl: "/assets/Men_s jacket.png",
+        to: "/featured/men/categories/jackets",
+      },
+      {
+        title: "Shoes",
+        imgUrl: "/assets/Men_s shoes.png",
+        to: "/featured/men/categories/shoes",
       },
     ],
     ar: [
       {
         title: "شيرتات",
         imgUrl: "/assets/men_s shirt.png",
+        to: "/featured/men/categories/shirts",
       },
       {
         title: "تيشيرتات",
         imgUrl: "/assets/men_s shirt.png",
+        to: "/featured/men/categories/t-shirts",
       },
       {
         title: "سويترات وهوديات",
         imgUrl: "/assets/men_s shirt.png",
+        to: "/featured/men/categories/hoodies",
       },
     ],
   };
-
 
   return (
     <section className=" w-full h-full flex flex-col justify-center items-center">
@@ -82,7 +76,7 @@ const Page: React.FC<Props> = ({ lang = "en" }: Props) => {
       <section className=" w-full xl:w-[70%] h-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 justify-items-center  pt-6">
         {categoryCards[lang].map((card) => (
           <Link
-            href={`/women/${card.title}`}
+            href={`${card.to}`}
             key={card.title}
             className="w-full h-full  justify-self-center "
           >

@@ -206,14 +206,14 @@ const Navbar: React.FC<NavbarProps> = ({
                   <NavigationMenuItem key={link.to} className="relative  ">
                     {link.subLinks ? (
                       <>
-                        <NavigationMenuTrigger className=" transition-all duration-300 ">
+                        <NavigationMenuTrigger className=" navLink ">
                           {link.label}
                         </NavigationMenuTrigger>
                         <NavigationMenuContent className="absolute mt-10 bg-white text-black rounded-2xl">
                           <ul className="grid gap-3 p-4 w-[200px]">
                             {link.subLinks.map((subLink) => (
                               <li key={subLink.to}>
-                                <NavigationMenuLink className="  text-black">
+                                <NavigationMenuLink className="  navLink">
                                   <Link href={subLink.to} className="block ">
                                     {subLink.label}
                                   </Link>
@@ -225,10 +225,7 @@ const Navbar: React.FC<NavbarProps> = ({
                       </>
                     ) : (
                       <NavigationMenuLink asChild>
-                        <Link
-                          href={link.to}
-                          className="text-gray-700 hover:text-gray-900"
-                        >
+                        <Link href={link.to} className="navLink">
                           {link.label}
                         </Link>
                       </NavigationMenuLink>
@@ -244,11 +241,7 @@ const Navbar: React.FC<NavbarProps> = ({
           <div className=" hidden md:flex justify-center items-center gap-4">
             {!session ? (
               logLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  href={link.to}
-                  className="text-red-700 hover:text-red-900 bg-green-500 px-6 py-3 rounded-3xl hover:bg-red-500 transition-all duration-300 cursor-pointer"
-                >
+                <Link key={link.to} href={link.to} className="navLink">
                   {link.label}
                 </Link>
               ))
@@ -319,7 +312,7 @@ const Navbar: React.FC<NavbarProps> = ({
                           <Link
                             key={link.to}
                             href={link.to}
-                            className="text-red-700 hover:text-red-900 bg-green-500 px-6 py-3 rounded-3xl hover:bg-red-500 transition-all duration-300 cursor-pointer"
+                            className=" px-6 py-3 rounded-3xl transition-all duration-300 cursor-pointer"
                           >
                             {link.label}
                           </Link>
