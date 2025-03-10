@@ -1,3 +1,4 @@
+import { ServerError } from "#root/shared/error/server.js";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Context, Effect, pipe } from "effect";
 
@@ -24,7 +25,11 @@ export const query = <A>(fn: (db: DatabaseClient) => Promise<A>) =>
     Effect.flatMap((db) =>
       Effect.tryPromise({
         try: async () => await fn(db),
-        catch: (err) => new Error("Failed to query database", { cause: err }),
+        catch: (err) =>
+          new ServerError({
+            tag: "DatabaseQueryError",
+            cause: err,
+          }),
       })
     )
   );

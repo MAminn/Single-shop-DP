@@ -1,15 +1,15 @@
 import { provideDatabase, publicProcedure } from "#root/shared/trpc/server.js";
 import { z } from "zod";
-import { me } from "./me";
 import {
   runBackendEffect,
   serializeBackendEffectResult,
 } from "#root/shared/backend/effect.js";
+import { logout } from "./logout";
 
-export const meProcedure = publicProcedure
+export const logoutProcedure = publicProcedure
   .input(z.object({ token: z.string() }))
   .mutation(async ({ ctx, input }) => {
-    return runBackendEffect(me(input.token).pipe(provideDatabase(ctx))).then(
-      serializeBackendEffectResult
-    );
+    return await runBackendEffect(
+      logout(input.token).pipe(provideDatabase(ctx))
+    ).then(serializeBackendEffectResult);
   });

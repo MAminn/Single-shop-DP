@@ -1,8 +1,4 @@
-import type {
-  NewSession,
-  Session,
-  User,
-} from "#root/shared/database/drizzle/schema/user.js";
+import type { NewSession, Session, User } from "./shared/database.schema";
 import {
   encodeBase32LowerCaseNoPadding,
   encodeHexLowerCase,
@@ -15,6 +11,8 @@ import {
 } from "#root/shared/database/drizzle/db.js";
 import { Tables } from "#root/shared/database/drizzle/schema.js";
 import { eq } from "drizzle-orm";
+import { ServerError } from "#root/shared/error/server.js";
+import type { ClientSession } from "./shared/entities";
 
 export function generateSessionToken(): string {
   const bytes = new Uint8Array(20);
@@ -43,7 +41,8 @@ export function createSession(token: string, userId: string) {
           await db.insert(Tables.session).values(newSession).returning(),
 
         catch: (err) =>
-          new Error("Failed to create session", {
+          new ServerError({
+            tag: "FailedToCreateSession",
             cause: err,
           }),
       }),
@@ -51,7 +50,16 @@ export function createSession(token: string, userId: string) {
     );
 
     if (!session) {
-      return yield* $(Effect.fail(new Error("Failed to create session")));
+      return yield* $(
+        Effect.fail(
+          new ServerError({
+            tag: "FailedToCreateSession",
+            statusCode: 500,
+            message:
+              "Failed to create session, session does not exist after creation.",
+          })
+        )
+      );
     }
 
     return session satisfies Session;
@@ -75,7 +83,15 @@ export function validateSessionToken(token: string) {
     );
 
     if (!result[0]) {
-      return { session: null, user: null };
+      return yield* $(
+        Effect.fail(
+          new ServerError({
+            tag: "InvalidSessionToken",
+            statusCode: 400,
+            clientMessage: "Invalid session token",
+          })
+        )
+      );
     }
 
     const { user, session } = result[0];
@@ -88,31 +104,46 @@ export function validateSessionToken(token: string) {
             .where(eq(Tables.session.id, session.id));
         })
       );
-      return { session: null, user: null };
+      return yield* $(
+        Effect.fail(
+          new ServerError({
+            tag: "SessionExpired",
+            statusCode: 400,
+            clientMessage: "Session expired",
+          })
+        )
+      );
     }
 
     if (Date.now() >= session.expiresAt.getTime() - 1000 * 60 * 60 * 24 * 15) {
-      session.expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
+      const newExpiryDate = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
 
       yield* $(
         query(async (db) => {
           await db
             .update(Tables.session)
             .set({
-              expiresAt: session.expiresAt,
+              expiresAt: newExpiryDate,
             })
             .where(eq(Tables.session.id, session.id));
         })
       );
     }
 
-    return { session, user };
+    return {
+      token: session.token,
+      email: user.email,
+      expiresAt: session.expiresAt,
+    } satisfies SessionValidationResult;
   });
 }
 
-export function invalidateSession(sessionId: string) {
-  query(async (db) => {
-    db.delete(Tables.session).where(eq(Tables.session.id, sessionId));
+export function invalidateSession(token: string) {
+  const sessionToken = encodeHexLowerCase(
+    sha256(new TextEncoder().encode(token))
+  );
+  return query(async (db) => {
+    db.delete(Tables.session).where(eq(Tables.session.token, sessionToken));
   });
 }
 
@@ -123,6 +154,4 @@ export function invalidateAllSessions(userId: string) {
   );
 }
 
-export type SessionValidationResult =
-  | { session: Session; user: User }
-  | { session: null; user: null };
+export type SessionValidationResult = ClientSession;
