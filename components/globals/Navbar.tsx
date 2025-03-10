@@ -54,35 +54,35 @@ const Navbar: React.FC<NavbarProps> = ({
         subLinks: [
           {
             label: "Shirts",
-            to: "",
+            to: "/featured/men/categories/shirts",
           },
           {
             label: "T-Shirts",
-            to: "",
+            to: "/featured/men/categories/t-shirts",
           },
           {
             label: "Sweaters & Hoodies",
-            to: "",
+            to: "/featured/men/categories/sweaters-hoodies",
           },
           {
             label: "Pants",
-            to: "",
+            to: "/featured/men/categories/pants",
           },
           {
             label: "Accessories",
-            to: "",
+            to: "/featured/men/categories/accessories",
           },
           {
             label: "Shorts",
-            to: "",
+            to: "/featured/men/categories/shorts",
           },
           {
             label: "Jackets",
-            to: "",
+            to: "/featured/men/categories/jackets",
           },
           {
             label: "Shoes",
-            to: "",
+            to: "/featured/men/categories/shoes",
           },
         ],
       },
@@ -92,51 +92,51 @@ const Navbar: React.FC<NavbarProps> = ({
         subLinks: [
           {
             label: "Accessories",
-            to: "/assets/w.accessories.png",
+            to: "/featured/women/categories/accessories",
           },
           {
             label: "Blouses",
-            to: "/assets/w.blouses.png",
+            to: "/featured/women/categories/blouses",
           },
           {
             label: "Body Suits",
-            to: "/assets/w.body suit.png",
+            to: "/featured/women/categories/body-suits",
           },
           {
             label: "Dresses",
-            to: "/assets/w.dress.png",
+            to: "/featured/women/categories/dresses",
           },
           {
             label: "Hoodies",
-            to: "/assets/w.hoodie.png",
+            to: "/featured/women/categories/hoodies",
           },
           {
             label: "Jackets",
-            to: "/assets/w.jackets.png",
+            to: "/featured/women/categories/jackets",
           },
           {
             label: "Pants",
-            to: "/assets/w.pants.png",
+            to: "/featured/women/categories/pants",
           },
           {
             label: "Shirts",
-            to: "/assets/W.shirts.png",
+            to: "/featured/women/categories/shirts",
           },
           {
             label: "Shoes",
-            to: "/assets/W.shoes.png",
+            to: "/featured/women/categories/shoes",
           },
           {
             label: "Shorts",
-            to: "/assets/W.SHORTS.png",
+            to: "/featured/women/categories/shorts",
           },
           {
             label: "Skirts",
-            to: "/assets/w.skirts.png",
+            to: "/featured/women/categories/skirts",
           },
           {
             label: "T-Shirts",
-            to: "/assets/W.TSHIRT.png",
+            to: "/featured/women/categories/t-shirts",
           },
         ],
       },
