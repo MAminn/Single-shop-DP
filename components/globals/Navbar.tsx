@@ -7,7 +7,6 @@ import {
   SheetTrigger,
   SheetContent,
   SheetTitle,
-  SheetDescription,
 } from "#root/components/ui/sheet";
 import {
   NavigationMenu,
@@ -19,13 +18,11 @@ import {
 } from "#root/components/ui/navigation-menu";
 import { Link } from "../Link";
 import logoImage from "#root/assets/Lebsy-Logo-Light.svg";
-import type { Session } from "#root/shared/database/drizzle/schema/user.js";
-import { trpc } from "#root/shared/trpc/client.js";
-import { reload } from "vike/client/router";
+import type { ClientSession } from "#root/backend/auth/shared/entities.js";
 
 interface NavbarProps {
   lang: string;
-  session?: Session | null;
+  session?: ClientSession | null;
   logoUrl?: string;
   cartItemCount?: number;
   sheetDescription?: string;

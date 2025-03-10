@@ -1,0 +1,5 @@
+export interface ClientSession {
+  token: string;
+  email: string;
+  expiresAt: Date;
+}

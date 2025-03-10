@@ -3,18 +3,18 @@ import { Tables } from "#root/shared/database/drizzle/schema.js";
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
-import { verify, hash } from "@node-rs/argon2";
+import { verify } from "@node-rs/argon2";
 import { createSession, generateSessionToken } from "../session";
+import { ServerError } from "#root/shared/error/server.js";
+import { hashPassword } from "../shared/utils";
 const verifyPassword = (hash: string, password: string) =>
   Effect.tryPromise({
     try: async () => await verify(hash, password),
-    catch: (err) => new Error("Failed to verify password", { cause: err }),
-  });
-
-const hashPassword = (password: string) =>
-  Effect.tryPromise({
-    try: async () => await hash(password),
-    catch: (err) => new Error("Failed to hash password", { cause: err }),
+    catch: (err) =>
+      new ServerError({
+        tag: "VerifyPasswordError",
+        cause: err,
+      }),
   });
 
 export const login = (email: string, password: string) =>
@@ -34,7 +34,15 @@ export const login = (email: string, password: string) =>
 
     if (!user) {
       yield* $(verifyPassword(passwordPlaceholder, password));
-      return yield* $(Effect.fail(new Error("Invalid credentials")));
+      return yield* $(
+        Effect.fail(
+          new ServerError({
+            tag: "UserNotFound",
+            statusCode: 400,
+            clientMessage: "Invalid credenetials",
+          })
+        )
+      );
     }
 
     const passwordMatch = yield* $(
@@ -42,11 +50,19 @@ export const login = (email: string, password: string) =>
     );
 
     if (!passwordMatch) {
-      return yield* $(Effect.fail(new Error("Invalid credentials")));
+      return yield* $(
+        Effect.fail(
+          new ServerError({
+            tag: "InvalidPassword",
+            statusCode: 400,
+            clientMessage: "Invalid credenetials",
+          })
+        )
+      );
     }
 
     const token = generateSessionToken();
-    const session = yield* $(createSession(token, user.id));
+    yield* $(createSession(token, user.id));
 
     return token;
   });

@@ -1,7 +1,5 @@
 import AnimatedContent from "#root/components/AnimatedContent.jsx";
 import { Button } from "#root/components/ui/button.jsx";
-import { trpc } from "#root/shared/trpc/client.js";
-import { navigate } from "vike/client/router";
 
 export default function Page() {
   return (

@@ -9,6 +9,9 @@
       "recommended": true,
       "style": {
         "useSelfClosingElements": "off"
+      },
+      "suspicious": {
+        "noShadowRestrictedNames": "off"
       }
     }
   },

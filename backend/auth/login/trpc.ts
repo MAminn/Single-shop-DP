@@ -1,17 +1,15 @@
-import { publicProcedure } from "#root/shared/trpc/server.js";
-import { Effect } from "effect";
+import { provideDatabase, publicProcedure } from "#root/shared/trpc/server.js";
 import { z } from "zod";
 import { login } from "./login";
-import { DatabaseClientService } from "#root/shared/database/drizzle/db.js";
+import {
+  runBackendEffect,
+  serializeBackendEffectResult,
+} from "#root/shared/backend/effect.js";
 
 export const loginProcedure = publicProcedure
-  .input(z.object({ email: z.string(), password: z.string() }))
-  .mutation(async (opts) => {
-    const db = opts.ctx.db;
-    const token = await Effect.runPromise(
-      login(opts.input.email, opts.input.password).pipe(
-        Effect.provideService(DatabaseClientService, db)
-      )
-    );
-    return token;
+  .input(z.object({ email: z.string().email(), password: z.string() }))
+  .mutation(async ({ ctx, input }) => {
+    return await runBackendEffect(
+      login(input.email, input.password).pipe(provideDatabase(ctx))
+    ).then(serializeBackendEffectResult);
   });

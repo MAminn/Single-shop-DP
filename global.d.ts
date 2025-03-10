@@ -1,15 +1,18 @@
+import type { ClientSession } from "./backend/auth/shared/entities";
 import type { DatabaseClient } from "./shared/database/drizzle/db";
 
 declare global {
   namespace Vike {
     interface PageContext {
       db: DatabaseClient;
+      clientSession?: ClientSession;
     }
   }
   namespace HonoContext {
     interface Env {
       Variables: {
         db: DatabaseClient;
+        clientSession?: ClientSession;
       };
     }
   }
