@@ -6,7 +6,7 @@ import { createMiddleware } from "hono/factory";
 
 export const vikeHonoMiddleware = createMiddleware<HonoContext.Env>(
   async (c) => {
-    console.log(c.var.clientSession)
+    // console.log(c.var.clientSession)
     const pageContextInit = {
       db: c.var.db,
       clientSession: c.var.clientSession,
