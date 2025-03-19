@@ -62,7 +62,7 @@ function Content({ children }: { children: React.ReactNode }) {
           <section className="h-full flex-1">
             <header className="flex bg-neutral-100 dark:bg-neutral-900 w-full p-1 sticky top-0">
               <SidebarTrigger />
-              <Tabs className="ml-4" value={activeTab}>
+              <Tabs className="ml-4 hidden md:flex" value={activeTab}>
                 <TabsList>
                   <TabsTrigger value="overview" asChild>
                     <Link href="/dashboard">Overview</Link>
@@ -88,7 +88,7 @@ function Content({ children }: { children: React.ReactNode }) {
                 </TabsList>
               </Tabs>
             </header>
-            
+
             {children}
           </section>
         </div>

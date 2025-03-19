@@ -15,16 +15,22 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
+  useSidebar,
 } from "#root/components/ui/sidebar";
 import { Link } from "./Link";
 
 export function DashboardSidebar() {
+  const { state, open, setOpen, openMobile, setOpenMobile, toggleSidebar } =
+    useSidebar();
+
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
+      <SidebarHeader className="flex justify-between">
         <h1 className="font-bold text-lg group-data-[state=collapsed]:text-center">
           D<span className="group-data-[state=collapsed]:hidden">ashboard</span>
         </h1>
+        <SidebarTrigger className="block md:hidden" />
       </SidebarHeader>
       <SidebarContent>
         {/* Navigation Links */}
@@ -33,6 +39,7 @@ export function DashboardSidebar() {
             <Link
               href="/dashboard"
               className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:justify-center"
+              onClick={() => toggleSidebar()}
             >
               <SidebarMenuButton>
                 <LayoutDashboard className="w-4 h-4 " />
@@ -46,6 +53,7 @@ export function DashboardSidebar() {
             <Link
               className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:justify-center"
               href="/dashboard/orders"
+              onClick={() => toggleSidebar()}
             >
               <SidebarMenuButton>
                 <ShoppingCart className="w-4 h-4" />
@@ -59,6 +67,7 @@ export function DashboardSidebar() {
             <Link
               className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:justify-center"
               href="/dashboard/products"
+              onClick={() => toggleSidebar()}
             >
               <SidebarMenuButton>
                 <Package className="w-4 h-4" />
@@ -72,6 +81,7 @@ export function DashboardSidebar() {
             <Link
               className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:justify-center"
               href="/dashboard/customers"
+              onClick={() => toggleSidebar()}
             >
               <SidebarMenuButton>
                 <Users className="w-4 h-4" />
@@ -85,6 +95,7 @@ export function DashboardSidebar() {
             <Link
               className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:justify-center"
               href="/dashboard/stores"
+              onClick={() => toggleSidebar()}
             >
               <SidebarMenuButton>
                 <Store className="w-4 h-4" />
@@ -98,6 +109,7 @@ export function DashboardSidebar() {
             <Link
               className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:justify-center"
               href="/dashboard/users"
+              onClick={() => toggleSidebar()}
             >
               <SidebarMenuButton>
                 <UserPlus className="w-4 h-4" />
@@ -111,6 +123,7 @@ export function DashboardSidebar() {
             <Link
               className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:justify-center"
               href="/dashboard/settings"
+              onClick={() => toggleSidebar()}
             >
               <SidebarMenuButton>
                 <Settings className="w-4 h-4" />
