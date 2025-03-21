@@ -54,6 +54,41 @@ function Content({ children }: { children: React.ReactNode }) {
 
   const activeTab = getActiveTab();
 
+  const tabs = [
+    {
+      label: "Overview",
+      href: "/dashboard",
+    },
+    {
+      label: "Orders",
+      href: "/dashboard/orders",
+    },
+    {
+      label: "Categories",
+      href: "/dashboard/categories",
+    },
+    {
+      label: "Products",
+      href: "/dashboard/products",
+    },
+    {
+      label: "Customers",
+      href: "/dashboard/customers",
+    },
+    {
+      label: "Stores",
+      href: "/dashboard/stores",
+    },
+    {
+      label: "Users",
+      href: "/dashboard/users",
+    },
+    {
+      label: "Settings",
+      href: "/dashboard/settings",
+    },
+  ];
+
   return (
     <main className="flex-1">
       <SidebarProvider>
@@ -62,29 +97,13 @@ function Content({ children }: { children: React.ReactNode }) {
           <section className="h-full flex-1">
             <header className="flex bg-neutral-100 dark:bg-neutral-900 w-full p-1 sticky top-0">
               <SidebarTrigger />
-              <Tabs className="ml-4 hidden md:flex" value={activeTab}>
+              <Tabs className="ml-4 hidden lg:flex" value={activeTab}>
                 <TabsList>
-                  <TabsTrigger value="overview" asChild>
-                    <Link href="/dashboard">Overview</Link>
-                  </TabsTrigger>
-                  <TabsTrigger value="orders" asChild>
-                    <Link href="/dashboard/orders">Orders</Link>
-                  </TabsTrigger>
-                  <TabsTrigger value="products" asChild>
-                    <Link href="/dashboard/products">Products</Link>
-                  </TabsTrigger>
-                  <TabsTrigger value="customers" asChild>
-                    <Link href="/dashboard/customers">Customers</Link>
-                  </TabsTrigger>
-                  <TabsTrigger value="stores" asChild>
-                    <Link href="/dashboard/stores">Stores</Link>
-                  </TabsTrigger>
-                  <TabsTrigger value="users" asChild>
-                    <Link href="/dashboard/users">Users</Link>
-                  </TabsTrigger>
-                  <TabsTrigger value="settings" asChild>
-                    <Link href="/dashboard/settings">Settings</Link>
-                  </TabsTrigger>
+                  {tabs.map((tab) => (
+                    <TabsTrigger key={tab.href} value={tab.href} asChild>
+                      <Link href={tab.href}>{tab.label}</Link>
+                    </TabsTrigger>
+                  ))}
                 </TabsList>
               </Tabs>
             </header>

@@ -21,6 +21,8 @@ import {
   mockCategories,
   addCategory,
 } from "#root/pages/dashboard/categories/store";
+import { usePageContext } from "vike-react/usePageContext";
+
 export default function CreateCategory() {
   const [category, setCategory] = useState("Men");
   const [subcategories, setSubcategories] = useState("");
@@ -37,7 +39,14 @@ export default function CreateCategory() {
       const newCategory = {
         id: String(Date.now()),
         name: category,
-        subcategories: subcategories.split(", ").filter(Boolean),
+        subcategories: subcategories
+          .split(", ")
+          .filter(Boolean)
+          .map((name) => ({
+            id: String(Date.now()) + Math.random(),
+            name,
+            products: [],
+          })),
       };
 
       addCategory(newCategory);
@@ -48,7 +57,9 @@ export default function CreateCategory() {
       setIsSuccess(true);
 
       setTimeout(() => {
-        window.location.href = "/dashboard/categories";
+        const pageContext = usePageContext();
+        const { urlPathname } = pageContext;
+        window.location.href = urlPathname;
       }, 1000);
     }, 500);
   };

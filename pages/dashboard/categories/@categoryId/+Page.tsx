@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "#root/components/Link.jsx";
 import {
   Card,
   CardHeader,
@@ -8,90 +9,392 @@ import {
 import { Button } from "#root/components/ui/button";
 import { Input } from "#root/components/ui/input.jsx";
 import { Label } from "#root/components/ui/label";
-import { Link } from "#root/components/Link.jsx";
+import { PlusCircle, ArrowLeft, Pencil, Trash2, Package } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "#root/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "#root/components/ui/table";
 
-import { mockCategories, updateCategory } from "../store";
-import type { Category } from "../store";
+import {
+  findCategory,
+  updateCategory,
+  addSubcategory,
+  updateSubcategory,
+  deleteSubcategory,
+} from "../store";
+import type { Category, Subcategory } from "../store";
+import { usePageContext } from "vike-react/usePageContext";
 
-export default function EditCategory() {
+export default function CategoryDetail() {
   const [category, setCategory] = useState<Category | null>(null);
-  const [subcategories, setSubcategories] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [newSubcategoryName, setNewSubcategoryName] = useState("");
+  const [selectedSubcategory, setSelectedSubcategory] =
+    useState<Subcategory | null>(null);
+  const [isEditCategoryDialogOpen, setIsEditCategoryDialogOpen] =
+    useState(false);
+  const [editedCategoryName, setEditedCategoryName] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const categoryId = window.location.pathname.split("/").pop() || "";
+  const pageContext = usePageContext();
+  const { urlPathname } = pageContext;
+
+  const categoryId = urlPathname.split("/").pop() || "";
 
   useEffect(() => {
-    const foundCategory = mockCategories.find((c) => c.id === categoryId);
+    setIsLoading(true);
+    const foundCategory = findCategory(categoryId);
     if (foundCategory) {
       setCategory(foundCategory);
-      setSubcategories(foundCategory.subcategories.join(", "));
+      setEditedCategoryName(foundCategory.name);
     }
+    setIsLoading(false);
   }, [categoryId]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!category) return;
+  const handleEditCategory = () => {
+    if (!category || !editedCategoryName.trim()) return;
 
-    setIsSubmitting(true);
+    const updatedCategory = {
+      ...category,
+      name: editedCategoryName.trim(),
+    };
 
-    setTimeout(() => {
-      const updatedCategoryData = {
-        ...category,
-        subcategories: subcategories.split(", ").filter(Boolean),
-      };
-
-      updateCategory(updatedCategoryData);
-
-      console.log("Category updated:", updatedCategoryData);
-
-      setIsSubmitting(false);
-      setIsSuccess(true);
-
-      setTimeout(() => {
-        window.location.href = "/dashboard/categories";
-      }, 1000);
-    }, 500);
+    updateCategory(updatedCategory);
+    setCategory(updatedCategory);
+    setIsEditCategoryDialogOpen(false);
   };
 
+  const handleAddSubcategory = () => {
+    if (!category || !newSubcategoryName.trim()) return;
+
+    const newSubcategory: Subcategory = {
+      id: `${category.id}-${newSubcategoryName
+        .toLowerCase()
+        .replace(/\s+/g, "-")}-${Date.now()}`,
+      name: newSubcategoryName.trim(),
+      products: [],
+    };
+
+    addSubcategory(category.id, newSubcategory);
+
+    setCategory({
+      ...category,
+      subcategories: [...category.subcategories, newSubcategory],
+    });
+
+    setNewSubcategoryName("");
+    setIsAddDialogOpen(false);
+  };
+
+  const handleEditSubcategory = () => {
+    if (!category || !selectedSubcategory || !selectedSubcategory.name.trim())
+      return;
+
+    updateSubcategory(category.id, selectedSubcategory);
+
+    setCategory({
+      ...category,
+      subcategories: category.subcategories.map((sub) =>
+        sub.id === selectedSubcategory.id ? selectedSubcategory : sub
+      ),
+    });
+
+    setSelectedSubcategory(null);
+    setIsEditDialogOpen(false);
+  };
+
+  const handleDeleteSubcategory = () => {
+    if (!category || !selectedSubcategory) return;
+
+    deleteSubcategory(category.id, selectedSubcategory.id);
+
+    setCategory({
+      ...category,
+      subcategories: category.subcategories.filter(
+        (sub) => sub.id !== selectedSubcategory.id
+      ),
+    });
+
+    setSelectedSubcategory(null);
+    setIsDeleteDialogOpen(false);
+  };
+
+  const openEditDialog = (subcategory: Subcategory) => {
+    setSelectedSubcategory({ ...subcategory });
+    setIsEditDialogOpen(true);
+  };
+
+  const openDeleteDialog = (subcategory: Subcategory) => {
+    setSelectedSubcategory(subcategory);
+    setIsDeleteDialogOpen(true);
+  };
+
+  if (isLoading) {
+    return <div className="p-6">Loading...</div>;
+  }
+
   if (!category) {
-    return <div className="p-6">Loading category...</div>;
+    return (
+      <div className="p-6">
+        <div className="flex items-center mb-6">
+          <Button variant="ghost" asChild className="mr-2">
+            <Link href="/dashboard/categories">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Categories
+            </Link>
+          </Button>
+        </div>
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold mb-2">Category Not Found</h2>
+          <p className="text-slate-500 mb-6">
+            The category you're looking for doesn't exist.
+          </p>
+          <Button asChild>
+            <Link href="/dashboard/categories">Return to Categories</Link>
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <Card className="max-w-md mx-auto p-6">
-      <CardHeader>
-        <CardTitle>Edit Category - {category.name}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isSuccess ? (
-          <div className="bg-green-100 p-4 rounded text-green-800 text-center">
-            Category updated successfully! Redirecting...
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="p-6 w-full mx-auto">
+      <div className="flex items-center mb-6">
+        <Button variant="ghost" asChild className="mr-4">
+          <Link href="/dashboard/categories">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Categories
+          </Link>
+        </Button>
+        <h1 className="text-2xl font-bold">{category.name}</h1>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsEditCategoryDialogOpen(true)}
+          className="ml-2"
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Subcategories</h2>
+        <Button onClick={() => setIsAddDialogOpen(true)}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Subcategory
+        </Button>
+      </div>
+
+      {category.subcategories.length === 0 ? (
+        <Card className="text-center py-12">
+          <CardContent>
+            <p className="text-slate-500 mb-4">No subcategories found</p>
+            <Button onClick={() => setIsAddDialogOpen(true)}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add Your First Subcategory
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="pt-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Products</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {category.subcategories.map((subcategory) => (
+                  <TableRow key={subcategory.id}>
+                    <TableCell className="font-medium">
+                      {subcategory.name}
+                    </TableCell>
+                    <TableCell>
+                      {subcategory.products.length} product
+                      {subcategory.products.length !== 1 ? "s" : ""}
+                    </TableCell>
+                    <TableCell className="flex justify-end space-x-2">
+                      <Button size="sm" variant="outline" asChild>
+                        <Link
+                          href={`/dashboard/categories/${category.id}/${subcategory.id}`}
+                        >
+                          <Package className="h-4 w-4 mr-1" />
+                          Products
+                        </Link>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openEditDialog(subcategory)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => openDeleteDialog(subcategory)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      <Dialog
+        open={isEditCategoryDialogOpen}
+        onOpenChange={setIsEditCategoryDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Category</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="subcategories">
-                Subcategories (comma separated)
-              </Label>
+              <Label htmlFor="category-name">Category Name</Label>
               <Input
-                id="subcategories"
-                value={subcategories}
-                onChange={(e) => setSubcategories(e.target.value)}
+                id="category-name"
+                value={editedCategoryName}
+                onChange={(e) => setEditedCategoryName(e.target.value)}
               />
             </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditCategoryDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEditCategory}
+              disabled={!editedCategoryName.trim()}
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-            <div className="flex justify-end pt-4">
-              <Button type="button" variant="outline" className="mr-2" asChild>
-                <Link href="/dashboard/categories">Cancel</Link>
-              </Button>
-              <Button type="submit" disabled={isSubmitting || !subcategories}>
-                {isSubmitting ? "Saving..." : "Save Changes"}
-              </Button>
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Subcategory</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="subcategory-name">Subcategory Name</Label>
+              <Input
+                id="subcategory-name"
+                value={newSubcategoryName}
+                onChange={(e) => setNewSubcategoryName(e.target.value)}
+                placeholder="Shirts, Pants, Shoes, etc."
+              />
             </div>
-          </form>
-        )}
-      </CardContent>
-    </Card>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddSubcategory}
+              disabled={!newSubcategoryName.trim()}
+            >
+              Add Subcategory
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Subcategory</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-subcategory-name">Subcategory Name</Label>
+              <Input
+                id="edit-subcategory-name"
+                value={selectedSubcategory?.name || ""}
+                onChange={(e) =>
+                  selectedSubcategory &&
+                  setSelectedSubcategory({
+                    ...selectedSubcategory,
+                    name: e.target.value,
+                  })
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEditSubcategory}
+              disabled={!selectedSubcategory?.name.trim()}
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Subcategory</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p>
+              Are you sure you want to delete "{selectedSubcategory?.name}"?
+              This will also remove all product associations.
+            </p>
+            {selectedSubcategory && selectedSubcategory.products.length > 0 && (
+              <p className="mt-2 text-orange-600">
+                Warning: This subcategory has{" "}
+                {selectedSubcategory.products.length} products associated with
+                it.
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteSubcategory}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
