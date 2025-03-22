@@ -13,6 +13,7 @@ export const authMiddlware = createMiddleware<HonoContext.Env>(
     const sessionToken = getCookie(c, "session");
 
     if (!sessionToken) {
+      c.set("clientSession", undefined);
       await next();
       return;
     }
@@ -24,6 +25,7 @@ export const authMiddlware = createMiddleware<HonoContext.Env>(
     ).then(serializeBackendEffectResult);
 
     if (!getClientSession.success) {
+      c.set("clientSession", undefined);
       await next();
       return;
     }
