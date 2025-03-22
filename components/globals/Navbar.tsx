@@ -25,7 +25,6 @@ interface NavbarProps {
   logoUrl?: string;
   cartItemCount?: number;
   sheetDescription?: string;
-  onLogOut?: () => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -33,7 +32,6 @@ const Navbar: React.FC<NavbarProps> = ({
   cartItemCount = 0,
   sheetDescription = "Navigation menu",
   logoUrl = "",
-  onLogOut,
 }: NavbarProps) => {
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(false);
 
@@ -186,11 +184,6 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const links = lang === "en" || lang === "ar" ? navLinks[lang] : [];
 
-  async function terminateSession() {
-    localStorage.removeItem("token");
-    onLogOut?.();
-  }
-
   return (
     <nav className=" shadow-md sticky py-6 top-0 z-10 bg-background">
       <div className="px-4 flex items-center justify-between min-h-16 max-w-7xl mx-auto">
@@ -236,7 +229,6 @@ const Navbar: React.FC<NavbarProps> = ({
             </NavigationMenu>
           </div>
         </div>
-
         <div className="flex items-center gap-4">
           <div className=" hidden md:flex justify-center items-center gap-4">
             {!session ? (
@@ -247,11 +239,7 @@ const Navbar: React.FC<NavbarProps> = ({
               ))
             ) : (
               <>
-                <button
-                  onClick={terminateSession}
-                  type="submit"
-                  className="navLink"
-                >
+                <button onClick={logout} type="submit" className="navLink">
                   Logout
                 </button>
               </>
@@ -320,7 +308,7 @@ const Navbar: React.FC<NavbarProps> = ({
                       ) : (
                         <>
                           <button
-                            onClick={terminateSession}
+                            onClick={logout}
                             type="submit"
                             className="navLink"
                           >

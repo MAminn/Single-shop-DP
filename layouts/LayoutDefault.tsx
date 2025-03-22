@@ -58,7 +58,7 @@ function Content({ children }: { children: React.ReactNode }) {
         id="page-content"
         className="bg-background h-full text-foreground w-full font-poppins"
       >
-        {!isDashboardRoute && <Navbar lang="en" onLogOut={logout} />}
+        {!isDashboardRoute && <Navbar lang="en" />}
         {children}
         <Toaster />
       </main>
