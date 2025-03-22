@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -6,6 +7,7 @@ import {
   Settings,
   Store,
   UserPlus,
+  LayoutGrid,
 } from "lucide-react";
 
 import {
@@ -19,26 +21,40 @@ import {
   useSidebar,
 } from "#root/components/ui/sidebar";
 import { Link } from "./Link";
+import { Button } from "#root/components/ui/button";
 
 export function DashboardSidebar() {
   const { state, open, setOpen, openMobile, setOpenMobile, toggleSidebar } =
     useSidebar();
 
-  const sideBarItems = [
+  const [userRole, setUserRole] = useState<"admin" | "vendor">("vendor");
+
+  useEffect(() => {
+    const savedRole = localStorage.getItem("userRole");
+    if (savedRole && (savedRole === "admin" || savedRole === "vendor")) {
+      setUserRole(savedRole as "admin" | "vendor");
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("userRole", userRole);
+  }, [userRole]);
+
+  const adminSidebarItems = [
     {
       label: "Overview",
       href: "/dashboard",
       icon: LayoutDashboard,
     },
     {
-      label: "Orders",
-      href: "/dashboard/orders",
-      icon: ShoppingCart,
+      label: "Vendors",
+      href: "/dashboard/vendors",
+      icon: Store,
     },
     {
       label: "Categories",
       href: "/dashboard/categories",
-      icon: Package,
+      icon: LayoutGrid,
     },
     {
       label: "Products",
@@ -46,26 +62,41 @@ export function DashboardSidebar() {
       icon: Package,
     },
     {
-      label: "Customers",
-      href: "/dashboard/customers",
-      icon: Users,
-    },
-    {
-      label: "Stores",
-      href: "/dashboard/stores",
-      icon: Store,
-    },
-    {
-      label: "Users",
-      href: "/dashboard/users",
-      icon: UserPlus,
-    },
-    {
-      label: "Settings",
-      href: "/dashboard/settings",
-      icon: Settings,
+      label: "Orders",
+      href: "/dashboard/orders",
+      icon: ShoppingCart,
     },
   ];
+
+  const vendorSidebarItems = [
+    {
+      label: "Overview",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Categories",
+      href: "/dashboard/categories",
+      icon: LayoutGrid,
+    },
+    {
+      label: "Products",
+      href: "/dashboard/products",
+      icon: Package,
+    },
+    {
+      label: "Orders",
+      href: "/dashboard/orders",
+      icon: ShoppingCart,
+    },
+  ];
+
+  const sideBarItems =
+    userRole === "admin" ? adminSidebarItems : vendorSidebarItems;
+
+  const toggleRole = () => {
+    setUserRole(userRole === "admin" ? "vendor" : "admin");
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -76,8 +107,7 @@ export function DashboardSidebar() {
         <SidebarTrigger className="block md:hidden" />
       </SidebarHeader>
       <SidebarContent>
-        {/* Navigation Links */}
-        <SidebarMenu className=" pt-11">
+        <SidebarMenu className="pt-6">
           {sideBarItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <Link
@@ -95,6 +125,23 @@ export function DashboardSidebar() {
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
+
+        <div className={`mt-6 px-4 ${state === "collapsed" ? "hidden" : ""}`}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full text-xs"
+            onClick={toggleRole}
+          >
+            {state === "collapsed"
+              ? userRole === "admin"
+                ? "A"
+                : "V"
+              : userRole === "admin"
+              ? "Switch to Vendor"
+              : "Switch to Admin"}
+          </Button>
+        </div>
       </SidebarContent>
     </Sidebar>
   );

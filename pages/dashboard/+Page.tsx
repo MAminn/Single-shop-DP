@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "#root/components/Link.jsx";
 import { Button } from "#root/components/ui/button.jsx";
 import {
@@ -6,125 +7,889 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "#root/components/ui/card.jsx";
+import {
+  ArrowUpRight,
+  ChevronRight,
+  DollarSign,
+  Package,
+  ShoppingBag,
+  ShoppingCart,
+  Store,
+  Truck,
+  Users,
+  AlertTriangle,
+  PackageOpen,
+  TrendingUp,
+  Clipboard,
+  Clock,
+  BarChart3,
+  CircleAlert,
+  Grid,
+} from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "#root/components/ui/table";
+import { Badge } from "#root/components/ui/badge";
 
 export default function Dashboard() {
+  const [userRole, setUserRole] = useState<"admin" | "vendor">("vendor");
+
+  useEffect(() => {
+    const savedRole = localStorage.getItem("userRole");
+    if (savedRole && (savedRole === "admin" || savedRole === "vendor")) {
+      setUserRole(savedRole as "admin" | "vendor");
+    }
+  }, []);
+
+  const toggleRole = () => {
+    const newRole = userRole === "admin" ? "vendor" : "admin";
+    setUserRole(newRole);
+    localStorage.setItem("userRole", newRole);
+  };
+
   return (
-    <main className="flex-1">
-      <div className="flex w-full">
-        <section className="h-full flex-1">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Welcome to Your Dashboard</CardTitle>
-                <CardDescription>
-                  Here's a quick overview of your eCommerce website. Manage your
-                  store, track performance, and stay updated with recent
-                  activity.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Button asChild variant="outline" className="h-24">
-                    <Link href="/dashboard/orders">
-                      <div className="text-center">
-                        <p className="text-lg font-semibold">Orders</p>
-                        <p className="text-sm text-muted-foreground">
-                          Manage and track orders
-                        </p>
-                      </div>
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" className="h-24">
-                    <Link href="/dashboard/products">
-                      <div className="text-center">
-                        <p className="text-lg font-semibold">Products</p>
-                        <p className="text-sm text-muted-foreground">
-                          Add or update products
-                        </p>
-                      </div>
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" className="h-24">
-                    <Link href="/dashboard/customers">
-                      <div className="text-center">
-                        <p className="text-lg font-semibold">Customers</p>
-                        <p className="text-sm text-muted-foreground">
-                          View customer details
-                        </p>
-                      </div>
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" className="h-24">
-                    <Link href="/dashboard/settings">
-                      <div className="text-center">
-                        <p className="text-lg font-semibold">Settings</p>
-                        <p className="text-sm text-muted-foreground">
-                          Configure your store
-                        </p>
-                      </div>
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Key Metrics</CardTitle>
-                <CardDescription>
-                  Track the performance of your store with these key metrics.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-white dark:bg-neutral-800 p-4 rounded-lg shadow">
-                    <h3 className="text-lg font-semibold">Total Sales</h3>
-                    <p className="text-2xl">$12,345</p>
-                  </div>
-                  <div className="bg-white dark:bg-neutral-800 p-4 rounded-lg shadow">
-                    <h3 className="text-lg font-semibold">Total Orders</h3>
-                    <p className="text-2xl">1,234</p>
-                  </div>
-                  <div className="bg-white dark:bg-neutral-800 p-4 rounded-lg shadow">
-                    <h3 className="text-lg font-semibold">Total Customers</h3>
-                    <p className="text-2xl">567</p>
-                  </div>
-                  <div className="bg-white dark:bg-neutral-800 p-4 rounded-lg shadow">
-                    <h3 className="text-lg font-semibold">Total Products</h3>
-                    <p className="text-2xl">89</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>
-                  Stay updated with the latest activities in your store.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p>New order #1234 placed by John Doe</p>
-                    <p className="text-sm text-muted-foreground">2 hours ago</p>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p>Product "Blue T-Shirt" was updated</p>
-                    <p className="text-sm text-muted-foreground">5 hours ago</p>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p>New customer Jane Smith registered</p>
-                    <p className="text-sm text-muted-foreground">1 day ago</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Dashboard Overview
+          </h1>
+          <p className="text-muted-foreground">
+            {userRole === "admin"
+              ? "Platform-wide metrics and vendor management"
+              : "Welcome to your store dashboard"}
+          </p>
+        </div>
+        <Button variant="outline" onClick={toggleRole}>
+          Switch to {userRole === "admin" ? "Vendor" : "Admin"} View
+        </Button>
       </div>
-    </main>
+
+      {userRole === "admin" ? <AdminDashboard /> : <VendorDashboard />}
+    </div>
+  );
+}
+
+function AdminDashboard() {
+  const stats = {
+    totalVendors: 18,
+    totalProducts: 1245,
+    totalOrders: 856,
+    totalRevenue: 124580,
+    pendingVendors: 3,
+  };
+
+  const recentVendors = [
+    { id: 1, name: "Fashion Trends", date: "2023-10-15", status: "Active" },
+    { id: 2, name: "Tech Hub", date: "2023-10-12", status: "Active" },
+    { id: 3, name: "Healthy Foods", date: "2023-10-10", status: "Pending" },
+    { id: 4, name: "Sports World", date: "2023-10-05", status: "Pending" },
+  ];
+
+  const topProducts = [
+    {
+      id: 1,
+      name: "Wireless Earbuds",
+      vendor: "Tech Hub",
+      sales: 124,
+      revenue: 4960,
+    },
+    {
+      id: 2,
+      name: "Summer Dress",
+      vendor: "Fashion Trends",
+      sales: 98,
+      revenue: 3920,
+    },
+    {
+      id: 3,
+      name: "Fitness Tracker",
+      vendor: "Tech Hub",
+      sales: 87,
+      revenue: 4350,
+    },
+    {
+      id: 4,
+      name: "Running Shoes",
+      vendor: "Sports Gear",
+      sales: 76,
+      revenue: 6840,
+    },
+  ];
+
+  const orderStatus = {
+    pending: 125,
+    processing: 85,
+    shipped: 220,
+    delivered: 426,
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Vendors
+                </p>
+                <p className="text-3xl font-bold">{stats.totalVendors}</p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                <Store className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <Badge
+                variant="outline"
+                className="bg-green-100 text-green-800 hover:bg-green-100"
+              >
+                +3 this month
+              </Badge>
+              <Link
+                href="/dashboard/vendors"
+                className="ml-auto flex items-center text-blue-600"
+              >
+                View all
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Products
+                </p>
+                <p className="text-3xl font-bold">{stats.totalProducts}</p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                <Package className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <Badge
+                variant="outline"
+                className="bg-green-100 text-green-800 hover:bg-green-100"
+              >
+                +189 this month
+              </Badge>
+              <Link
+                href="/dashboard/products"
+                className="ml-auto flex items-center text-blue-600"
+              >
+                View all
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Orders
+                </p>
+                <p className="text-3xl font-bold">{stats.totalOrders}</p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                <ShoppingBag className="h-6 w-6 text-green-600 dark:text-green-300" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <Badge
+                variant="outline"
+                className="bg-green-100 text-green-800 hover:bg-green-100"
+              >
+                +58 today
+              </Badge>
+              <Link
+                href="/dashboard/orders"
+                className="ml-auto flex items-center text-blue-600"
+              >
+                View all
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Revenue
+                </p>
+                <p className="text-3xl font-bold">
+                  ${(stats.totalRevenue / 1000).toFixed(1)}K
+                </p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                <DollarSign className="h-6 w-6 text-orange-600 dark:text-orange-300" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <Badge
+                variant="outline"
+                className="bg-green-100 text-green-800 hover:bg-green-100"
+              >
+                +12% from last month
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-medium">
+              Recent Vendors
+            </CardTitle>
+            <CardDescription>
+              Latest vendor registrations on the platform
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Vendor</TableHead>
+                  <TableHead>Joined</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentVendors.map((vendor) => (
+                  <TableRow key={vendor.id}>
+                    <TableCell className="font-medium">{vendor.name}</TableCell>
+                    <TableCell>{vendor.date}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={
+                          vendor.status === "Active"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }
+                      >
+                        {vendor.status}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+          <CardFooter className="border-t px-6 py-4">
+            <Link
+              href="/dashboard/vendors"
+              className="flex items-center text-blue-600 text-sm"
+            >
+              View all vendors
+              <ArrowUpRight className="h-4 w-4 ml-1" />
+            </Link>
+          </CardFooter>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-medium">Order Status</CardTitle>
+            <CardDescription>
+              Distribution of orders by current status
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center">
+                    <div className="h-3 w-3 rounded-full bg-yellow-400 mr-2"></div>
+                    <p>Pending</p>
+                  </div>
+                  <p className="font-medium">{orderStatus.pending}</p>
+                </div>
+                <div className="h-2 w-full bg-yellow-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-yellow-400 rounded-full"
+                    style={{
+                      width: `${
+                        (orderStatus.pending / stats.totalOrders) * 100
+                      }%`,
+                    }}
+                  ></div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center">
+                    <div className="h-3 w-3 rounded-full bg-blue-400 mr-2"></div>
+                    <p>Processing</p>
+                  </div>
+                  <p className="font-medium">{orderStatus.processing}</p>
+                </div>
+                <div className="h-2 w-full bg-blue-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-400 rounded-full"
+                    style={{
+                      width: `${
+                        (orderStatus.processing / stats.totalOrders) * 100
+                      }%`,
+                    }}
+                  ></div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center">
+                    <div className="h-3 w-3 rounded-full bg-purple-400 mr-2"></div>
+                    <p>Shipped</p>
+                  </div>
+                  <p className="font-medium">{orderStatus.shipped}</p>
+                </div>
+                <div className="h-2 w-full bg-purple-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-purple-400 rounded-full"
+                    style={{
+                      width: `${
+                        (orderStatus.shipped / stats.totalOrders) * 100
+                      }%`,
+                    }}
+                  ></div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center">
+                    <div className="h-3 w-3 rounded-full bg-green-400 mr-2"></div>
+                    <p>Delivered</p>
+                  </div>
+                  <p className="font-medium">{orderStatus.delivered}</p>
+                </div>
+                <div className="h-2 w-full bg-green-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-green-400 rounded-full"
+                    style={{
+                      width: `${
+                        (orderStatus.delivered / stats.totalOrders) * 100
+                      }%`,
+                    }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="border-t px-6 py-4">
+            <Link
+              href="/dashboard/orders"
+              className="flex items-center text-blue-600 text-sm"
+            >
+              View all orders
+              <ArrowUpRight className="h-4 w-4 ml-1" />
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium">
+            Top Selling Products
+          </CardTitle>
+          <CardDescription>
+            Best performing products across all vendors
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>Vendor</TableHead>
+                <TableHead>Units Sold</TableHead>
+                <TableHead>Revenue</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {topProducts.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell>{product.vendor}</TableCell>
+                  <TableCell>{product.sales}</TableCell>
+                  <TableCell>${product.revenue}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+        <CardFooter className="border-t px-6 py-4">
+          <Link
+            href="/dashboard/products"
+            className="flex items-center text-blue-600 text-sm"
+          >
+            View all products
+            <ArrowUpRight className="h-4 w-4 ml-1" />
+          </Link>
+        </CardFooter>
+      </Card>
+
+      <Card className="bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800">
+        <CardHeader>
+          <div className="flex items-center">
+            <AlertTriangle className="h-5 w-5 text-orange-500 mr-2" />
+            <CardTitle className="text-lg font-medium">
+              Attention Required
+            </CardTitle>
+          </div>
+          <CardDescription>Items that need your attention</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-3">
+            <li className="flex items-center text-sm">
+              <CircleAlert className="h-4 w-4 text-yellow-600 mr-2" />
+              <span>
+                {stats.pendingVendors} new vendor registrations awaiting
+                approval
+              </span>
+              <Link href="/dashboard/vendors" className="ml-auto text-blue-600">
+                Review
+              </Link>
+            </li>
+            <li className="flex items-center text-sm">
+              <CircleAlert className="h-4 w-4 text-red-600 mr-2" />
+              <span>4 products reported for policy violations</span>
+              <Link
+                href="/dashboard/products"
+                className="ml-auto text-blue-600"
+              >
+                Check
+              </Link>
+            </li>
+            <li className="flex items-center text-sm">
+              <CircleAlert className="h-4 w-4 text-orange-600 mr-2" />
+              <span>12 customer support tickets awaiting response</span>
+              <span className="ml-auto text-blue-600">Respond</span>
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function VendorDashboard() {
+  // Mock data for vendor dashboard
+  const stats = {
+    totalProducts: 48,
+    totalOrders: 124,
+    totalRevenue: 8650,
+    totalCustomers: 76,
+  };
+
+  const recentOrders = [
+    {
+      id: 10156,
+      date: "2023-10-20",
+      customer: "John Smith",
+      total: "$125.00",
+      status: "Processing",
+    },
+    {
+      id: 10155,
+      date: "2023-10-19",
+      customer: "Emily Johnson",
+      total: "$78.50",
+      status: "Shipped",
+    },
+    {
+      id: 10154,
+      date: "2023-10-18",
+      customer: "David Lee",
+      total: "$210.25",
+      status: "Delivered",
+    },
+    {
+      id: 10152,
+      date: "2023-10-17",
+      customer: "Sarah Williams",
+      total: "$56.99",
+      status: "Pending",
+    },
+  ];
+
+  const lowStockItems = [
+    { id: 1, name: "Leather Jacket", sku: "LJ-001", stock: 3, threshold: 5 },
+    { id: 2, name: "Running Shoes", sku: "RS-103", stock: 2, threshold: 5 },
+    { id: 3, name: "Winter Gloves", sku: "WG-022", stock: 4, threshold: 8 },
+  ];
+
+  const topProducts = [
+    { id: 1, name: "Denim Jeans", sold: 32, stock: 18, revenue: 1280 },
+    { id: 2, name: "Leather Jacket", sold: 21, stock: 3, revenue: 2100 },
+    { id: 3, name: "Cotton T-Shirt", sold: 45, stock: 35, revenue: 1350 },
+    { id: 4, name: "Winter Boots", sold: 16, stock: 12, revenue: 1920 },
+  ];
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "Processing":
+        return "bg-blue-100 text-blue-800";
+      case "Shipped":
+        return "bg-purple-100 text-purple-800";
+      case "Delivered":
+        return "bg-green-100 text-green-800";
+      case "Cancelled":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Orders
+                </p>
+                <p className="text-3xl font-bold">{stats.totalOrders}</p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                <ShoppingBag className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <Badge
+                variant="outline"
+                className="bg-green-100 text-green-800 hover:bg-green-100"
+              >
+                +12 this week
+              </Badge>
+              <Link
+                href="/dashboard/orders"
+                className="ml-auto flex items-center text-blue-600"
+              >
+                View all
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Revenue
+                </p>
+                <p className="text-3xl font-bold">${stats.totalRevenue}</p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                <DollarSign className="h-6 w-6 text-green-600 dark:text-green-300" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <Badge
+                variant="outline"
+                className="bg-green-100 text-green-800 hover:bg-green-100"
+              >
+                +8% from last month
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Products
+                </p>
+                <p className="text-3xl font-bold">{stats.totalProducts}</p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                <Package className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <Badge
+                variant="outline"
+                className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+              >
+                3 low in stock
+              </Badge>
+              <Link
+                href="/dashboard/products"
+                className="ml-auto flex items-center text-blue-600"
+              >
+                Manage
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Customers
+                </p>
+                <p className="text-3xl font-bold">{stats.totalCustomers}</p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                <Users className="h-6 w-6 text-orange-600 dark:text-orange-300" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <Badge
+                variant="outline"
+                className="bg-green-100 text-green-800 hover:bg-green-100"
+              >
+                +5 new this week
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center">
+              <Clock className="h-5 w-5 text-muted-foreground mr-2" />
+              <CardTitle className="text-lg font-medium">
+                Recent Orders
+              </CardTitle>
+            </div>
+            <CardDescription>Latest customer purchases</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Order</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentOrders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium">#{order.id}</TableCell>
+                    <TableCell>{order.date}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={getStatusColor(order.status)}
+                      >
+                        {order.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{order.total}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+          <CardFooter className="border-t px-6 py-4">
+            <Link
+              href="/dashboard/orders"
+              className="flex items-center text-blue-600 text-sm"
+            >
+              View all orders
+              <ArrowUpRight className="h-4 w-4 ml-1" />
+            </Link>
+          </CardFooter>
+        </Card>
+
+        <Card className="bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800">
+          <CardHeader>
+            <div className="flex items-center">
+              <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
+              <CardTitle className="text-lg font-medium">
+                Low Stock Alerts
+              </CardTitle>
+            </div>
+            <CardDescription>
+              Products that need to be restocked soon
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Product</TableHead>
+                  <TableHead>SKU</TableHead>
+                  <TableHead>Current Stock</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {lowStockItems.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell>{item.sku}</TableCell>
+                    <TableCell>
+                      <span className="font-medium text-red-600">
+                        {item.stock}
+                      </span>{" "}
+                      / {item.threshold}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className="bg-red-100 text-red-800"
+                      >
+                        Low Stock
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+          <CardFooter className="border-t border-red-200 dark:border-red-800 px-6 py-4">
+            <Link
+              href="/dashboard/products"
+              className="flex items-center text-blue-600 text-sm"
+            >
+              Manage inventory
+              <ArrowUpRight className="h-4 w-4 ml-1" />
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center">
+            <BarChart3 className="h-5 w-5 text-muted-foreground mr-2" />
+            <CardTitle className="text-lg font-medium">
+              Top Selling Products
+            </CardTitle>
+          </div>
+          <CardDescription>
+            Your best performing products this month
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>Units Sold</TableHead>
+                <TableHead>Current Stock</TableHead>
+                <TableHead>Revenue</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {topProducts.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell>{product.sold}</TableCell>
+                  <TableCell
+                    className={
+                      product.stock < 5 ? "text-red-600 font-medium" : ""
+                    }
+                  >
+                    {product.stock}
+                  </TableCell>
+                  <TableCell>${product.revenue}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+        <CardFooter className="border-t px-6 py-4">
+          <Link
+            href="/dashboard/products"
+            className="flex items-center text-blue-600 text-sm"
+          >
+            View all products
+            <ArrowUpRight className="h-4 w-4 ml-1" />
+          </Link>
+        </CardFooter>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium">Quick Actions</CardTitle>
+          <CardDescription>
+            Common tasks you might want to perform
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <Button
+              asChild
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center justify-center"
+            >
+              <Link href="/dashboard/products/create">
+                <Package className="h-10 w-10 mb-2" />
+                <span className="text-base font-medium">Add Product</span>
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center justify-center"
+            >
+              <Link href="/dashboard/categories">
+                <Grid className="h-10 w-10 mb-2" />
+                <span className="text-base font-medium">Manage Categories</span>
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center justify-center"
+            >
+              <Link href="/dashboard/orders">
+                <Truck className="h-10 w-10 mb-2" />
+                <span className="text-base font-medium">Process Orders</span>
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center justify-center"
+            >
+              <Link href="/dashboard/products">
+                <PackageOpen className="h-10 w-10 mb-2" />
+                <span className="text-base font-medium">Update Inventory</span>
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
