@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { DashboardSidebar } from "#root/components/DashboardSidebar.jsx";
 import { Link } from "#root/components/Link.jsx";
 import { Button } from "#root/components/ui/button.jsx";
@@ -15,19 +14,24 @@ import {
 } from "#root/components/ui/sidebar.jsx";
 import { Tabs, TabsList, TabsTrigger } from "#root/components/ui/tabs.jsx";
 import { usePageContext } from "vike-react/usePageContext";
+import { RoleProvider, useRole } from "#root/lib/context/RoleContext";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <Content>{children}</Content>;
+  return (
+    <RoleProvider>
+      <Content>{children}</Content>
+    </RoleProvider>
+  );
 }
 
 function Content({ children }: { children: React.ReactNode }) {
   const pageContext = usePageContext();
   const pathname = pageContext.urlPathname;
-  const [userRole, setUserRole] = useState<"admin" | "vendor">("vendor");
+  const { userRole, toggleRole } = useRole();
 
   const getActiveTab = () => {
     if (pathname === "/dashboard" || pathname === "/dashboard/overview") {
@@ -79,10 +83,6 @@ function Content({ children }: { children: React.ReactNode }) {
       href: "/dashboard",
     },
     {
-      label: "Categories",
-      href: "/dashboard/categories",
-    },
-    {
       label: "Products",
       href: "/dashboard/products",
     },
@@ -119,13 +119,7 @@ function Content({ children }: { children: React.ReactNode }) {
                   </Tabs>
                 </div>
                 <div className="mr-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setUserRole(userRole === "admin" ? "vendor" : "admin")
-                    }
-                  >
+                  <Button variant="outline" size="sm" onClick={toggleRole}>
                     {userRole === "admin"
                       ? "Switch to Vendor View"
                       : "Switch to Admin View"}

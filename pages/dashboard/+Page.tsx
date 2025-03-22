@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Link } from "#root/components/Link.jsx";
 import { Button } from "#root/components/ui/button.jsx";
 import {
@@ -37,22 +36,25 @@ import {
   TableRow,
 } from "#root/components/ui/table";
 import { Badge } from "#root/components/ui/badge";
+import { useRole } from "#root/lib/context/RoleContext";
+
+import {
+  adminDashboardStats,
+  recentVendors,
+} from "#root/lib/mock-data/vendors";
+import type { Vendor } from "#root/lib/mock-data/vendors";
+import {
+  topProducts as adminTopProducts,
+  vendorProducts,
+  lowStockItems,
+} from "#root/lib/mock-data/products";
+import type { Product } from "#root/lib/mock-data/products";
+import { orders, orderStatus } from "#root/lib/mock-data/orders";
+import type { Order } from "#root/lib/mock-data/orders";
+import { vendorDashboardStats } from "#root/lib/mock-data/customers";
 
 export default function Dashboard() {
-  const [userRole, setUserRole] = useState<"admin" | "vendor">("vendor");
-
-  useEffect(() => {
-    const savedRole = localStorage.getItem("userRole");
-    if (savedRole && (savedRole === "admin" || savedRole === "vendor")) {
-      setUserRole(savedRole as "admin" | "vendor");
-    }
-  }, []);
-
-  const toggleRole = () => {
-    const newRole = userRole === "admin" ? "vendor" : "admin";
-    setUserRole(newRole);
-    localStorage.setItem("userRole", newRole);
-  };
+  const { userRole } = useRole();
 
   return (
     <div className="p-6">
@@ -67,9 +69,6 @@ export default function Dashboard() {
               : "Welcome to your store dashboard"}
           </p>
         </div>
-        <Button variant="outline" onClick={toggleRole}>
-          Switch to {userRole === "admin" ? "Vendor" : "Admin"} View
-        </Button>
       </div>
 
       {userRole === "admin" ? <AdminDashboard /> : <VendorDashboard />}
@@ -78,58 +77,9 @@ export default function Dashboard() {
 }
 
 function AdminDashboard() {
-  const stats = {
-    totalVendors: 18,
-    totalProducts: 1245,
-    totalOrders: 856,
-    totalRevenue: 124580,
-    pendingVendors: 3,
-  };
-
-  const recentVendors = [
-    { id: 1, name: "Fashion Trends", date: "2023-10-15", status: "Active" },
-    { id: 2, name: "Tech Hub", date: "2023-10-12", status: "Active" },
-    { id: 3, name: "Healthy Foods", date: "2023-10-10", status: "Pending" },
-    { id: 4, name: "Sports World", date: "2023-10-05", status: "Pending" },
-  ];
-
-  const topProducts = [
-    {
-      id: 1,
-      name: "Wireless Earbuds",
-      vendor: "Tech Hub",
-      sales: 124,
-      revenue: 4960,
-    },
-    {
-      id: 2,
-      name: "Summer Dress",
-      vendor: "Fashion Trends",
-      sales: 98,
-      revenue: 3920,
-    },
-    {
-      id: 3,
-      name: "Fitness Tracker",
-      vendor: "Tech Hub",
-      sales: 87,
-      revenue: 4350,
-    },
-    {
-      id: 4,
-      name: "Running Shoes",
-      vendor: "Sports Gear",
-      sales: 76,
-      revenue: 6840,
-    },
-  ];
-
-  const orderStatus = {
-    pending: 125,
-    processing: 85,
-    shipped: 220,
-    delivered: 426,
-  };
+  const stats = adminDashboardStats;
+  const vendorList = recentVendors;
+  const topProducts = adminTopProducts;
 
   return (
     <div className="space-y-6">
@@ -274,10 +224,10 @@ function AdminDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentVendors.map((vendor) => (
+                {vendorList.map((vendor: Vendor) => (
                   <TableRow key={vendor.id}>
                     <TableCell className="font-medium">{vendor.name}</TableCell>
-                    <TableCell>{vendor.date}</TableCell>
+                    <TableCell>{vendor.joinDate}</TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"
@@ -428,7 +378,7 @@ function AdminDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {topProducts.map((product) => (
+              {topProducts.map((product: Product) => (
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.vendor}</TableCell>
@@ -495,57 +445,9 @@ function AdminDashboard() {
 }
 
 function VendorDashboard() {
-  // Mock data for vendor dashboard
-  const stats = {
-    totalProducts: 48,
-    totalOrders: 124,
-    totalRevenue: 8650,
-    totalCustomers: 76,
-  };
-
-  const recentOrders = [
-    {
-      id: 10156,
-      date: "2023-10-20",
-      customer: "John Smith",
-      total: "$125.00",
-      status: "Processing",
-    },
-    {
-      id: 10155,
-      date: "2023-10-19",
-      customer: "Emily Johnson",
-      total: "$78.50",
-      status: "Shipped",
-    },
-    {
-      id: 10154,
-      date: "2023-10-18",
-      customer: "David Lee",
-      total: "$210.25",
-      status: "Delivered",
-    },
-    {
-      id: 10152,
-      date: "2023-10-17",
-      customer: "Sarah Williams",
-      total: "$56.99",
-      status: "Pending",
-    },
-  ];
-
-  const lowStockItems = [
-    { id: 1, name: "Leather Jacket", sku: "LJ-001", stock: 3, threshold: 5 },
-    { id: 2, name: "Running Shoes", sku: "RS-103", stock: 2, threshold: 5 },
-    { id: 3, name: "Winter Gloves", sku: "WG-022", stock: 4, threshold: 8 },
-  ];
-
-  const topProducts = [
-    { id: 1, name: "Denim Jeans", sold: 32, stock: 18, revenue: 1280 },
-    { id: 2, name: "Leather Jacket", sold: 21, stock: 3, revenue: 2100 },
-    { id: 3, name: "Cotton T-Shirt", sold: 45, stock: 35, revenue: 1350 },
-    { id: 4, name: "Winter Boots", sold: 16, stock: 12, revenue: 1920 },
-  ];
+  const stats = vendorDashboardStats;
+  const recentOrders = orders.slice(0, 4);
+  const topProducts = vendorProducts.slice(0, 4);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -640,7 +542,7 @@ function VendorDashboard() {
                 variant="outline"
                 className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
               >
-                3 low in stock
+                {lowStockItems.length} low in stock
               </Badge>
               <Link
                 href="/dashboard/products"
@@ -700,7 +602,7 @@ function VendorDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentOrders.map((order) => (
+                {recentOrders.map((order: Order) => (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">#{order.id}</TableCell>
                     <TableCell>{order.date}</TableCell>
@@ -752,7 +654,7 @@ function VendorDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {lowStockItems.map((item) => (
+                {lowStockItems.map((item: Product) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell>{item.sku}</TableCell>
@@ -810,7 +712,7 @@ function VendorDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {topProducts.map((product) => (
+              {topProducts.map((product: Product) => (
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.sold}</TableCell>

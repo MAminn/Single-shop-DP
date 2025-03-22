@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -22,23 +21,11 @@ import {
 } from "#root/components/ui/sidebar";
 import { Link } from "./Link";
 import { Button } from "#root/components/ui/button";
+import { useRole } from "#root/lib/context/RoleContext";
 
 export function DashboardSidebar() {
-  const { state, open, setOpen, openMobile, setOpenMobile, toggleSidebar } =
-    useSidebar();
-
-  const [userRole, setUserRole] = useState<"admin" | "vendor">("vendor");
-
-  useEffect(() => {
-    const savedRole = localStorage.getItem("userRole");
-    if (savedRole && (savedRole === "admin" || savedRole === "vendor")) {
-      setUserRole(savedRole as "admin" | "vendor");
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("userRole", userRole);
-  }, [userRole]);
+  const { state, toggleSidebar } = useSidebar();
+  const { userRole } = useRole();
 
   const adminSidebarItems = [
     {
@@ -75,11 +62,6 @@ export function DashboardSidebar() {
       icon: LayoutDashboard,
     },
     {
-      label: "Categories",
-      href: "/dashboard/categories",
-      icon: LayoutGrid,
-    },
-    {
       label: "Products",
       href: "/dashboard/products",
       icon: Package,
@@ -93,10 +75,6 @@ export function DashboardSidebar() {
 
   const sideBarItems =
     userRole === "admin" ? adminSidebarItems : vendorSidebarItems;
-
-  const toggleRole = () => {
-    setUserRole(userRole === "admin" ? "vendor" : "admin");
-  };
 
   return (
     <Sidebar collapsible="icon">
@@ -125,23 +103,6 @@ export function DashboardSidebar() {
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
-
-        <div className={`mt-6 px-4 ${state === "collapsed" ? "hidden" : ""}`}>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full text-xs"
-            onClick={toggleRole}
-          >
-            {state === "collapsed"
-              ? userRole === "admin"
-                ? "A"
-                : "V"
-              : userRole === "admin"
-              ? "Switch to Vendor"
-              : "Switch to Admin"}
-          </Button>
-        </div>
       </SidebarContent>
     </Sidebar>
   );

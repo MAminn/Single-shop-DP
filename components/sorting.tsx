@@ -6,14 +6,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#root/components/ui/select";
-
-type Product = {
-  id: number;
-  name: string;
-  price: number;
-  imageUrl: string;
-  dateAdded: Date;
-};
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "#root/components/ui/dialog";
+import { Button } from "#root/components/ui/button";
+import { Minus, Plus, ShoppingBag } from "lucide-react";
+import { useToast } from "#root/components/ui/use-toast";
+import { useCart } from "#root/lib/context/CartContext";
+import type { Product } from "#root/lib/mock-data/products";
 
 interface SortingProps {
   Products: Product[];
@@ -32,6 +38,17 @@ const Sorting: React.FC<SortingProps> = ({ Products }: SortingProps) => {
   const [sortCriteria, setSortCriteria] = useState<SortCriteria>("featured");
   const toBeSorted = [...Products];
   const [products, setProducts] = useState(toBeSorted);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const [selectedOptions, setSelectedOptions] = useState({
+    size: "",
+    color: "",
+  });
+  const { toast } = useToast();
+  const { addItem } = useCart();
+
+  const availableSizes = ["XS", "S", "M", "L", "XL"];
+  const availableColors = ["Black", "White", "Red", "Blue", "Green"];
 
   const handleSort = (criteria: SortCriteria) => {
     const sortedProducts = [...toBeSorted];
@@ -52,16 +69,18 @@ const Sorting: React.FC<SortingProps> = ({ Products }: SortingProps) => {
         sortedProducts.sort((a, b) => b.price - a.price);
         break;
       case "date-asc":
-        sortedProducts.sort(
-          (a, b) =>
-            new Date(a.dateAdded).getTime() - new Date(b.dateAdded).getTime()
-        );
+        sortedProducts.sort((a, b) => {
+          const dateA = a.dateAdded ? new Date(a.dateAdded).getTime() : 0;
+          const dateB = b.dateAdded ? new Date(b.dateAdded).getTime() : 0;
+          return dateA - dateB;
+        });
         break;
       case "date-desc":
-        sortedProducts.sort(
-          (a, b) =>
-            new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()
-        );
+        sortedProducts.sort((a, b) => {
+          const dateA = a.dateAdded ? new Date(a.dateAdded).getTime() : 0;
+          const dateB = b.dateAdded ? new Date(b.dateAdded).getTime() : 0;
+          return dateB - dateA;
+        });
         break;
       default:
         break;
@@ -71,9 +90,67 @@ const Sorting: React.FC<SortingProps> = ({ Products }: SortingProps) => {
     setSortCriteria(criteria);
   };
 
+  const incrementQuantity = () => {
+    if (selectedProduct && quantity < (selectedProduct.stock || 0)) {
+      setQuantity(quantity + 1);
+    } else {
+      toast({
+        title: "Stock limit reached",
+        description:
+          "You cannot add more of this item than available in stock.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const decrementQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(quantity - 1);
+    }
+  };
+
+  const handleProductSelect = (product: Product) => {
+    setSelectedProduct(product);
+    setQuantity(1);
+    setSelectedOptions({ size: "", color: "" });
+  };
+
+  const handleAddToCart = () => {
+    if (!selectedProduct) return;
+
+    if (!selectedOptions.size || !selectedOptions.color) {
+      toast({
+        title: "Please select all options",
+        description: "Size and color are required before adding to cart.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const success = addItem(selectedProduct, quantity, selectedOptions);
+
+    if (success) {
+      toast({
+        title: "Added to cart",
+        description: `${quantity} × ${selectedProduct.name} added to your cart.`,
+      });
+    } else {
+      toast({
+        title: "Could not add to cart",
+        description: "The requested quantity is not available in stock.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent, product: Product) => {
+    if (event.key === "Enter" || event.key === " ") {
+      handleProductSelect(product);
+    }
+  };
+
   return (
     <div className="space-y-4 w-full h-full">
-      {/* Sorting Dropdown */}
       <div className="flex-wrap flex flex-col md:flex-row justify-end mt-6 items-center w-full gap-2">
         <span className="text-sm font-medium ">Sort by:</span>
         <Select
@@ -97,17 +174,201 @@ const Sorting: React.FC<SortingProps> = ({ Products }: SortingProps) => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 justify-items-center items-center w-full h-full gap-4 ">
         {products.map((product) => (
-          <div
-            key={product.id}
-            className="border p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col gap-2 justify-center items-center object-cover w-[80%] h-full"
-          >
-            <img src={product.imageUrl} alt="" />
-            <h3 className="text-lg font-semibold">{product.name}</h3>
-            <p className="text-gray-600">${product.price}</p>
-            <p className="text-sm text-gray-500">
-              Added: {new Date(product.dateAdded).toLocaleDateString()}
-            </p>
-          </div>
+          <Dialog key={product.id}>
+            <DialogTrigger asChild>
+              <button
+                className="border p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col gap-2 justify-center items-center object-cover w-[80%] h-full cursor-pointer"
+                onClick={() => handleProductSelect(product)}
+                onKeyDown={(e) => handleKeyPress(e, product)}
+                tabIndex={0}
+                type="button"
+                aria-label={`View ${product.name} details`}
+              >
+                {product.imageUrl && (
+                  <img
+                    src={product.imageUrl}
+                    alt="product-pic"
+                    className="w-full h-full object-cover rounded-md"
+                  />
+                )}
+                {!product.imageUrl && (
+                  <div className="bg-gray-200 rounded-md w-full h-40 flex items-center justify-center">
+                    <span className="text-2xl font-bold text-gray-400">
+                      {product.name.charAt(0)}
+                    </span>
+                  </div>
+                )}
+                <h3 className="text-lg font-semibold">{product.name}</h3>
+                <p className="text-gray-600">${product.price.toFixed(2)}</p>
+                {product.stock <= 10 && product.stock > 0 && (
+                  <p className="text-orange-500 text-sm">
+                    Only {product.stock} left
+                  </p>
+                )}
+                {product.dateAdded && (
+                  <p className="text-sm text-gray-500">
+                    Added: {new Date(product.dateAdded).toLocaleDateString()}
+                  </p>
+                )}
+              </button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>{selectedProduct?.name}</DialogTitle>
+                <DialogDescription>
+                  {selectedProduct?.category && (
+                    <span className="text-sm text-gray-500">
+                      Category: {selectedProduct.category}
+                    </span>
+                  )}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center justify-center">
+                  {selectedProduct?.imageUrl ? (
+                    <img
+                      src={selectedProduct.imageUrl}
+                      alt={selectedProduct.name}
+                      className="max-h-64 object-contain"
+                    />
+                  ) : (
+                    <div className="bg-gray-200 rounded-md w-full h-64 flex items-center justify-center">
+                      <span className="text-6xl font-bold text-gray-400">
+                        {selectedProduct?.name.charAt(0)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col gap-4">
+                  <p className="text-2xl font-bold">
+                    ${selectedProduct?.price.toFixed(2)}
+                  </p>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <span id="size-label" className="text-sm font-medium">
+                        Size
+                      </span>
+                      <div
+                        className="flex flex-wrap gap-2"
+                        role="radiogroup"
+                        aria-labelledby="size-label"
+                      >
+                        {availableSizes.map((size) => (
+                          <button
+                            key={size}
+                            type="button"
+                            className={`px-3 py-1 border rounded-md ${
+                              selectedOptions.size === size
+                                ? "bg-black text-white"
+                                : "bg-white"
+                            }`}
+                            onClick={() =>
+                              setSelectedOptions({
+                                ...selectedOptions,
+                                size,
+                              })
+                            }
+                            aria-pressed={selectedOptions.size === size}
+                          >
+                            {size}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <span id="color-label" className="text-sm font-medium">
+                        Color
+                      </span>
+                      <div
+                        className="flex flex-wrap gap-2"
+                        role="radiogroup"
+                        aria-labelledby="color-label"
+                      >
+                        {availableColors.map((color) => (
+                          <button
+                            key={color}
+                            type="button"
+                            className={`px-3 py-1 border rounded-md ${
+                              selectedOptions.color === color
+                                ? "bg-black text-white"
+                                : "bg-white"
+                            }`}
+                            onClick={() =>
+                              setSelectedOptions({
+                                ...selectedOptions,
+                                color,
+                              })
+                            }
+                            aria-pressed={selectedOptions.color === color}
+                          >
+                            {color}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <span id="quantity-label" className="text-sm font-medium">
+                        Quantity
+                      </span>
+                      <div
+                        className="flex items-center"
+                        aria-labelledby="quantity-label"
+                      >
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={decrementQuantity}
+                          disabled={quantity <= 1}
+                          aria-label="Decrease quantity"
+                          type="button"
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <span className="w-12 text-center">{quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={incrementQuantity}
+                          disabled={
+                            selectedProduct
+                              ? quantity >= selectedProduct.stock
+                              : true
+                          }
+                          aria-label="Increase quantity"
+                          type="button"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      className="flex-1"
+                      onClick={handleAddToCart}
+                      type="button"
+                    >
+                      <ShoppingBag className="h-4 w-4 mr-2" />
+                      Add to Cart
+                    </Button>
+                    <DialogClose asChild>
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        type="button"
+                      >
+                        Cancel
+                      </Button>
+                    </DialogClose>
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         ))}
       </div>
     </div>

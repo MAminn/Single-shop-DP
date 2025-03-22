@@ -1,52 +1,61 @@
-import Sorting from "#root/components/sorting.jsx";
+import Sorting from "#root/components/sorting";
+import { CartProvider } from "#root/lib/context/CartContext";
+import type { Product } from "#root/lib/mock-data/products";
 
 const Page = () => {
-  const mockProducts = [
+  const mockProducts: Product[] = [
     {
-      id: 1,
-      name: "Basic Tee",
-      price: 20,
-      dateAdded: new Date(),
-      category: "Shorts",
-      imageUrl: "/assets/Men_s shorts.png",
-    },
-    {
-      id: 2,
-      name: "Premium Shirt",
-      price: 40,
-      dateAdded: new Date(),
-      category: "Shorts",
-      imageUrl: "/assets/Men_s shorts.png",
-    },
-    {
-      id: 3,
-      name: "Casual Shirt",
-      price: 30,
-      dateAdded: new Date(),
-      category: "Shorts",
-      imageUrl: "/assets/Men_s shorts.png",
-    },
-    {
-      id: 4,
-      name: "Sport Shirt",
-      price: 25,
-      dateAdded: new Date(),
-      category: "Shorts",
-      imageUrl: "/assets/Men_s shorts.png",
-    },
-    {
-      id: 5,
-      name: "Linen Shirt",
+      id: 16,
+      name: "Chino Shorts",
       price: 35,
       dateAdded: new Date(),
       category: "Shorts",
       imageUrl: "/assets/Men_s shorts.png",
+      stock: 24,
+    },
+    {
+      id: 17,
+      name: "Athletic Shorts",
+      price: 30,
+      dateAdded: new Date(),
+      category: "Shorts",
+      imageUrl: "/assets/Men_s shorts.png",
+      stock: 30,
+    },
+    {
+      id: 18,
+      name: "Cargo Shorts",
+      price: 38,
+      dateAdded: new Date(),
+      category: "Shorts",
+      imageUrl: "/assets/Men_s shorts.png",
+      stock: 16,
+    },
+    {
+      id: 19,
+      name: "Swim Shorts",
+      price: 32,
+      dateAdded: new Date(),
+      category: "Shorts",
+      imageUrl: "/assets/Men_s shorts.png",
+      stock: 22,
+    },
+    {
+      id: 20,
+      name: "Denim Shorts",
+      price: 40,
+      dateAdded: new Date(),
+      category: "Shorts",
+      imageUrl: "/assets/Men_s shorts.png",
+      stock: 18,
     },
   ];
   return (
-    <div className=" flex justify-center items-center h-full w-full pr-6">
-      <Sorting Products={mockProducts} />
-    </div>
+    <CartProvider>
+      <div className="flex justify-center items-center h-full w-full pr-6">
+        <Sorting Products={mockProducts} />
+      </div>
+    </CartProvider>
   );
 };
 

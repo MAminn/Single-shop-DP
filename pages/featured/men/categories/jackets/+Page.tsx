@@ -1,50 +1,56 @@
-import Sorting from "#root/components/sorting.jsx";
+import Sorting from "#root/components/sorting";
+import type { Product } from "#root/lib/mock-data/products";
 
 const Page = () => {
-  const mockProducts = [
+  const mockProducts: Product[] = [
     {
-      id: 1,
-      name: "Basic Tee",
-      price: 20,
+      id: 11,
+      name: "Leather Jacket",
+      price: 180,
       dateAdded: new Date(),
       category: "Jackets",
       imageUrl: "/assets/Men_s jacket.png",
+      stock: 10,
     },
     {
-      id: 2,
-      name: "Premium Shirt",
-      price: 40,
+      id: 12,
+      name: "Bomber Jacket",
+      price: 120,
       dateAdded: new Date(),
       category: "Jackets",
       imageUrl: "/assets/Men_s jacket.png",
+      stock: 15,
     },
     {
-      id: 3,
-      name: "Casual Shirt",
-      price: 30,
+      id: 13,
+      name: "Denim Jacket",
+      price: 95,
       dateAdded: new Date(),
       category: "Jackets",
       imageUrl: "/assets/Men_s jacket.png",
+      stock: 20,
     },
     {
-      id: 4,
-      name: "Sport Shirt",
-      price: 25,
+      id: 14,
+      name: "Windbreaker",
+      price: 85,
       dateAdded: new Date(),
       category: "Jackets",
       imageUrl: "/assets/Men_s jacket.png",
+      stock: 18,
     },
     {
-      id: 5,
-      name: "Linen Shirt",
-      price: 35,
+      id: 15,
+      name: "Puffer Jacket",
+      price: 150,
       dateAdded: new Date(),
       category: "Jackets",
       imageUrl: "/assets/Men_s jacket.png",
+      stock: 12,
     },
   ];
   return (
-    <div className=" flex justify-center items-center h-full w-full pr-6">
+    <div className="flex justify-center items-center h-full w-full pr-6">
       <Sorting Products={mockProducts} />
     </div>
   );
