@@ -1,5 +1,5 @@
 import { query } from "#root/shared/database/drizzle/db.js";
-import { Tables } from "#root/shared/database/drizzle/schema.js";
+import * as Tables from "#root/shared/database/drizzle/schema.js";
 import { Array, Effect, Option } from "effect";
 import { hashPassword } from "../shared/utils";
 import { eq } from "drizzle-orm";

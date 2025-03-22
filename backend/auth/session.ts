@@ -9,10 +9,15 @@ import {
   DatabaseClientService,
   query,
 } from "#root/shared/database/drizzle/db.js";
-import { Tables } from "#root/shared/database/drizzle/schema.js";
+import { session, user } from "#root/shared/database/drizzle/schema.js";
 import { eq } from "drizzle-orm";
 import { ServerError } from "#root/shared/error/server.js";
 import type { ClientSession } from "./shared/entities";
+
+const Tables = {
+  session,
+  user,
+};
 
 export function generateSessionToken(): string {
   const bytes = new Uint8Array(20);

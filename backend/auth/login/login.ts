@@ -1,5 +1,5 @@
 import { query } from "#root/shared/database/drizzle/db.js";
-import { Tables } from "#root/shared/database/drizzle/schema.js";
+import * as Tables from "#root/shared/database/drizzle/schema.js";
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
