@@ -5,6 +5,8 @@ import { trpc } from "#root/shared/trpc/client.js";
 import { toast, Toaster } from "sonner";
 import type { ClientSession } from "#root/backend/auth/shared/entities.js";
 import { usePageContext } from "vike-react/usePageContext";
+import { TRPCClientError } from "@trpc/client";
+import { AuthContext } from "#root/context/AuthContext.js";
 
 export default function LayoutDefault({
   children,
@@ -13,9 +15,12 @@ export default function LayoutDefault({
 }) {
   return <Content>{children}</Content>;
 }
+
 function Content({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<ClientSession | null>(null);
   const pageContext = usePageContext();
+  const [session, setSession] = useState<ClientSession | null>(
+    pageContext.clientSession ?? null
+  );
 
   useEffect(() => {
     if (pageContext.clientSession) {
@@ -33,7 +38,13 @@ function Content({ children }: { children: React.ReactNode }) {
         method: "DELETE",
       });
     } catch (err) {
-      toast.error(err);
+      if (err instanceof TRPCClientError) {
+        toast.error(err.message);
+      } else {
+        toast.error(
+          "Something went wrong, please refresh the page and try again."
+        );
+      }
     }
 
     setSession(null);
@@ -42,15 +53,15 @@ function Content({ children }: { children: React.ReactNode }) {
   const isDashboardRoute = pageContext.urlPathname.startsWith("/dashboard");
 
   return (
-    <main
-      id="page-content"
-      className=" bg-background h-full text-foreground w-full font-poppins"
-    >
-      {!isDashboardRoute && (
-        <Navbar lang="en" session={session} onLogOut={logout} />
-      )}
-      {children}
-      <Toaster />
-    </main>
+    <AuthContext.Provider value={{ session, logout }}>
+      <main
+        id="page-content"
+        className="bg-background h-full text-foreground w-full font-poppins"
+      >
+        {!isDashboardRoute && <Navbar lang="en" onLogOut={logout} />}
+        {children}
+        <Toaster />
+      </main>
+    </AuthContext.Provider>
   );
 }

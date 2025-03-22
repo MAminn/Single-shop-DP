@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Button } from "#root/components/ui/button";
 import { Menu, ShoppingCart, Globe } from "lucide-react";
 import {
@@ -18,11 +18,10 @@ import {
 } from "#root/components/ui/navigation-menu";
 import { Link } from "../Link";
 import logoImage from "#root/assets/Lebsy-Logo-Light.svg";
-import type { ClientSession } from "#root/backend/auth/shared/entities.js";
+import { AuthContext } from "#root/context/AuthContext.js";
 
 interface NavbarProps {
   lang: string;
-  session?: ClientSession | null;
   logoUrl?: string;
   cartItemCount?: number;
   sheetDescription?: string;
@@ -31,7 +30,6 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({
   lang = "en",
-  session,
   cartItemCount = 0,
   sheetDescription = "Navigation menu",
   logoUrl = "",
@@ -40,6 +38,8 @@ const Navbar: React.FC<NavbarProps> = ({
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(false);
 
   const handleCloseSheet = () => setIsSheetOpen(false);
+
+  const { session, logout } = useContext(AuthContext);
 
   const logLinks = [
     { label: "Login", to: "/login" },
