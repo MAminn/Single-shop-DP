@@ -250,7 +250,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 <button
                   onClick={terminateSession}
                   type="submit"
-                  className="text-gray-700 hover:text-gray-900 cursor-pointer"
+                  className="navLink"
                 >
                   Logout
                 </button>
@@ -312,7 +312,7 @@ const Navbar: React.FC<NavbarProps> = ({
                           <Link
                             key={link.to}
                             href={link.to}
-                            className=" px-6 py-3 rounded-3xl transition-all duration-300 cursor-pointer"
+                            className=" navLink"
                           >
                             {link.label}
                           </Link>
@@ -322,7 +322,7 @@ const Navbar: React.FC<NavbarProps> = ({
                           <button
                             onClick={terminateSession}
                             type="submit"
-                            className="text-gray-700 hover:text-gray-900 cursor-pointer"
+                            className="navLink"
                           >
                             Logout
                           </button>

@@ -39,12 +39,16 @@ function Content({ children }: { children: React.ReactNode }) {
     setSession(null);
   };
 
+  const isDashboardRoute = pageContext.urlPathname.startsWith("/dashboard");
+
   return (
     <main
       id="page-content"
       className=" bg-background h-full text-foreground w-full font-poppins"
     >
-      <Navbar lang="en" session={session} onLogOut={logout} />
+      {!isDashboardRoute && (
+        <Navbar lang="en" session={session} onLogOut={logout} />
+      )}
       {children}
       <Toaster />
     </main>

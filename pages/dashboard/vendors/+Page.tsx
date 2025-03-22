@@ -1,0 +1,331 @@
+import { useState } from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "#root/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "#root/components/ui/table";
+import { Button } from "#root/components/ui/button";
+import { Input } from "#root/components/ui/input";
+import { Badge } from "#root/components/ui/badge";
+import {
+  ChevronDown,
+  Search,
+  Filter,
+  Users,
+  Store,
+  Edit,
+  Trash2,
+  Eye,
+  ShoppingBag,
+  LayoutGrid,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "#root/components/ui/dropdown-menu";
+import { Link } from "#root/components/Link.jsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#root/components/ui/select";
+
+interface Vendor {
+  id: number;
+  name: string;
+  owner: string;
+  email: string;
+  products: number;
+  categories: number;
+  joinDate: string;
+  status: "Active" | "Pending" | "Suspended";
+}
+
+export default function Vendors() {
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const mockVendors: Vendor[] = [
+    {
+      id: 1,
+      name: "Fashion Store",
+      owner: "John Smith",
+      email: "john@fashionstore.com",
+      products: 48,
+      categories: 5,
+      joinDate: "2023-01-15",
+      status: "Active",
+    },
+    {
+      id: 2,
+      name: "Tech Gadgets",
+      owner: "Sarah Johnson",
+      email: "sarah@techgadgets.com",
+      products: 64,
+      categories: 8,
+      joinDate: "2023-03-22",
+      status: "Active",
+    },
+    {
+      id: 3,
+      name: "Home Decor",
+      owner: "Michael Brown",
+      email: "michael@homedecor.com",
+      products: 36,
+      categories: 4,
+      joinDate: "2023-05-10",
+      status: "Suspended",
+    },
+    {
+      id: 4,
+      name: "Jewelry Hub",
+      owner: "Emily Wilson",
+      email: "emily@jewelryhub.com",
+      products: 72,
+      categories: 3,
+      joinDate: "2023-06-18",
+      status: "Active",
+    },
+    {
+      id: 5,
+      name: "Sports World",
+      owner: "David Lee",
+      email: "david@sportsworld.com",
+      products: 0,
+      categories: 0,
+      joinDate: "2023-09-05",
+      status: "Pending",
+    },
+  ];
+
+  const filteredVendors = mockVendors
+    .filter((vendor) => {
+      if (statusFilter !== "all") {
+        return vendor.status.toLowerCase() === statusFilter.toLowerCase();
+      }
+      return true;
+    })
+    .filter((vendor) => {
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        return (
+          vendor.name.toLowerCase().includes(query) ||
+          vendor.owner.toLowerCase().includes(query) ||
+          vendor.email.toLowerCase().includes(query)
+        );
+      }
+      return true;
+    });
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "Active":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-green-100 text-green-800 hover:bg-green-100"
+          >
+            <CheckCircle className="w-3.5 h-3.5 mr-1" />
+            Active
+          </Badge>
+        );
+      case "Pending":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+          >
+            <AlertCircle className="w-3.5 h-3.5 mr-1" />
+            Pending
+          </Badge>
+        );
+      case "Suspended":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-red-100 text-red-800 hover:bg-red-100"
+          >
+            <XCircle className="w-3.5 h-3.5 mr-1" />
+            Suspended
+          </Badge>
+        );
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Vendors</h1>
+        <p className="text-muted-foreground">
+          Manage all vendors on the platform
+        </p>
+      </div>
+
+      <div className="flex justify-between items-center">
+        <Button>
+          <Store className="mr-2 h-4 w-4" />
+          Add New Vendor
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex flex-col gap-4 md:flex-row justify-between">
+            <div className="flex items-center gap-2 w-full md:w-1/3">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search vendors..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-9"
+              />
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="h-9 w-[180px]">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="suspended">Suspended</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {filteredVendors.length === 0 ? (
+            <div className="text-center py-10">
+              <Store className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-4 text-lg font-semibold">No vendors found</h3>
+              <p className="mt-2 text-muted-foreground">
+                {searchQuery || statusFilter !== "all"
+                  ? "Try adjusting your filters"
+                  : "Add vendors to get started"}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Vendor</TableHead>
+                    <TableHead>Owner</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Products</TableHead>
+                    <TableHead>Categories</TableHead>
+                    <TableHead>Join Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredVendors.map((vendor) => (
+                    <TableRow key={vendor.id}>
+                      <TableCell className="font-medium">
+                        {vendor.name}
+                      </TableCell>
+                      <TableCell>{vendor.owner}</TableCell>
+                      <TableCell>{vendor.email}</TableCell>
+                      <TableCell>{vendor.products}</TableCell>
+                      <TableCell>{vendor.categories}</TableCell>
+                      <TableCell>{vendor.joinDate}</TableCell>
+                      <TableCell>{getStatusBadge(vendor.status)}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              Actions
+                              <ChevronDown className="ml-2 h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>
+                              Vendor Actions
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Profile
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit Vendor
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <ShoppingBag className="mr-2 h-4 w-4" />
+                              View Products
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <LayoutGrid className="mr-2 h-4 w-4" />
+                              View Categories
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {vendor.status === "Active" ? (
+                              <DropdownMenuItem className="text-yellow-600">
+                                <AlertCircle className="mr-2 h-4 w-4" />
+                                Suspend Vendor
+                              </DropdownMenuItem>
+                            ) : vendor.status === "Suspended" ? (
+                              <DropdownMenuItem className="text-green-600">
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                Activate Vendor
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem className="text-green-600">
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                Approve Vendor
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem className="text-red-600">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete Vendor
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+        <CardFooter className="border-t px-6 py-4">
+          <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
+            <div>
+              Showing {filteredVendors.length} of {mockVendors.length} vendors
+            </div>
+          </div>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}
