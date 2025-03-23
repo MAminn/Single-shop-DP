@@ -2,7 +2,7 @@ import { initTRPC } from "@trpc/server";
 import {
   DatabaseClientService,
   type DatabaseClient,
-} from "#root/shared/database/drizzle/db";
+} from "#root/shared/database/drizzle/db.js";
 import { Effect } from "effect";
 import superjson from "superjson";
 

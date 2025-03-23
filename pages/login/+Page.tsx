@@ -17,12 +17,14 @@ export default function Page() {
 
       const token = loginResult.result;
 
-      await fetch("/api/auth/save-token", {
+      await fetch("/api/auth/token", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ token }),
+      }).catch((err) => {
+        console.error(err);
       });
 
       toast.success("Login successful");

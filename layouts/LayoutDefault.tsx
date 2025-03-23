@@ -34,7 +34,7 @@ function Content({ children }: { children: React.ReactNode }) {
       await trpc.auth.logout.mutate({
         token: session.token,
       });
-      await fetch("/api/auth/remove-token", {
+      await fetch("/api/auth/token", {
         method: "DELETE",
       });
     } catch (err) {
