@@ -45,20 +45,17 @@ export const CheckoutService = {
     cartItems: CartItem[],
     formData: CheckoutFormData
   ): Promise<Order> {
-    // Verify stock availability
     for (const item of cartItems) {
       if (!item.stock || item.quantity > item.stock) {
         throw new Error(`Item ${item.name} has insufficient stock`);
       }
     }
 
-    // Calculate totals
     const subtotal = cartItems.reduce(
       (total, item) => total + item.price * item.quantity,
       0
     );
 
-    // Calculate shipping (simplified for mock)
     const shipping =
       formData.deliveryMethod === "express"
         ? 15
@@ -66,13 +63,10 @@ export const CheckoutService = {
         ? 5
         : 0;
 
-    // Calculate tax (simplified for mock - 5% tax rate)
     const tax = subtotal * 0.05;
 
-    // Calculate total
     const total = subtotal + shipping + tax;
 
-    // Prepare billing address (use shipping if sameAsShipping is true)
     const billingAddress = formData.billingInfo.sameAsShipping
       ? { ...formData.shippingInfo }
       : {
@@ -84,7 +78,6 @@ export const CheckoutService = {
           country: formData.billingInfo.country,
         };
 
-    // Create order request
     const orderDetails: OrderDetails = {
       userId,
       items: cartItems,
@@ -106,7 +99,6 @@ export const CheckoutService = {
       notes: formData.notes,
     };
 
-    // Create order (sends notifications to vendors in the process)
     try {
       const order = await OrderService.createOrder(orderDetails);
       return order;

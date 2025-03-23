@@ -94,7 +94,7 @@ export default function CartPage() {
                 Add items to your cart to begin the checkout process.
               </p>
               <Button asChild>
-                <Link href="/shop">Continue Shopping</Link>
+                <Link href="/">Continue Shopping</Link>
               </Button>
             </div>
           </CardContent>
