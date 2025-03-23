@@ -1,4 +1,5 @@
 import { ServerError } from "#root/shared/error/server.js";
+import type { PostgresDb } from "@fastify/postgres";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Context, Effect, pipe } from "effect";
 

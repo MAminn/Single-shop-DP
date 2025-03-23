@@ -8,14 +8,6 @@ declare global {
       clientSession?: ClientSession;
     }
   }
-  namespace HonoContext {
-    interface Env {
-      Variables: {
-        db: DatabaseClient;
-        clientSession?: ClientSession;
-      };
-    }
-  }
 }
 
 // biome-ignore lint/complexity/noUselessEmptyExport: ensure that the file is considered as a module

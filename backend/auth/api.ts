@@ -8,59 +8,57 @@ import {
   serializeBackendEffectResult,
 } from "#root/shared/backend/effect.js";
 import { DatabaseClientService } from "#root/shared/database/drizzle/db.js";
-
-export const authRouter = new Hono<HonoContext.Env>();
+import type { FastifyInstance, FastifyPluginCallback } from "fastify";
 
 const saveTokenSchema = z.object({
   token: z.string().nonempty(),
 });
 
-authRouter.post("/save-token", async (c) => {
-  console.log("saving token");
-  const body = await c.req.json().catch(() => null);
+export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
+  app.post("/token", async (req, res) => {
+    const validation = saveTokenSchema.safeParse(req.body);
 
-  if (!body) {
-    return c.json({ success: false, error: "Invalid data" });
-  }
+    if (!validation.success) {
+      return res.status(400).send({ success: false, error: "Invalid data" });
+    }
 
-  const validation = saveTokenSchema.safeParse(body);
+    const { token } = validation.data;
 
-  if (!validation.success) {
-    return c.json({ success: false, error: "Invalid data" });
-  }
+    const getClientSession = await runBackendEffect(
+      validateSessionToken(token).pipe(
+        Effect.provideService(DatabaseClientService, req.db)
+      )
+    ).then(serializeBackendEffectResult);
 
-  const { token } = validation.data;
+    if (!getClientSession.success) {
+      return res.status(400).send(getClientSession);
+    }
 
-  const getClientSession = await runBackendEffect(
-    validateSessionToken(token).pipe(
-      Effect.provideService(DatabaseClientService, c.var.db)
-    )
-  ).then(serializeBackendEffectResult);
+    const clientSession = getClientSession.result;
 
-  if (!getClientSession.success) {
-    return c.json(getClientSession);
-  }
+    res.setCookie("session", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: Math.ceil(
+        (clientSession.expiresAt.getTime() - Date.now()) / 1000
+      ),
+    });
 
-  const clientSession = getClientSession.result;
-
-  setCookie(c, "session", token, {
-    httpOnly: true,
-    secure: import.meta.env.PROD,
-    sameSite: "lax",
-    path: "/",
-    maxAge: (clientSession.expiresAt.getTime() - Date.now()) / 1000,
+    return res.status(200).send({
+      success: true,
+      result: clientSession,
+    });
   });
 
-  return c.json({
-    success: true,
-    result: clientSession,
-  });
-});
+  app.delete("/token", async (req, res) => {
+    res.clearCookie("session");
 
-authRouter.delete("/remove-token", async (c) => {
-  deleteCookie(c, "session");
-
-  return c.json({
-    success: true,
+    return res.status(200).send({
+      success: true,
+    });
   });
-});
+
+  done();
+}) satisfies FastifyPluginCallback;
