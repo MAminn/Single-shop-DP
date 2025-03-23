@@ -19,21 +19,21 @@ import {
 import { Link } from "../Link";
 import logoImage from "#root/assets/Lebsy-Logo-Light.svg";
 import { AuthContext } from "#root/context/AuthContext.js";
+import { useCart } from "#root/lib/context/CartContext";
 
 interface NavbarProps {
   lang: string;
   logoUrl?: string;
-  cartItemCount?: number;
   sheetDescription?: string;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
   lang = "en",
-  cartItemCount = 0,
   sheetDescription = "Navigation menu",
   logoUrl = "",
 }: NavbarProps) => {
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(false);
+  const { totalItems } = useCart();
 
   const handleCloseSheet = () => setIsSheetOpen(false);
 
@@ -261,9 +261,9 @@ const Navbar: React.FC<NavbarProps> = ({
           >
             <Link href="/cart" className="relative">
               <ShoppingCart size={20} />
-              {cartItemCount > 0 && (
+              {totalItems > 0 && (
                 <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-1 text-xs font-bold leading-none transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full">
-                  {cartItemCount}
+                  {totalItems}
                 </span>
               )}
             </Link>

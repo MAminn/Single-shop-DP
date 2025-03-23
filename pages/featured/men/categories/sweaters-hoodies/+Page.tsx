@@ -1,52 +1,61 @@
-import Sorting from "#root/components/sorting.jsx";
+import Sorting from "#root/components/sorting";
+import { CartProvider } from "#root/lib/context/CartContext";
+import type { Product } from "#root/lib/mock-data/products";
 
 const Page = () => {
-  const mockProducts = [
+  const mockProducts: Product[] = [
     {
-      id: 1,
-      name: "Basic Tee",
-      price: 20,
+      id: 31,
+      name: "Pullover Hoodie",
+      price: 55,
       dateAdded: new Date(),
       category: "Hoodies",
       imageUrl: "/assets/Men_s hoodie.png",
+      stock: 20,
     },
     {
-      id: 2,
-      name: "Premium Shirt",
-      price: 40,
+      id: 32,
+      name: "Zip-Up Hoodie",
+      price: 60,
       dateAdded: new Date(),
       category: "Hoodies",
       imageUrl: "/assets/Men_s hoodie.png",
+      stock: 15,
     },
     {
-      id: 3,
-      name: "Casual Shirt",
-      price: 30,
+      id: 33,
+      name: "Crewneck Sweater",
+      price: 50,
       dateAdded: new Date(),
-      category: "Hoodies",
+      category: "Sweaters",
       imageUrl: "/assets/Men_s hoodie.png",
+      stock: 18,
     },
     {
-      id: 4,
-      name: "Sport Shirt",
-      price: 25,
+      id: 34,
+      name: "Cardigan",
+      price: 65,
       dateAdded: new Date(),
-      category: "Hoodies",
+      category: "Sweaters",
       imageUrl: "/assets/Men_s hoodie.png",
+      stock: 10,
     },
     {
-      id: 5,
-      name: "Linen Shirt",
-      price: 35,
+      id: 35,
+      name: "Fleece Jacket",
+      price: 45,
       dateAdded: new Date(),
       category: "Hoodies",
       imageUrl: "/assets/Men_s hoodie.png",
+      stock: 22,
     },
   ];
   return (
-    <div className=" flex justify-center items-center h-full w-full pr-6">
-      <Sorting Products={mockProducts} />
-    </div>
+    <CartProvider>
+      <div className="flex justify-center items-center h-full w-full pr-6">
+        <Sorting Products={mockProducts} />
+      </div>
+    </CartProvider>
   );
 };
 

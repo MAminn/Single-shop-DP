@@ -7,6 +7,8 @@ import type { ClientSession } from "#root/backend/auth/shared/entities.js";
 import { usePageContext } from "vike-react/usePageContext";
 import { TRPCClientError } from "@trpc/client";
 import { AuthContext } from "#root/context/AuthContext.js";
+import { CartProvider } from "#root/lib/context/CartContext";
+import { Toaster as ShadcnToaster } from "#root/components/ui/toaster";
 
 export default function LayoutDefault({
   children,
@@ -54,14 +56,17 @@ function Content({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ session, logout }}>
-      <main
-        id="page-content"
-        className="bg-background h-full text-foreground w-full font-poppins"
-      >
-        {!isDashboardRoute && <Navbar lang="en" />}
-        {children}
-        <Toaster />
-      </main>
+      <CartProvider>
+        <main
+          id="page-content"
+          className="bg-background h-full text-foreground w-full font-poppins"
+        >
+          {!isDashboardRoute && <Navbar lang="en" />}
+          {children}
+          <Toaster />
+          <ShadcnToaster />
+        </main>
+      </CartProvider>
     </AuthContext.Provider>
   );
 }
