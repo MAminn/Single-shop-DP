@@ -54,31 +54,8 @@ export default function CartPage() {
     });
   };
 
-  const handleCheckout = async () => {
-    setProcessingCheckout(true);
-
-    try {
-      // This would be replaced with actual checkout logic
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Successful checkout
-      toast({
-        title: "Order placed successfully",
-        description: "Thank you for your purchase!",
-      });
-
-      // Redirect to confirmation page (in a real app)
-      // window.location.href = "/checkout/confirmation";
-    } catch (error) {
-      toast({
-        title: "Checkout failed",
-        description:
-          "There was an error processing your order. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setProcessingCheckout(false);
-    }
+  const handleCheckout = () => {
+    window.location.href = "/checkout";
   };
 
   if (items.length === 0) {
