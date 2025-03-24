@@ -28,6 +28,20 @@ export default function CreateCategory() {
   const [subcategories, setSubcategories] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +53,7 @@ export default function CreateCategory() {
       const newCategory = {
         id: String(Date.now()),
         name: category,
+        imageUrl: imagePreview,
         subcategories: subcategories
           .split(", ")
           .filter(Boolean)
@@ -49,9 +64,14 @@ export default function CreateCategory() {
           })),
       };
 
-      addCategory(newCategory);
+      const categoryToAdd = {
+        ...newCategory,
+        imageUrl: newCategory.imageUrl || undefined,
+      };
 
-      console.log("Category created:", newCategory);
+      addCategory(categoryToAdd);
+
+      console.log("Category created:", categoryToAdd);
 
       setIsSubmitting(false);
       setIsSuccess(true);
@@ -65,7 +85,7 @@ export default function CreateCategory() {
   };
 
   return (
-    <Card className="max-w-md mx-auto p-6">
+    <Card className="max-w-md mt-0 lg:mt-16 mx-auto p-6">
       <CardHeader>
         <CardTitle>Create Category</CardTitle>
       </CardHeader>
@@ -100,6 +120,34 @@ export default function CreateCategory() {
                 onChange={(e) => setSubcategories(e.target.value)}
                 placeholder="T-shirts, Pants, Shoes"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="image">Category Image</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  onClick={() => document.getElementById("image")?.click()}
+                >
+                  Upload
+                </Button>
+              </div>
+              {imagePreview && (
+                <div className="mt-2">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-32 h-32 object-cover rounded-md"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end pt-4">

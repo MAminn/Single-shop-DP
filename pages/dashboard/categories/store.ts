@@ -7,6 +7,7 @@ export interface Subcategory {
 export interface Category {
   id: string;
   name: string;
+  imageUrl?: string;
   subcategories: Subcategory[];
 }
 
@@ -14,6 +15,7 @@ export const mockCategories: Category[] = [
   {
     id: "men",
     name: "Men",
+    imageUrl: "/assets/men-category.jpg",
     subcategories: [
       { id: "men-shirts", name: "Shirts", products: [1] },
       { id: "men-pants", name: "Pants", products: [2] },
@@ -24,6 +26,7 @@ export const mockCategories: Category[] = [
   {
     id: "women",
     name: "Women",
+    imageUrl: "/assets/women-category.jpg",
     subcategories: [
       { id: "women-dresses", name: "Dresses", products: [] },
       { id: "women-tops", name: "Tops", products: [] },
