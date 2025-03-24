@@ -30,13 +30,33 @@ interface Product {
   name: string;
   price: number;
   stock: number;
+  imageUrl?: string;
+  isOutOfStock: boolean;
 }
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([
-    { id: 1, name: "Blue T-Shirt", price: 19.99, stock: 50 },
-    { id: 2, name: "Black Jeans", price: 49.99, stock: 25 },
-    { id: 3, name: "Red Sneakers", price: 79.99, stock: 10 },
+    {
+      id: 1,
+      name: "Blue T-Shirt",
+      price: 19.99,
+      stock: 50,
+      isOutOfStock: false,
+    },
+    {
+      id: 2,
+      name: "Black Jeans",
+      price: 49.99,
+      stock: 25,
+      isOutOfStock: false,
+    },
+    {
+      id: 3,
+      name: "Red Sneakers",
+      price: 79.99,
+      stock: 10,
+      isOutOfStock: false,
+    },
   ]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -46,15 +66,40 @@ export default function Products() {
     name: "",
     price: 0,
     stock: 0,
+    isOutOfStock: false,
   });
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("name");
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleAddProduct = () => {
     if (!newProduct.name || newProduct.price <= 0 || newProduct.stock <= 0)
       return;
-    setProducts([...products, { ...newProduct, id: Date.now() }]);
-    setNewProduct({ id: 0, name: "", price: 0, stock: 0 });
+
+    const productToAdd = {
+      ...newProduct,
+      id: Date.now(),
+      imageUrl: imagePreview || undefined,
+      isOutOfStock: newProduct.stock === 0,
+    };
+
+    setProducts([...products, productToAdd]);
+    setNewProduct({ id: 0, name: "", price: 0, stock: 0, isOutOfStock: false });
+    setSelectedImage(null);
+    setImagePreview(null);
     setIsAddModalOpen(false);
   };
 
@@ -64,11 +109,18 @@ export default function Products() {
 
   const handleEditProduct = () => {
     if (!selectedProduct) return;
+
+    const updatedProduct = {
+      ...selectedProduct,
+      imageUrl: imagePreview || selectedProduct.imageUrl,
+      isOutOfStock: selectedProduct.stock === 0,
+    };
+
     setProducts(
-      products.map((p) =>
-        p.id === selectedProduct.id ? { ...selectedProduct } : p
-      )
+      products.map((p) => (p.id === selectedProduct.id ? updatedProduct : p))
     );
+    setSelectedImage(null);
+    setImagePreview(null);
     setIsEditModalOpen(false);
   };
 
@@ -111,18 +163,36 @@ export default function Products() {
         <Table className="w-full text-sm mt-4">
           <TableHeader>
             <TableRow>
+              <TableHead>Image</TableHead>
               <TableHead>Product Name</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Stock</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredProducts.map((product) => (
               <TableRow key={product.id}>
+                <TableCell>
+                  {product.imageUrl && (
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="w-12 h-12 object-cover rounded"
+                    />
+                  )}
+                </TableCell>
                 <TableCell>{product.name}</TableCell>
                 <TableCell>${product.price.toFixed(2)}</TableCell>
                 <TableCell>{product.stock} in stock</TableCell>
+                <TableCell>
+                  {product.isOutOfStock ? (
+                    <span className="text-red-500">Out of Stock</span>
+                  ) : (
+                    <span className="text-green-500">In Stock</span>
+                  )}
+                </TableCell>
                 <TableCell className="flex justify-end gap-2">
                   <Button
                     size="sm"
@@ -199,6 +269,56 @@ export default function Products() {
                       ? {
                           ...selectedProduct,
                           stock: Number.parseInt(e.target.value, 10),
+                          isOutOfStock:
+                            Number.parseInt(e.target.value, 10) === 0,
+                        }
+                      : null
+                  )
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-image">Product Image</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="edit-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  onClick={() => document.getElementById("edit-image")?.click()}
+                >
+                  Upload
+                </Button>
+              </div>
+              {(imagePreview || selectedProduct?.imageUrl) && (
+                <div className="mt-2">
+                  <img
+                    src={imagePreview || selectedProduct?.imageUrl}
+                    alt="Preview"
+                    className="w-32 h-32 object-cover rounded-md"
+                  />
+                </div>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-out-of-stock">Mark as Out of Stock</Label>
+              <input
+                type="checkbox"
+                id="edit-out-of-stock"
+                checked={selectedProduct?.isOutOfStock || false}
+                onChange={(e) =>
+                  setSelectedProduct(
+                    selectedProduct
+                      ? {
+                          ...selectedProduct,
+                          isOutOfStock: e.target.checked,
+                          stock: e.target.checked
+                            ? 0
+                            : selectedProduct.stock || 1,
                         }
                       : null
                   )
@@ -253,6 +373,49 @@ export default function Products() {
                   setNewProduct({
                     ...newProduct,
                     stock: Number.parseInt(e.target.value, 10),
+                    isOutOfStock: Number.parseInt(e.target.value, 10) === 0,
+                  })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="add-image">Product Image</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="add-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  onClick={() => document.getElementById("add-image")?.click()}
+                >
+                  Upload
+                </Button>
+              </div>
+              {imagePreview && (
+                <div className="mt-2">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-32 h-32 object-cover rounded-md"
+                  />
+                </div>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="add-out-of-stock">Mark as Out of Stock</Label>
+              <input
+                type="checkbox"
+                id="add-out-of-stock"
+                checked={newProduct.isOutOfStock}
+                onChange={(e) =>
+                  setNewProduct({
+                    ...newProduct,
+                    isOutOfStock: e.target.checked,
+                    stock: e.target.checked ? 0 : newProduct.stock || 1,
                   })
                 }
               />

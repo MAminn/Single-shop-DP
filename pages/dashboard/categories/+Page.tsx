@@ -70,9 +70,11 @@ export default function Categories() {
           <h1 className="text-2xl font-bold">Categories</h1>
           <p className="text-slate-500">Manage your product categories</p>
         </div>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Category
+        <Button asChild>
+          <Link href="/dashboard/categories/create">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Category
+          </Link>
         </Button>
       </div>
 
@@ -102,6 +104,15 @@ export default function Categories() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {category.imageUrl && (
+                <div className="mb-4">
+                  <img
+                    src={category.imageUrl}
+                    alt={category.name}
+                    className="w-full h-48 object-cover rounded-md"
+                  />
+                </div>
+              )}
               <ul className="space-y-1">
                 {category.subcategories.slice(0, 3).map((subcategory) => (
                   <li key={subcategory.id} className="text-sm">
@@ -133,9 +144,11 @@ export default function Categories() {
         {categories.length === 0 && (
           <div className="col-span-full flex flex-col items-center justify-center p-12 border border-dashed rounded-lg bg-slate-50">
             <p className="text-slate-500 mb-4">No categories found</p>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Your First Category
+            <Button asChild>
+              <Link href="/dashboard/categories/create">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Your First Category
+              </Link>
             </Button>
           </div>
         )}
