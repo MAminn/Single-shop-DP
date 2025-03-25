@@ -95,11 +95,11 @@ function Content({ children }: { children: React.ReactNode }) {
   const tabs = userRole === "admin" ? adminTabs : vendorTabs;
 
   return (
-    <main className="flex-1">
+    <main className="flex-1 w-full h-full">
       <SidebarProvider>
-        <div className="flex w-full">
+        <div className="flex w-full h-full">
           <DashboardSidebar />
-          <section className="h-full flex-1">
+          <section className="h-full w-full flex-1">
             <header className="flex flex-col bg-neutral-100 dark:bg-neutral-900 w-full p-1 sticky top-0">
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center">

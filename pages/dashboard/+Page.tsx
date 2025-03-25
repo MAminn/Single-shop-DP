@@ -748,7 +748,7 @@ function VendorDashboard() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Button
               asChild
               variant="outline"
@@ -756,7 +756,7 @@ function VendorDashboard() {
             >
               <Link href="/dashboard/products/create">
                 <Package className="h-10 w-10 mb-2" />
-                <span className="text-base font-medium">Add Product</span>
+                <span className="text-base font-medium">Products</span>
               </Link>
             </Button>
             <Button
@@ -766,7 +766,7 @@ function VendorDashboard() {
             >
               <Link href="/dashboard/categories">
                 <Grid className="h-10 w-10 mb-2" />
-                <span className="text-base font-medium">Manage Categories</span>
+                <span className="text-base font-medium">Categories</span>
               </Link>
             </Button>
             <Button
@@ -776,7 +776,7 @@ function VendorDashboard() {
             >
               <Link href="/dashboard/orders">
                 <Truck className="h-10 w-10 mb-2" />
-                <span className="text-base font-medium">Process Orders</span>
+                <span className="text-base font-medium">Orders</span>
               </Link>
             </Button>
             <Button
@@ -786,7 +786,7 @@ function VendorDashboard() {
             >
               <Link href="/dashboard/products">
                 <PackageOpen className="h-10 w-10 mb-2" />
-                <span className="text-base font-medium">Update Inventory</span>
+                <span className="text-base font-medium">Inventory</span>
               </Link>
             </Button>
           </div>

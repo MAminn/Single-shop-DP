@@ -82,7 +82,7 @@ const Page: React.FC<Props> = ({ lang = "en" }: Props) => {
           <Link
             href={`${card.to}`}
             key={card.title}
-            className="w-full h-full  justify-self-center "
+            className="w-full h-full flex flex-col justify-center items-center justify-self-center "
           >
             <Magnet padding={50} disabled={false} magnetStrength={4}>
               <div className=" w-full h-full flex flex-col justify-center items-center">

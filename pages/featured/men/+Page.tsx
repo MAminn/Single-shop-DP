@@ -78,14 +78,14 @@ const Page: React.FC<Props> = ({ lang = "en" }: Props) => {
           <Link
             href={`${card.to}`}
             key={card.title}
-            className="w-full h-full  justify-self-center "
+            className="w-full h-full flex flex-col justify-center items-center justify-self-center "
           >
             <Magnet padding={50} disabled={false} magnetStrength={4}>
               <div className=" w-full h-full flex flex-col justify-center items-center">
                 <img
                   src={card.imgUrl}
                   alt="img"
-                  className="max-w-[200px] xl:max-w-[300px] object-center object-cover"
+                  className="max-w-[200px]  xl:max-w-[300px] object-center object-cover"
                 />
                 <h1 className="text-xl md:text-2xl text-center font-semibold mb-6 mt-10">
                   {card.title}

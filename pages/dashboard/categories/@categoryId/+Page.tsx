@@ -148,7 +148,7 @@ export default function CategoryDetail() {
 
   if (!category) {
     return (
-      <div className="p-6">
+      <div className="p-6 w-full h-full flex-wrap mx-auto">
         <div className="flex items-center mb-6">
           <Button variant="ghost" asChild className="mr-2">
             <Link href="/dashboard/categories">
@@ -171,26 +171,28 @@ export default function CategoryDetail() {
   }
 
   return (
-    <div className="p-6 w-full mx-auto">
-      <div className="flex items-center mb-6">
+    <div className="p-6 w-full h-full flex-wrap mx-auto">
+      <div className="flex flex-col lg:flex-row items-center mb-6 gap-2">
         <Button variant="ghost" asChild className="mr-4">
           <Link href="/dashboard/categories">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Categories
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold">{category.name}</h1>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsEditCategoryDialogOpen(true)}
-          className="ml-2"
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold">{category.name}</h1>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsEditCategoryDialogOpen(true)}
+            className="ml-2"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-center lg:justify-between items-center mb-4 flex-wrap gap-2">
         <h2 className="text-xl font-semibold">Subcategories</h2>
         <Button onClick={() => setIsAddDialogOpen(true)}>
           <PlusCircle className="mr-2 h-4 w-4" />

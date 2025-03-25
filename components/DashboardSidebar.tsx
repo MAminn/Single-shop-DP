@@ -77,7 +77,7 @@ export function DashboardSidebar() {
     userRole === "admin" ? adminSidebarItems : vendorSidebarItems;
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="h-full">
       <SidebarHeader className="flex justify-between">
         <h1 className="font-bold text-lg group-data-[state=collapsed]:text-center">
           D<span className="group-data-[state=collapsed]:hidden">ashboard</span>
