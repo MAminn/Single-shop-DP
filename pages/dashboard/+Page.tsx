@@ -55,6 +55,9 @@ import { vendorDashboardStats } from "#root/lib/mock-data/customers";
 import { useData } from "vike-react/useData";
 import type { Data } from "./+data";
 import { ErrorSection } from "#root/components/error-section";
+import { useEffect, useState } from "react";
+import { trpc } from "#root/shared/trpc/client";
+import { toast } from "sonner";
 
 export default function Dashboard() {
   const { userRole } = useRole();
@@ -81,6 +84,14 @@ export default function Dashboard() {
 
 function AdminDashboard() {
   const fetchData = useData<Data>();
+  const [recentVendors, setRecentVendors] = useState<
+    {
+      id: string;
+      name: string;
+      createdAt: Date;
+      status: string;
+    }[]
+  >([]);
 
   if (!fetchData.success) {
     return <ErrorSection error={fetchData.error} />;
@@ -89,6 +100,16 @@ function AdminDashboard() {
   if (fetchData.type === "vendor") {
     return <ErrorSection error="You are not authorized to view this page" />;
   }
+
+  useEffect(() => {
+    trpc.vendor.view.query({ limit: 5 }).then((result) => {
+      if (result.success) {
+        setRecentVendors(result.result);
+      } else {
+        toast.error(result.error);
+      }
+    });
+  }, []);
 
   const data = fetchData.result;
 
@@ -289,10 +310,10 @@ function AdminDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {vendorList.map((vendor: Vendor) => (
+                {recentVendors.map((vendor) => (
                   <TableRow key={vendor.id}>
                     <TableCell className="font-medium">{vendor.name}</TableCell>
-                    <TableCell>{vendor.joinDate}</TableCell>
+                    <TableCell>{vendor.createdAt.toDateString()}</TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"
