@@ -1,5 +1,5 @@
 import type React from "react";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Button } from "#root/components/ui/button";
 import { Menu, ShoppingCart, Globe } from "lucide-react";
 import {
@@ -20,6 +20,8 @@ import { Link } from "../Link";
 import logoImage from "#root/assets/Lebsy-Logo-Light.svg";
 import { AuthContext } from "#root/context/AuthContext.js";
 import { useCart } from "#root/lib/context/CartContext";
+import { trpc } from "#root/shared/trpc/client";
+import { toast } from "sonner";
 
 interface NavbarProps {
   lang: string;
@@ -33,6 +35,27 @@ const Navbar: React.FC<NavbarProps> = ({
   logoUrl = "",
 }: NavbarProps) => {
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(false);
+  const [subcategories, setSubcategories] = useState<
+    {
+      id: string;
+      name: string;
+      slug: string;
+      filename: string | null;
+      type: "men" | "women";
+    }[]
+  >([]);
+
+  useEffect(() => {
+    trpc.category.view.query().then((res) => {
+      if (!res.success) {
+        toast.error(res.error);
+        return;
+      }
+
+      setSubcategories(res.result);
+    });
+  }, []);
+
   const { totalItems } = useCart();
 
   const handleCloseSheet = () => setIsSheetOpen(false);
@@ -48,95 +71,23 @@ const Navbar: React.FC<NavbarProps> = ({
     en: [
       {
         label: "Men",
-        to: "/man",
-        subLinks: [
-          {
-            label: "Shirts",
-            to: "/featured/men/categories/shirts",
-          },
-          {
-            label: "T-Shirts",
-            to: "/featured/men/categories/t-shirts",
-          },
-          {
-            label: "Sweaters & Hoodies",
-            to: "/featured/men/categories/sweaters-hoodies",
-          },
-          {
-            label: "Pants",
-            to: "/featured/men/categories/pants",
-          },
-          {
-            label: "Accessories",
-            to: "/featured/men/categories/accessories",
-          },
-          {
-            label: "Shorts",
-            to: "/featured/men/categories/shorts",
-          },
-          {
-            label: "Jackets",
-            to: "/featured/men/categories/jackets",
-          },
-          {
-            label: "Shoes",
-            to: "/featured/men/categories/shoes",
-          },
-        ],
+        to: "/featured/men",
+        subLinks: subcategories
+          .filter((s) => s.type === "men")
+          .map((s) => ({
+            label: s.name,
+            to: `/featured/men/categories/${s.slug}`,
+          })),
       },
       {
         label: "Women",
         to: "/women",
-        subLinks: [
-          {
-            label: "Accessories",
-            to: "/featured/women/categories/accessories",
-          },
-          {
-            label: "Blouses",
-            to: "/featured/women/categories/blouses",
-          },
-          {
-            label: "Body Suits",
-            to: "/featured/women/categories/body-suits",
-          },
-          {
-            label: "Dresses",
-            to: "/featured/women/categories/dresses",
-          },
-          {
-            label: "Hoodies",
-            to: "/featured/women/categories/hoodies",
-          },
-          {
-            label: "Jackets",
-            to: "/featured/women/categories/jackets",
-          },
-          {
-            label: "Pants",
-            to: "/featured/women/categories/pants",
-          },
-          {
-            label: "Shirts",
-            to: "/featured/women/categories/shirts",
-          },
-          {
-            label: "Shoes",
-            to: "/featured/women/categories/shoes",
-          },
-          {
-            label: "Shorts",
-            to: "/featured/women/categories/shorts",
-          },
-          {
-            label: "Skirts",
-            to: "/featured/women/categories/skirts",
-          },
-          {
-            label: "T-Shirts",
-            to: "/featured/women/categories/t-shirts",
-          },
-        ],
+        subLinks: subcategories
+          .filter((s) => s.type === "women")
+          .map((s) => ({
+            label: s.name,
+            to: `/featured/women/categories/${s.slug}`,
+          })),
       },
       { label: "Become a vendor!", to: "/vendor" },
     ],

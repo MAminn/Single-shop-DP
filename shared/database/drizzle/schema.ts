@@ -1,4 +1,11 @@
-import { pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	pgEnum,
+	pgTable,
+	text,
+	timestamp,
+	uuid,
+} from "drizzle-orm/pg-core";
 import { v7 } from "uuid";
 
 export const userRole = pgEnum("user_role", ["admin", "vendor", "user"]);
@@ -111,4 +118,80 @@ export const vendorLog = pgTable("vendor_log", {
 		.defaultNow()
 		.notNull(),
 	action: vendorLogAction("action").notNull(),
+});
+
+export const file = pgTable("file", {
+	id: uuid("id")
+		.primaryKey()
+		.$defaultFn(() => v7()),
+	diskname: text("name").notNull(),
+	createdAt: timestamp("created_at", {
+		withTimezone: true,
+		mode: "date",
+	})
+		.defaultNow()
+		.notNull(),
+	updatedAt: timestamp("updated_at", {
+		withTimezone: true,
+		mode: "date",
+	}),
+});
+
+export const categoryType = pgEnum("category_type", ["men", "women"]);
+
+export const category = pgTable("category", {
+	id: uuid("id")
+		.primaryKey()
+		.$defaultFn(() => v7()),
+	name: text("name").notNull().unique(),
+	slug: text("slug").notNull().unique(),
+	imageId: uuid("image_id")
+		.references(() => file.id, {
+			onDelete: "cascade",
+			onUpdate: "cascade",
+		})
+		.unique(),
+	createdAt: timestamp("created_at", {
+		withTimezone: true,
+		mode: "date",
+	})
+		.defaultNow()
+		.notNull(),
+	updatedAt: timestamp("updated_at", {
+		withTimezone: true,
+		mode: "date",
+	}),
+	type: categoryType("type").notNull().default("men"),
+	deleted: boolean("deleted").notNull().default(false),
+});
+
+export const categoryLogAction = pgEnum("category_log_action", [
+	"created",
+	"updated",
+	"deleted",
+]);
+
+export const categoryLog = pgTable("category_log", {
+	id: uuid("id")
+		.primaryKey()
+		.$defaultFn(() => v7()),
+	categoryId: uuid("category_id")
+		.notNull()
+		.references(() => category.id, {
+			onDelete: "restrict",
+			onUpdate: "cascade",
+		}),
+	userId: uuid("user_id")
+		.notNull()
+		.references(() => user.id, {
+			onDelete: "restrict",
+			onUpdate: "cascade",
+		}),
+	createdAt: timestamp("created_at", {
+		withTimezone: true,
+		mode: "date",
+	})
+		.defaultNow()
+		.notNull(),
+	action: categoryLogAction("action").notNull(),
 });
