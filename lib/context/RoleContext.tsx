@@ -1,42 +1,21 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
+import { usePageContext } from "vike-react/usePageContext";
 
-type Role = "admin" | "vendor";
+type Role = "admin" | "vendor" | "user";
 
 interface RoleContextType {
-  userRole: Role;
-  toggleRole: () => void;
-  setRole: (role: Role) => void;
+  userRole?: Role;
 }
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
 export function RoleProvider({ children }: { children: ReactNode }) {
-  const [userRole, setUserRole] = useState<Role>("vendor");
-
-  useEffect(() => {
-    const savedRole = localStorage.getItem("userRole");
-    if (savedRole && (savedRole === "admin" || savedRole === "vendor")) {
-      setUserRole(savedRole as Role);
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("userRole", userRole);
-  }, [userRole]);
-
-  const toggleRole = () => {
-    setUserRole((prev) => (prev === "admin" ? "vendor" : "admin"));
-  };
-
-  const setRole = (role: Role) => {
-    setUserRole(role);
-  };
+  const pageContext = usePageContext();
+  const userRole = pageContext.clientSession?.role;
 
   return (
-    <RoleContext.Provider value={{ userRole, toggleRole, setRole }}>
-      {children}
-    </RoleContext.Provider>
+    <RoleContext.Provider value={{ userRole }}>{children}</RoleContext.Provider>
   );
 }
 

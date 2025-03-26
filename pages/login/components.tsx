@@ -12,6 +12,7 @@ import {
   FormMessage,
 } from "#root/components/ui/form";
 import { Input } from "#root/components/ui/input";
+import { useState } from "react";
 
 export type LoginOnSubmit = (
   values: z.infer<typeof formSchema>
@@ -23,14 +24,21 @@ const formSchema = z.object({
 });
 
 export default function LoginForm({ onSubmit }: { onSubmit: LoginOnSubmit }) {
+  const [submitting, setSubmitting] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    disabled: submitting,
   });
 
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(async (values) => {
+          setSubmitting(true);
+          await onSubmit(values);
+          setSubmitting(false);
+        })}
         className="space-y-4 max-w-3xl mx-auto w-full"
       >
         <FormField
@@ -66,7 +74,12 @@ export default function LoginForm({ onSubmit }: { onSubmit: LoginOnSubmit }) {
             </FormItem>
           )}
         />
-        <Button className="w-full" size={"lg"} type="submit">
+        <Button
+          className="w-full"
+          size={"lg"}
+          type="submit"
+          disabled={submitting}
+        >
           Login
         </Button>
       </form>
