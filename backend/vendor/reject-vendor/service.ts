@@ -1,17 +1,17 @@
 import type { ClientSession } from "#root/backend/auth/shared/entities";
 import { query } from "#root/shared/database/drizzle/db";
-import { user, vendor } from "#root/shared/database/drizzle/schema";
+import { user, vendor, vendorLog } from "#root/shared/database/drizzle/schema";
 import { ServerError } from "#root/shared/error/server";
 import { eq } from "drizzle-orm";
 import { Array, Effect, Option } from "effect";
 import { z } from "zod";
 
-export const approveVendorSchema = z.object({
+export const rejectVendorSchema = z.object({
 	id: z.string().uuid(),
 });
 
-export const approveVendor = (
-	input: z.infer<typeof approveVendorSchema>,
+export const rejectVendor = (
+	input: z.infer<typeof rejectVendorSchema>,
 	session?: ClientSession,
 ) =>
 	Effect.gen(function* ($) {
@@ -57,5 +57,48 @@ export const approveVendor = (
 			);
 		}
 
-		return Option.getOrThrow(maybeVendor);
+		const targetVendor = Option.getOrThrow(maybeVendor);
+
+		if (targetVendor.status === "rejected") {
+			return yield* $(
+				Effect.fail(
+					new ServerError({
+						tag: "VendorAlreadyRejected",
+						statusCode: 400,
+						clientMessage: "Vendor already rejected",
+					}),
+				),
+			);
+		}
+
+		return yield* $(
+			query(async (db) => {
+				return await db.transaction(async (tx) => {
+					const actionUser = await tx
+						.select({
+							id: user.id,
+						})
+						.from(user)
+						.where(eq(user.email, session.email))
+						.then((data) => data[0]);
+
+					if (!actionUser) {
+						throw new Error("User not found");
+					}
+
+					const reject = tx
+						.update(vendor)
+						.set({ status: "rejected" })
+						.where(eq(vendor.id, targetVendor.id));
+
+					const logApprove = tx.insert(vendorLog).values({
+						action: "rejected",
+						userId: actionUser.id,
+						vendorId: targetVendor.id,
+					});
+
+					await Promise.all([reject, logApprove]);
+				});
+			}),
+		);
 	});

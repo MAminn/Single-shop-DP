@@ -33,6 +33,7 @@ import {
   XCircle,
   AlertCircle,
   Loader2Icon,
+  XIcon,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -54,15 +55,75 @@ import { useData } from "vike-react/useData";
 import type { Data } from "./+data";
 import { trpc } from "#root/shared/trpc/client";
 import { useDebounce } from "use-debounce";
+import { toast } from "sonner";
 
 export default function Vendors() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchQueryValue] = useDebounce(searchQuery, 1000);
+  const [lastUpdateDate, setLastUpdateDate] = useState<Date>(new Date());
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const initalData = useData<Data>();
 
   const [fetchDataResult, setFetchDataResult] = useState<Data>(initalData);
   const [loading, setLoading] = useState(false);
+
+  const approveVendor = async (id: string) => {
+    setLoading(true);
+
+    const result = await trpc.vendor.approve.mutate({ id });
+
+    if (!result.success) {
+      toast.error(result.error);
+    } else {
+      setLastUpdateDate(new Date());
+    }
+
+    setLoading(false);
+  };
+
+  const rejectVendor = async (id: string) => {
+    setLoading(true);
+
+    const result = await trpc.vendor.reject.mutate({ id });
+
+    if (!result.success) {
+      toast.error(result.error);
+    } else {
+      setLastUpdateDate(new Date());
+    }
+
+    setLoading(false);
+  };
+
+  const suspendVendor = async (id: string) => {
+    setLoading(true);
+
+    const result = await trpc.vendor.suspend.mutate({ id });
+
+    if (!result.success) {
+      toast.error(result.error);
+    } else {
+      setLastUpdateDate(new Date());
+    }
+
+    setLoading(false);
+  };
+
+  const activateVendor = async (id: string) => {
+    setLoading(true);
+
+    const result = await trpc.vendor.activate.mutate({ id });
+
+    if (!result.success) {
+      toast.error(result.error);
+    } else {
+      setLastUpdateDate(new Date());
+    }
+
+    setLoading(false);
+  };
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies(lastUpdateDate): for refreshing data
   useEffect(() => {
     if (statusFilter && statusFilter !== "all") {
       setLoading(true);
@@ -82,7 +143,7 @@ export default function Vendors() {
         .then(setFetchDataResult)
         .then(() => setLoading(false));
     }
-  }, [statusFilter, searchQueryValue]);
+  }, [statusFilter, searchQueryValue, lastUpdateDate]);
 
   if (!fetchDataResult.success) {
     return (
@@ -247,26 +308,48 @@ export default function Vendors() {
                               View Categories
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            {vendor.status === "active" ? (
-                              <DropdownMenuItem className="text-yellow-600">
+                            {vendor.status === "active" && (
+                              <DropdownMenuItem
+                                disabled={loading}
+                                onClick={() => suspendVendor(vendor.id)}
+                                className="text-yellow-600"
+                              >
                                 <AlertCircle className="mr-2 h-4 w-4" />
                                 Suspend Vendor
                               </DropdownMenuItem>
-                            ) : vendor.status === "suspended" ? (
-                              <DropdownMenuItem className="text-green-600">
+                            )}
+                            {vendor.status === "suspended" && (
+                              <DropdownMenuItem
+                                onClick={() => activateVendor(vendor.id)}
+                                className="text-green-600"
+                                disabled={loading}
+                              >
                                 <CheckCircle className="mr-2 h-4 w-4" />
                                 Activate Vendor
                               </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem className="text-green-600">
-                                <CheckCircle className="mr-2 h-4 w-4" />
-                                Approve Vendor
-                              </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem className="text-red-600">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete Vendor
-                            </DropdownMenuItem>
+
+                            {vendor.status === "pending" && (
+                              <>
+                                <DropdownMenuItem
+                                  disabled={loading}
+                                  onClick={() => approveVendor(vendor.id)}
+                                  className="text-green-600"
+                                >
+                                  <CheckCircle className="mr-2 h-4 w-4" />
+                                  Approve Vendor
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  disabled={loading}
+                                  className="text-red-600"
+                                  onClick={() => rejectVendor(vendor.id)}
+                                >
+                                  <XIcon className="mr-2 h-4 w-4" />
+                                  Reject Vendor
+                                </DropdownMenuItem>
+                              </>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>

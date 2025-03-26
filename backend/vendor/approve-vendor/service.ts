@@ -1,6 +1,6 @@
 import type { ClientSession } from "#root/backend/auth/shared/entities";
 import { query } from "#root/shared/database/drizzle/db";
-import { user, vendor } from "#root/shared/database/drizzle/schema";
+import { user, vendor, vendorLog } from "#root/shared/database/drizzle/schema";
 import { ServerError } from "#root/shared/error/server";
 import { eq } from "drizzle-orm";
 import { Array, Effect, Option } from "effect";
@@ -57,5 +57,48 @@ export const approveVendor = (
 			);
 		}
 
-		return Option.getOrThrow(maybeVendor);
+		const targetVendor = Option.getOrThrow(maybeVendor);
+
+		if (targetVendor.status === "active") {
+			return yield* $(
+				Effect.fail(
+					new ServerError({
+						tag: "VendorAlreadyActive",
+						statusCode: 400,
+						clientMessage: "Vendor already active",
+					}),
+				),
+			);
+		}
+
+		return yield* $(
+			query(async (db) => {
+				return await db.transaction(async (tx) => {
+					const actionUser = await tx
+						.select({
+							id: user.id,
+						})
+						.from(user)
+						.where(eq(user.email, session.email))
+						.then((data) => data[0]);
+
+					if (!actionUser) {
+						throw new Error("User not found");
+					}
+
+					const approve = tx
+						.update(vendor)
+						.set({ status: "active" })
+						.where(eq(vendor.id, targetVendor.id));
+
+					const logApprove = tx.insert(vendorLog).values({
+						action: "approved",
+						userId: actionUser.id,
+						vendorId: targetVendor.id,
+					});
+
+					await Promise.all([approve, logApprove]);
+				});
+			}),
+		);
 	});

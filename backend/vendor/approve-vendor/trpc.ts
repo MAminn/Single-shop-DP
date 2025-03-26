@@ -5,9 +5,9 @@ import {
 import { provideDatabase, publicProcedure } from "#root/shared/trpc/server";
 import { approveVendor, approveVendorSchema } from "./service.js";
 
-export const viewVendorByIdProcedure = publicProcedure
+export const approveVendorProcedure = publicProcedure
 	.input(approveVendorSchema)
-	.query(async ({ ctx, input }) => {
+	.mutation(async ({ ctx, input }) => {
 		return await runBackendEffect(
 			approveVendor(input, ctx.clientSession).pipe(provideDatabase(ctx)),
 		).then(serializeBackendEffectResult);

@@ -2,7 +2,7 @@ import type { ClientSession } from "#root/backend/auth/shared/entities";
 import { query } from "#root/shared/database/drizzle/db";
 import { user, vendor } from "#root/shared/database/drizzle/schema";
 import { ServerError } from "#root/shared/error/server";
-import { eq, ilike, inArray, or } from "drizzle-orm";
+import { desc, eq, ilike, inArray, or } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 
@@ -48,6 +48,7 @@ export const viewVendors = (
 					.leftJoin(user, eq(vendor.id, user.vendorId))
 					.limit(input.limit ?? 10)
 					.offset(input.offset ?? 0)
+					.orderBy(desc(vendor.createdAt))
 					.$dynamic();
 
 				if (input.statuses && input.statuses.length > 0) {

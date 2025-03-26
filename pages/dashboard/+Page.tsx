@@ -52,6 +52,9 @@ import type { Product } from "#root/lib/mock-data/products";
 import { orders, orderStatus } from "#root/lib/mock-data/orders";
 import type { Order } from "#root/lib/mock-data/orders";
 import { vendorDashboardStats } from "#root/lib/mock-data/customers";
+import { useData } from "vike-react/useData";
+import type { Data } from "./+data";
+import { ErrorSection } from "#root/components/error-section";
 
 export default function Dashboard() {
   const { userRole } = useRole();
@@ -77,12 +80,72 @@ export default function Dashboard() {
 }
 
 function AdminDashboard() {
-  const stats = adminDashboardStats;
+  const fetchData = useData<Data>();
+
+  if (!fetchData.success) {
+    return <ErrorSection error={fetchData.error} />;
+  }
+
+  if (fetchData.type === "vendor") {
+    return <ErrorSection error="You are not authorized to view this page" />;
+  }
+
+  const data = fetchData.result;
+
+  const stats = { ...adminDashboardStats };
   const vendorList = recentVendors;
   const topProducts = adminTopProducts;
 
   return (
     <div className="space-y-6">
+      {data.vendors.pending > 0 && (
+        <Card className="bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800">
+          <CardHeader>
+            <div className="flex items-center">
+              <AlertTriangle className="h-5 w-5 text-orange-500 mr-2" />
+              <CardTitle className="text-lg font-medium">
+                Attention Required
+              </CardTitle>
+            </div>
+            <CardDescription>Items that need your attention</CardDescription>
+          </CardHeader>
+          <CardContent className="p-4">
+            <ul className="space-y-3">
+              {data.vendors.pending > 0 && (
+                <li className="flex items-center text-sm">
+                  <CircleAlert className="h-4 w-4 text-yellow-600 mr-2" />
+                  <span>
+                    {data.vendors.pending} new vendor registrations awaiting
+                    approval
+                  </span>
+                  <Link
+                    href="/dashboard/vendors"
+                    className="ml-auto text-blue-600"
+                  >
+                    Review
+                  </Link>
+                </li>
+              )}
+              <li className="flex items-center text-sm">
+                <CircleAlert className="h-4 w-4 text-red-600 mr-2" />
+                <span>4 products reported for policy violations</span>
+                <Link
+                  href="/dashboard/products"
+                  className="ml-auto text-blue-600"
+                >
+                  Check
+                </Link>
+              </li>
+              <li className="flex items-center text-sm">
+                <CircleAlert className="h-4 w-4 text-orange-600 mr-2" />
+                <span>12 customer support tickets awaiting response</span>
+                <span className="ml-auto text-blue-600">Respond</span>
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-6">
@@ -91,19 +154,21 @@ function AdminDashboard() {
                 <p className="text-sm font-medium text-muted-foreground">
                   Total Vendors
                 </p>
-                <p className="text-3xl font-bold">{stats.totalVendors}</p>
+                <p className="text-3xl font-bold">{data.vendors.total}</p>
               </div>
               <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
                 <Store className="h-6 w-6 text-blue-600 dark:text-blue-300" />
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
-              <Badge
-                variant="outline"
-                className="bg-green-100 text-green-800 hover:bg-green-100"
-              >
-                +3 this month
-              </Badge>
+              {data.vendors.new > 0 && (
+                <Badge
+                  variant="outline"
+                  className="bg-green-100 text-green-800 hover:bg-green-100"
+                >
+                  +{data.vendors.new} this month
+                </Badge>
+              )}
               <Link
                 href="/dashboard/vendors"
                 className="ml-auto flex items-center text-blue-600"
@@ -398,47 +463,6 @@ function AdminDashboard() {
             <ArrowUpRight className="h-4 w-4 ml-1" />
           </Link>
         </CardFooter>
-      </Card>
-
-      <Card className="bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800">
-        <CardHeader>
-          <div className="flex items-center">
-            <AlertTriangle className="h-5 w-5 text-orange-500 mr-2" />
-            <CardTitle className="text-lg font-medium">
-              Attention Required
-            </CardTitle>
-          </div>
-          <CardDescription>Items that need your attention</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-3">
-            <li className="flex items-center text-sm">
-              <CircleAlert className="h-4 w-4 text-yellow-600 mr-2" />
-              <span>
-                {stats.pendingVendors} new vendor registrations awaiting
-                approval
-              </span>
-              <Link href="/dashboard/vendors" className="ml-auto text-blue-600">
-                Review
-              </Link>
-            </li>
-            <li className="flex items-center text-sm">
-              <CircleAlert className="h-4 w-4 text-red-600 mr-2" />
-              <span>4 products reported for policy violations</span>
-              <Link
-                href="/dashboard/products"
-                className="ml-auto text-blue-600"
-              >
-                Check
-              </Link>
-            </li>
-            <li className="flex items-center text-sm">
-              <CircleAlert className="h-4 w-4 text-orange-600 mr-2" />
-              <span>12 customer support tickets awaiting response</span>
-              <span className="ml-auto text-blue-600">Respond</span>
-            </li>
-          </ul>
-        </CardContent>
       </Card>
     </div>
   );
