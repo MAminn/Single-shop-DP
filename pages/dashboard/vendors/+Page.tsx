@@ -259,8 +259,6 @@ export default function Vendors() {
                     <TableHead>Vendor</TableHead>
                     <TableHead>Owner</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Products</TableHead>
-                    <TableHead>Categories</TableHead>
                     <TableHead>Join Date</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -274,8 +272,6 @@ export default function Vendors() {
                       </TableCell>
                       <TableCell>{vendor.ownerName}</TableCell>
                       <TableCell>{vendor.ownerEmail}</TableCell>
-                      <TableCell>{"-"}</TableCell>
-                      <TableCell>{"-"}</TableCell>
                       <TableCell>{vendor.createdAt.toDateString()}</TableCell>
                       <TableCell>{getStatusBadge(vendor.status)}</TableCell>
                       <TableCell className="text-right">
@@ -291,21 +287,21 @@ export default function Vendors() {
                               Vendor Actions
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem>
+                            {/* <DropdownMenuItem>
                               <Eye className="mr-2 h-4 w-4" />
                               View Profile
-                            </DropdownMenuItem>
+                            </DropdownMenuItem> */}
                             <DropdownMenuItem>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit Vendor
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <ShoppingBag className="mr-2 h-4 w-4" />
-                              View Products
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <LayoutGrid className="mr-2 h-4 w-4" />
-                              View Categories
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href={`/dashboard/products?vendorId=${vendor.id}`}
+                              >
+                                <ShoppingBag className="mr-2 h-4 w-4" />
+                                View Products
+                              </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             {vendor.status === "active" && (
