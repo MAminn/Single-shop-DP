@@ -53,10 +53,10 @@ const Hero: React.FC<HeroProps> = ({ lang = "en" }: HeroProps) => {
   };
   return (
     <section className=" w-full h-full">
-      <section className=" w-full h-full">
+      <section className=" w-full h-[200px] md:h-full">
         <img src={HeroImg} alt="" className=" w-full h-full " />
       </section>
-      <section className=" w-full h-[400px] men-section-image bg-center bg-cover bg-fixed flex justify-center items-center flex-col ">
+      <section className=" w-full h-[300px] md:h-[400px] men-section-image bg-center bg-cover bg-fixed flex justify-center items-center flex-col ">
         <h1 className=" text-3xl md:text-6xl font-bold text-white uppercase">
           Men
         </h1>
@@ -66,7 +66,7 @@ const Hero: React.FC<HeroProps> = ({ lang = "en" }: HeroProps) => {
           </Button>
         </Link>
       </section>
-      <section className=" w-full h-[400px] women-section-image bg-center bg-cover bg-fixed flex justify-center items-center flex-col ">
+      <section className=" w-full h-[300px] md:h-[400px] women-section-image bg-center bg-cover bg-fixed flex justify-center items-center flex-col ">
         <h1 className=" text-3xl md:text-6xl font-bold text-white uppercase">
           Women
         </h1>

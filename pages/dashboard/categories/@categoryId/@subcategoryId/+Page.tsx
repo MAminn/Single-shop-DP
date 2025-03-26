@@ -167,23 +167,27 @@ export default function SubcategoryProducts() {
   }
 
   return (
-    <div className="p-6 w-full mx-auto">
-      <div className="flex items-center mb-6">
-        <Button variant="ghost" asChild className="mr-4">
-          <Link href={`/dashboard/categories/${category.id}`}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to {category.name}
-          </Link>
-        </Button>
+    <div className="p-6 w-full h-full flex-wrap mx-auto">
+      <div className="flex flex-col  mb-6 gap-2 flex-wrap">
+        <div className="flex  gap-2">
+          <Button variant="ghost" asChild className="mr-4">
+            <Link href={`/dashboard/categories/${category.id}`}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to {category.name}
+            </Link>
+          </Button>
+          <h1 className="text-2xl font-bold text-center ">
+            {subcategory.name}
+          </h1>
+        </div>
         <div>
-          <h1 className="text-2xl font-bold">{subcategory.name}</h1>
           <p className="text-slate-500">
             Manage products in {category.name} &gt; {subcategory.name}
           </p>
         </div>
       </div>
 
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col lg:flex-row justify-center lg:justify-between items-center mb-4 flex-wrap gap-2">
         <h2 className="text-xl font-semibold">Products</h2>
         <Button
           onClick={() => setIsAddDialogOpen(true)}

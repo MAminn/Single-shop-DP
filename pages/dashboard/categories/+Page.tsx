@@ -80,7 +80,7 @@ export default function Categories() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {categories.map((category) => (
-          <Card key={category.id} className="relative group">
+          <Card key={category.id} className="relative group p-4">
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>{category.name}</CardTitle>

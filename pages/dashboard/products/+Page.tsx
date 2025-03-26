@@ -136,13 +136,15 @@ export default function Products() {
     });
 
   return (
-    <Card className="p-6 w-full mx-auto flex-1">
+    <Card className="p-6 w-full h-full mx-auto flex-1">
       <CardHeader className="flex justify-between items-center">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col justify-center items-center lg:items-start lg:justify-start gap-2">
           <CardTitle>Products</CardTitle>
-          <CardDescription>Manage your product inventory.</CardDescription>
+          <CardDescription className="text-center lg:text-left">
+            Manage your product inventory.
+          </CardDescription>
         </div>
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-4 flex-wrap justify-center lg:justify-start items-center">
           <Input
             placeholder="Search..."
             value={search}

@@ -137,11 +137,13 @@ export default function Orders() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="p-6 space-y-6 w-full h-full">
+      <div className="flex justify-center lg:justify-between items-center flex-wrap gap-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Orders</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-center lg:text-left">
+            Orders
+          </h1>
+          <p className="text-muted-foreground text-center lg:text-left">
             {userRole === "admin"
               ? "Manage all vendor orders across the platform"
               : "Track and manage your store's orders"}
