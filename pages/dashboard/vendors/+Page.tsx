@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardHeader,
@@ -32,6 +32,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  Loader2Icon,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -49,97 +50,55 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#root/components/ui/select";
-
-interface Vendor {
-  id: number;
-  name: string;
-  owner: string;
-  email: string;
-  products: number;
-  categories: number;
-  joinDate: string;
-  status: "Active" | "Pending" | "Suspended";
-}
+import { useData } from "vike-react/useData";
+import type { Data } from "./+data";
+import { trpc } from "#root/shared/trpc/client";
+import { useDebounce } from "use-debounce";
 
 export default function Vendors() {
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchQueryValue] = useDebounce(searchQuery, 1000);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const initalData = useData<Data>();
 
-  const mockVendors: Vendor[] = [
-    {
-      id: 1,
-      name: "Fashion Store",
-      owner: "John Smith",
-      email: "john@fashionstore.com",
-      products: 48,
-      categories: 5,
-      joinDate: "2023-01-15",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Tech Gadgets",
-      owner: "Sarah Johnson",
-      email: "sarah@techgadgets.com",
-      products: 64,
-      categories: 8,
-      joinDate: "2023-03-22",
-      status: "Active",
-    },
-    {
-      id: 3,
-      name: "Home Decor",
-      owner: "Michael Brown",
-      email: "michael@homedecor.com",
-      products: 36,
-      categories: 4,
-      joinDate: "2023-05-10",
-      status: "Suspended",
-    },
-    {
-      id: 4,
-      name: "Jewelry Hub",
-      owner: "Emily Wilson",
-      email: "emily@jewelryhub.com",
-      products: 72,
-      categories: 3,
-      joinDate: "2023-06-18",
-      status: "Active",
-    },
-    {
-      id: 5,
-      name: "Sports World",
-      owner: "David Lee",
-      email: "david@sportsworld.com",
-      products: 0,
-      categories: 0,
-      joinDate: "2023-09-05",
-      status: "Pending",
-    },
-  ];
+  const [fetchDataResult, setFetchDataResult] = useState<Data>(initalData);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (statusFilter && statusFilter !== "all") {
+      setLoading(true);
+      trpc.vendor.view
+        .query({
+          statuses: [statusFilter],
+          search: searchQueryValue,
+        })
+        .then(setFetchDataResult)
+        .then(() => setLoading(false));
+    } else {
+      setLoading(true);
+      trpc.vendor.view
+        .query({
+          search: searchQueryValue,
+        })
+        .then(setFetchDataResult)
+        .then(() => setLoading(false));
+    }
+  }, [statusFilter, searchQueryValue]);
 
-  const filteredVendors = mockVendors
-    .filter((vendor) => {
-      if (statusFilter !== "all") {
-        return vendor.status.toLowerCase() === statusFilter.toLowerCase();
-      }
-      return true;
-    })
-    .filter((vendor) => {
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        return (
-          vendor.name.toLowerCase().includes(query) ||
-          vendor.owner.toLowerCase().includes(query) ||
-          vendor.email.toLowerCase().includes(query)
-        );
-      }
-      return true;
-    });
+  if (!fetchDataResult.success) {
+    return (
+      <section className="max-w-3xl text-center mx-auto py-10">
+        <AlertCircle className="w-20 h-20 bg-primary text-primary-foreground rounded-full p-4 mx-auto" />
+        <h1 className="text-2xl font-bold mb-2">Something went wrong</h1>
+        <p>{fetchDataResult.error}</p>
+      </section>
+    );
+  }
+
+  const data = fetchDataResult.result;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "Active":
+      case "active":
         return (
           <Badge
             variant="outline"
@@ -149,7 +108,7 @@ export default function Vendors() {
             Active
           </Badge>
         );
-      case "Pending":
+      case "pending":
         return (
           <Badge
             variant="outline"
@@ -159,7 +118,7 @@ export default function Vendors() {
             Pending
           </Badge>
         );
-      case "Suspended":
+      case "suspended":
         return (
           <Badge
             variant="outline"
@@ -175,31 +134,29 @@ export default function Vendors() {
   };
 
   return (
-    <div className="p-6 space-y-6 w-full h-full">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Vendors</h1>
-        <p className="text-muted-foreground">
-          Manage all vendors on the platform
-        </p>
-      </div>
-
-      <div className="flex justify-between items-center">
-        <Button>
-          <Store className="mr-2 h-4 w-4" />
-          Add New Vendor
-        </Button>
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Vendors</h1>
+          <p className="text-muted-foreground">
+            Manage all vendors on the platform
+          </p>
+        </div>
+        {loading && (
+          <Loader2Icon className="w-6 h-6 animate-spin text-muted-foreground" />
+        )}
       </div>
 
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col gap-4 md:flex-row justify-between">
-            <div className="flex items-center gap-2 w-full md:w-1/3">
+            <div className="flex items-center gap-2 w-full">
               <Search className="h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search vendors..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9"
+                className="h-9 flex-1"
               />
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -212,7 +169,9 @@ export default function Vendors() {
                   <SelectContent>
                     <SelectItem value="all">All Statuses</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
                     <SelectItem value="suspended">Suspended</SelectItem>
                   </SelectContent>
                 </Select>
@@ -221,7 +180,7 @@ export default function Vendors() {
           </div>
         </CardHeader>
         <CardContent>
-          {filteredVendors.length === 0 ? (
+          {data.length === 0 ? (
             <div className="text-center py-10">
               <Store className="mx-auto h-12 w-12 text-muted-foreground" />
               <h3 className="mt-4 text-lg font-semibold">No vendors found</h3>
@@ -247,16 +206,16 @@ export default function Vendors() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredVendors.map((vendor) => (
+                  {data.map((vendor) => (
                     <TableRow key={vendor.id}>
                       <TableCell className="font-medium">
                         {vendor.name}
                       </TableCell>
-                      <TableCell>{vendor.owner}</TableCell>
-                      <TableCell>{vendor.email}</TableCell>
-                      <TableCell>{vendor.products}</TableCell>
-                      <TableCell>{vendor.categories}</TableCell>
-                      <TableCell>{vendor.joinDate}</TableCell>
+                      <TableCell>{vendor.ownerName}</TableCell>
+                      <TableCell>{vendor.ownerEmail}</TableCell>
+                      <TableCell>{"-"}</TableCell>
+                      <TableCell>{"-"}</TableCell>
+                      <TableCell>{vendor.createdAt.toDateString()}</TableCell>
                       <TableCell>{getStatusBadge(vendor.status)}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
@@ -288,12 +247,12 @@ export default function Vendors() {
                               View Categories
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            {vendor.status === "Active" ? (
+                            {vendor.status === "active" ? (
                               <DropdownMenuItem className="text-yellow-600">
                                 <AlertCircle className="mr-2 h-4 w-4" />
                                 Suspend Vendor
                               </DropdownMenuItem>
-                            ) : vendor.status === "Suspended" ? (
+                            ) : vendor.status === "suspended" ? (
                               <DropdownMenuItem className="text-green-600">
                                 <CheckCircle className="mr-2 h-4 w-4" />
                                 Activate Vendor
@@ -321,7 +280,7 @@ export default function Vendors() {
         <CardFooter className="border-t px-6 py-4">
           <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
             <div>
-              Showing {filteredVendors.length} of {mockVendors.length} vendors
+              Showing {data.length} of {0} vendors
             </div>
           </div>
         </CardFooter>

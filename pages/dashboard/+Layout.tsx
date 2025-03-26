@@ -31,7 +31,7 @@ export default function DashboardLayout({
 function Content({ children }: { children: React.ReactNode }) {
   const pageContext = usePageContext();
   const pathname = pageContext.urlPathname;
-  const { userRole, toggleRole } = useRole();
+  const { userRole } = useRole();
 
   const getActiveTab = () => {
     if (pathname === "/dashboard" || pathname === "/dashboard/overview") {
@@ -54,19 +54,23 @@ function Content({ children }: { children: React.ReactNode }) {
 
   const activeTab = getActiveTab();
 
-  const adminTabs = [
+  const tabs = [
     {
       label: "Overview",
       href: "/dashboard",
     },
-    {
-      label: "Vendors",
-      href: "/dashboard/vendors",
-    },
-    {
-      label: "Categories",
-      href: "/dashboard/categories",
-    },
+    ...(userRole === "admin"
+      ? [
+          {
+            label: "Vendors",
+            href: "/dashboard/vendors",
+          },
+          {
+            label: "Categories",
+            href: "/dashboard/categories",
+          },
+        ]
+      : []),
     {
       label: "Products",
       href: "/dashboard/products",
@@ -76,23 +80,6 @@ function Content({ children }: { children: React.ReactNode }) {
       href: "/dashboard/orders",
     },
   ];
-
-  const vendorTabs = [
-    {
-      label: "Overview",
-      href: "/dashboard",
-    },
-    {
-      label: "Products",
-      href: "/dashboard/products",
-    },
-    {
-      label: "Orders",
-      href: "/dashboard/orders",
-    },
-  ];
-
-  const tabs = userRole === "admin" ? adminTabs : vendorTabs;
 
   return (
     <main className="flex-1 w-full h-full">
@@ -117,13 +104,6 @@ function Content({ children }: { children: React.ReactNode }) {
                       ))}
                     </TabsList>
                   </Tabs>
-                </div>
-                <div className="mr-4">
-                  <Button variant="outline" size="sm" onClick={toggleRole}>
-                    {userRole === "admin"
-                      ? "Switch to Vendor View"
-                      : "Switch to Admin View"}
-                  </Button>
                 </div>
               </div>
               {userRole === "admin" && (

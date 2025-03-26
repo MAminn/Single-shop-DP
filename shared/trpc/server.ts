@@ -1,17 +1,18 @@
 import { initTRPC } from "@trpc/server";
 import {
-  DatabaseClientService,
-  type DatabaseClient,
+	DatabaseClientService,
+	type DatabaseClient,
 } from "#root/shared/database/drizzle/db.js";
 import { Effect } from "effect";
 import superjson from "superjson";
+import type { Context } from "./context.server";
 
 /**
  * Initialization of tRPC backend
  * Should be done only once per backend!
  */
-export const t = initTRPC.context<{ db: DatabaseClient }>().create({
-  transformer: superjson,
+export const t = initTRPC.context<Context>().create({
+	transformer: superjson,
 });
 
 /**
@@ -22,4 +23,4 @@ export const router = t.router;
 export const publicProcedure = t.procedure;
 
 export const provideDatabase = (ctx: { db: DatabaseClient }) =>
-  Effect.provideService(DatabaseClientService, ctx.db);
+	Effect.provideService(DatabaseClientService, ctx.db);
