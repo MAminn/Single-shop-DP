@@ -29,9 +29,16 @@ export async function data(ctx: PageContext) {
 		}
 	};
 
+	const getCategoryId = () => {
+		if (ctx.urlParsed.search.categoryId) {
+			return ctx.urlParsed.search.categoryId;
+		}
+	};
+
 	const viewProductsResult = await runBackendEffect(
 		viewProducts({
 			vendorId: getVendorId(),
+			categoryId: getCategoryId(),
 		}).pipe(Effect.provideService(DatabaseClientService, ctx.db)),
 	).then(serializeBackendEffectResult);
 
@@ -66,6 +73,7 @@ export async function data(ctx: PageContext) {
 	return {
 		success: true,
 		vendorId: getVendorId(),
+		categoryId: getCategoryId(),
 		vendors,
 		categories: viewCategoriesResult.result,
 		products: viewProductsResult.result,

@@ -213,7 +213,7 @@ export default function CategoryDetail() {
                     <TableCell className="flex justify-end space-x-2">
                       <Button size="sm" variant="outline" asChild>
                         <Link
-                          href={`/dashboard/categories/${categoryType}/${subcategory.id}`}
+                          href={`/dashboard/products?categoryId=${subcategory.id}`}
                         >
                           <Package className="h-4 w-4 mr-1" />
                           Products

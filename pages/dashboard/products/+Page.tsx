@@ -70,13 +70,16 @@ export default function Products() {
   const categories = fetchData.categories;
   const vendors = fetchData.vendors;
   const vendorId = fetchData.vendorId;
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  const categoryId = fetchData.categoryId;
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies:(lastFetchDate) <explanation>
   useEffect(() => {
     const fetchProducts = async () => {
       const res = await trpc.product.view.query({
         search,
         sortBy,
         vendorId,
+        categoryId,
       });
 
       if (!res.success) {
@@ -87,6 +90,7 @@ export default function Products() {
       setFetchData({
         success: true,
         vendorId,
+        categoryId,
         products: res.result,
         categories,
         vendors,
@@ -94,7 +98,7 @@ export default function Products() {
     };
 
     fetchProducts();
-  }, [search, sortBy, initialData, lastFetchDate]);
+  }, [search, sortBy, initialData, lastFetchDate, categoryId]);
 
   const handleAddProduct = async (values: ProductFormSchema) => {
     const res = await trpc.product.create.mutate(values);
