@@ -18,7 +18,6 @@ import {
   ShoppingBag,
   ShoppingCart,
   Trash2,
-  XCircle,
 } from "lucide-react";
 import { useToast } from "#root/components/ui/use-toast";
 
@@ -28,7 +27,7 @@ export default function CartPage() {
   const [processingCheckout, setProcessingCheckout] = useState(false);
 
   const handleQuantityChange = (
-    itemId: number,
+    itemId: string,
     newQuantity: number,
     selectedOptions: CartItem["selectedOptions"]
   ) => {
@@ -44,7 +43,7 @@ export default function CartPage() {
   };
 
   const handleRemoveItem = (
-    itemId: number,
+    itemId: string,
     selectedOptions: CartItem["selectedOptions"]
   ) => {
     removeItem(itemId, selectedOptions);

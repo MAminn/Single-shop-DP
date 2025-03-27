@@ -236,6 +236,7 @@ export default function Products() {
                 : undefined
             }
             onSubmit={handleEditProduct}
+            vendorId={session?.role === "vendor" ? session.vendorId : undefined}
           />
         </DialogContent>
       </Dialog>
@@ -249,6 +250,7 @@ export default function Products() {
             categories={categories}
             vendors={vendors}
             onSubmit={handleAddProduct}
+            vendorId={session?.role === "vendor" ? session.vendorId : undefined}
           />
         </DialogContent>
       </Dialog>

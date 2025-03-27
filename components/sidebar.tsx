@@ -8,41 +8,43 @@ import {
 } from "#root/components/ui/sidebar";
 import { Button } from "#root/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "./Link";
+import { trpc } from "#root/shared/trpc/client";
+import { toast } from "sonner";
 
 export function AppSidebar() {
   const [isMenOpen, setIsMenOpen] = useState(false);
   const [isWomenOpen, setIsWomenOpen] = useState(false);
 
-  const menCategories = [
-    { label: "Shirts", to: "/featured/men/categories/shirts" },
-    { label: "T-Shirts", to: "/featured/men/categories/t-shirts" },
+  const [categories, setCategories] = useState<
     {
-      label: "Sweaters & Hoodies",
-      to: "/featured/men/categories/sweaters-hoodies",
-    },
-    { label: "Pants", to: "/featured/men/categories/pants" },
-    { label: "Accessories", to: "/featured/men/categories/accessories" },
-    { label: "Shorts", to: "/featured/men/categories/shorts" },
-    { label: "Jackets", to: "/featured/men/categories/jackets" },
-    { label: "Shoes", to: "/featured/men/categories/shoes" },
-  ];
+      label: string;
+      to: string;
+      type: "men" | "women";
+    }[]
+  >([]);
 
-  const womenCategories = [
-    { label: "Accessories", to: "/featured/women/categories/accessories" },
-    { label: "Blouses", to: "/featured/women/categories/blouses" },
-    { label: "Body Suits", to: "/featured/women/categories/body-suits" },
-    { label: "Dresses", to: "/featured/women/categories/dresses" },
-    { label: "Hoodies", to: "/featured/women/categories/hoodies" },
-    { label: "Jackets", to: "/featured/women/categories/jackets" },
-    { label: "Pants", to: "/featured/women/categories/pants" },
-    { label: "Shirts", to: "/featured/women/categories/shirts" },
-    { label: "Shoes", to: "/featured/women/categories/shoes" },
-    { label: "Shorts", to: "/featured/women/categories/shorts" },
-    { label: "Skirts", to: "/featured/women/categories/skirts" },
-    { label: "T-Shirts", to: "/featured/women/categories/t-shirts" },
-  ];
+  useEffect(() => {
+    trpc.category.view.query().then((res) => {
+      if (!res.success) {
+        toast.error(res.error);
+        return;
+      }
+
+      setCategories(
+        res.result.map((c) => ({
+          label: c.name,
+          to: `/featured/${c.type}/categories/${c.id}`,
+          type: c.type,
+        }))
+      );
+    });
+  }, []);
+
+  const menCategories = categories.filter((c) => c.type === "men");
+
+  const womenCategories = categories.filter((c) => c.type === "women");
 
   return (
     <Sidebar>
@@ -50,15 +52,6 @@ export function AppSidebar() {
         <h2 className="text-xl font-semibold p-4">Categories</h2>
       </SidebarHeader>
       <SidebarContent>
-        {/* Featured Section */}
-        <SidebarGroup>
-          <Link href="/featured">
-            <Button variant="ghost" className="w-full justify-start">
-              Featured
-            </Button>
-          </Link>
-        </SidebarGroup>
-
         {/* Men Section */}
         <SidebarGroup>
           <Button

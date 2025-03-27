@@ -13,6 +13,7 @@ export const createProductSchema = z.object({
 	categoryId: z.string().uuid(),
 	price: z.number().min(0).max(10000),
 	vendorId: z.string().uuid(),
+	stock: z.number().min(0).max(10000),
 });
 
 export const createProduct = (
@@ -60,6 +61,7 @@ export const createProduct = (
 						categoryId: data.categoryId,
 						vendorId: data.vendorId,
 						price: data.price.toString(),
+						stock: data.stock,
 					})
 					.returning()
 					.then((data) => data[0]);

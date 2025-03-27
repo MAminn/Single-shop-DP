@@ -14,6 +14,7 @@ export const editProductSchema = z.object({
 	categoryId: z.string().uuid(),
 	price: z.number().min(0).max(10000),
 	vendorId: z.string().uuid(),
+	stock: z.number().min(0).max(10000),
 });
 
 export const editProduct = (
@@ -61,6 +62,7 @@ export const editProduct = (
 						categoryId: data.categoryId,
 						vendorId: data.vendorId,
 						price: data.price.toString(),
+						stock: data.stock
 					})
 					.where(eq(product.id, data.id))
 					.returning()

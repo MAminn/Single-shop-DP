@@ -18,9 +18,9 @@ interface CartContextType {
     quantity: number,
     selectedOptions: CartItem["selectedOptions"]
   ) => boolean;
-  removeItem: (itemId: number, options?: CartItem["selectedOptions"]) => void;
+  removeItem: (itemId: string, options?: CartItem["selectedOptions"]) => void;
   updateQuantity: (
-    itemId: number,
+    itemId: string,
     quantity: number,
     options?: CartItem["selectedOptions"]
   ) => boolean;
@@ -28,7 +28,7 @@ interface CartContextType {
   totalItems: number;
   subtotal: number;
   findItemInCart: (
-    itemId: number,
+    itemId: string,
     options: CartItem["selectedOptions"]
   ) => CartItem | undefined;
 }
@@ -56,7 +56,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items]);
 
   const findItemInCart = (
-    itemId: number,
+    itemId: string,
     options: CartItem["selectedOptions"]
   ) => {
     return items.find(
@@ -111,7 +111,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const removeItem = (
-    itemId: number,
+    itemId: string,
     options?: CartItem["selectedOptions"]
   ) => {
     if (options) {
@@ -130,7 +130,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const updateQuantity = (
-    itemId: number,
+    itemId: string,
     quantity: number,
     options?: CartItem["selectedOptions"]
   ) => {

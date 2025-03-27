@@ -76,7 +76,7 @@ const Navbar: React.FC<NavbarProps> = ({
           .filter((s) => s.type === "men")
           .map((s) => ({
             label: s.name,
-            to: `/featured/men/categories/${s.slug}`,
+            to: `/featured/men/categories/${s.id}`,
           })),
       },
       {
@@ -86,7 +86,7 @@ const Navbar: React.FC<NavbarProps> = ({
           .filter((s) => s.type === "women")
           .map((s) => ({
             label: s.name,
-            to: `/featured/women/categories/${s.slug}`,
+            to: `/featured/women/categories/${s.id}`,
           })),
       },
       { label: "Become a vendor!", to: "/vendor" },

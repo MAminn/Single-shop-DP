@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -20,9 +20,10 @@ import { Minus, Plus, ShoppingBag } from "lucide-react";
 import { useToast } from "#root/components/ui/use-toast";
 import { useCart } from "#root/lib/context/CartContext";
 import type { Product } from "#root/lib/mock-data/products";
+import { trpc } from "#root/shared/trpc/client";
 
 interface SortingProps {
-  Products: Product[];
+  categoryId?: string;
 }
 
 type SortCriteria =
@@ -34,10 +35,9 @@ type SortCriteria =
   | "date-asc"
   | "date-desc";
 
-const Sorting: React.FC<SortingProps> = ({ Products }: SortingProps) => {
+const Sorting: React.FC<SortingProps> = ({ categoryId }: SortingProps) => {
   const [sortCriteria, setSortCriteria] = useState<SortCriteria>("featured");
-  const toBeSorted = [...Products];
-  const [products, setProducts] = useState(toBeSorted);
+  const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState({
@@ -50,8 +50,33 @@ const Sorting: React.FC<SortingProps> = ({ Products }: SortingProps) => {
   const availableSizes = ["XS", "S", "M", "L", "XL"];
   const availableColors = ["Black", "White", "Red", "Blue", "Green"];
 
-  const handleSort = (criteria: SortCriteria) => {
-    const sortedProducts = [...toBeSorted];
+  useEffect(() => {
+    trpc.product.view
+      .query({
+        categoryId,
+      })
+      .then((res) => {
+        if (res.success) {
+          setProducts(
+            res.result.map(({ file, product }) => ({
+              id: product.id,
+              sku: product.id,
+              name: product.name,
+              price: Number(product.price),
+              stock: product.stock,
+              imageUrl: file ? `/uploads/${file.diskname}` : undefined,
+            }))
+          );
+        }
+      });
+  }, [categoryId]);
+
+  useEffect(() => {
+    setProducts(getSortedProducts(sortCriteria));
+  }, [sortCriteria]);
+
+  const getSortedProducts = (criteria: SortCriteria) => {
+    const sortedProducts = [...products];
 
     switch (criteria) {
       case "featured":
@@ -86,8 +111,7 @@ const Sorting: React.FC<SortingProps> = ({ Products }: SortingProps) => {
         break;
     }
 
-    setProducts(sortedProducts);
-    setSortCriteria(criteria);
+    return sortedProducts;
   };
 
   const incrementQuantity = () => {
@@ -98,7 +122,6 @@ const Sorting: React.FC<SortingProps> = ({ Products }: SortingProps) => {
         title: "Stock limit reached",
         description:
           "You cannot add more of this item than available in stock.",
-        variant: "destructive",
       });
     }
   };
@@ -122,7 +145,6 @@ const Sorting: React.FC<SortingProps> = ({ Products }: SortingProps) => {
       toast({
         title: "Please select all options",
         description: "Size and color are required before adding to cart.",
-        variant: "destructive",
       });
       return;
     }
@@ -132,13 +154,12 @@ const Sorting: React.FC<SortingProps> = ({ Products }: SortingProps) => {
     if (success) {
       toast({
         title: "Added to cart",
-        description: `${quantity} × ${selectedProduct.name} added to your cart.`,
+        description: `${quantity} x ${selectedProduct.name} added to your cart.`,
       });
     } else {
       toast({
         title: "Could not add to cart",
         description: "The requested quantity is not available in stock.",
-        variant: "destructive",
       });
     }
   };
@@ -155,7 +176,7 @@ const Sorting: React.FC<SortingProps> = ({ Products }: SortingProps) => {
         <span className="text-sm font-medium ">Sort by:</span>
         <Select
           value={sortCriteria}
-          onValueChange={(value) => handleSort(value as SortCriteria)}
+          onValueChange={(value) => setSortCriteria(value as SortCriteria)}
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select sort criteria" />

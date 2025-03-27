@@ -48,12 +48,14 @@ export type ProductFormSchema = z.infer<typeof formSchema>;
 export default function ProductForm({
   categories,
   vendors,
+  vendorId,
   defaultValues,
   onSubmit,
 }: {
   defaultValues?: z.infer<typeof formSchema>;
   categories: { id: string; name: string }[];
   vendors: { id: string; name: string }[];
+  vendorId?: string;
   onSubmit: (values: z.infer<typeof formSchema>) => PromiseLike<void>;
 }) {
   const [submitting, setSubmitting] = useState(false);
@@ -163,7 +165,7 @@ export default function ProductForm({
                     >
                       {field.value
                         ? categories.find((c) => c.id === field.value)?.name
-                        : "Select language"}
+                        : "Select category"}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>
@@ -203,66 +205,75 @@ export default function ProductForm({
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="vendorId"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Vendor</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      // biome-ignore lint/a11y/useSemanticElements: <explanation>
-                      role="combobox"
-                      className={cn(
-                        "w-[200px] justify-between",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value
-                        ? vendors.find((v) => v.id === field.value)?.name
-                        : "Select language"}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-[200px] p-0">
-                  <Command>
-                    <CommandInput placeholder="Search language..." />
-                    <CommandList>
-                      <CommandEmpty>No language found.</CommandEmpty>
-                      <CommandGroup>
-                        {vendors.map((v) => (
-                          <CommandItem
-                            value={v.name}
-                            key={v.id}
-                            onSelect={() => {
-                              form.setValue("vendorId", v.id);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                v.id === field.value
-                                  ? "opacity-100"
-                                  : "opacity-0"
-                              )}
-                            />
-                            {v.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+        {vendorId && (
+          <input
+            type="hidden"
+            {...form.register("vendorId")}
+            value={vendorId}
+          />
+        )}
+        {!vendorId && (
+          <FormField
+            control={form.control}
+            name="vendorId"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Vendor</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        // biome-ignore lint/a11y/useSemanticElements: <explanation>
+                        role="combobox"
+                        className={cn(
+                          "w-[200px] justify-between",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value
+                          ? vendors.find((v) => v.id === field.value)?.name
+                          : "Select vendor"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[200px] p-0">
+                    <Command>
+                      <CommandInput placeholder="Search language..." />
+                      <CommandList>
+                        <CommandEmpty>No language found.</CommandEmpty>
+                        <CommandGroup>
+                          {vendors.map((v) => (
+                            <CommandItem
+                              value={v.name}
+                              key={v.id}
+                              onSelect={() => {
+                                form.setValue("vendorId", v.id);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  v.id === field.value
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                              {v.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
 
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         <Button type="submit" size="lg" className="w-full">
           Submit
         </Button>
