@@ -19,9 +19,19 @@ export async function data(ctx: PageContext) {
 		} as const;
 	}
 
+	const getVendorId = () => {
+		if (session.role === "vendor") {
+			return session.vendorId;
+		}
+
+		if (ctx.urlParsed.search.vendorId) {
+			return ctx.urlParsed.search.vendorId;
+		}
+	};
+
 	const viewProductsResult = await runBackendEffect(
 		viewProducts({
-			vendorId: session.role === "vendor" ? session.vendorId : undefined,
+			vendorId: getVendorId(),
 		}).pipe(Effect.provideService(DatabaseClientService, ctx.db)),
 	).then(serializeBackendEffectResult);
 
@@ -55,6 +65,7 @@ export async function data(ctx: PageContext) {
 
 	return {
 		success: true,
+		vendorId: getVendorId(),
 		vendors,
 		categories: viewCategoriesResult.result,
 		products: viewProductsResult.result,
