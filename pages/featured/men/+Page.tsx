@@ -15,7 +15,7 @@ const Page: React.FC = () => {
   const categoryCards = fetchData.subcategories.map((s) => ({
     title: s.name,
     imgUrl: `/uploads/${s.filename}`,
-    to: `/featured/men/categories/${s.slug}`,
+    to: `/featured/${s.type}/categories/${s.id}`,
   }));
 
   return (

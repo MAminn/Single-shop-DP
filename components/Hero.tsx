@@ -51,6 +51,9 @@ const Hero: React.FC<HeroProps> = ({ lang = "en" }: HeroProps) => {
       ],
     },
   };
+
+  
+
   return (
     <section className=" w-full h-full">
       <section className=" w-full h-[200px] md:h-full">

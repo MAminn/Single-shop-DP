@@ -113,7 +113,6 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
 
     try {
-
       const checkoutFormData = {
         shippingInfo: {
           fullName: formData.fullName,
@@ -364,7 +363,7 @@ export default function CheckoutPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <form onSubmit={handleSubmit}>
-            <Card className="mb-6">
+            <Card className="mb-6 p-5 ">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
@@ -410,7 +409,7 @@ export default function CheckoutPage() {
               </CardContent>
             </Card>
 
-            <Card className="mb-6">
+            <Card className="mb-6 p-5">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Truck className="h-5 w-5" />
@@ -482,7 +481,7 @@ export default function CheckoutPage() {
               </CardContent>
             </Card>
 
-            <Card className="mb-6">
+            <Card className="mb-6 p-5">
               <CardHeader>
                 <CardTitle>Additional Notes</CardTitle>
               </CardHeader>
@@ -563,7 +562,7 @@ function OrderSummary({
   total: number;
 }) {
   return (
-    <Card className="sticky top-4">
+    <Card className="sticky top-4 p-5">
       <CardHeader>
         <CardTitle>Order Summary</CardTitle>
       </CardHeader>
