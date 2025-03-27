@@ -135,7 +135,10 @@ export default function CategoryDetail() {
       );
       return;
     }
-    const res = await trpc.category.edit.mutate(values);
+
+    const res = await trpc.category.edit.mutate(
+      values as SubCategoryFormSchema & { id: string }
+    );
 
     if (!res.success) {
       toast.error(res.error);
