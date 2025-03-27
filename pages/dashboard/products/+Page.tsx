@@ -30,6 +30,7 @@ import ProductForm, { type ProductFormSchema } from "./components";
 import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
 import { usePageContext } from "vike-react/usePageContext";
+import { useDebounce } from "use-debounce";
 
 interface Product {
   id: number;
@@ -58,6 +59,7 @@ export default function Products() {
     isOutOfStock: false,
   });
   const [search, setSearch] = useState("");
+  const [searchQueryValue] = useDebounce(search, 1000);
   const [sortBy, setSortBy] = useState("name");
   if (!fetchData.success) {
     return <ErrorSection error={fetchData.error} />;
@@ -76,7 +78,7 @@ export default function Products() {
   useEffect(() => {
     const fetchProducts = async () => {
       const res = await trpc.product.view.query({
-        search,
+        search: searchQueryValue,
         sortBy,
         vendorId,
         categoryId,
@@ -98,7 +100,7 @@ export default function Products() {
     };
 
     fetchProducts();
-  }, [search, sortBy, initialData, lastFetchDate, categoryId]);
+  }, [searchQueryValue, sortBy, initialData, lastFetchDate, categoryId]);
 
   const handleAddProduct = async (values: ProductFormSchema) => {
     const res = await trpc.product.create.mutate(values);

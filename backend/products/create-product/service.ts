@@ -14,6 +14,14 @@ export const createProductSchema = z.object({
 	price: z.number().min(0).max(10000),
 	vendorId: z.string().uuid(),
 	stock: z.number().min(0).max(10000),
+	variants: z
+		.array(
+			z.object({
+				name: z.string().nonempty().max(255),
+				values: z.array(z.string().nonempty().max(255)),
+			}),
+		)
+		.optional(),
 });
 
 export const createProduct = (

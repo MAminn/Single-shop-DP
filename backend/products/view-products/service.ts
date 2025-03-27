@@ -5,14 +5,14 @@ import {
 	product,
 	vendor,
 } from "#root/shared/database/drizzle/schema";
-import { and, asc, eq, ilike } from "drizzle-orm";
+import { and, asc, eq, ilike, or } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 
 export const viewProductsSchema = z.object({
 	limit: z.number().min(1).max(100).optional(),
 	offset: z.number().min(0).optional(),
-	search: z.string().max(255).optional(),
+	search: z.string().trim().max(255).optional(),
 	sortBy: z.enum(["name", "price", "stock"]).optional(),
 	categoryId: z.string().uuid().optional(),
 	vendorId: z.string().uuid().optional(),
@@ -35,7 +35,7 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
 
 				if (input.search) {
 					pQuery.where(
-						and(
+						or(
 							ilike(product.name, `%${input.search}%`),
 							ilike(product.description, `%${input.search}%`),
 							ilike(vendor.name, `%${input.search}%`),
