@@ -23,11 +23,10 @@ import {
 } from "#root/components/ui/dialog";
 import { Input } from "#root/components/ui/input.jsx";
 import { Tabs, TabsList, TabsTrigger } from "#root/components/ui/tabs";
-import { Label } from "#root/components/ui/label";
 import type { Data } from "./+data";
 import { useData } from "vike-react/useData";
 import { ErrorSection } from "#root/components/error-section";
-import ProductForm, { ProductFormSchema } from "./components";
+import ProductForm, { type ProductFormSchema } from "./components";
 import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
 import { usePageContext } from "vike-react/usePageContext";
@@ -70,14 +69,14 @@ export default function Products() {
   );
   const categories = fetchData.categories;
   const vendors = fetchData.vendors;
-
+  const vendorId = fetchData.vendorId;
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     const fetchProducts = async () => {
       const res = await trpc.product.view.query({
         search,
         sortBy,
-        vendorId: session?.role === "vendor" ? session.vendorId : undefined,
+        vendorId,
       });
 
       if (!res.success) {
@@ -87,6 +86,7 @@ export default function Products() {
 
       setFetchData({
         success: true,
+        vendorId,
         products: res.result,
         categories,
         vendors,
@@ -97,7 +97,6 @@ export default function Products() {
   }, [search, sortBy, initialData, lastFetchDate]);
 
   const handleAddProduct = async (values: ProductFormSchema) => {
-    alert(values);
     const res = await trpc.product.create.mutate(values);
 
     if (!res.success) {
