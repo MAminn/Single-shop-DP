@@ -88,7 +88,7 @@ export const rejectVendor = (
 
 					const reject = tx
 						.update(vendor)
-						.set({ status: "rejected" })
+						.set({ status: "rejected", updatedAt: new Date() })
 						.where(eq(vendor.id, targetVendor.id));
 
 					const logApprove = tx.insert(vendorLog).values({

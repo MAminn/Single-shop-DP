@@ -181,7 +181,7 @@ const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className=" hidden md:flex justify-center items-center gap-4">
+          <div className=" hidden md:flex justify-center items-center gap-2">
             {!session ? (
               logLinks.map((link) => (
                 <Link key={link.to} href={link.to} className="navLink">
@@ -193,6 +193,10 @@ const Navbar: React.FC<NavbarProps> = ({
                 <button onClick={logout} type="submit" className="navLink">
                   Logout
                 </button>
+
+                <Link href="/dashboard" className="navLink">
+                  Dashboard
+                </Link>
               </>
             )}
           </div>
@@ -265,6 +269,10 @@ const Navbar: React.FC<NavbarProps> = ({
                           >
                             Logout
                           </button>
+
+                          <Link href="/dashboard" className="navLink">
+                            Dashboard
+                          </Link>
                         </>
                       )}
                     </div>

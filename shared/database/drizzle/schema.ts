@@ -1,5 +1,7 @@
 import {
 	boolean,
+	decimal,
+	integer,
 	pgEnum,
 	pgTable,
 	text,
@@ -194,4 +196,45 @@ export const categoryLog = pgTable("category_log", {
 		.defaultNow()
 		.notNull(),
 	action: categoryLogAction("action").notNull(),
+});
+
+export const product = pgTable("product", {
+	id: uuid("id")
+		.primaryKey()
+		.$defaultFn(() => v7()),
+	name: text("name").notNull(),
+	description: text("description").notNull(),
+	imageId: uuid("image_id")
+		.references(() => file.id, {
+			onDelete: "cascade",
+			onUpdate: "cascade",
+		})
+		.notNull(),
+	categoryId: uuid("category_id")
+		.notNull()
+		.references(() => category.id, {
+			onDelete: "restrict",
+			onUpdate: "cascade",
+		}),
+	price: decimal("price", {
+		precision: 10,
+		scale: 2,
+	}).notNull(),
+	createdAt: timestamp("created_at", {
+		withTimezone: true,
+		mode: "date",
+	})
+		.defaultNow()
+		.notNull(),
+	updatedAt: timestamp("updated_at", {
+		withTimezone: true,
+		mode: "date",
+	}),
+	vendorId: uuid("vendor_id")
+		.references(() => vendor.id, {
+			onDelete: "restrict",
+			onUpdate: "cascade",
+		})
+		.notNull(),
+	stock: integer("stock").notNull().default(0),
 });

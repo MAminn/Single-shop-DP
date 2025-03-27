@@ -88,7 +88,7 @@ export const activateVendor = (
 
 					const activate = tx
 						.update(vendor)
-						.set({ status: "active" })
+						.set({ status: "active", updatedAt: new Date() })
 						.where(eq(vendor.id, targetVendor.id));
 
 					const logApprove = tx.insert(vendorLog).values({

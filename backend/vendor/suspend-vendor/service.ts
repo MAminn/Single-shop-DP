@@ -88,7 +88,7 @@ export const suspendVendor = (
 
 					const suspend = tx
 						.update(vendor)
-						.set({ status: "suspended" })
+						.set({ status: "suspended", updatedAt: new Date() })
 						.where(eq(vendor.id, targetVendor.id));
 
 					const logApprove = tx.insert(vendorLog).values({
