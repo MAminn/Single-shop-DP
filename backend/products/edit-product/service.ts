@@ -47,7 +47,7 @@ export const editProduct = (
       );
     }
 
-		yield* $(validateProductRules(data));
+    yield* $(validateProductRules(data));
 
     return yield* $(
       query(async (db) => {
@@ -92,6 +92,8 @@ export const editProduct = (
             return updatedProduct;
           }
 
+          const variantNames: string[] = [];
+
           for (const variant of data.variants) {
             const existingVariant = await tx
               .select()
@@ -103,8 +105,6 @@ export const editProduct = (
                 )
               )
               .then((data) => data[0]);
-
-            const variantNames: string[] = [];
 
             if (existingVariant) {
               await tx
@@ -124,16 +124,16 @@ export const editProduct = (
 
               variantNames.push(variant.name);
             }
-
-            await tx
-              .delete(productVariant)
-              .where(
-                and(
-                  eq(productVariant.productId, updatedProduct.id),
-                  not(inArray(productVariant.name, variantNames))
-                )
-              );
           }
+
+          await tx
+            .delete(productVariant)
+            .where(
+              and(
+                eq(productVariant.productId, updatedProduct.id),
+                not(inArray(productVariant.name, variantNames))
+              )
+            );
 
           return updatedProduct;
         });

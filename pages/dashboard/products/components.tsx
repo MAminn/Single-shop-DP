@@ -35,7 +35,7 @@ import { TagsInput } from "#root/components/ui/tags-input";
 import { Label } from "#root/components/ui/label";
 
 const formSchema = z.object({
-  id: z.string().uuid().optional().nullable(),
+  id: z.string().uuid().optional().catch(undefined),
   name: z.string().min(1).max(255),
   description: z.string().max(255),
   price: z.coerce.number(),
