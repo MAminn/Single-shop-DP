@@ -123,6 +123,13 @@ export default function Products() {
   const handleEditProduct = async (values: ProductFormSchema) => {
     if (!selectedProductData) return;
 
+    if (!selectedProductData.product.id) {
+      alert(
+        "Selected product has no id, this is likely a bug, try refreshing the page."
+      );
+      return;
+    }
+
     await trpc.product.edit.mutate({
       id: selectedProductData.product.id,
       ...values,
@@ -237,6 +244,7 @@ export default function Products() {
                     description: selectedProductData.product.description,
                     price: Number(selectedProductData.product.price),
                     stock: selectedProductData.product.stock,
+                    variants: selectedProductData.variants,
                   }
                 : undefined
             }
