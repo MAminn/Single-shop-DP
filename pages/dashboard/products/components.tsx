@@ -390,6 +390,7 @@ export function VariantInput({
       <div className="flex flex-col gap-1">
         <Label>Values</Label>
         <TagsInput
+          className="outline-1 border-none"
           value={value.values}
           onValueChange={(v) => onChange({ ...value, values: v })}
         />
