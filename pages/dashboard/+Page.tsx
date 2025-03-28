@@ -43,11 +43,7 @@ import {
   recentVendors,
 } from "#root/lib/mock-data/vendors";
 import type { Vendor } from "#root/lib/mock-data/vendors";
-import {
-  topProducts as adminTopProducts,
-  vendorProducts,
-  lowStockItems,
-} from "#root/lib/mock-data/products";
+
 import type { Product } from "#root/lib/mock-data/products";
 import { orders, orderStatus } from "#root/lib/mock-data/orders";
 import type { Order } from "#root/lib/mock-data/orders";
@@ -115,7 +111,7 @@ function AdminDashboard() {
 
   const stats = { ...adminDashboardStats };
   const vendorList = recentVendors;
-  const topProducts = adminTopProducts;
+  const topProducts = [];
 
   return (
     <div className="space-y-6">
@@ -492,7 +488,7 @@ function AdminDashboard() {
 function VendorDashboard() {
   const stats = vendorDashboardStats;
   const recentOrders = orders.slice(0, 4);
-  const topProducts = vendorProducts.slice(0, 4);
+  const topProducts = [].slice(0, 4);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -587,7 +583,7 @@ function VendorDashboard() {
                 variant="outline"
                 className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
               >
-                {lowStockItems.length} low in stock
+                {[].length} low in stock
               </Badge>
               <Link
                 href="/dashboard/products"
@@ -699,7 +695,7 @@ function VendorDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {lowStockItems.map((item: Product) => (
+                {[].map((item: Product) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell>{item.sku}</TableCell>
