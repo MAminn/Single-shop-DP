@@ -248,7 +248,7 @@ export const productVariant = pgTable("product_variant", {
 	productId: uuid("product_id")
 		.notNull()
 		.references(() => product.id, {
-			onDelete: "restrict",
+			onDelete: "cascade",
 			onUpdate: "cascade",
 		}),
 	values: jsonb("values").notNull().default([]).$type<string[]>(),
