@@ -17,7 +17,7 @@ import { Input } from "#root/components/ui/input";
 import { FileUploadInput } from "#root/components/file-uploads/FileUpload";
 
 const formSchema = z.object({
-  id: z.string().uuid().optional(),
+  id: z.string().uuid().optional().catch(undefined),
   name: z.string().nonempty().max(255),
   imageId: z.string().uuid(),
   type: z.enum(["men", "women"]),
