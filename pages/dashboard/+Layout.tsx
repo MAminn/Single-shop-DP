@@ -88,7 +88,7 @@ function Content({ children }: { children: React.ReactNode }) {
           <DashboardSidebar />
           <section className="h-full w-full flex-1">
             <header className="flex flex-col bg-neutral-100 dark:bg-neutral-900 w-full p-1 sticky top-0">
-              <div className="flex items-center justify-between w-full">
+              <div className="flex items-center justify-between w-full px-4">
                 <div className="flex items-center">
                   <SidebarTrigger />
                   <Tabs className="ml-4 hidden lg:flex" value={activeTab}>
@@ -104,6 +104,11 @@ function Content({ children }: { children: React.ReactNode }) {
                       ))}
                     </TabsList>
                   </Tabs>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Link href="/">
+                    <Button variant="outline">Return to Home</Button>
+                  </Link>
                 </div>
               </div>
               {userRole === "admin" && (

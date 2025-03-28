@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "#root/components/ui/button";
 import {
   Card,
@@ -26,6 +26,7 @@ import {
   User,
 } from "lucide-react";
 import { CheckoutService } from "#root/lib/services/CheckoutService";
+import { trpc } from "#root/shared/trpc/client";
 
 interface OrderData {
   id: number;
@@ -55,6 +56,7 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOrderConfirmation, setShowOrderConfirmation] = useState(false);
   const [orderDetails, setOrderDetails] = useState<OrderData | null>(null);
+  const [isComplete, setIsComplete] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -84,15 +86,9 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
-    if (items.length === 0) {
-      toast({
-        title: "Cart is empty",
-        description: "Your cart is empty. Add some items before checking out.",
-        variant: "destructive",
-      });
-      return;
-    }
+    setIsSubmitting(true);
 
     if (
       !formData.fullName ||
@@ -100,50 +96,46 @@ export default function CheckoutPage() {
       !formData.address ||
       !formData.city ||
       !formData.state ||
-      !formData.postalCode
+      !formData.postalCode ||
+      !formData.country
     ) {
       toast({
         title: "Missing information",
         description: "Please fill in all required fields.",
         variant: "destructive",
       });
+      setIsSubmitting(false);
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
-      const checkoutFormData = {
-        shippingInfo: {
-          fullName: formData.fullName,
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          postalCode: formData.postalCode,
-          country: formData.country,
-        },
-        billingInfo: {
-          sameAsShipping: true,
-          fullName: formData.fullName,
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          postalCode: formData.postalCode,
-          country: formData.country,
-        },
-        paymentInfo: {
-          method: "card" as const,
-        },
-        deliveryMethod: "standard" as const,
-        notes: formData.notes,
-      };
+      const orderItems = items.map((item) => ({
+        productId: item.id,
+        quantity: item.quantity,
+      }));
 
-      const userId = 1;
+      const result = await trpc.order.create.mutate({
+        customerName: formData.fullName,
+        customerEmail: formData.email || "not-provided@example.com",
+        customerPhone: formData.phoneNumber,
+        shippingAddress: formData.address,
+        shippingCity: formData.city,
+        shippingState: formData.state,
+        shippingPostalCode: formData.postalCode,
+        shippingCountry: formData.country,
+        items: orderItems,
+      });
 
-      const summary = CheckoutService.calculateSummary(items);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to create order");
+      }
 
-      const orderData: OrderData = {
-        id: Math.floor(Math.random() * 10000),
+      const orderData = result.result;
+      setOrderDetails({
+        id:
+          typeof orderData.id === "string"
+            ? Number.parseInt(orderData.id, 10)
+            : orderData.id,
         date: new Date().toISOString(),
         customerInfo: {
           fullName: formData.fullName,
@@ -156,30 +148,26 @@ export default function CheckoutPage() {
           country: formData.country,
         },
         items: items,
-        subtotal: summary.subtotal,
-        shipping: summary.shipping,
-        tax: summary.tax,
-        total: summary.total,
-        status: "Pending",
+        subtotal: subtotal,
+        shipping: shipping,
+        tax: tax,
+        total: total,
+        status: "pending",
         notes: formData.notes,
-      };
+      });
 
-      // In a real application, you would use:
-      // const order = await CheckoutService.processCheckout(userId, items, checkoutFormData);
-
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      setOrderDetails(orderData);
-
+      setIsComplete(true);
       setShowOrderConfirmation(true);
-
       clearCart();
+      localStorage.setItem("cart", JSON.stringify([]));
     } catch (error) {
-      console.error("Checkout error:", error);
+      console.error("Error creating order:", error);
       toast({
-        title: "Checkout failed",
+        title: "Error",
         description:
-          "There was an error processing your order. Please try again.",
+          error instanceof Error
+            ? error.message
+            : "Failed to create your order. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -204,7 +192,7 @@ export default function CheckoutPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 px-6">
             <div className="space-y-6">
               <div>
                 <h3 className="font-semibold flex items-center gap-2 mb-3">
@@ -518,16 +506,19 @@ export default function CheckoutPage() {
                 </Link>
               </Button>
 
-              <Button type="submit" size="lg" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                  <>
+                    <span className="animate-spin mr-2">⟳</span>
                     Processing...
-                  </span>
+                  </>
                 ) : (
-                  <span className="flex items-center gap-2">
-                    Complete Order
-                  </span>
+                  "Place Order"
                 )}
               </Button>
             </div>
@@ -567,7 +558,7 @@ function OrderSummary({
         <CardTitle>Order Summary</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-4 ">
           {items.length > 0 && (
             <div className="space-y-2">
               <p className="font-medium">
