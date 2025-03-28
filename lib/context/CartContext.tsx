@@ -4,11 +4,7 @@ import type { Product } from "../mock-data/products";
 
 export interface CartItem extends Product {
   quantity: number;
-  selectedOptions: {
-    size?: string;
-    color?: string;
-    [key: string]: string | undefined;
-  };
+  selectedOptions: Record<string, string>;
 }
 
 interface CartContextType {

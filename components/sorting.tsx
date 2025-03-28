@@ -40,15 +40,11 @@ const Sorting: React.FC<SortingProps> = ({ categoryId }: SortingProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [selectedOptions, setSelectedOptions] = useState({
-    size: "",
-    color: "",
-  });
+  const [selectedOptions, setSelectedOptions] = useState<
+    Record<string, string>
+  >({});
   const { toast } = useToast();
   const { addItem } = useCart();
-
-  const availableSizes = ["XS", "S", "M", "L", "XL"];
-  const availableColors = ["Black", "White", "Red", "Blue", "Green"];
 
   useEffect(() => {
     trpc.product.view
@@ -58,13 +54,18 @@ const Sorting: React.FC<SortingProps> = ({ categoryId }: SortingProps) => {
       .then((res) => {
         if (res.success) {
           setProducts(
-            res.result.map(({ file, product }) => ({
+            res.result.map(({ file, vendor, product, variants }) => ({
               id: product.id,
               sku: product.id,
               name: product.name,
               price: Number(product.price),
               stock: product.stock,
               imageUrl: file ? `/uploads/${file.diskname}` : undefined,
+              variants: variants.map(({ name, values }) => ({
+                name,
+                values,
+              })),
+              vendor: vendor.name,
             }))
           );
         }
@@ -135,18 +136,42 @@ const Sorting: React.FC<SortingProps> = ({ categoryId }: SortingProps) => {
   const handleProductSelect = (product: Product) => {
     setSelectedProduct(product);
     setQuantity(1);
-    setSelectedOptions({ size: "", color: "" });
+    setSelectedOptions({});
   };
 
   const handleAddToCart = () => {
     if (!selectedProduct) return;
 
-    if (!selectedOptions.size || !selectedOptions.color) {
-      toast({
-        title: "Please select all options",
-        description: "Size and color are required before adding to cart.",
-      });
-      return;
+    const productVariants = selectedProduct.variants ?? [];
+
+    if (productVariants) {
+      for (const [selectedVariant, selectedItem] of Object.entries(
+        selectedOptions
+      )) {
+        const variant = productVariants.find(
+          (variant) => variant.name === selectedVariant
+        );
+
+        if (!variant) continue;
+
+        if (!variant.values.includes(selectedItem)) {
+          toast({
+            title: "Invalid selection",
+            description: `Please select a valid option for ${variant.name}.`,
+          });
+          return;
+        }
+      }
+
+      for (const variant of productVariants) {
+        if (!selectedOptions[variant.name]) {
+          toast({
+            title: "Missing selection",
+            description: `Please select an option for ${variant.name}.`,
+          });
+          return;
+        }
+      }
     }
 
     const success = addItem(selectedProduct, quantity, selectedOptions);
@@ -265,71 +290,45 @@ const Sorting: React.FC<SortingProps> = ({ categoryId }: SortingProps) => {
                     ${selectedProduct?.price.toFixed(2)}
                   </p>
 
+                  {product.variants?.map((variant) => {
+                    return (
+                      <div key={variant.name} className="space-y-2">
+                        <span id="size-label" className="text-sm font-medium">
+                          {variant.name}
+                        </span>
+                        <div
+                          className="flex flex-wrap gap-2"
+                          role="radiogroup"
+                          aria-labelledby="size-label"
+                        >
+                          {variant.values.map((value) => (
+                            <button
+                              key={value}
+                              type="button"
+                              className={`px-3 py-1 border rounded-md ${
+                                selectedOptions[variant.name] === value
+                                  ? "bg-black text-white"
+                                  : "bg-white"
+                              }`}
+                              onClick={() =>
+                                setSelectedOptions({
+                                  ...selectedOptions,
+                                  [variant.name]: value,
+                                })
+                              }
+                              aria-pressed={
+                                selectedOptions[variant.name] === value
+                              }
+                            >
+                              {value}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+
                   <div className="space-y-4">
-                    <div className="space-y-2">
-                      <span id="size-label" className="text-sm font-medium">
-                        Size
-                      </span>
-                      <div
-                        className="flex flex-wrap gap-2"
-                        role="radiogroup"
-                        aria-labelledby="size-label"
-                      >
-                        {availableSizes.map((size) => (
-                          <button
-                            key={size}
-                            type="button"
-                            className={`px-3 py-1 border rounded-md ${
-                              selectedOptions.size === size
-                                ? "bg-black text-white"
-                                : "bg-white"
-                            }`}
-                            onClick={() =>
-                              setSelectedOptions({
-                                ...selectedOptions,
-                                size,
-                              })
-                            }
-                            aria-pressed={selectedOptions.size === size}
-                          >
-                            {size}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <span id="color-label" className="text-sm font-medium">
-                        Color
-                      </span>
-                      <div
-                        className="flex flex-wrap gap-2"
-                        role="radiogroup"
-                        aria-labelledby="color-label"
-                      >
-                        {availableColors.map((color) => (
-                          <button
-                            key={color}
-                            type="button"
-                            className={`px-3 py-1 border rounded-md ${
-                              selectedOptions.color === color
-                                ? "bg-black text-white"
-                                : "bg-white"
-                            }`}
-                            onClick={() =>
-                              setSelectedOptions({
-                                ...selectedOptions,
-                                color,
-                              })
-                            }
-                            aria-pressed={selectedOptions.color === color}
-                          >
-                            {color}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
                     <div className="space-y-2">
                       <span id="quantity-label" className="text-sm font-medium">
                         Quantity
