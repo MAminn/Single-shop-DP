@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import {
   Card,
   CardHeader,
@@ -56,6 +56,15 @@ import type { Data } from "./+data";
 import { trpc } from "#root/shared/trpc/client";
 import { useDebounce } from "use-debounce";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#root/components/ui/dialog";
+import { DialogTrigger } from "@radix-ui/react-dialog";
+import VendorForm from "./components";
 
 export default function Vendors() {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -291,9 +300,19 @@ export default function Vendors() {
                               <Eye className="mr-2 h-4 w-4" />
                               View Profile
                             </DropdownMenuItem> */}
-                            <DropdownMenuItem>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit Vendor
+                            <DropdownMenuItem asChild>
+                              <EditVendorForm
+                                Trigger={
+                                  <Button variant={"ghost"} className="w-full justify-start px-0">
+                                    <Edit className="h-4 w-4" />
+                                    Edit Vendor
+                                  </Button>
+                                }
+                                vendorId={vendor.id}
+                                onUpdate={() => {
+                                  setLastUpdateDate(new Date());
+                                }}
+                              />
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
                               <Link
@@ -365,5 +384,73 @@ export default function Vendors() {
         </CardFooter>
       </Card>
     </div>
+  );
+}
+
+function EditVendorForm({
+  vendorId,
+  Trigger,
+  onUpdate,
+}: {
+  vendorId: string;
+  Trigger: ReactNode;
+  onUpdate: () => void;
+}) {
+  const [vendorData, setVendorData] = useState<null | {
+    id: string;
+    name: string;
+  }>(null);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    trpc.vendor.viewById.query({ id: vendorId }).then((res) => {
+      if (!res.success) {
+        toast.error(res.error);
+        return;
+      }
+
+      setVendorData({
+        id: res.result.id,
+        name: res.result.name,
+      });
+    });
+  }, [vendorId]);
+
+  const onSubmit = async (values: { id?: string; name: string }) => {
+    if (!values.id) {
+      alert(
+        "Selected vendor has no id, this is likely a bug, try refreshing the page."
+      );
+      return;
+    }
+
+    const res = await trpc.vendor.edit.mutate({
+      id: values.id,
+      name: values.name,
+    });
+
+    if (!res.success) {
+      toast.error(res.error);
+    } else {
+      setOpen(false);
+    }
+
+    onUpdate();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{Trigger}</DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Vendor</DialogTitle>
+        </DialogHeader>
+        {vendorData && (
+          <VendorForm defaultValues={vendorData} onSubmit={onSubmit} />
+        )}
+        {!vendorData && <div>Loading...</div>}
+        <DialogFooter></DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

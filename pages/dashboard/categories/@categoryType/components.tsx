@@ -17,6 +17,7 @@ import { Input } from "#root/components/ui/input";
 import { FileUploadInput } from "#root/components/file-uploads/FileUpload";
 
 const formSchema = z.object({
+  id: z.string().uuid().optional(),
   name: z.string().nonempty().max(255),
   imageId: z.string().uuid(),
   type: z.enum(["men", "women"]),
@@ -41,6 +42,7 @@ export default function SubCategoryForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 py-10">
+        <input type="hidden" {...form.register("id")} />
         <FormField
           control={form.control}
           name="name"

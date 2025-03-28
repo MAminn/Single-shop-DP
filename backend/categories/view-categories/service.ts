@@ -1,6 +1,6 @@
 import { query } from "#root/shared/database/drizzle/db";
-import { category, file } from "#root/shared/database/drizzle/schema";
-import { eq } from "drizzle-orm";
+import { category, file, product } from "#root/shared/database/drizzle/schema";
+import { count, eq } from "drizzle-orm";
 
 import { Effect } from "effect";
 
@@ -16,11 +16,13 @@ export const viewCategories = () =>
 						imageId: category.imageId,
 						filename: file.diskname,
 						type: category.type,
+						productCount: count(product.id),
 					})
 					.from(category)
 					.leftJoin(file, eq(category.imageId, file.id))
+					.leftJoin(product, eq(category.id, product.categoryId))
 					.where(eq(category.deleted, false))
-					.then((data) => data.map((c) => ({ ...c, productCount: 0 })));
+					.groupBy(category.id, file.diskname)
 			}),
 		);
 	});

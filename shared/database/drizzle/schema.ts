@@ -2,6 +2,7 @@ import {
 	boolean,
 	decimal,
 	integer,
+	jsonb,
 	pgEnum,
 	pgTable,
 	text,
@@ -237,4 +238,18 @@ export const product = pgTable("product", {
 		})
 		.notNull(),
 	stock: integer("stock").notNull().default(0),
+});
+
+export const productVariant = pgTable("product_variant", {
+	id: uuid("id")
+		.primaryKey()
+		.$defaultFn(() => v7()),
+	name: text("name").notNull(),
+	productId: uuid("product_id")
+		.notNull()
+		.references(() => product.id, {
+			onDelete: "restrict",
+			onUpdate: "cascade",
+		}),
+	values: jsonb("values").notNull().default([]).$type<string[]>(),
 });

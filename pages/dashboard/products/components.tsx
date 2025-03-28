@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,8 +29,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "#root/components/ui/popover";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, XIcon } from "lucide-react";
 import { FileUploadInput } from "#root/components/file-uploads/FileUpload";
+import { TagsInput } from "#root/components/ui/tags-input";
+import { Label } from "#root/components/ui/label";
 
 const formSchema = z.object({
   id: z.string().uuid().optional().nullable(),
@@ -41,6 +43,14 @@ const formSchema = z.object({
   imageId: z.string(),
   categoryId: z.string(),
   vendorId: z.string(),
+  variants: z
+    .array(
+      z.object({
+        name: z.string().min(1).max(255),
+        values: z.array(z.string().min(1).max(255)),
+      })
+    )
+    .optional(),
 });
 
 export type ProductFormSchema = z.infer<typeof formSchema>;
@@ -205,6 +215,25 @@ export default function ProductForm({
             </FormItem>
           )}
         />
+
+        <FormField
+          name="variants"
+          control={form.control}
+          render={({ field }) => {
+            return (
+              <FormItem>
+                <FormLabel className="text-lg">Variants</FormLabel>
+                <FormControl>
+                  <VariantsInput
+                    value={field.value}
+                    onChange={(v) => field.onChange(v)}
+                  />
+                </FormControl>
+              </FormItem>
+            );
+          }}
+        />
+
         {vendorId && (
           <input
             type="hidden"
@@ -279,5 +308,95 @@ export default function ProductForm({
         </Button>
       </form>
     </Form>
+  );
+}
+
+export function VariantsInput({
+  value,
+  onChange,
+}: {
+  value: { name: string; values: string[] }[] | undefined;
+  onChange: (value: { name: string; values: string[] }[]) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      {value?.map((v, i) => (
+        <Fragment
+          key={`variant.${
+            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+            i
+          }`}
+        >
+          <VariantInput
+            value={v}
+            onChange={(v) => {
+              const newValue = [...value];
+              newValue[i] = v;
+              onChange(newValue);
+            }}
+          />
+          <Button
+            size="sm"
+            className="self-end opacity-90"
+            variant={"destructive"}
+            type="button"
+            onClick={() => {
+              const newValue = [...value];
+              newValue.splice(i, 1);
+              onChange(newValue);
+            }}
+          >
+            <XIcon />
+            Remove Variant
+          </Button>
+        </Fragment>
+      ))}
+
+      <Button
+        type="button"
+        onClick={() =>
+          onChange([
+            ...(value ?? []),
+            { name: `Variant ${(value?.length ?? 0) + 1}`, values: [] },
+          ])
+        }
+      >
+        Add Variant
+      </Button>
+    </div>
+  );
+}
+
+export function VariantInput({
+  value,
+  onChange,
+}: {
+  value: {
+    name: string;
+    values: string[];
+  };
+  onChange: (value: { name: string; values: string[] }) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1">
+        <Label>Name</Label>
+        <Input
+          value={value.name}
+          onChange={(e) => onChange({ ...value, name: e.target.value })}
+        />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <Label>Values</Label>
+        <TagsInput
+          value={value.values}
+          onValueChange={(v) => onChange({ ...value, values: v })}
+        />
+        <p className="text-sm text-muted-foreground">
+          Press Enter to add a value
+        </p>
+      </div>
+    </div>
   );
 }

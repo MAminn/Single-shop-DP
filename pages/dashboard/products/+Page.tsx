@@ -30,6 +30,7 @@ import ProductForm, { type ProductFormSchema } from "./components";
 import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
 import { usePageContext } from "vike-react/usePageContext";
+import { useDebounce } from "use-debounce";
 
 interface Product {
   id: number;
@@ -58,6 +59,7 @@ export default function Products() {
     isOutOfStock: false,
   });
   const [search, setSearch] = useState("");
+  const [searchQueryValue] = useDebounce(search, 1000);
   const [sortBy, setSortBy] = useState("name");
   if (!fetchData.success) {
     return <ErrorSection error={fetchData.error} />;
@@ -70,13 +72,16 @@ export default function Products() {
   const categories = fetchData.categories;
   const vendors = fetchData.vendors;
   const vendorId = fetchData.vendorId;
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  const categoryId = fetchData.categoryId;
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies:(lastFetchDate) <explanation>
   useEffect(() => {
     const fetchProducts = async () => {
       const res = await trpc.product.view.query({
-        search,
+        search: searchQueryValue,
         sortBy,
         vendorId,
+        categoryId,
       });
 
       if (!res.success) {
@@ -87,6 +92,7 @@ export default function Products() {
       setFetchData({
         success: true,
         vendorId,
+        categoryId,
         products: res.result,
         categories,
         vendors,
@@ -94,7 +100,7 @@ export default function Products() {
     };
 
     fetchProducts();
-  }, [search, sortBy, initialData, lastFetchDate]);
+  }, [searchQueryValue, sortBy, initialData, lastFetchDate, categoryId]);
 
   const handleAddProduct = async (values: ProductFormSchema) => {
     const res = await trpc.product.create.mutate(values);
@@ -116,6 +122,13 @@ export default function Products() {
 
   const handleEditProduct = async (values: ProductFormSchema) => {
     if (!selectedProductData) return;
+
+    if (!selectedProductData.product.id) {
+      alert(
+        "Selected product has no id, this is likely a bug, try refreshing the page."
+      );
+      return;
+    }
 
     await trpc.product.edit.mutate({
       id: selectedProductData.product.id,
@@ -231,6 +244,7 @@ export default function Products() {
                     description: selectedProductData.product.description,
                     price: Number(selectedProductData.product.price),
                     stock: selectedProductData.product.stock,
+                    variants: selectedProductData.variants,
                   }
                 : undefined
             }

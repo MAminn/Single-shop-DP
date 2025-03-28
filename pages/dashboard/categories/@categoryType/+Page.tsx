@@ -38,6 +38,8 @@ import { toast } from "sonner";
 export default function CategoryDetail() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedCategoryData, setSelectedCategoryData] =
+    useState<SubCategoryFormSchema | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedSubcategory, setSelectedSubcategory] =
     useState<SubCategory | null>(null);
@@ -126,7 +128,25 @@ export default function CategoryDetail() {
     setIsAddDialogOpen(false);
   };
 
-  const handleEditSubcategory = () => {
+  const handleEditSubcategory = async (values: SubCategoryFormSchema) => {
+    if (!values.id) {
+      alert(
+        "Selected category has no id, this is likely a bug, try refreshing the page."
+      );
+      return;
+    }
+
+    const res = await trpc.category.edit.mutate(
+      values as SubCategoryFormSchema & { id: string }
+    );
+
+    if (!res.success) {
+      toast.error(res.error);
+      return;
+    }
+
+    setLastFetchDate(new Date());
+
     setIsEditDialogOpen(false);
   };
 
@@ -146,7 +166,26 @@ export default function CategoryDetail() {
     setIsDeleteDialogOpen(false);
   };
 
-  const openEditDialog = (subcategory: SubCategoryFormSchema) => {
+  const openEditDialog = (id: string) => {
+    const subCategory = subcategories.find((s) => s.id === id);
+
+    // images are required on the backend so this won't happen
+    if (!subCategory) return;
+
+    if (!subCategory.imageId) {
+      alert("Subcategory has no image, please delete it and create it again");
+      return;
+    }
+
+    setSelectedSubcategory(subCategory);
+
+    setSelectedCategoryData({
+      id: subCategory.id,
+      name: subCategory.name,
+      imageId: subCategory.imageId,
+      type: subCategory.type,
+    });
+
     setIsEditDialogOpen(true);
   };
 
@@ -213,13 +252,17 @@ export default function CategoryDetail() {
                     <TableCell className="flex justify-end space-x-2">
                       <Button size="sm" variant="outline" asChild>
                         <Link
-                          href={`/dashboard/categories/${categoryType}/${subcategory.id}`}
+                          href={`/dashboard/products?categoryId=${subcategory.id}`}
                         >
                           <Package className="h-4 w-4 mr-1" />
                           Products
                         </Link>
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => {}}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openEditDialog(subcategory.id)}
+                      >
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
@@ -260,6 +303,11 @@ export default function CategoryDetail() {
           <DialogHeader>
             <DialogTitle>Edit Subcategory</DialogTitle>
           </DialogHeader>
+          <SubCategoryForm
+            type={categoryType}
+            defaultValues={selectedCategoryData ?? undefined}
+            onSubmit={handleEditSubcategory}
+          />
           <DialogFooter>
             <Button
               variant="outline"
