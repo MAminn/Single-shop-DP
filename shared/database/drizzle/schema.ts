@@ -241,17 +241,17 @@ export const product = pgTable("product", {
 });
 
 export const productVariant = pgTable("product_variant", {
-  id: uuid("id")
-    .primaryKey()
-    .$defaultFn(() => v7()),
-  name: text("name").notNull(),
-  productId: uuid("product_id")
-    .notNull()
-    .references(() => product.id, {
-      onDelete: "restrict",
-      onUpdate: "cascade",
-    }),
-  values: jsonb("values").notNull().default([]).$type<string[]>(),
+	id: uuid("id")
+		.primaryKey()
+		.$defaultFn(() => v7()),
+	name: text("name").notNull(),
+	productId: uuid("product_id")
+		.notNull()
+		.references(() => product.id, {
+			onDelete: "cascade",
+			onUpdate: "cascade",
+		}),
+	values: jsonb("values").notNull().default([]).$type<string[]>(),
 });
 
 export const orderStatus = pgEnum("order_status", [

@@ -130,10 +130,15 @@ export default function Products() {
       return;
     }
 
-    await trpc.product.edit.mutate({
+    const res = await trpc.product.edit.mutate({
       id: selectedProductData.product.id,
       ...values,
     });
+
+    if (!res.success) {
+      toast.error(res.error);
+      return;
+    }
 
     setLastFetchDate(new Date());
 
