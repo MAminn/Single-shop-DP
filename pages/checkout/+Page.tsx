@@ -102,7 +102,6 @@ export default function CheckoutPage() {
       toast({
         title: "Missing information",
         description: "Please fill in all required fields.",
-        variant: "destructive",
       });
       setIsSubmitting(false);
       return;
@@ -168,7 +167,6 @@ export default function CheckoutPage() {
           error instanceof Error
             ? error.message
             : "Failed to create your order. Please try again.",
-        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);

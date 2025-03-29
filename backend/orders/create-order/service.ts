@@ -11,6 +11,8 @@ import { Effect } from "effect";
 import { z } from "zod";
 import type { ClientSession } from "#root/backend/auth/shared/entities";
 import { ServerError } from "#root/shared/error/server";
+import { EmailService, renderEmailTemplate } from "#root/shared/email/service";
+import { NewOrderEmailTemplate } from "./email-template";
 
 const OrderItemSchema = z.object({
   productId: z.string().uuid(),
@@ -48,7 +50,7 @@ export const createOrder = (
       );
     }
 
-    return yield* $(
+    const result = yield* $(
       query(async (db) => {
         return await db.transaction(async (tx) => {
           const userData = await tx
@@ -201,4 +203,31 @@ export const createOrder = (
         });
       })
     );
+
+    const emailService = yield* $(EmailService);
+
+    const emailTemplate = yield* $(
+      renderEmailTemplate(
+        NewOrderEmailTemplate({
+          items: result.items.map((i) => ({
+            name: i?.name ?? "-",
+            quantity: i?.quantity ?? 0,
+            price: i?.price ? Number.parseFloat(i.price) : 0,
+          })),
+          shippingFees: Number.parseFloat(result.shipping),
+          subTotal: Number.parseFloat(result.subtotal),
+          tax: Number.parseFloat(result.tax),
+        })
+      )
+    );
+
+    yield* $(
+      emailService.sendEmail(
+        input.customerEmail,
+        "Lebsy Order Confirmation",
+        emailTemplate
+      )
+    );
+
+    return result;
   });
