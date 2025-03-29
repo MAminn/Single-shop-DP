@@ -241,17 +241,17 @@ export const product = pgTable("product", {
 });
 
 export const productVariant = pgTable("product_variant", {
-	id: uuid("id")
-		.primaryKey()
-		.$defaultFn(() => v7()),
-	name: text("name").notNull(),
-	productId: uuid("product_id")
-		.notNull()
-		.references(() => product.id, {
-			onDelete: "cascade",
-			onUpdate: "cascade",
-		}),
-	values: jsonb("values").notNull().default([]).$type<string[]>(),
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => v7()),
+  name: text("name").notNull(),
+  productId: uuid("product_id")
+    .notNull()
+    .references(() => product.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  values: jsonb("values").notNull().default([]).$type<string[]>(),
 });
 
 export const orderStatus = pgEnum("order_status", [
@@ -266,12 +266,10 @@ export const order = pgTable("order", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => v7()),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => user.id, {
-      onDelete: "restrict",
-      onUpdate: "cascade",
-    }),
+  userId: uuid("user_id").references(() => user.id, {
+    onDelete: "restrict",
+    onUpdate: "cascade",
+  }),
   customerName: text("customer_name").notNull(),
   customerEmail: text("customer_email").notNull(),
   customerPhone: text("customer_phone").notNull(),

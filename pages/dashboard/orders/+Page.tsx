@@ -283,6 +283,7 @@ export default function Orders() {
                     <TableHead>Order ID</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Customer</TableHead>
+                    {isAdmin && <TableHead>Vendors</TableHead>}
                     <TableHead>Items</TableHead>
                     <TableHead>Total</TableHead>
                     <TableHead>Status</TableHead>
@@ -297,6 +298,17 @@ export default function Orders() {
                       </TableCell>
                       <TableCell>{formatDate(order.createdAt)}</TableCell>
                       <TableCell>{order.customerName}</TableCell>
+                      {isAdmin && (
+                        <TableCell>
+                          {Array.from(
+                            new Set(
+                              order.items.map(
+                                (item) => item.vendorName || "Unknown"
+                              )
+                            )
+                          ).join(", ")}
+                        </TableCell>
+                      )}
                       <TableCell>{order.items.length}</TableCell>
                       <TableCell>
                         ${Number.parseFloat(order.total).toFixed(2)}

@@ -123,15 +123,15 @@ export const OrderService = {
         0
       );
 
-      console.log(`Notification to vendor #${vendorId}:`);
-      console.log(
-        `New order #${order.id} received with ${items.length} products`
-      );
-      console.log(`Vendor subtotal: $${vendorSubtotal.toFixed(2)}`);
-      console.log(
-        "Items:",
-        items.map((item) => `${item.quantity}x ${item.name}`).join(", ")
-      );
+      // console.log(`Notification to vendor #${vendorId}:`);
+      // console.log(
+      //   `New order #${order.id} received with ${items.length} products`
+      // );
+      // console.log(`Vendor subtotal: $${vendorSubtotal.toFixed(2)}`);
+      // console.log(
+      //   "Items:",
+      //   items.map((item) => `${item.quantity}x ${item.name}`).join(", ")
+      // );
     }
   },
 

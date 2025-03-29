@@ -355,6 +355,13 @@ export default function CheckoutPage() {
                   <User className="h-5 w-5" />
                   Customer Information
                 </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  No account needed - continue as a guest or{" "}
+                  <Link href="/login" className="text-primary underline">
+                    login
+                  </Link>{" "}
+                  if you have an account
+                </p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -391,6 +398,10 @@ export default function CheckoutPage() {
                     onChange={handleInputChange}
                     placeholder="john.doe@example.com"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Email is optional but recommended to receive order
+                    confirmations
+                  </p>
                 </div>
               </CardContent>
             </Card>

@@ -367,14 +367,16 @@ const Sorting: React.FC<SortingProps> = ({ categoryId }: SortingProps) => {
                   </div>
 
                   <div className="flex gap-2 mt-4">
-                    <Button
-                      className="flex-1"
-                      onClick={handleAddToCart}
-                      type="button"
-                    >
-                      <ShoppingBag className="h-4 w-4 mr-2" />
-                      Add to Cart
-                    </Button>
+                    <DialogClose asChild>
+                      <Button
+                        className="flex-1"
+                        onClick={handleAddToCart}
+                        type="button"
+                      >
+                        <ShoppingBag className="h-4 w-4 mr-2" />
+                        Add to Cart
+                      </Button>
+                    </DialogClose>
                     <DialogClose asChild>
                       <Button
                         variant="outline"

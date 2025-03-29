@@ -37,38 +37,24 @@ export const createOrder = (
   session?: ClientSession
 ) =>
   Effect.gen(function* ($) {
-    if (!session) {
-      return yield* $(
-        Effect.fail(
-          new ServerError({
-            tag: "Unauthorized",
-            message: "You must be logged in to create an order",
-            statusCode: 401,
-            clientMessage: "You must be logged in to create an order",
-          })
-        )
-      );
-    }
-
+    // We no longer require a session for ordering
     const result = yield* $(
       query(async (db) => {
         return await db.transaction(async (tx) => {
-          const userData = await tx
-            .select({ id: user.id })
-            .from(user)
-            .where(eq(user.email, session.email))
-            .execute();
+          // Get user ID if the user is logged in, otherwise set to null
+          let userId = null;
+          if (session) {
+            const userData = await tx
+              .select({ id: user.id })
+              .from(user)
+              .where(eq(user.email, session.email))
+              .execute();
 
-          if (!userData || userData.length === 0 || !userData[0]?.id) {
-            throw new ServerError({
-              tag: "UserNotFound",
-              message: "User not found",
-              statusCode: 404,
-              clientMessage: "User not found",
-            });
+            if (userData && userData.length > 0 && userData[0]?.id) {
+              userId = userData[0].id;
+            }
           }
 
-          const userId = userData[0].id;
           const productIds = input.items.map((item) => item.productId);
 
           const products = await tx
@@ -130,7 +116,7 @@ export const createOrder = (
           const newOrdersInsert = await tx
             .insert(order)
             .values({
-              userId,
+              userId, // Can be null for guest orders
               customerName: input.customerName,
               customerEmail: input.customerEmail,
               customerPhone: input.customerPhone,

@@ -2,11 +2,17 @@ import { t } from "#root/shared/trpc/server";
 import { createProductProcedure } from "./create-product/trpc";
 import { deleteProductProcedure } from "./delete-product/trpc";
 import { editProductProcedure } from "./edit-product/trpc";
+import { productStatsProcedure } from "./get-product-stats/trpc";
+import { topSellingProcedure } from "./get-top-selling/trpc";
+import { totalRevenueProcedure } from "./get-total-revenue/trpc";
 import { viewProductsProcedure } from "./view-products/trpc";
 
 export const productRouter = t.router({
-	view: viewProductsProcedure,
-	create: createProductProcedure,
-	edit: editProductProcedure,
-	delete: deleteProductProcedure,
+  view: viewProductsProcedure,
+  create: createProductProcedure,
+  edit: editProductProcedure,
+  delete: deleteProductProcedure,
+  stats: productStatsProcedure,
+  topSelling: topSellingProcedure,
+  revenue: totalRevenueProcedure,
 });

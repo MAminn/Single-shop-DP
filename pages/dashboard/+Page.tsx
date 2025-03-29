@@ -26,6 +26,7 @@ import {
   BarChart3,
   CircleAlert,
   Grid,
+  Star,
 } from "lucide-react";
 import {
   Table,
@@ -38,22 +39,22 @@ import {
 import { Badge } from "#root/components/ui/badge";
 import { useRole } from "#root/lib/context/RoleContext";
 
-import {
-  adminDashboardStats,
-  recentVendors,
-} from "#root/lib/mock-data/vendors";
 import type { Vendor } from "#root/lib/mock-data/vendors";
-
 import type { Product } from "#root/lib/mock-data/products";
-import { orders, orderStatus } from "#root/lib/mock-data/orders";
 import type { Order } from "#root/lib/mock-data/orders";
-import { vendorDashboardStats } from "#root/lib/mock-data/customers";
 import { useData } from "vike-react/useData";
 import type { Data } from "./+data";
 import { ErrorSection } from "#root/components/error-section";
-import { useEffect, useState } from "react";
-import { trpc } from "#root/shared/trpc/client";
-import { toast } from "sonner";
+
+// Import all dashboard components from index file
+import {
+  OrderStatsCard,
+  ProductStatsCard,
+  TopSellingProductsCard,
+  RevenueStatsCard,
+  RecentVendorsCard,
+  useAnalytics,
+} from "#root/components/dashboard";
 
 export default function Dashboard() {
   const { userRole } = useRole();
@@ -80,14 +81,7 @@ export default function Dashboard() {
 
 function AdminDashboard() {
   const fetchData = useData<Data>();
-  const [recentVendors, setRecentVendors] = useState<
-    {
-      id: string;
-      name: string;
-      createdAt: Date;
-      status: string;
-    }[]
-  >([]);
+  const analytics = useAnalytics("admin");
 
   if (!fetchData.success) {
     return <ErrorSection error={fetchData.error} />;
@@ -97,25 +91,15 @@ function AdminDashboard() {
     return <ErrorSection error="You are not authorized to view this page" />;
   }
 
-  useEffect(() => {
-    trpc.vendor.view.query({ limit: 5 }).then((result) => {
-      if (result.success) {
-        setRecentVendors(result.result);
-      } else {
-        toast.error(result.error);
-      }
-    });
-  }, []);
-
   const data = fetchData.result;
-
-  const stats = { ...adminDashboardStats };
-  const vendorList = recentVendors;
-  const topProducts = [];
+  const pendingOrdersCount = analytics.orderStats.data?.pending || 0;
+  const outOfStockCount = analytics.productStats.data?.outOfStock || 0;
 
   return (
     <div className="space-y-6">
-      {data.vendors.pending > 0 && (
+      {(data.vendors.pending > 0 ||
+        pendingOrdersCount > 0 ||
+        outOfStockCount > 0) && (
         <Card className="bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800">
           <CardHeader>
             <div className="flex items-center">
@@ -143,21 +127,30 @@ function AdminDashboard() {
                   </Link>
                 </li>
               )}
-              <li className="flex items-center text-sm">
-                <CircleAlert className="h-4 w-4 text-red-600 mr-2" />
-                <span>4 products reported for policy violations</span>
-                <Link
-                  href="/dashboard/products"
-                  className="ml-auto text-blue-600"
-                >
-                  Check
-                </Link>
-              </li>
-              <li className="flex items-center text-sm">
-                <CircleAlert className="h-4 w-4 text-orange-600 mr-2" />
-                <span>12 customer support tickets awaiting response</span>
-                <span className="ml-auto text-blue-600">Respond</span>
-              </li>
+              {pendingOrdersCount > 0 && (
+                <li className="flex items-center text-sm">
+                  <CircleAlert className="h-4 w-4 text-blue-600 mr-2" />
+                  <span>{pendingOrdersCount} orders awaiting processing</span>
+                  <Link
+                    href="/dashboard/orders"
+                    className="ml-auto text-blue-600"
+                  >
+                    View
+                  </Link>
+                </li>
+              )}
+              {outOfStockCount > 0 && (
+                <li className="flex items-center text-sm">
+                  <CircleAlert className="h-4 w-4 text-red-600 mr-2" />
+                  <span>{outOfStockCount} products out of stock</span>
+                  <Link
+                    href="/dashboard/products"
+                    className="ml-auto text-blue-600"
+                  >
+                    Check
+                  </Link>
+                </li>
+              )}
             </ul>
           </CardContent>
         </Card>
@@ -197,81 +190,38 @@ function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total Products
-                </p>
-                <p className="text-3xl font-bold">{stats.totalProducts}</p>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                <Package className="h-6 w-6 text-purple-600 dark:text-purple-300" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <Badge
-                variant="outline"
-                className="bg-green-100 text-green-800 hover:bg-green-100"
-              >
-                +189 this month
-              </Badge>
-              <Link
-                href="/dashboard/products"
-                className="ml-auto flex items-center text-blue-600"
-              >
-                View all
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+        <ProductStatsCard
+          productStats={
+            analytics.productStats.data || {
+              total: 0,
+              outOfStock: 0,
+              lowStock: 0,
+              newThisWeek: 0,
+            }
+          }
+          isLoading={analytics.productStats.isLoading}
+          error={analytics.productStats.error}
+        />
+
+        <RevenueStatsCard
+          totalRevenue={analytics.totalRevenue.data || 0}
+          percentChange={8}
+          timeFrame="last month"
+          isLoading={analytics.totalRevenue.isLoading}
+          error={analytics.totalRevenue.error}
+        />
 
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total Orders
+                  Total Customers
                 </p>
-                <p className="text-3xl font-bold">{stats.totalOrders}</p>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                <ShoppingBag className="h-6 w-6 text-green-600 dark:text-green-300" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <Badge
-                variant="outline"
-                className="bg-green-100 text-green-800 hover:bg-green-100"
-              >
-                +58 today
-              </Badge>
-              <Link
-                href="/dashboard/orders"
-                className="ml-auto flex items-center text-blue-600"
-              >
-                View all
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total Revenue
-                </p>
-                <p className="text-3xl font-bold">
-                  ${(stats.totalRevenue / 1000).toFixed(1)}K
-                </p>
+                <p className="text-3xl font-bold">2,845</p>
               </div>
               <div className="h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-orange-600 dark:text-orange-300" />
+                <Users className="h-6 w-6 text-orange-600 dark:text-orange-300" />
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
@@ -279,7 +229,7 @@ function AdminDashboard() {
                 variant="outline"
                 className="bg-green-100 text-green-800 hover:bg-green-100"
               >
-                +12% from last month
+                +5 new this week
               </Badge>
             </div>
           </CardContent>
@@ -287,228 +237,105 @@ function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-medium">
-              Recent Vendors
-            </CardTitle>
-            <CardDescription>
-              Latest vendor registrations on the platform
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Vendor</TableHead>
-                  <TableHead>Joined</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentVendors.map((vendor) => (
-                  <TableRow key={vendor.id}>
-                    <TableCell className="font-medium">{vendor.name}</TableCell>
-                    <TableCell>{vendor.createdAt.toDateString()}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={
-                          vendor.status === "Active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }
-                      >
-                        {vendor.status}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-          <CardFooter className="border-t px-6 py-4">
-            <Link
-              href="/dashboard/vendors"
-              className="flex items-center text-blue-600 text-sm"
-            >
-              View all vendors
-              <ArrowUpRight className="h-4 w-4 ml-1" />
-            </Link>
-          </CardFooter>
-        </Card>
+        <RecentVendorsCard
+          vendors={analytics.recentVendors.data}
+          isLoading={analytics.recentVendors.isLoading}
+          error={analytics.recentVendors.error}
+        />
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-medium">Order Status</CardTitle>
-            <CardDescription>
-              Distribution of orders by current status
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center">
-                    <div className="h-3 w-3 rounded-full bg-yellow-400 mr-2"></div>
-                    <p>Pending</p>
-                  </div>
-                  <p className="font-medium">{orderStatus.pending}</p>
-                </div>
-                <div className="h-2 w-full bg-yellow-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-yellow-400 rounded-full"
-                    style={{
-                      width: `${
-                        (orderStatus.pending / stats.totalOrders) * 100
-                      }%`,
-                    }}
-                  ></div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center">
-                    <div className="h-3 w-3 rounded-full bg-blue-400 mr-2"></div>
-                    <p>Processing</p>
-                  </div>
-                  <p className="font-medium">{orderStatus.processing}</p>
-                </div>
-                <div className="h-2 w-full bg-blue-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-blue-400 rounded-full"
-                    style={{
-                      width: `${
-                        (orderStatus.processing / stats.totalOrders) * 100
-                      }%`,
-                    }}
-                  ></div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center">
-                    <div className="h-3 w-3 rounded-full bg-purple-400 mr-2"></div>
-                    <p>Shipped</p>
-                  </div>
-                  <p className="font-medium">{orderStatus.shipped}</p>
-                </div>
-                <div className="h-2 w-full bg-purple-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-purple-400 rounded-full"
-                    style={{
-                      width: `${
-                        (orderStatus.shipped / stats.totalOrders) * 100
-                      }%`,
-                    }}
-                  ></div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center">
-                    <div className="h-3 w-3 rounded-full bg-green-400 mr-2"></div>
-                    <p>Delivered</p>
-                  </div>
-                  <p className="font-medium">{orderStatus.delivered}</p>
-                </div>
-                <div className="h-2 w-full bg-green-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-green-400 rounded-full"
-                    style={{
-                      width: `${
-                        (orderStatus.delivered / stats.totalOrders) * 100
-                      }%`,
-                    }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="border-t px-6 py-4">
-            <Link
-              href="/dashboard/orders"
-              className="flex items-center text-blue-600 text-sm"
-            >
-              View all orders
-              <ArrowUpRight className="h-4 w-4 ml-1" />
-            </Link>
-          </CardFooter>
-        </Card>
+        <OrderStatsCard
+          orderStats={
+            analytics.orderStats.data || {
+              pending: 0,
+              processing: 0,
+              shipped: 0,
+              delivered: 0,
+              cancelled: 0,
+            }
+          }
+          isLoading={analytics.orderStats.isLoading}
+          error={analytics.orderStats.error}
+        />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg font-medium">
-            Top Selling Products
-          </CardTitle>
-          <CardDescription>
-            Best performing products across all vendors
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Vendor</TableHead>
-                <TableHead>Units Sold</TableHead>
-                <TableHead>Revenue</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {topProducts.map((product: Product) => (
-                <TableRow key={product.id}>
-                  <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.vendor}</TableCell>
-                  <TableCell>{product.sales}</TableCell>
-                  <TableCell>${product.revenue}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-        <CardFooter className="border-t px-6 py-4">
-          <Link
-            href="/dashboard/products"
-            className="flex items-center text-blue-600 text-sm"
-          >
-            View all products
-            <ArrowUpRight className="h-4 w-4 ml-1" />
-          </Link>
-        </CardFooter>
-      </Card>
+      <div className="grid grid-cols-1 gap-6">
+        <TopSellingProductsCard
+          products={analytics.topSellingProducts.data}
+          isLoading={analytics.topSellingProducts.isLoading}
+          error={analytics.topSellingProducts.error}
+          showVendor={true}
+        />
+      </div>
     </div>
   );
 }
 
 function VendorDashboard() {
-  const stats = vendorDashboardStats;
-  const recentOrders = orders.slice(0, 4);
-  const topProducts = [].slice(0, 4);
+  const analytics = useAnalytics("vendor");
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "Processing":
-        return "bg-blue-100 text-blue-800";
-      case "Shipped":
-        return "bg-purple-100 text-purple-800";
-      case "Delivered":
-        return "bg-green-100 text-green-800";
-      case "Cancelled":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  // Replace with actual vendor ID when available
+  const vendorId = "vendor-123";
+
+  const pendingOrdersCount = analytics.orderStats.data?.pending || 0;
+  const outOfStockCount = analytics.productStats.data?.outOfStock || 0;
+  const lowStockCount = analytics.productStats.data?.lowStock || 0;
 
   return (
     <div className="space-y-6">
+      {(pendingOrdersCount > 0 || outOfStockCount > 0 || lowStockCount > 0) && (
+        <Card className="bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800">
+          <CardHeader>
+            <div className="flex items-center">
+              <AlertTriangle className="h-5 w-5 text-orange-500 mr-2" />
+              <CardTitle className="text-lg font-medium">
+                Attention Required
+              </CardTitle>
+            </div>
+            <CardDescription>Items that need your attention</CardDescription>
+          </CardHeader>
+          <CardContent className="p-4">
+            <ul className="space-y-3">
+              {pendingOrdersCount > 0 && (
+                <li className="flex items-center text-sm">
+                  <CircleAlert className="h-4 w-4 text-blue-600 mr-2" />
+                  <span>{pendingOrdersCount} orders awaiting processing</span>
+                  <Link
+                    href="/dashboard/orders"
+                    className="ml-auto text-blue-600"
+                  >
+                    Process
+                  </Link>
+                </li>
+              )}
+              {outOfStockCount > 0 && (
+                <li className="flex items-center text-sm">
+                  <CircleAlert className="h-4 w-4 text-red-600 mr-2" />
+                  <span>{outOfStockCount} products out of stock</span>
+                  <Link
+                    href="/dashboard/products"
+                    className="ml-auto text-blue-600"
+                  >
+                    Restock
+                  </Link>
+                </li>
+              )}
+              {lowStockCount > 0 && (
+                <li className="flex items-center text-sm">
+                  <CircleAlert className="h-4 w-4 text-orange-600 mr-2" />
+                  <span>{lowStockCount} products running low on inventory</span>
+                  <Link
+                    href="/dashboard/products"
+                    className="ml-auto text-blue-600"
+                  >
+                    Check
+                  </Link>
+                </li>
+              )}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-6">
@@ -517,7 +344,14 @@ function VendorDashboard() {
                 <p className="text-sm font-medium text-muted-foreground">
                   Total Orders
                 </p>
-                <p className="text-3xl font-bold">{stats.totalOrders}</p>
+                <p className="text-3xl font-bold">
+                  {analytics.orderStats.data
+                    ? Object.values(analytics.orderStats.data).reduce(
+                        (a, b) => a + b,
+                        0
+                      )
+                    : 0}
+                </p>
               </div>
               <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
                 <ShoppingBag className="h-6 w-6 text-blue-600 dark:text-blue-300" />
@@ -541,298 +375,74 @@ function VendorDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total Revenue
-                </p>
-                <p className="text-3xl font-bold">${stats.totalRevenue}</p>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-green-600 dark:text-green-300" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <Badge
-                variant="outline"
-                className="bg-green-100 text-green-800 hover:bg-green-100"
-              >
-                +8% from last month
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
+        <RevenueStatsCard
+          totalRevenue={analytics.totalRevenue.data || 0}
+          percentChange={8}
+          timeFrame="last month"
+          isLoading={analytics.totalRevenue.isLoading}
+          error={analytics.totalRevenue.error}
+        />
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total Products
-                </p>
-                <p className="text-3xl font-bold">{stats.totalProducts}</p>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                <Package className="h-6 w-6 text-purple-600 dark:text-purple-300" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <Badge
-                variant="outline"
-                className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
-              >
-                {[].length} low in stock
-              </Badge>
-              <Link
-                href="/dashboard/products"
-                className="ml-auto flex items-center text-blue-600"
-              >
-                Manage
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+        <ProductStatsCard
+          productStats={
+            analytics.productStats.data || {
+              total: 0,
+              outOfStock: 0,
+              lowStock: 0,
+              newThisWeek: 0,
+            }
+          }
+          isLoading={analytics.productStats.isLoading}
+          error={analytics.productStats.error}
+        />
 
-        <Card>
+        {/* <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total Customers
+                  Store Rating
                 </p>
-                <p className="text-3xl font-bold">{stats.totalCustomers}</p>
+                <p className="text-3xl font-bold">4.8/5</p>
               </div>
-              <div className="h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
-                <Users className="h-6 w-6 text-orange-600 dark:text-orange-300" />
+              <div className="h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center">
+                <Star className="h-6 w-6 text-yellow-600 dark:text-yellow-300" />
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
               <Badge
                 variant="outline"
-                className="bg-green-100 text-green-800 hover:bg-green-100"
+                className="bg-blue-100 text-blue-800 hover:bg-blue-100"
               >
-                +5 new this week
+                42 new reviews
               </Badge>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center">
-              <Clock className="h-5 w-5 text-muted-foreground mr-2" />
-              <CardTitle className="text-lg font-medium">
-                Recent Orders
-              </CardTitle>
-            </div>
-            <CardDescription>Latest customer purchases</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentOrders.map((order: Order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">#{order.id}</TableCell>
-                    <TableCell>{order.date}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={getStatusColor(order.status)}
-                      >
-                        {order.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{order.total}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-          <CardFooter className="border-t px-6 py-4">
-            <Link
-              href="/dashboard/orders"
-              className="flex items-center text-blue-600 text-sm"
-            >
-              View all orders
-              <ArrowUpRight className="h-4 w-4 ml-1" />
-            </Link>
-          </CardFooter>
-        </Card>
+        <OrderStatsCard
+          orderStats={
+            analytics.orderStats.data || {
+              pending: 0,
+              processing: 0,
+              shipped: 0,
+              delivered: 0,
+              cancelled: 0,
+            }
+          }
+          isLoading={analytics.orderStats.isLoading}
+          error={analytics.orderStats.error}
+        />
 
-        <Card className="bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800">
-          <CardHeader>
-            <div className="flex items-center">
-              <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
-              <CardTitle className="text-lg font-medium">
-                Low Stock Alerts
-              </CardTitle>
-            </div>
-            <CardDescription>
-              Products that need to be restocked soon
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Current Stock</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {[].map((item: Product) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell>{item.sku}</TableCell>
-                    <TableCell>
-                      <span className="font-medium text-red-600">
-                        {item.stock}
-                      </span>{" "}
-                      / {item.threshold}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className="bg-red-100 text-red-800"
-                      >
-                        Low Stock
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-          <CardFooter className="border-t border-red-200 dark:border-red-800 px-6 py-4">
-            <Link
-              href="/dashboard/products"
-              className="flex items-center text-blue-600 text-sm"
-            >
-              Manage inventory
-              <ArrowUpRight className="h-4 w-4 ml-1" />
-            </Link>
-          </CardFooter>
-        </Card>
+        <TopSellingProductsCard
+          products={analytics.topSellingProducts.data}
+          isLoading={analytics.topSellingProducts.isLoading}
+          error={analytics.topSellingProducts.error}
+          showVendor={false}
+        />
       </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center">
-            <BarChart3 className="h-5 w-5 text-muted-foreground mr-2" />
-            <CardTitle className="text-lg font-medium">
-              Top Selling Products
-            </CardTitle>
-          </div>
-          <CardDescription>
-            Your best performing products this month
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Units Sold</TableHead>
-                <TableHead>Current Stock</TableHead>
-                <TableHead>Revenue</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {topProducts.map((product: Product) => (
-                <TableRow key={product.id}>
-                  <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.sold}</TableCell>
-                  <TableCell
-                    className={
-                      product.stock < 5 ? "text-red-600 font-medium" : ""
-                    }
-                  >
-                    {product.stock}
-                  </TableCell>
-                  <TableCell>${product.revenue}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-        <CardFooter className="border-t px-6 py-4">
-          <Link
-            href="/dashboard/products"
-            className="flex items-center text-blue-600 text-sm"
-          >
-            View all products
-            <ArrowUpRight className="h-4 w-4 ml-1" />
-          </Link>
-        </CardFooter>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg font-medium">Quick Actions</CardTitle>
-          <CardDescription>
-            Common tasks you might want to perform
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Button
-              asChild
-              variant="outline"
-              className="h-auto py-4 flex flex-col items-center justify-center"
-            >
-              <Link href="/dashboard/products/create">
-                <Package className="h-10 w-10 mb-2" />
-                <span className="text-base font-medium">Products</span>
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="h-auto py-4 flex flex-col items-center justify-center"
-            >
-              <Link href="/dashboard/categories">
-                <Grid className="h-10 w-10 mb-2" />
-                <span className="text-base font-medium">Categories</span>
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="h-auto py-4 flex flex-col items-center justify-center"
-            >
-              <Link href="/dashboard/orders">
-                <Truck className="h-10 w-10 mb-2" />
-                <span className="text-base font-medium">Orders</span>
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="h-auto py-4 flex flex-col items-center justify-center"
-            >
-              <Link href="/dashboard/products">
-                <PackageOpen className="h-10 w-10 mb-2" />
-                <span className="text-base font-medium">Inventory</span>
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
