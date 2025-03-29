@@ -108,7 +108,11 @@ function Content({ children }: { children: React.ReactNode }) {
                   </Tabs>
                 </div>
                 <Link href="/" className="text-3xl font-bold ">
-                  <img src={logoImage} alt="" className=" w-[100px]" />
+                  <img
+                    src={logoImage}
+                    alt=""
+                    className=" w-[100px] py-2 lg:hidden"
+                  />
                 </Link>
                 <div className="flex items-center gap-2">
                   <Link href="/">
