@@ -332,6 +332,7 @@ export const orderItem = pgTable("order_item", {
       onDelete: "restrict",
       onUpdate: "cascade",
     }),
+  vendorName: text("vendor_name"),
   quantity: integer("quantity").notNull(),
   price: decimal("price", {
     precision: 10,

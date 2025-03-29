@@ -6,7 +6,7 @@ import {
   user,
   vendor,
 } from "#root/shared/database/drizzle/schema";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 import type { ClientSession } from "#root/backend/auth/shared/entities";
@@ -78,8 +78,10 @@ export const createOrder = (
               vendorId: product.vendorId,
               name: product.name,
               stock: product.stock,
+              vendorName: vendor.name,
             })
             .from(product)
+            .leftJoin(vendor, eq(product.vendorId, vendor.id))
             .where(inArray(product.id, productIds))
             .execute();
 
@@ -170,7 +172,15 @@ export const createOrder = (
           const orderItems = await Promise.all(
             input.items.map(async (item) => {
               const productData = products.find((p) => p.id === item.productId);
-              if (!productData) return null;
+              if (!productData) {
+                throw new ServerError({
+                  tag: "ProductNotFound",
+                  message: `Product with ID ${item.productId} not found`,
+                  statusCode: 404,
+                  clientMessage:
+                    "Some products in your order could not be found",
+                });
+              }
 
               await tx
                 .update(product)
@@ -188,17 +198,27 @@ export const createOrder = (
                   quantity: item.quantity,
                   price: productData.price.toString(),
                   name: productData.name,
+                  vendorName: productData.vendorName,
                 })
                 .returning();
 
-              if (!orderItemInsert || orderItemInsert.length === 0) return null;
-              return orderItemInsert[0] || null;
+              if (!orderItemInsert[0]) {
+                throw new ServerError({
+                  tag: "OrderItemCreationFailed",
+                  message: "Failed to create order item",
+                  statusCode: 500,
+                  clientMessage:
+                    "Failed to create order item. Please try again.",
+                });
+              }
+
+              return orderItemInsert[0];
             })
           );
 
           return {
             ...newOrder,
-            items: orderItems.filter(Boolean),
+            items: orderItems,
           };
         });
       })
@@ -210,14 +230,48 @@ export const createOrder = (
       renderEmailTemplate(
         NewOrderEmailTemplate({
           items: result.items.map((i) => ({
-            name: i?.name ?? "-",
-            quantity: i?.quantity ?? 0,
-            price: i?.price ? Number.parseFloat(i.price) : 0,
+            name: i.name ?? "-",
+            quantity: i.quantity ?? 0,
+            price: i.price ? Number.parseFloat(i.price) : 0,
+            vendorName: i.vendorName ?? undefined,
           })),
           shippingFees: Number.parseFloat(result.shipping),
           subTotal: Number.parseFloat(result.subtotal),
           tax: Number.parseFloat(result.tax),
+          total: Number.parseFloat(result.total),
+          address: result.shippingAddress,
+          city: result.shippingCity,
+          state: result.shippingState,
+          country: result.shippingCountry,
+          postalCode: result.shippingPostalCode,
+          customerName: result.customerName,
+          customerEmail: result.customerEmail,
+          customerPhone: result.customerPhone,
         })
+      )
+    );
+
+    const admins = yield* $(
+      query(
+        async (db) => await db.select().from(user).where(eq(user.role, "admin"))
+      )
+    );
+
+    const vendors = yield* $(
+      query(
+        async (db) =>
+          await db
+            .select()
+            .from(user)
+            .where(
+              and(
+                eq(user.role, "vendor"),
+                inArray(
+                  user.vendorId,
+                  result.items.map((i) => i.vendorId)
+                )
+              )
+            )
       )
     );
 
@@ -228,6 +282,22 @@ export const createOrder = (
         emailTemplate
       )
     );
+
+    for (const admin of admins) {
+      yield* $(
+        emailService.sendEmail(admin.email, "New Order Received", emailTemplate)
+      );
+    }
+
+    for (const vendor of vendors) {
+      yield* $(
+        emailService.sendEmail(
+          vendor.email,
+          "New Order Received",
+          emailTemplate
+        )
+      );
+    }
 
     return result;
   });
