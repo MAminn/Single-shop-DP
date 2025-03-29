@@ -1,30 +1,33 @@
 import type { FastifyInstance } from "fastify";
 import { db } from "./drizzle/db";
+import { migrateToLatest } from "./drizzle/migrate";
 import fp from "fastify-plugin";
 
 declare module "fastify" {
   interface FastifyInstance {
     db: ReturnType<typeof db>;
   }
-	interface FastifyRequest {
-		db: ReturnType<typeof db>;
-	}
+  interface FastifyRequest {
+    db: ReturnType<typeof db>;
+  }
 }
 
 const drizzleFastifyPlugin = fp(async (app: FastifyInstance) => {
-	const dbInstance = db();
+  await migrateToLatest();
 
-	app.decorate("db", {
-		getter() {
-			return dbInstance;
-		},
-	});
+  const dbInstance = db();
 
-	app.decorateRequest("db", {
-		getter() {
-			return dbInstance;
-		},
-	});
+  app.decorate("db", {
+    getter() {
+      return dbInstance;
+    },
+  });
+
+  app.decorateRequest("db", {
+    getter() {
+      return dbInstance;
+    },
+  });
 });
 
 export default drizzleFastifyPlugin;
