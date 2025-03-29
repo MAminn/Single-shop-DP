@@ -87,7 +87,7 @@ export function DashboardSidebar() {
       <SidebarContent>
         <SidebarMenu className="pt-6">
           {sideBarItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
+            <SidebarMenuItem key={item.href} className="py-2 px-3">
               <Link
                 href={item.href}
                 className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:justify-center"
