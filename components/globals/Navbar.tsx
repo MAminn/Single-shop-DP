@@ -86,6 +86,10 @@ const Navbar: React.FC<NavbarProps> = ({
             to: `/featured/women/categories/${s.id}`,
           })),
       },
+      {
+        label: "Brands",
+        to: "/featured/brands",
+      },
       { label: "Become a vendor!", to: "/vendor" },
     ],
     ar: [

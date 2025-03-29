@@ -102,6 +102,12 @@ export const createProduct = (
               .then((data) => data[0]);
           }
 
+          // Update the vendor to be featured if they have products
+          await tx
+            .update(vendor)
+            .set({ featured: true })
+            .where(eq(vendor.id, data.vendorId));
+
           return newProduct;
         });
 

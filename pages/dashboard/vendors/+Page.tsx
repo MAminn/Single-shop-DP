@@ -303,7 +303,10 @@ export default function Vendors() {
                             <DropdownMenuItem asChild>
                               <EditVendorForm
                                 Trigger={
-                                  <Button variant={"ghost"} className="w-full justify-start px-0">
+                                  <Button
+                                    variant={"ghost"}
+                                    className="w-full justify-start px-0"
+                                  >
                                     <Edit className="h-4 w-4" />
                                     Edit Vendor
                                   </Button>
@@ -399,24 +402,35 @@ function EditVendorForm({
   const [vendorData, setVendorData] = useState<null | {
     id: string;
     name: string;
+    description?: string;
+    logoId?: string;
+    featured?: boolean;
   }>(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    trpc.vendor.viewById.query({ id: vendorId }).then((res) => {
-      if (!res.success) {
-        toast.error(res.error);
-        return;
+    trpc.vendor.viewById.query({ vendorId }).then((res) => {
+      if (res.success && res.result) {
+        setVendorData({
+          id: res.result.id,
+          name: res.result.name,
+          description: res.result.description || undefined,
+          logoId: res.result.logoId || undefined,
+          featured: res.result.featured,
+        });
+      } else {
+        toast.error("Failed to fetch vendor data");
       }
-
-      setVendorData({
-        id: res.result.id,
-        name: res.result.name,
-      });
     });
   }, [vendorId]);
 
-  const onSubmit = async (values: { id?: string; name: string }) => {
+  const onSubmit = async (values: {
+    id?: string;
+    name: string;
+    description?: string;
+    logoId?: string;
+    featured?: boolean;
+  }) => {
     if (!values.id) {
       alert(
         "Selected vendor has no id, this is likely a bug, try refreshing the page."
@@ -427,11 +441,15 @@ function EditVendorForm({
     const res = await trpc.vendor.edit.mutate({
       id: values.id,
       name: values.name,
+      description: values.description,
+      logoId: values.logoId,
+      featured: values.featured,
     });
 
     if (!res.success) {
       toast.error(res.error);
     } else {
+      toast.success("Vendor updated successfully");
       setOpen(false);
     }
 

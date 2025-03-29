@@ -5,6 +5,7 @@ import { editProductProcedure } from "./edit-product/trpc";
 import { productStatsProcedure } from "./get-product-stats/trpc";
 import { topSellingProcedure } from "./get-top-selling/trpc";
 import { totalRevenueProcedure } from "./get-total-revenue/trpc";
+import { searchProductsProcedure } from "./search-products/trpc";
 import { viewProductsProcedure } from "./view-products/trpc";
 
 export const productRouter = t.router({
@@ -15,4 +16,5 @@ export const productRouter = t.router({
   stats: productStatsProcedure,
   topSelling: topSellingProcedure,
   revenue: totalRevenueProcedure,
+  search: searchProductsProcedure,
 });
