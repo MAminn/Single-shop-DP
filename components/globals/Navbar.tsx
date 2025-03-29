@@ -64,7 +64,6 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const logLinks = [
     { label: "Login", to: "/login" },
-    { label: "Register", to: "/register" },
   ];
 
   const navLinks = {
@@ -200,13 +199,7 @@ const Navbar: React.FC<NavbarProps> = ({
               </>
             )}
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hover:text-gray-700 hover:bg-gray-100"
-          >
-            <Globe size={20} className="" />
-          </Button>
+          
 
           <Button
             variant="ghost"

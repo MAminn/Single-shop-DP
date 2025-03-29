@@ -52,7 +52,7 @@ export default function Page() {
         <div className="w-full sm:max-w-md">
           <div className="w-full h-full flex flex-col p-8 md:p-10 bg-white">
             <h1 className="text-2xl md:text-3xl text-center font-semibold mb-6">
-              Log in to your account
+              Log in for vendors!
             </h1>
             {/* OAuth divs */}
             {/* <div className="flex gap-4 justify-around items-center flex-wrap">
