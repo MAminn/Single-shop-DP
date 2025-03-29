@@ -2,63 +2,80 @@ import type { ClientSession } from "#root/backend/auth/shared/entities";
 import { query } from "#root/shared/database/drizzle/db";
 import { product, vendor } from "#root/shared/database/drizzle/schema";
 import { ServerError } from "#root/shared/error/server";
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 
 export const deleteProductSchema = z.object({
-	id: z.string().uuid(),
+  id: z.string().uuid(),
 });
 
 export const deleteProduct = (
-	data: z.infer<typeof deleteProductSchema>,
-	session?: ClientSession,
+  data: z.infer<typeof deleteProductSchema>,
+  session?: ClientSession
 ) =>
-	Effect.gen(function* ($) {
-		if (!session || (session.role !== "admin" && session.role !== "vendor")) {
-			return yield* $(
-				Effect.fail(
-					new ServerError({
-						tag: "Unauthorized",
-						statusCode: 401,
-						clientMessage: "Unauthorized",
-					}),
-				),
-			);
-		}
+  Effect.gen(function* ($) {
+    if (!session || (session.role !== "admin" && session.role !== "vendor")) {
+      return yield* $(
+        Effect.fail(
+          new ServerError({
+            tag: "Unauthorized",
+            statusCode: 401,
+            clientMessage: "Unauthorized",
+          })
+        )
+      );
+    }
 
-		return yield* $(
-			query(async (db) => {
-				const existingProduct = await db
-					.select()
-					.from(product)
-					.where(eq(product.id, data.id))
-					.then((data) => data[0]);
+    return yield* $(
+      query(async (db) => {
+        const existingProduct = await db
+          .select()
+          .from(product)
+          .where(eq(product.id, data.id))
+          .then((data) => data[0]);
 
-				if (!existingProduct) {
-					throw new Error("Product not found");
-				}
+        if (!existingProduct) {
+          throw new Error("Product not found");
+        }
 
-				const existingVendor = await db
-					.select()
-					.from(vendor)
-					.where(eq(vendor.id, existingProduct.vendorId))
-					.then((data) => data[0]);
+        const existingVendor = await db
+          .select()
+          .from(vendor)
+          .where(eq(vendor.id, existingProduct.vendorId))
+          .then((data) => data[0]);
 
-				if (!existingVendor) {
-					throw new Error("Vendor not found");
-				}
+        if (!existingVendor) {
+          throw new Error("Vendor not found");
+        }
 
-				if (
-					session.role === "vendor" &&
-					session.vendorId !== existingVendor.id
-				) {
-					throw new Error("Unauthorized");
-				}
+        if (
+          session.role === "vendor" &&
+          session.vendorId !== existingVendor.id
+        ) {
+          throw new Error("Unauthorized");
+        }
 
-				await db.delete(product).where(eq(product.id, data.id));
+        const vendorId = existingVendor.id;
 
-				return;
-			}),
-		);
-	});
+        // Delete the product
+        await db.delete(product).where(eq(product.id, data.id));
+
+        // After deleting, check if this vendor has any remaining products
+        const remainingProducts = await db
+          .select({ count: count() })
+          .from(product)
+          .where(eq(product.vendorId, vendorId));
+
+        const hasProducts = remainingProducts[0].count > 0;
+
+        // Update vendor's featured status based on whether they have any products left
+        await db
+          .update(vendor)
+          .set({ featured: hasProducts })
+          .where(eq(vendor.id, vendorId));
+
+        return;
+      })
+    );
+  });

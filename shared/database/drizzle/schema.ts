@@ -74,6 +74,12 @@ export const vendor = pgTable("vendor", {
     .$defaultFn(() => v7()),
   name: text("name").notNull(),
   status: vendorStatus("status").notNull().default("pending"),
+  description: text("description"),
+  logoId: uuid("logo_id").references(() => file.id, {
+    onDelete: "set null",
+    onUpdate: "cascade",
+  }),
+  featured: boolean("featured").notNull().default(false),
   createdAt: timestamp("created_at", {
     withTimezone: true,
     mode: "date",

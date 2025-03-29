@@ -7,59 +7,65 @@ import { Effect } from "effect";
 import { z } from "zod";
 
 export const editVendorSchema = z.object({
-	id: z.string().uuid(),
-	name: z.string().nonempty().max(255),
+  id: z.string().uuid(),
+  name: z.string().nonempty().max(255),
+  description: z.string().max(1000).optional(),
+  logoId: z.string().uuid().optional(),
+  featured: z.boolean().optional(),
 });
 
 export const editVendor = (
-	input: z.infer<typeof editVendorSchema>,
-	session?: ClientSession,
+  input: z.infer<typeof editVendorSchema>,
+  session?: ClientSession
 ) =>
-	Effect.gen(function* ($) {
-		if (!session || session.role !== "admin") {
-			return yield* $(
-				Effect.fail(
-					new ServerError({
-						tag: "Unauthorized",
-						statusCode: 401,
-						clientMessage: "Unauthorized",
-					}),
-				),
-			);
-		}
+  Effect.gen(function* ($) {
+    if (!session || session.role !== "admin") {
+      return yield* $(
+        Effect.fail(
+          new ServerError({
+            tag: "Unauthorized",
+            statusCode: 401,
+            clientMessage: "Unauthorized",
+          })
+        )
+      );
+    }
 
-		yield* $(
-			query(async (db) => {
-				await db.transaction(async (tx) => {
-					const updatedVendor = await tx
-						.update(vendor)
-						.set({
-							name: input.name,
-						})
-						.where(eq(vendor.id, input.id))
-						.returning()
-						.then((data) => data[0]);
+    yield* $(
+      query(async (db) => {
+        await db.transaction(async (tx) => {
+          const updatedVendor = await tx
+            .update(vendor)
+            .set({
+              name: input.name,
+              description: input.description,
+              logoId: input.logoId,
+              featured: input.featured,
+            })
+            .where(eq(vendor.id, input.id))
+            .returning()
+            .then((data) => data[0]);
 
-					if (!updatedVendor) {
-						throw new Error("Vendor not found");
-					}
+          if (!updatedVendor) {
+            throw new Error("Vendor not found");
+          }
 
-					const actionUser = await tx
-						.select()
-						.from(user)
-						.where(eq(user.email, session.email))
-						.then((data) => data[0]);
+          const actionUser = await tx
+            .select()
+            .from(user)
+            .where(eq(user.email, session.email))
+            .then((data) => data[0]);
 
-					if (!actionUser) {
-						throw new Error("User not found");
-					}
+          if (!actionUser) {
+            throw new Error("User not found");
+          }
 
-					await tx.insert(vendorLog).values({
-						vendorId: updatedVendor.id,
-						userId: actionUser.id,
-						action: "updated",
-					});
-				});
-			}),
-		);
-	});
+          await tx.insert(vendorLog).values({
+            vendorId: updatedVendor.id,
+            userId: actionUser.id,
+            action: "updated",
+          });
+        });
+      })
+    );
+  });

@@ -3,12 +3,12 @@ import {
   serializeBackendEffectResult,
 } from "#root/shared/backend/effect";
 import { provideDatabase, publicProcedure } from "#root/shared/trpc/server";
-import { viewVendorById, viewVendorByIdSchema } from "./service";
+import { searchProducts, searchProductsSchema } from "./service";
 
-export const viewVendorByIdProcedure = publicProcedure
-  .input(viewVendorByIdSchema)
+export const searchProductsProcedure = publicProcedure
+  .input(searchProductsSchema)
   .query(async ({ ctx, input }) => {
     return await runBackendEffect(
-      viewVendorById(input).pipe(provideDatabase(ctx))
+      searchProducts(input).pipe(provideDatabase(ctx))
     ).then(serializeBackendEffectResult);
   });

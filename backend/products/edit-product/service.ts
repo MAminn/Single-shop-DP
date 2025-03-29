@@ -88,6 +88,12 @@ export const editProduct = (
             throw new Error("Product not updated");
           }
 
+          // Update the vendor to be featured if they have products
+          await tx
+            .update(vendor)
+            .set({ featured: true })
+            .where(eq(vendor.id, data.vendorId));
+
           if (!data.variants) {
             return updatedProduct;
           }

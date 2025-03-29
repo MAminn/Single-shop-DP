@@ -93,8 +93,8 @@ export function DashboardSidebar() {
                 className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:justify-center"
                 onClick={() => toggleSidebar()}
               >
-                <SidebarMenuButton>
-                  <item.icon className="w-4 h-4" />
+                <SidebarMenuButton className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:items-center group-data-[state=collapsed]:justify-center">
+                  <item.icon className="w-4 h-4  " />
                   <span className="group-data-[state=collapsed]:hidden">
                     {item.label}
                   </span>
