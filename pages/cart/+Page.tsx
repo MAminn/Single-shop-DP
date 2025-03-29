@@ -95,10 +95,18 @@ export default function CartPage() {
               {items.map((item) => (
                 <div key={`${item.id}-${JSON.stringify(item.selectedOptions)}`}>
                   <div className="flex flex-col sm:flex-row gap-4 py-4">
-                    <div className="aspect-square h-24 w-24 flex-shrink-0 bg-neutral-100 rounded-md flex items-center justify-center">
-                      <div className="text-2xl font-bold text-neutral-300">
-                        {item.name.charAt(0)}
-                      </div>
+                    <div className="aspect-square h-24 w-24 flex-shrink-0 bg-neutral-100 rounded-md flex items-center justify-center overflow-hidden">
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="text-2xl font-bold text-neutral-300">
+                          {item.name.charAt(0)}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex-grow">
