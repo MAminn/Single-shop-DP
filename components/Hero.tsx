@@ -52,8 +52,6 @@ const Hero: React.FC<HeroProps> = ({ lang = "en" }: HeroProps) => {
     },
   };
 
-  
-
   return (
     <section className=" w-full h-full">
       <section className=" w-full h-[200px] md:h-full">
@@ -74,6 +72,16 @@ const Hero: React.FC<HeroProps> = ({ lang = "en" }: HeroProps) => {
           Women
         </h1>
         <Link href="/featured/women">
+          <Button className=" w-full h-full md:py-4 md:px-6 py-2 px-4 mt-4 text-sm md:text-xl bg-accent-lb transition-all duration-300">
+            Shop
+          </Button>
+        </Link>
+      </section>
+      <section className=" w-full h-[300px] md:h-[400px] men-section-image bg-center bg-cover bg-fixed flex justify-center items-center flex-col ">
+        <h1 className=" text-3xl md:text-6xl font-bold text-white uppercase">
+          Brands
+        </h1>
+        <Link href="/featured/brands">
           <Button className=" w-full h-full md:py-4 md:px-6 py-2 px-4 mt-4 text-sm md:text-xl bg-accent-lb transition-all duration-300">
             Shop
           </Button>
