@@ -62,9 +62,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const { session, logout } = useContext(AuthContext);
 
-  const logLinks = [
-    { label: "Login", to: "/login" },
-  ];
+  const logLinks = [{ label: "Login", to: "/login" }];
 
   const navLinks = {
     en: [
@@ -135,8 +133,8 @@ const Navbar: React.FC<NavbarProps> = ({
   const links = lang === "en" || lang === "ar" ? navLinks[lang] : [];
 
   return (
-    <nav className=" shadow-md sticky py-6 top-0 z-10 bg-background">
-      <div className="px-4 flex items-center justify-between min-h-16 max-w-7xl mx-auto">
+    <nav className=" shadow-md sticky py-2 lg:py-6 top-0 z-10 bg-background">
+      <div className="px-4 flex text-sm lg:text-base items-center justify-between min-h-16 max-w-7xl mx-auto">
         <div className="flex items-center gap-8">
           <Link href="/" className="text-3xl font-bold ">
             <img src={logoImage} alt="" className="md:w-[150px] w-[100px]" />
@@ -199,7 +197,6 @@ const Navbar: React.FC<NavbarProps> = ({
               </>
             )}
           </div>
-          
 
           <Button
             variant="ghost"

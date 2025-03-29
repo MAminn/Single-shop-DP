@@ -15,6 +15,8 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "#root/components/ui/tabs.jsx";
 import { usePageContext } from "vike-react/usePageContext";
 import { RoleProvider, useRole } from "#root/lib/context/RoleContext";
+import { HomeIcon, Home, Menu } from "lucide-react";
+import logoImage from "#root/assets/Lebsy-Logo-Light.svg";
 
 export default function DashboardLayout({
   children,
@@ -105,9 +107,17 @@ function Content({ children }: { children: React.ReactNode }) {
                     </TabsList>
                   </Tabs>
                 </div>
+                <Link href="/" className="text-3xl font-bold ">
+                  <img src={logoImage} alt="" className=" w-[100px]" />
+                </Link>
                 <div className="flex items-center gap-2">
                   <Link href="/">
-                    <Button variant="outline">Return to Home</Button>
+                    <Button variant="outline" className="hidden lg:block">
+                      Return to Home
+                    </Button>
+                    <Button variant="outline" className="block lg:hidden">
+                      <HomeIcon />
+                    </Button>
                   </Link>
                 </div>
               </div>
