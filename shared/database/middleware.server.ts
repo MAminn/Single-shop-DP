@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
-import { db } from "./drizzle/db";
-import { migrateToLatest } from "./drizzle/migrate";
+import { db } from "./drizzle/db.js";
+import { migrateToLatest } from "./drizzle/migrate.js";
+import { fixDatabaseSchema } from "./schema-fix.js";
 import fp from "fastify-plugin";
 
 declare module "fastify" {
@@ -23,6 +24,12 @@ const drizzleFastifyPlugin = fp(async (app: FastifyInstance) => {
       );
       throw new Error("DATABASE_URL environment variable is not set");
     }
+
+    // First, run schema fix to ensure database is in a clean state
+    console.log(
+      "[DB Middleware] Running schema fix to ensure database is clean..."
+    );
+    await fixDatabaseSchema();
 
     console.log("[DB Middleware] Starting database migrations...");
     await migrateToLatest();
