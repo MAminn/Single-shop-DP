@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState, lazy, Suspense } from "react";
 import {
   Card,
   CardHeader,
@@ -34,6 +34,7 @@ import {
   AlertCircle,
   Loader2Icon,
   XIcon,
+  Loader2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -66,12 +67,34 @@ import {
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import VendorForm from "./components";
 
+// Use lazy loading for the form
+const CreateVendorForm = lazy(() =>
+  import("./components/CreateVendorForm").then((mod) => ({
+    default: mod.CreateVendorForm,
+  }))
+);
+
+// Create a loading placeholder
+function VendorFormLoader() {
+  return (
+    <div className="p-6 space-y-4">
+      <p className="text-center text-muted-foreground">
+        Loading vendor creation form...
+      </p>
+      <div className="flex justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    </div>
+  );
+}
+
 export default function Vendors() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchQueryValue] = useDebounce(searchQuery, 1000);
   const [lastUpdateDate, setLastUpdateDate] = useState<Date>(new Date());
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const initalData = useData<Data>();
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const [fetchDataResult, setFetchDataResult] = useState<Data>(initalData);
   const [loading, setLoading] = useState(false);
@@ -205,16 +228,41 @@ export default function Vendors() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Vendors</h1>
+          <h1 className="text-2xl font-bold">Vendors</h1>
           <p className="text-muted-foreground">
-            Manage all vendors on the platform
+            Manage vendors and their permissions
           </p>
         </div>
-        {loading && (
-          <Loader2Icon className="w-6 h-6 animate-spin text-muted-foreground" />
-        )}
+
+        <div className="flex gap-2 items-center">
+          {loading && (
+            <Loader2Icon className="w-6 h-6 animate-spin text-muted-foreground" />
+          )}
+
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Store className="w-4 h-4 mr-2" />
+                Add Vendor
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Create New Vendor</DialogTitle>
+              </DialogHeader>
+              <Suspense fallback={<VendorFormLoader />}>
+                <CreateVendorForm
+                  onSuccess={() => {
+                    setLastUpdateDate(new Date());
+                    setDialogOpen(false);
+                  }}
+                />
+              </Suspense>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>
