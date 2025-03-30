@@ -111,6 +111,201 @@ async function buildServer() {
 
   await instance.register(uploadFileApiPlugin);
 
+  // Add a debug endpoint for database connection and migration status
+  instance.get("/api/debug/db-status", async (request, reply) => {
+    try {
+      // Test database connection
+      const connectionTest = await request.db.execute(
+        "SELECT 1 as connection_test"
+      );
+
+      // Test database version
+      const pgVersion = await request.db.execute(
+        "SELECT version() as pg_version"
+      );
+
+      // Check migration table existence
+      const migrationTableExists = await request.db.execute(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_name = '__drizzle_migrations'
+        ) as table_exists
+      `);
+
+      // Check migration status if table exists
+      let migrations = null;
+      const tableExists =
+        Array.isArray(migrationTableExists) &&
+        migrationTableExists.length > 0 &&
+        migrationTableExists[0]?.table_exists;
+
+      if (tableExists) {
+        migrations = await request.db.execute(
+          'SELECT id, hash, created_at FROM "__drizzle_migrations" ORDER BY created_at DESC LIMIT 10'
+        );
+      }
+
+      // Get database info
+      const dbInfo = await request.db.execute(`
+        SELECT 
+          current_database() as current_db,
+          current_schema() as current_schema,
+          inet_server_addr() as server_ip,
+          inet_server_port() as server_port
+      `);
+
+      const dbInfoData =
+        Array.isArray(dbInfo) && dbInfo.length > 0 ? dbInfo[0] : {};
+
+      return {
+        success: true,
+        connectionTest,
+        pgVersion,
+        migrationTableExists: tableExists,
+        migrations,
+        dbInfo: dbInfoData,
+        serverTimestamp: new Date().toISOString(),
+        envVars: {
+          nodeEnv: process.env.NODE_ENV,
+          databaseUrl: process.env.DATABASE_URL
+            ? process.env.DATABASE_URL.replace(
+                /(postgres:\/\/[^:]+):([^@]+)@/,
+                "postgres://$1:***@"
+              )
+            : "not defined",
+        },
+      };
+    } catch (error) {
+      console.error("[Debug Endpoint] Database connection test failed:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
+      };
+    }
+  });
+
+  // Add a manual migration initialization endpoint
+  instance.get("/api/debug/init-migrations", async (request, reply) => {
+    try {
+      console.log(
+        "[Manual Migration] Starting manual migration initialization"
+      );
+
+      // First test the connection
+      await request.db.execute("SELECT 1 as test");
+      console.log("[Manual Migration] Database connection successful");
+
+      // Create the migration table
+      console.log("[Manual Migration] Creating migration table");
+      await request.db.execute(`
+        CREATE TABLE IF NOT EXISTS "__drizzle_migrations" (
+          id SERIAL PRIMARY KEY,
+          hash text NOT NULL,
+          created_at timestamp with time zone DEFAULT now()
+        )
+      `);
+      console.log("[Manual Migration] Migration table created");
+
+      // Check if we have migrations in the table
+      const migrationCheck = await request.db.execute(`
+        SELECT COUNT(*) as count FROM "__drizzle_migrations"
+      `);
+
+      const count =
+        Array.isArray(migrationCheck) && migrationCheck.length > 0
+          ? Number(migrationCheck[0].count)
+          : 0;
+
+      console.log(`[Manual Migration] Found ${count} existing migrations`);
+
+      if (count === 0) {
+        // Find the first migration file
+        const fs = await import("node:fs");
+        const path = await import("node:path");
+
+        console.log("[Manual Migration] Looking for migration files");
+        const { fileURLToPath } = await import("node:url");
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+        const migrationsFolder = path.resolve(
+          __dirname,
+          "..",
+          "shared",
+          "database",
+          "migrations"
+        );
+
+        console.log(
+          `[Manual Migration] Checking migrations folder: ${migrationsFolder}`
+        );
+
+        if (fs.existsSync(migrationsFolder)) {
+          const files = fs.readdirSync(migrationsFolder);
+          console.log(
+            `[Manual Migration] Found ${files.length} files in migrations folder`
+          );
+
+          // Filter SQL files that aren't the safety file
+          const sqlFiles = files.filter(
+            (file) => file.endsWith(".sql") && !file.includes("safety")
+          );
+
+          console.log(
+            `[Manual Migration] Found ${sqlFiles.length} SQL migration files`
+          );
+
+          if (sqlFiles.length > 0) {
+            // Sort the files
+            sqlFiles.sort();
+            console.log(
+              `[Manual Migration] Sorted migration files: ${sqlFiles.join(", ")}`
+            );
+
+            // Mark the first migration as applied
+            const firstMigration = sqlFiles[0];
+            if (firstMigration) {
+              const migrationName = firstMigration.replace(".sql", "");
+
+              console.log(
+                `[Manual Migration] Marking first migration as applied: ${migrationName}`
+              );
+              await request.db.execute(`
+                INSERT INTO "__drizzle_migrations" (hash)
+                VALUES ('${migrationName}')
+                ON CONFLICT DO NOTHING
+              `);
+
+              console.log(
+                `[Manual Migration] Successfully marked migration ${migrationName} as applied`
+              );
+            }
+          }
+        } else {
+          console.log(
+            `[Manual Migration] Migrations folder not found at: ${migrationsFolder}`
+          );
+        }
+      }
+
+      return {
+        success: true,
+        message: "Manual migration initialization completed",
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error(
+        "[Manual Migration] Error during manual migration initialization:",
+        error
+      );
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
+      };
+    }
+  });
+
   instance.all(
     "/*",
     {
