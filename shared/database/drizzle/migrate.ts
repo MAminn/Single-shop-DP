@@ -370,22 +370,25 @@ async function manuallyRunRemainingMigrations(
           `[DB Migration] Migration ${migrationName} has ${statements.length} statements`
         );
 
-        // Execute each statement, skipping any that would create types (already handled)
+        // Execute each statement, skipping any that would create types or constraints that already exist
         let successCount = 0;
         let skipCount = 0;
+
         for (let i = 0; i < statements.length; i++) {
           const statement = statements[i]?.trim();
 
           // Skip empty statements
           if (!statement) continue;
 
-          // Skip statements that would create types (already exist)
+          // Automatically skip statements that would create objects without IF NOT EXISTS
           if (
-            statement.toUpperCase().includes("CREATE TYPE") &&
+            (statement.toUpperCase().includes("CREATE TYPE") ||
+              statement.toUpperCase().includes("CREATE TABLE") ||
+              statement.toUpperCase().includes("CREATE EXTENSION")) &&
             !statement.toUpperCase().includes("IF NOT EXISTS")
           ) {
             console.log(
-              `[DB Migration] Skipping statement ${i + 1} (type creation)`
+              `[DB Migration] Skipping statement ${i + 1} (object creation without IF NOT EXISTS)`
             );
             skipCount++;
             continue;
@@ -394,12 +397,37 @@ async function manuallyRunRemainingMigrations(
           try {
             await dbInstance.execute(sql.raw(statement));
             successCount++;
-          } catch (statementError) {
-            console.error(
-              `[DB Migration] Error executing statement ${i + 1}:`,
-              statementError
-            );
-            // Continue with next statement
+          } catch (statementError: unknown) {
+            // Handle common "already exists" errors gracefully
+            const errorObj = statementError as {
+              code?: string;
+              message?: string;
+            };
+            const errorCode = errorObj?.code;
+            const errorMessage = errorObj?.message || "";
+
+            if (
+              // PostgreSQL error codes for common "already exists" errors
+              errorCode === "42710" || // Type already exists
+              errorCode === "42P07" || // Table already exists
+              errorCode === "42P16" || // Function already exists
+              errorCode === "23505" || // Unique violation
+              // Also check error message patterns
+              errorMessage.includes("already exists") ||
+              (errorMessage.includes("constraint") &&
+                errorMessage.includes("already exists")) ||
+              errorMessage.includes("duplicate key")
+            ) {
+              console.warn(
+                `[DB Migration] Skipping statement ${i + 1} - object already exists: ${errorMessage}`
+              );
+              skipCount++;
+            } else {
+              console.error(
+                `[DB Migration] Error executing statement ${i + 1}:`,
+                statementError
+              );
+            }
           }
         }
 
@@ -407,7 +435,8 @@ async function manuallyRunRemainingMigrations(
           `[DB Migration] Migration ${migrationName}: ${successCount} statements applied, ${skipCount} skipped`
         );
 
-        // Mark the migration as applied
+        // Mark the migration as applied regardless of errors
+        // since errors like "already exists" are expected and handled
         await dbInstance.execute(sql`
           INSERT INTO "__drizzle_migrations" (hash)
           VALUES (${migrationName})

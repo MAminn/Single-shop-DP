@@ -1,6 +1,6 @@
 import type { ClientSession } from "#root/backend/auth/shared/entities";
-import { query } from "#root/shared/database/drizzle/db";
-import { product, vendor } from "#root/shared/database/drizzle/schema";
+import { query } from "#root/shared/database/drizzle/db.js";
+import { product, vendor } from "#root/shared/database/drizzle/schema.js";
 import { ServerError } from "#root/shared/error/server";
 import { count, eq } from "drizzle-orm";
 import { Effect } from "effect";
@@ -67,7 +67,7 @@ export const deleteProduct = (
           .from(product)
           .where(eq(product.vendorId, vendorId));
 
-        const hasProducts = remainingProducts[0].count > 0;
+        const hasProducts = (remainingProducts[0]?.count ?? 0) > 0;
 
         // Update vendor's featured status based on whether they have any products left
         await db
