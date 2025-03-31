@@ -139,8 +139,50 @@ const Navbar: React.FC<NavbarProps> = ({
   return (
     <nav className=' shadow-md sticky py-2 lg:py-6 top-0 z-10 bg-background'>
       <div className='px-4 flex text-sm lg:text-base items-center justify-between min-h-16 max-w-7xl mx-auto'>
-        <div className='flex items-center gap-4'>
-          <div className=' hidden md:flex justify-center items-center gap-2'>
+        <div className='flex items-center gap-8 lg:order-1 order-2'>
+          <Link href='/' className='text-3xl font-bold '>
+            <img src={logoImage} alt='' className='md:w-[150px] w-[100px]' />
+          </Link>
+
+          <div className='hidden lg:flex gap-6 '>
+            <NavigationMenu>
+              <NavigationMenuList>
+                {links.map((link) => (
+                  <NavigationMenuItem key={link.to} className='relative  '>
+                    {link.subLinks ? (
+                      <>
+                        <NavigationMenuTrigger className=' navLink '>
+                          {link.label}
+                        </NavigationMenuTrigger>
+                        <NavigationMenuContent className='absolute mt-10 bg-white text-black rounded-2xl'>
+                          <ul className='grid gap-3 p-4 w-[200px]'>
+                            {link.subLinks.map((subLink) => (
+                              <li key={subLink.to}>
+                                <NavigationMenuLink className='  navLink'>
+                                  <Link href={subLink.to} className='block '>
+                                    {subLink.label}
+                                  </Link>
+                                </NavigationMenuLink>
+                              </li>
+                            ))}
+                          </ul>
+                        </NavigationMenuContent>
+                      </>
+                    ) : (
+                      <NavigationMenuLink asChild>
+                        <Link href={link.to} className='navLink'>
+                          {link.label}
+                        </Link>
+                      </NavigationMenuLink>
+                    )}
+                  </NavigationMenuItem>
+                ))}
+              </NavigationMenuList>
+            </NavigationMenu>
+          </div>
+        </div>
+        <div className='flex items-center gap-4 lg:order-2 order-1'>
+          <div className=' hidden lg:flex justify-center items-center gap-2'>
             {!session ? (
               logLinks.map((link) => (
                 <Link key={link.to} href={link.to} className='navLink'>
@@ -160,7 +202,7 @@ const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
-          <div className='flex md:hidden'>
+          <div className='flex lg:hidden'>
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
                 <Button
@@ -214,53 +256,11 @@ const Navbar: React.FC<NavbarProps> = ({
             </Sheet>
           </div>
         </div>
-        <div className='flex items-center gap-8'>
-          <Link href='/' className='text-3xl font-bold '>
-            <img src={logoImage} alt='' className='md:w-[150px] w-[100px]' />
-          </Link>
-
-          <div className='hidden md:flex gap-6 '>
-            <NavigationMenu>
-              <NavigationMenuList>
-                {links.map((link) => (
-                  <NavigationMenuItem key={link.to} className='relative  '>
-                    {link.subLinks ? (
-                      <>
-                        <NavigationMenuTrigger className=' navLink '>
-                          {link.label}
-                        </NavigationMenuTrigger>
-                        <NavigationMenuContent className='absolute mt-10 bg-white text-black rounded-2xl'>
-                          <ul className='grid gap-3 p-4 w-[200px]'>
-                            {link.subLinks.map((subLink) => (
-                              <li key={subLink.to}>
-                                <NavigationMenuLink className='  navLink'>
-                                  <Link href={subLink.to} className='block '>
-                                    {subLink.label}
-                                  </Link>
-                                </NavigationMenuLink>
-                              </li>
-                            ))}
-                          </ul>
-                        </NavigationMenuContent>
-                      </>
-                    ) : (
-                      <NavigationMenuLink asChild>
-                        <Link href={link.to} className='navLink'>
-                          {link.label}
-                        </Link>
-                      </NavigationMenuLink>
-                    )}
-                  </NavigationMenuItem>
-                ))}
-              </NavigationMenuList>
-            </NavigationMenu>
-          </div>
-        </div>
 
         <Button
           variant='ghost'
           size='icon'
-          className='hover:text-gray-700 hover:bg-gray-100 hidden max-md:flex'
+          className='hover:text-gray-700 hover:bg-gray-100 hidden max-lg:flex order-3'
           asChild>
           <Link href='/cart' className='relative'>
             <ShoppingCart size={20} />
