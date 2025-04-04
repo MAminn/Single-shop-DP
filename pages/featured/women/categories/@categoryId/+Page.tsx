@@ -12,7 +12,7 @@ const Page = () => {
   }
 
   return (
-    <div className="flex justify-center items-center h-full w-full pr-6">
+    <div className="flex flex-col justify-center items-center h-full w-full pr-6">
       <Sorting categoryId={categoryId} />
     </div>
   );

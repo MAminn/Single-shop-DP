@@ -7,6 +7,8 @@ import { topSellingProcedure } from "./get-top-selling/trpc";
 import { totalRevenueProcedure } from "./get-total-revenue/trpc";
 import { searchProductsProcedure } from "./search-products/trpc";
 import { viewProductsProcedure } from "./view-products/trpc";
+import { viewReviewsProcedure } from "./view-reviews/trpc";
+import { createReviewProcedure } from "./create-review/trpc";
 
 export const productRouter = t.router({
   view: viewProductsProcedure,
@@ -17,4 +19,6 @@ export const productRouter = t.router({
   topSelling: topSellingProcedure,
   revenue: totalRevenueProcedure,
   search: searchProductsProcedure,
+  getReviews: viewReviewsProcedure,
+  createReview: createReviewProcedure,
 });

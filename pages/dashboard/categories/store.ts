@@ -15,7 +15,7 @@ export const mockCategories: Category[] = [
   {
     id: "men",
     name: "Men",
-    imageUrl: "/assets/men-category.jpg",
+    imageUrl: "/assets/men-section.png",
     subcategories: [
       { id: "men-shirts", name: "Shirts", products: [1] },
       { id: "men-pants", name: "Pants", products: [2] },
@@ -26,7 +26,7 @@ export const mockCategories: Category[] = [
   {
     id: "women",
     name: "Women",
-    imageUrl: "/assets/women-category.jpg",
+    imageUrl: "/assets/women-section.png",
     subcategories: [
       { id: "women-dresses", name: "Dresses", products: [] },
       { id: "women-tops", name: "Tops", products: [] },

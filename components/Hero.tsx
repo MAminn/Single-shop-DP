@@ -1,17 +1,62 @@
-import HeroImg from "#root/assets/landing-hero.png";
-import { Link } from "./Link";
+import type React from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
+import { Link } from "./Link";
+import AnimatedContent from "./AnimatedContent";
+import { usePageContext } from "vike-react/usePageContext";
+import { ArrowRight } from "lucide-react";
+import HeroImg from "#root/assets/landing-hero.png";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "#root/components/ui/accordion";
+
 interface HeroProps {
   lang: "en" | "ar";
+  title?: string;
+  caption?: string;
+  description?: string;
+  overlay?: boolean;
+  centered?: boolean;
+  cta?: {
+    text: string;
+    href: string;
+  };
+  secondaryCta?: {
+    text: string;
+    href: string;
+  };
+  imageUrl?: string;
+  style?: React.CSSProperties;
+  className?: string;
+  align?: "left" | "center" | "right";
+  textColor?: string;
 }
 
-const Hero: React.FC<HeroProps> = ({ lang = "en" }: HeroProps) => {
+const DEFAULT_IMAGE = "/assets/men-section.png";
+
+const Hero: React.FC<HeroProps> = ({
+  lang = "en",
+  title,
+  caption,
+  description,
+  overlay,
+  centered,
+  cta,
+  secondaryCta,
+  imageUrl = DEFAULT_IMAGE,
+  style,
+  className,
+  align = "left",
+  textColor = "text-white",
+}: HeroProps) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [parallaxOffset, setParallaxOffset] = useState(0);
+  const pageContext = usePageContext();
+  const isHomePage = pageContext.urlPathname === "/";
+
   const cardContent = {
     en: {
       cards: [
@@ -52,104 +97,168 @@ const Hero: React.FC<HeroProps> = ({ lang = "en" }: HeroProps) => {
     },
   };
 
+  useEffect(() => {
+    setIsVisible(true);
+
+    const handleScroll = () => {
+      if (window.scrollY < 600) {
+        setParallaxOffset(window.scrollY * 0.15);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Text alignment classes
+  const alignClasses = {
+    left: "text-left items-start",
+    center: "text-center items-center",
+    right: "text-right items-end",
+  };
+
+  // Adjust the hero height based on if it's homepage or not
+  const heightClass = isHomePage
+    ? "min-h-[80vh] md:min-h-[85vh]"
+    : "min-h-[40vh] md:min-h-[50vh]";
+
   return (
-    <section className=" w-full h-full">
-      <section className=" w-full h-[200px] md:h-full">
-        <img src={HeroImg} alt="" className=" w-full h-full " />
-      </section>
-      <section className=" w-full h-[300px] md:h-[400px] men-section-image bg-center bg-cover bg-fixed flex justify-center items-center flex-col ">
-        <h1 className=" text-3xl md:text-6xl font-bold text-white uppercase">
-          Men
-        </h1>
-        <Link href="/featured/men">
-          <Button className=" w-full h-full md:py-4 md:px-6 py-2 px-4 mt-4 text-sm md:text-xl bg-accent-lb transition-all duration-300">
-            Shop
-          </Button>
-        </Link>
-      </section>
-      <section className=" w-full h-[300px] md:h-[400px] women-section-image bg-center bg-cover bg-fixed flex justify-center items-center flex-col ">
-        <h1 className=" text-3xl md:text-6xl font-bold text-white uppercase">
-          Women
-        </h1>
-        <Link href="/featured/women">
-          <Button className=" w-full h-full md:py-4 md:px-6 py-2 px-4 mt-4 text-sm md:text-xl bg-accent-lb transition-all duration-300">
-            Shop
-          </Button>
-        </Link>
-      </section>
-      <section className=" w-full h-[300px] md:h-[400px] men-section-image bg-center bg-cover bg-fixed flex justify-center items-center flex-col ">
-        <h1 className=" text-3xl md:text-6xl font-bold text-white uppercase">
-          Brands
-        </h1>
-        <Link href="/featured/brands">
-          <Button className=" w-full h-full md:py-4 md:px-6 py-2 px-4 mt-4 text-sm md:text-xl bg-accent-lb transition-all duration-300">
-            Shop
-          </Button>
-        </Link>
-      </section>
-      <section className=" w-full h-[400px] md:h-[500px] flex justify-center items-center flex-col md:flex-row relative ">
-        <div className=" bg-white p-4 w-full h-[300px] rounded-2xl max-2xl:bottom-[-40%] 2xl:left-[20%] absolute max-w-[200px] md:max-w-[400px] flex flex-col justify-center items-center">
-          <h1 className="text-2xl md:text-4xl font-semibold mb-6">Our Story</h1>
-          <p className=" text-xs md:text-sm text-center">
-            We started Lebsy because shopping for clothes online was
-            frustrating, too many websites, too much hassle. So, we built one
-            place where all clothing sellers come together, making fashion
-            shopping easier for everyone.
-          </p>
-        </div>
-        <div className="img1 md:w-[85%] 2xl:w-[35%] w-[90%] h-full bg-center bg-cover"></div>
-      </section>
-      <section className=" w-full h-full max-2xl:mt-[200px] max-md:mt-[230px] max-xl:px-10">
-        <div className=" w-full h-full flex justify-center items-center gap-6 flex-col md:flex-row ">
-          {cardContent[lang].cards.map((card) => (
-            <div
-              key={card.title}
-              className=" bg-gray-100 p-4 w-full h-[240px] md:h-[300px] rounded-2xl max-w-[250px] md:max-w-[400px] flex flex-col justify-center items-center"
-            >
-              <h1 className="text-2xl md:text-4xl text-center font-semibold mb-6">
-                {card.title}
+    <div
+      className={`relative overflow-hidden ${heightClass} w-full ${className}`}
+      style={style}
+    >
+      {/* Parallax Background Image */}
+      <div
+        className="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-700 ease-out"
+        style={{
+          backgroundImage: `url(${imageUrl})`,
+          transform: `translateY(${parallaxOffset}px) scale(1.1)`,
+        }}
+      />
+
+      {/* Overlay */}
+      {overlay && (
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30"
+          style={{ mixBlendMode: "multiply" }}
+        />
+      )}
+
+      {/* Content */}
+      <div
+        className={`relative z-[9] container mx-auto px-6 flex flex-col justify-center ${
+          centered ? "h-full items-center text-center" : "h-full"
+        } ${alignClasses[align]}`}
+      >
+        <AnimatedContent
+          distance={50}
+          direction="vertical"
+          reverse={false}
+          config={{ tension: 100, friction: 20 }}
+          initialOpacity={0}
+          threshold={0.1}
+          animateOpacity
+          scale={1}
+        >
+          <div
+            className={`max-w-lg ${
+              align === "center" ? "mx-auto" : ""
+            } space-y-5`}
+          >
+            {caption && (
+              <div
+                className="transform transition-all duration-700 delay-100"
+                style={{
+                  opacity: isVisible ? 1 : 0,
+                  transform: isVisible ? "translateY(0)" : "translateY(20px)",
+                }}
+              >
+                <span
+                  className={`inline-block px-4 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${textColor === "text-white" ? "bg-white/20 backdrop-blur-sm" : "bg-black/20"} ${textColor}`}
+                >
+                  {caption}
+                </span>
+              </div>
+            )}
+
+            {title && (
+              <h1
+                className={`text-4xl md:text-5xl lg:text-6xl font-bold leading-tight ${textColor} transform transition-all duration-700 delay-200`}
+                style={{
+                  opacity: isVisible ? 1 : 0,
+                  transform: isVisible ? "translateY(0)" : "translateY(20px)",
+                }}
+              >
+                {title}
               </h1>
-              <p className=" text-xs md:text-sm text-center">
-                {card.description}
+            )}
+
+            {description && (
+              <p
+                className={`text-base md:text-lg ${textColor === "text-white" ? "text-gray-200" : "text-gray-700"} max-w-md transform transition-all duration-700 delay-300`}
+                style={{
+                  opacity: isVisible ? 1 : 0,
+                  transform: isVisible ? "translateY(0)" : "translateY(20px)",
+                }}
+              >
+                {description}
               </p>
+            )}
+
+            <div
+              className="flex flex-wrap gap-4 pt-2 transform transition-all duration-700 delay-400"
+              style={{
+                opacity: isVisible ? 1 : 0,
+                transform: isVisible ? "translateY(0)" : "translateY(20px)",
+              }}
+            >
+              {cta && (
+                <Button
+                  asChild
+                  size="lg"
+                  className="relative overflow-hidden group bg-accent-lb hover:bg-accent-db text-white transition-all duration-300"
+                >
+                  <Link href={cta.href}>
+                    <span className="relative z-[9]">{cta.text}</span>
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    <span className="absolute inset-0 w-0 bg-accent-db group-hover:w-full transition-all duration-300"></span>
+                  </Link>
+                </Button>
+              )}
+
+              {secondaryCta && (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="lg"
+                  className={`border-2 ${
+                    textColor === "text-white"
+                      ? "border-white text-white hover:bg-white hover:text-accent-lb"
+                      : "border-accent-lb text-accent-lb hover:bg-accent-lb hover:text-white"
+                  } transition-colors duration-300`}
+                >
+                  <Link href={secondaryCta.href}>{secondaryCta.text}</Link>
+                </Button>
+              )}
             </div>
-          ))}
-        </div>
-      </section>
-      <section className=" w-full h-full flex justify-center items-center flex-col ">
-        <div className=" w-full h-full flex flex-col justify-center items-center max-w-[700px] px-8">
-          <h1 className="text-2xl md:text-4xl text-center font-semibold mb-6 mt-10">
-            FAQ
-          </h1>
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="item-1">
-              <AccordionTrigger className="header">
-                Shipping and Delivery
-              </AccordionTrigger>
-              <AccordionContent>
-                We ship across Egypt, delivering orders within a week (Not
-                including holidays). Shipping costs vary based on order details
-                and location, with support available at cs@Lebsey.com for any
-                issues.{" "}
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-2">
-              <AccordionTrigger className="header">Need Help?</AccordionTrigger>
-              <AccordionContent>
-                Feel free to reach out via WhatsApp at 01507135600 or email us
-                at cs@lebsey.com—we’re always happy to help!
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-3">
-              <AccordionTrigger className="header">
-                Join Our network of vendors
-              </AccordionTrigger>
-              <AccordionContent>Become a vendor Now!</AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
-      </section>
-    </section>
+          </div>
+        </AnimatedContent>
+      </div>
+
+      {/* Hero bottom curve */}
+      <div className="absolute bottom-0 left-0 right-0">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1440 70"
+          className="w-full h-auto fill-white"
+          preserveAspectRatio="none"
+          aria-label="Decorative wave pattern at bottom of hero section"
+          role="img"
+        >
+          <path d="M0,32L60,37.3C120,43,240,53,360,53.3C480,53,600,43,720,37.3C840,32,960,32,1080,37.3C1200,43,1320,53,1380,58.7L1440,64L1440,70L1380,70C1320,70,1200,70,1080,70C960,70,840,70,720,70C600,70,480,70,360,70C240,70,120,70,60,70L0,70Z"></path>
+        </svg>
+      </div>
+    </div>
   );
 };
 

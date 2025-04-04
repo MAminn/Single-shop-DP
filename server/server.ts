@@ -111,6 +111,33 @@ async function buildServer() {
 
   await instance.register(uploadFileApiPlugin);
 
+  // Add product detail route handler - updated to new format
+  instance.get("/featured/products/@productId", async (request, reply) => {
+    const pageContextInit = {
+      urlOriginal: request.url,
+      headersOriginal: request.headers,
+      routeParams: request.params,
+      db: request.db,
+      clientSession: request.clientSession,
+    };
+    const pageContext = await renderPage(pageContextInit);
+    const { httpResponse } = pageContext;
+
+    if (!httpResponse) {
+      return reply.code(404).send("Product page not found");
+    }
+
+    reply.status(httpResponse.statusCode);
+
+    for (const [name, value] of Object.entries(httpResponse.headers)) {
+      if (value) reply.header(name, value);
+    }
+
+    httpResponse.pipe(reply.raw);
+
+    return reply;
+  });
+
   // Add a debug endpoint for database connection and migration status
   instance.get("/api/debug/db-status", async (request, reply) => {
     try {
