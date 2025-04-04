@@ -12,9 +12,11 @@ interface AnimatedContentProps {
   scale?: number;
   threshold?: number;
   delay?: number;
+  className?: string;
 }
 
 const AnimatedContent: React.FC<AnimatedContentProps> = ({
+  className,
   children,
   distance = 100,
   direction = "vertical",
@@ -73,7 +75,7 @@ const AnimatedContent: React.FC<AnimatedContentProps> = ({
   const AnimatedDiv = animated("div");
 
   return (
-    <AnimatedDiv ref={ref} style={springProps}>
+    <AnimatedDiv ref={ref} style={springProps} className={className}>
       {children}
     </AnimatedDiv>
   );

@@ -350,3 +350,32 @@ export const orderItem = pgTable("order_item", {
     .defaultNow()
     .notNull(),
 });
+
+export const productReview = pgTable("product_review", {
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => v7()),
+  productId: uuid("product_id")
+    .notNull()
+    .references(() => product.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  userId: uuid("user_id").references(() => user.id, {
+    onDelete: "set null",
+    onUpdate: "cascade",
+  }),
+  userName: text("user_name").notNull(),
+  rating: integer("rating").notNull(),
+  comment: text("comment").notNull(),
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+    mode: "date",
+  })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", {
+    withTimezone: true,
+    mode: "date",
+  }),
+});

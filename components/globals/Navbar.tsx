@@ -137,29 +137,29 @@ const Navbar: React.FC<NavbarProps> = ({
   const links = lang === "en" || lang === "ar" ? navLinks[lang] : [];
 
   return (
-    <nav className=' shadow-md sticky py-2 lg:py-6 top-0 z-10 bg-background'>
-      <div className='px-4 flex text-sm lg:text-base items-center justify-between min-h-16 max-w-7xl mx-auto'>
-        <div className='flex items-center gap-8 lg:order-1 order-2'>
-          <Link href='/' className='text-3xl font-bold '>
-            <img src={logoImage} alt='' className='md:w-[150px] w-[100px]' />
+    <nav className=" shadow-md sticky w-full py-2 lg:py-6 top-0 z-10 bg-white">
+      <div className="px-4 flex text-sm lg:text-base items-center justify-between min-h-16 max-w-7xl mx-auto">
+        <div className="flex items-center gap-8 lg:order-1 order-2">
+          <Link href="/" className="text-3xl font-bold ">
+            <img src={logoImage} alt="" className="md:w-[150px] w-[100px]" />
           </Link>
 
-          <div className='hidden lg:flex gap-6 '>
+          <div className="hidden lg:flex gap-6 ">
             <NavigationMenu>
               <NavigationMenuList>
                 {links.map((link) => (
-                  <NavigationMenuItem key={link.to} className='relative  '>
+                  <NavigationMenuItem key={link.to} className="relative  ">
                     {link.subLinks ? (
                       <>
-                        <NavigationMenuTrigger className=' navLink '>
+                        <NavigationMenuTrigger className=" navLink ">
                           {link.label}
                         </NavigationMenuTrigger>
-                        <NavigationMenuContent className='absolute mt-10 bg-white text-black rounded-2xl'>
-                          <ul className='grid gap-3 p-4 w-[200px]'>
+                        <NavigationMenuContent className="absolute mt-10 bg-gray-100 text-black rounded-2xl">
+                          <ul className="grid gap-3 p-4 w-[200px]">
                             {link.subLinks.map((subLink) => (
                               <li key={subLink.to}>
-                                <NavigationMenuLink className='  navLink'>
-                                  <Link href={subLink.to} className='block '>
+                                <NavigationMenuLink className="  navLink">
+                                  <Link href={subLink.to} className="block ">
                                     {subLink.label}
                                   </Link>
                                 </NavigationMenuLink>
@@ -170,7 +170,7 @@ const Navbar: React.FC<NavbarProps> = ({
                       </>
                     ) : (
                       <NavigationMenuLink asChild>
-                        <Link href={link.to} className='navLink'>
+                        <Link href={link.to} className="navLink">
                           {link.label}
                         </Link>
                       </NavigationMenuLink>
@@ -181,57 +181,60 @@ const Navbar: React.FC<NavbarProps> = ({
             </NavigationMenu>
           </div>
         </div>
-        <div className='flex items-center gap-4 lg:order-2 order-1'>
-          <div className=' hidden lg:flex justify-center items-center gap-2'>
+        <div className="flex items-center gap-4 lg:order-2 order-1">
+          <div className=" hidden lg:flex justify-center items-center gap-2">
             {!session ? (
               logLinks.map((link) => (
-                <Link key={link.to} href={link.to} className='navLink'>
+                <Link key={link.to} href={link.to} className="navLink">
                   {link.label}
                 </Link>
               ))
             ) : (
               <>
-                <button onClick={logout} type='submit' className='navLink'>
+                <button onClick={logout} type="submit" className="navLink">
                   Logout
                 </button>
 
-                <Link href='/dashboard' className='navLink'>
+                <Link href="/dashboard" className="navLink">
                   Dashboard
                 </Link>
               </>
             )}
           </div>
 
-          <div className='flex lg:hidden'>
+          <div className="flex lg:hidden">
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
                 <Button
-                  variant='ghost'
-                  size='icon'
-                  className='text-gray-700 hover:bg-gray-100'>
+                  variant="ghost"
+                  size="icon"
+                  className="text-gray-700 hover:bg-gray-100"
+                >
                   <Menu size={24} />
                 </Button>
               </SheetTrigger>
-              <SheetContent side='left' className='w-64 bg-white'>
-                <div className='p-4 h-full'>
-                  <nav className='space-y-4 flex flex-col justify-center items-center h-full'>
-                    <SheetTitle className=''>Navigation menu</SheetTitle>
+              <SheetContent side="left" className="w-64 bg-white">
+                <div className="p-4 h-full">
+                  <nav className="space-y-4 flex flex-col justify-center items-center h-full">
+                    <SheetTitle className="">Navigation menu</SheetTitle>
                     {links.map((link) => (
                       <Link
                         key={link.to}
                         href={link.to}
-                        className='block text-lg text-gray-700 hover:text-gray-900'
-                        onClick={handleCloseSheet}>
+                        className="block text-lg text-gray-700 hover:text-gray-900"
+                        onClick={handleCloseSheet}
+                      >
                         {link.label}
                       </Link>
                     ))}
-                    <div className=' md:hidden flex justify-center items-center gap-4'>
+                    <div className=" md:hidden flex justify-center items-center gap-4">
                       {!session ? (
                         logLinks.map((link) => (
                           <Link
                             key={link.to}
                             href={link.to}
-                            className=' navLink'>
+                            className=" navLink"
+                          >
                             {link.label}
                           </Link>
                         ))
@@ -239,12 +242,13 @@ const Navbar: React.FC<NavbarProps> = ({
                         <>
                           <button
                             onClick={logout}
-                            type='submit'
-                            className='navLink'>
+                            type="submit"
+                            className="navLink"
+                          >
                             Logout
                           </button>
 
-                          <Link href='/dashboard' className='navLink'>
+                          <Link href="/dashboard" className="navLink">
                             Dashboard
                           </Link>
                         </>
@@ -255,22 +259,22 @@ const Navbar: React.FC<NavbarProps> = ({
               </SheetContent>
             </Sheet>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hover:text-gray-700 hover:bg-gray-100 order-3"
+            asChild
+          >
+            <Link href="/cart" className="relative">
+              <ShoppingCart size={20} />
+              {totalItems > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-1 text-xs font-bold leading-none transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+          </Button>
         </div>
-
-        <Button
-          variant='ghost'
-          size='icon'
-          className='hover:text-gray-700 hover:bg-gray-100 hidden max-lg:flex order-3'
-          asChild>
-          <Link href='/cart' className='relative'>
-            <ShoppingCart size={20} />
-            {totalItems > 0 && (
-              <span className='absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-1 text-xs font-bold leading-none transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full'>
-                {totalItems}
-              </span>
-            )}
-          </Link>
-        </Button>
       </div>
     </nav>
   );
