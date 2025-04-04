@@ -621,7 +621,7 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
               <label htmlFor="quantity" className="sr-only">
                 Quantity
               </label>
-              <div className="flex border border-gray-300 rounded-md w-full sm:w-32">
+              <div className="flex border border-gray-300 rounded-md w-full">
                 <button
                   type="button"
                   className="px-3 py-2 text-gray-600 hover:bg-gray-100 focus:outline-none"
@@ -663,10 +663,6 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
           {/* Additional Product Info */}
           <div className="border-t border-gray-200 pt-6 mt-6">
             <dl className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
-              <div className="border-b border-gray-200 pb-3">
-                <dt className="text-sm font-medium text-gray-500">SKU</dt>
-                <dd className="mt-1 text-sm text-gray-900">{product.id}</dd>
-              </div>
               {product.stock !== undefined && (
                 <div className="border-b border-gray-200 pb-3">
                   <dt className="text-sm font-medium text-gray-500">
@@ -709,7 +705,7 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
 
       {/* Reviews Section */}
       <div className="mt-12">
-        <Tabs defaultValue="reviews" className="w-full">
+        <Tabs defaultValue="reviews" className="w-full ">
           <TabsList className="w-full justify-start mb-6 bg-transparent border-b">
             <TabsTrigger value="reviews" className="text-lg">
               Reviews ({reviewStats.totalReviews})
@@ -718,7 +714,7 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
           <TabsContent value="reviews" className="pt-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-1">
-                <Card className="border-accent-lb/20">
+                <Card className="border-accent-lb/20 px-4">
                   <CardHeader>
                     <CardTitle>Write a Review</CardTitle>
                     <CardDescription>
@@ -831,7 +827,7 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
                 ) : (
                   <div className="space-y-6">
                     {reviews.map((review) => (
-                      <Card key={review.id} className="border-gray-200">
+                      <Card key={review.id} className="border-gray-200 px-4">
                         <CardHeader className="pb-2">
                           <div className="flex justify-between items-center">
                             <CardTitle className="text-lg font-semibold">

@@ -60,10 +60,10 @@ export default function BrandsPage() {
   return (
     <AnimatedContent
       className=" flex flex-col justify-center items-center"
-      distance={100}
+      distance={25}
       direction="vertical"
       reverse={false}
-      config={{ tension: 60, friction: 30 }}
+      config={{ tension: 30, friction: 15 }}
       initialOpacity={0}
       animateOpacity
       scale={1}
@@ -92,7 +92,7 @@ export default function BrandsPage() {
                 </Link>
               </Button>
               <Button variant="outline">
-                <Link href="/products">All Products</Link>
+                <Link href="/featured/products">All Products</Link>
               </Button>
             </div>
           </div>

@@ -78,7 +78,7 @@ const Navbar: React.FC<NavbarProps> = ({
       },
       {
         label: "Women",
-        to: "/women",
+        to: "/featured/women",
         subLinks: subcategories
           .filter((s) => s.type === "women")
           .map((s) => ({
@@ -151,10 +151,10 @@ const Navbar: React.FC<NavbarProps> = ({
                   <NavigationMenuItem key={link.to} className="relative  ">
                     {link.subLinks ? (
                       <>
-                        <NavigationMenuTrigger className=" navLink ">
-                          {link.label}
-                        </NavigationMenuTrigger>
-                        <NavigationMenuContent className="absolute mt-10 bg-gray-100 text-black rounded-2xl">
+                        <NavigationMenuItem asChild className=" navLink ">
+                          <Link href={link.to}>{link.label}</Link>
+                        </NavigationMenuItem>
+                        {/* <NavigationMenuContent className="absolute mt-10 bg-gray-100 text-black rounded-2xl">
                           <ul className="grid gap-3 p-4 w-[200px]">
                             {link.subLinks.map((subLink) => (
                               <li key={subLink.to}>
@@ -166,7 +166,7 @@ const Navbar: React.FC<NavbarProps> = ({
                               </li>
                             ))}
                           </ul>
-                        </NavigationMenuContent>
+                        </NavigationMenuContent> */}
                       </>
                     ) : (
                       <NavigationMenuLink asChild>
@@ -259,22 +259,22 @@ const Navbar: React.FC<NavbarProps> = ({
               </SheetContent>
             </Sheet>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hover:text-gray-700 hover:bg-gray-100 order-3"
-            asChild
-          >
-            <Link href="/cart" className="relative">
-              <ShoppingCart size={20} />
-              {totalItems > 0 && (
-                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-1 text-xs font-bold leading-none transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full">
-                  {totalItems}
-                </span>
-              )}
-            </Link>
-          </Button>
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hover:text-gray-700 hover:bg-gray-100 order-3"
+          asChild
+        >
+          <Link href="/cart" className="relative">
+            <ShoppingCart size={20} />
+            {totalItems > 0 && (
+              <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-1 text-xs font-bold leading-none transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full">
+                {totalItems}
+              </span>
+            )}
+          </Link>
+        </Button>
       </div>
     </nav>
   );

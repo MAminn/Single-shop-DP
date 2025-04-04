@@ -175,6 +175,16 @@ body.page-is-transitioning #page-content {
   }
 }
 
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 .navLink {
   font-size: medium;
   padding-top: 0.75rem;

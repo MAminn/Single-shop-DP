@@ -110,9 +110,8 @@ export default function BrandDetailPage() {
       threshold={0.1}
     >
       <div className="container mx-auto py-8 px-4">
-
         {/* Brand Header */}
-        <div className="bg-white rounded-xl shadow-sm mb-10 overflow-hidden">
+        <div className="bg-white flex flex-col gap-6 rounded-xl shadow-sm mb-10 overflow-hidden">
           <div className="bg-gradient-to-r from-accent-lb/10 to-transparent h-32 md:h-40 relative">
             {/* Brand Logo */}
             <div className="absolute -bottom-12 left-6 md:left-10 w-24 h-24 md:w-32 md:h-32 bg-white rounded-xl shadow-md flex items-center justify-center p-3 border-2 border-white">
@@ -168,20 +167,6 @@ export default function BrandDetailPage() {
                   >
                     <ExternalLink className="h-4 w-4 mr-1" />
                     Visit Website
-                  </a>
-                </Button>
-              )}
-
-              {vendor.ownerEmail && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                  className="text-gray-600 border-gray-300"
-                >
-                  <a href={`mailto:${vendor.ownerEmail}`}>
-                    <Mail className="h-4 w-4 mr-1" />
-                    Contact
                   </a>
                 </Button>
               )}
