@@ -5,6 +5,8 @@ import { Link } from "#root/components/Link";
 import { ShoppingBag, Users, Store, ChevronRight } from "lucide-react";
 import AnimatedContent from "#root/components/AnimatedContent";
 import { trpc } from "#root/shared/trpc/client";
+import { FAQ } from "#root/components/globals/FAQ";
+import { Footer } from "#root/components/globals/Footer";
 
 interface FeaturedProduct {
   id: string;
@@ -18,6 +20,46 @@ interface FeaturedProduct {
   categoryName: string;
   available: boolean;
 }
+
+// FAQ data structure for easy editing
+const faqData = [
+  {
+    id: "how-lebsey-works",
+    question: "How does Lebsey work?",
+    answer:
+      "Lebsey brings together fashion vendors and brands into one marketplace, making it easy for you to shop from multiple sellers without having to visit different websites. Browse collections, add items to your cart, and checkout seamlessly.",
+  },
+  {
+    id: "payment-methods",
+    question: "What payment methods do you accept?",
+    answer:
+      "We accept all major credit cards, debit cards, PayPal, and Apple Pay. All transactions are secure and encrypted to ensure your financial information is protected.",
+  },
+  {
+    id: "shipping-time",
+    question: "How long does shipping take?",
+    answer:
+      "Shipping times depend on your location and the seller. Typically, domestic orders are delivered within 3-5 business days, while international shipping can take 7-14 business days. You can view the estimated shipping time for each product on its page.",
+  },
+  {
+    id: "return-policy",
+    question: "What is your return policy?",
+    answer:
+      "We offer a 30-day return policy for most items. Products must be unworn, unwashed, and in their original packaging with tags attached. Some sellers may have specific return policies, which will be noted on their product pages.",
+  },
+  {
+    id: "order-tracking",
+    question: "How do I track my order?",
+    answer:
+      "Once your order ships, you'll receive a tracking number via email. You can also track your order in your account dashboard under 'Order History'.",
+  },
+  {
+    id: "international-shipping",
+    question: "Do you ship internationally?",
+    answer:
+      "Yes, we ship to many countries worldwide. International shipping rates and delivery times vary by location. You can view available shipping options during checkout.",
+  },
+];
 
 export default function Page() {
   const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>(
@@ -290,6 +332,15 @@ export default function Page() {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section id="faq" className="py-20 bg-white">
+        <FAQ
+          title="Frequently Asked Questions"
+          description="Find answers to common questions about shopping with Lebsey"
+          faqs={faqData}
+        />
+      </section>
+
       {/* Call To Action */}
       <section className="relative py-20 overflow-hidden">
         <div className="absolute inset-0 bg-accent-lb/90"></div>
@@ -322,6 +373,9 @@ export default function Page() {
           </AnimatedContent>
         </div>
       </section>
+
+      {/* Footer */}
+      <Footer />
     </main>
   );
 }
