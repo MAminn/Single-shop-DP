@@ -4,12 +4,18 @@ import { vendor } from "#root/shared/database/drizzle/schema";
 import { Array, Effect, Option } from "effect";
 import { z } from "zod";
 
+const socialLinkSchema = z.object({
+  platform: z.string().min(1),
+  url: z.string().url(),
+});
+
 export const registerVendorSchema = z.object({
   user: registerSchema,
   vendor: z.object({
     name: z.string().nonempty().max(255),
     description: z.string().max(1000).optional(),
     logoId: z.string().uuid().optional(),
+    socialLinks: z.array(socialLinkSchema).optional().default([]),
   }),
 });
 
@@ -24,6 +30,7 @@ export const registerVendor = (input: z.infer<typeof registerVendorSchema>) => {
             status: "pending",
             description: input.vendor.description,
             logoId: input.vendor.logoId,
+            socialLinks: input.vendor.socialLinks,
           })
           .returning({
             id: vendor.id,

@@ -79,6 +79,7 @@ export const vendor = pgTable("vendor", {
     onDelete: "set null",
     onUpdate: "cascade",
   }),
+  socialLinks: jsonb("social_links").default([]),
   featured: boolean("featured").notNull().default(false),
   createdAt: timestamp("created_at", {
     withTimezone: true,

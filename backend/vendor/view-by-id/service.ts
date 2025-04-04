@@ -87,6 +87,7 @@ export const viewVendorById = (input: z.infer<typeof viewVendorByIdSchema>) =>
             featured: vendor.featured,
             status: vendor.status,
             ownerEmail: user.email,
+            socialLinks: vendor.socialLinks,
           })
           .from(vendor)
           .leftJoin(user, eq(vendor.id, user.vendorId))
@@ -113,10 +114,30 @@ export const viewVendorById = (input: z.infer<typeof viewVendorByIdSchema>) =>
           );
           console.log("Product count:", productCountResult[0]?.count || 0);
 
+          // Ensure socialLinks is always a properly typed array
+          const typedSocialLinks: Array<{ platform: string; url: string }> =
+            Array.isArray(vendorData.socialLinks)
+              ? vendorData.socialLinks.map((link) => {
+                  if (
+                    typeof link === "object" &&
+                    link !== null &&
+                    "platform" in link &&
+                    "url" in link
+                  ) {
+                    return {
+                      platform: String(link.platform),
+                      url: String(link.url),
+                    };
+                  }
+                  return { platform: "", url: "" };
+                })
+              : [];
+
           // Only return the vendor if it's active or we include the product count regardless
           return {
             ...vendorData,
             productCount: productCountResult[0]?.count || 0,
+            socialLinks: typedSocialLinks,
           };
         }
 

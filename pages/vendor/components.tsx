@@ -17,12 +17,20 @@ import { PhoneInput } from "#root/components/ui/phone-input";
 import { useState } from "react";
 import { Textarea } from "#root/components/ui/textarea";
 import { toast } from "sonner";
+import { PlusCircle, Trash2 } from "lucide-react";
+
+const socialLinkSchema = z.object({
+  platform: z.string().min(1, "Platform name is required"),
+  url: z.string().url("Please enter a valid URL"),
+  id: z.string().optional(),
+});
 
 const vendorRegistrationFormSchema = z.object({
   vendor: z.object({
     name: z.string().nonempty().max(255),
     description: z.string().max(1000).optional(),
     logoId: z.string().uuid().optional(),
+    socialLinks: z.array(socialLinkSchema).default([]),
   }),
   user: z.object({
     email: z.string().email(),
@@ -58,6 +66,7 @@ export default function RegisterFormSchema({
       vendor: {
         name: "",
         description: "",
+        socialLinks: [],
       },
       user: {
         email: "",
@@ -95,6 +104,25 @@ export default function RegisterFormSchema({
       toast.error("Error uploading logo");
     }
   };
+
+  // Handle adding a new social media link field
+  const addSocialLink = () => {
+    const currentLinks = form.getValues("vendor.socialLinks") || [];
+    form.setValue("vendor.socialLinks", [
+      ...currentLinks,
+      { platform: "", url: "", id: `${Date.now()}` },
+    ]);
+  };
+
+  // Handle removing a social media link field
+  const removeSocialLink = (index: number) => {
+    const currentLinks = form.getValues("vendor.socialLinks") || [];
+    const updatedLinks = currentLinks.filter((_, i) => i !== index);
+    form.setValue("vendor.socialLinks", updatedLinks);
+  };
+
+  // Get the social links from the form
+  const socialLinks = form.watch("vendor.socialLinks") || [];
 
   return (
     <Form {...form}>
@@ -145,6 +173,81 @@ export default function RegisterFormSchema({
             </FormItem>
           )}
         />
+
+        {/* Social Media Links Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <FormLabel className="text-base">Social Media Links</FormLabel>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addSocialLink}
+              className="flex items-center gap-1"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Add Social Media
+            </Button>
+          </div>
+
+          <FormDescription>
+            Add links to your social media profiles
+          </FormDescription>
+
+          {socialLinks.length === 0 && (
+            <p className="text-sm text-muted-foreground italic">
+              No social media links added yet. Click the button above to add
+              one.
+            </p>
+          )}
+
+          {socialLinks.map((link, index) => (
+            <div
+              key={link.id || `social-link-${index}`}
+              className="flex gap-3 items-start"
+            >
+              <FormField
+                control={form.control}
+                name={`vendor.socialLinks.${index}.platform`}
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormControl>
+                      <Input
+                        placeholder="Platform (e.g., Instagram)"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name={`vendor.socialLinks.${index}.url`}
+                render={({ field }) => (
+                  <FormItem className="flex-[2]">
+                    <FormControl>
+                      <Input placeholder="URL (https://...)" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => removeSocialLink(index)}
+                className="mt-1"
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+                <span className="sr-only">Remove</span>
+              </Button>
+            </div>
+          ))}
+        </div>
 
         <div className="space-y-3">
           <FormLabel>Vendor Logo</FormLabel>
@@ -250,9 +353,11 @@ export default function RegisterFormSchema({
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <PasswordInput placeholder="Placeholder" {...field} />
+                <PasswordInput placeholder="********" {...field} />
               </FormControl>
-              <FormDescription>Enter your password.</FormDescription>
+              <FormDescription>
+                Must be at least 8 characters long.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -262,17 +367,12 @@ export default function RegisterFormSchema({
           control={form.control}
           name="user.phone"
           render={({ field }) => (
-            <FormItem className="flex flex-col items-start">
-              <FormLabel>Phone number</FormLabel>
-              <FormControl className="w-full">
-                <PhoneInput
-                  placeholder="+20XXX XXX XXXX"
-                  {...field}
-                  defaultCountry="EG"
-                  countries={["EG"]}
-                />
+            <FormItem>
+              <FormLabel>Phone Number</FormLabel>
+              <FormControl>
+                <PhoneInput placeholder="+20 11 1234 5678" {...field} />
               </FormControl>
-              <FormDescription>Enter your phone number.</FormDescription>
+              <FormDescription>Your contact phone number.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -280,11 +380,10 @@ export default function RegisterFormSchema({
 
         <Button
           type="submit"
-          className="w-full"
-          size="lg"
+          className="bg-accent-lb text-white py-2 rounded-lg hover:bg-[#021E43] transition-all duration-300 w-full"
           disabled={submitting}
         >
-          Submit
+          Register
         </Button>
       </form>
     </Form>

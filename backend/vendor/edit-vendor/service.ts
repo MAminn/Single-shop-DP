@@ -6,11 +6,17 @@ import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 
+const socialLinkSchema = z.object({
+  platform: z.string().min(1),
+  url: z.string().url(),
+});
+
 export const editVendorSchema = z.object({
   id: z.string().uuid(),
   name: z.string().nonempty().max(255),
   description: z.string().max(1000).optional(),
   logoId: z.string().uuid().optional(),
+  socialLinks: z.array(socialLinkSchema).optional(),
   featured: z.boolean().optional(),
 });
 
@@ -41,6 +47,7 @@ export const editVendor = (
               description: input.description,
               logoId: input.logoId,
               featured: input.featured,
+              socialLinks: input.socialLinks,
             })
             .where(eq(vendor.id, input.id))
             .returning()

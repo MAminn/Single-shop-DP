@@ -35,6 +35,7 @@ import {
   Loader2Icon,
   XIcon,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -344,22 +345,32 @@ export default function Vendors() {
                               Vendor Actions
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            {/* <DropdownMenuItem>
-                              <Eye className="mr-2 h-4 w-4" />
-                              View Profile
-                            </DropdownMenuItem> */}
                             <DropdownMenuItem asChild>
-                              <EditVendorForm
+                              <ViewVendorDetails
+                                vendorId={vendor.id}
                                 Trigger={
                                   <Button
                                     variant={"ghost"}
                                     className="w-full justify-start px-0"
                                   >
-                                    <Edit className="h-4 w-4" />
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    View Details
+                                  </Button>
+                                }
+                              />
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <EditVendorForm
+                                vendorId={vendor.id}
+                                Trigger={
+                                  <Button
+                                    variant={"ghost"}
+                                    className="w-full justify-start px-0"
+                                  >
+                                    <Edit className="mr-2 h-4 w-4" />
                                     Edit Vendor
                                   </Button>
                                 }
-                                vendorId={vendor.id}
                                 onUpdate={() => {
                                   setLastUpdateDate(new Date());
                                 }}
@@ -447,13 +458,21 @@ function EditVendorForm({
   Trigger: ReactNode;
   onUpdate: () => void;
 }) {
-  const [vendorData, setVendorData] = useState<null | {
+  type SocialLink = {
+    platform: string;
+    url: string;
+  };
+
+  type VendorFormData = {
     id: string;
     name: string;
     description?: string;
     logoId?: string;
     featured?: boolean;
-  }>(null);
+    socialLinks: SocialLink[];
+  };
+
+  const [vendorData, setVendorData] = useState<VendorFormData | null>(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -465,6 +484,9 @@ function EditVendorForm({
           description: res.result.description || undefined,
           logoId: res.result.logoId || undefined,
           featured: res.result.featured,
+          socialLinks: Array.isArray(res.result.socialLinks)
+            ? res.result.socialLinks
+            : [],
         });
       } else {
         toast.error("Failed to fetch vendor data");
@@ -478,6 +500,7 @@ function EditVendorForm({
     description?: string;
     logoId?: string;
     featured?: boolean;
+    socialLinks: SocialLink[];
   }) => {
     if (!values.id) {
       alert(
@@ -492,6 +515,7 @@ function EditVendorForm({
       description: values.description,
       logoId: values.logoId,
       featured: values.featured,
+      socialLinks: values.socialLinks,
     });
 
     if (!res.success) {
@@ -516,6 +540,170 @@ function EditVendorForm({
         )}
         {!vendorData && <div>Loading...</div>}
         <DialogFooter></DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ViewVendorDetails({
+  vendorId,
+  Trigger,
+}: {
+  vendorId: string;
+  Trigger: ReactNode;
+}) {
+  type SocialLink = {
+    platform: string;
+    url: string;
+  };
+
+  type VendorData = {
+    id: string;
+    name: string;
+    description?: string | null;
+    logoId?: string | null;
+    logoImagePath?: string | null;
+    featured?: boolean;
+    status?: string;
+    ownerEmail?: string | null;
+    productCount?: number;
+    socialLinks: SocialLink[];
+  };
+
+  const [vendorData, setVendorData] = useState<VendorData | null>(null);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      trpc.vendor.viewById.query({ vendorId }).then((res) => {
+        if (res.success && res.result) {
+          // Create a properly typed object
+          const typedData: VendorData = {
+            id: res.result.id,
+            name: res.result.name,
+            description: res.result.description,
+            logoId: res.result.logoId,
+            logoImagePath: res.result.logoImagePath,
+            featured: res.result.featured,
+            status: res.result.status,
+            ownerEmail: res.result.ownerEmail,
+            productCount: res.result.productCount,
+            // Ensure socialLinks is always an array of the correct type
+            socialLinks: Array.isArray(res.result.socialLinks)
+              ? res.result.socialLinks
+              : [],
+          };
+          setVendorData(typedData);
+        } else {
+          toast.error("Failed to fetch vendor data");
+        }
+      });
+    }
+  }, [vendorId, open]);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{Trigger}</DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Vendor Details</DialogTitle>
+        </DialogHeader>
+
+        {vendorData ? (
+          <div className="grid gap-6">
+            <div className="flex items-start gap-4">
+              {vendorData.logoImagePath && (
+                <div className="h-16 w-16 rounded-md overflow-hidden">
+                  <img
+                    src={`/uploads/${vendorData.logoImagePath}`}
+                    alt={`${vendorData.name} logo`}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              )}
+              <div>
+                <h3 className="text-xl font-semibold">{vendorData.name}</h3>
+                <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                  <Badge variant="outline" className="capitalize">
+                    {vendorData.status}
+                  </Badge>
+                  {vendorData.featured && (
+                    <Badge className="bg-accent-lb text-white">Featured</Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {vendorData.description && (
+              <div>
+                <h4 className="text-sm font-medium mb-1">Description</h4>
+                <p className="text-sm text-muted-foreground">
+                  {vendorData.description}
+                </p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <h4 className="font-medium mb-1">Owner Email</h4>
+                <p className="text-muted-foreground">
+                  {vendorData.ownerEmail || "N/A"}
+                </p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-1">Product Count</h4>
+                <p className="text-muted-foreground">
+                  {vendorData.productCount || 0}
+                </p>
+              </div>
+            </div>
+
+            {/* Social Media Links Section */}
+            <div>
+              <h4 className="text-sm font-medium mb-2">Social Media Links</h4>
+              {vendorData.socialLinks.length > 0 ? (
+                <div className="grid gap-2">
+                  {vendorData.socialLinks.map((link, index) => {
+                    const key = `social-link-${index}-${link.platform || ""}-${link.url}`;
+                    return (
+                      <div
+                        key={key}
+                        className="flex items-center justify-between border-b pb-2"
+                      >
+                        <div className="font-medium">{link.platform}</div>
+                        <a
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 flex items-center"
+                        >
+                          <span className="max-w-[15rem] truncate">
+                            {link.url}
+                          </span>
+                          <ExternalLink className="h-4 w-4 ml-1 flex-shrink-0" />
+                        </a>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No social media links provided
+                </p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Close
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
