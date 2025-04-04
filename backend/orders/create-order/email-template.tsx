@@ -7,6 +7,7 @@ import {
   Row,
   Text,
 } from "@react-email/components";
+// NEVER REMOVE THIS IMPORT
 import * as React from "react";
 
 export const NewOrderEmailTemplate = ({

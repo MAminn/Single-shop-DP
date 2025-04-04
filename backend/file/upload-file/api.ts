@@ -12,10 +12,6 @@ export const uploadFileApiPlugin = (app: FastifyInstance) => {
 	app.post("/file", async (req, res) => {
 		const session = req.clientSession;
 
-		if (!session || (session.role !== "admin" && session.role !== "vendor")) {
-			return res.status(401).send({ success: false, error: "Unauthorized" });
-		}
-
 		const data = await req.file();
 		if (!data) {
 			return res
