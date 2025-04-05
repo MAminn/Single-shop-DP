@@ -368,7 +368,7 @@ async function buildServer() {
 async function main() {
   const fastify = await buildServer();
 
-  fastify.listen({ port: port }, (err) => {
+  fastify.listen({ port: port, host: "0.0.0.0" }, (err) => {
     console.info(`Server running at http://localhost:${port}`);
     if (err) {
       fastify.log.error(err);
