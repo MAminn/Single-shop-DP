@@ -57,6 +57,7 @@ export const getFeaturedVendors = (
           .leftJoin(product, eq(vendor.id, product.vendorId))
           .where(
             and(
+              // Only show active vendors - exclude suspended and rejected
               eq(vendor.status, "active"),
               inArray(vendor.id, vendorIds),
               input.featured ? eq(vendor.featured, true) : undefined
@@ -94,12 +95,15 @@ export const updateVendorFeaturedStatus = (
 
         const hasProducts = products.length > 0;
 
+        // Only update featured status for active vendors
         if (hasProducts) {
           // Update the vendor to featured=true if they have products
           return await db
             .update(vendor)
             .set({ featured: true })
-            .where(eq(vendor.id, input.vendorId))
+            .where(
+              and(eq(vendor.id, input.vendorId), eq(vendor.status, "active"))
+            )
             .returning();
         }
 
@@ -127,10 +131,20 @@ export const checkAndUpdateVendorFeaturedStatus = (
 
         const hasProducts = products.length > 0;
 
-        // Update the vendor's featured status based on whether they have products
+        // Get vendor status
+        const vendorData = await db
+          .select({ status: vendor.status })
+          .from(vendor)
+          .where(eq(vendor.id, input.vendorId))
+          .then((results) => results[0]);
+
+        // Only set featured=true for active vendors
+        const shouldBeFeatured = hasProducts && vendorData?.status === "active";
+
+        // Update the vendor's featured status based on whether they have products and are active
         return await db
           .update(vendor)
-          .set({ featured: hasProducts })
+          .set({ featured: shouldBeFeatured })
           .where(eq(vendor.id, input.vendorId))
           .returning();
       })

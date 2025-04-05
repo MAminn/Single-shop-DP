@@ -440,7 +440,7 @@ export default function Vendors() {
         <CardFooter className="border-t px-6 py-4">
           <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
             <div>
-              Showing {data.length} of {0} vendors
+              Showing {data.length} of {data.length} vendors
             </div>
           </div>
         </CardFooter>

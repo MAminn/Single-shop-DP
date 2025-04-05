@@ -1,4 +1,5 @@
 import type { ClientSession } from "#root/backend/auth/shared/entities";
+import { checkVendorStatus } from "#root/backend/vendor/utils/check-vendor-status";
 import { query } from "#root/shared/database/drizzle/db";
 import {
   product,
@@ -48,6 +49,13 @@ export const createProduct = (
 
     yield* $(validateProductRules(data));
 
+    // If this is a vendor, check their status
+    if (session.role === "vendor") {
+      yield* $(
+        checkVendorStatus(data.vendorId, session, "create new products")
+      );
+    }
+
     return yield* $(
       query(async (db) => {
         const existingVendor = await db
@@ -65,6 +73,13 @@ export const createProduct = (
           session.vendorId !== existingVendor.id
         ) {
           throw new Error("Unauthorized");
+        }
+
+        // Check vendor status again at the database level
+        if (existingVendor.status !== "active") {
+          throw new Error(
+            `Cannot create products for a ${existingVendor.status} vendor`
+          );
         }
 
         const newProduct = await db.transaction(async (tx) => {
