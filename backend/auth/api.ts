@@ -16,11 +16,15 @@ const saveTokenSchema = z.object({
 });
 
 export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
+	if(!process.env.ADMIN_EMAIL || !process.env.ADMIN_EMAIL) {
+		throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be set");
+	}
+
 	runBackendEffect(
 		register({
-			email: "admin@lebsy.com",
+			email: process.env.ADMIN_EMAIL,
 			name: "Admin",
-			password: "admin1234",
+			password: process.env.ADMIN_EMAIL,
 			phone: "+201001112233",
 			role: "admin",
 		}).pipe(Effect.provideService(DatabaseClientService, app.db)),
