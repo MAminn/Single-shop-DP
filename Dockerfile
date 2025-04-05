@@ -5,7 +5,6 @@ RUN corepack enable
 COPY . /app
 WORKDIR /app
 RUN pnpm install
-RUN pnpm build
 RUN pnpm start
 EXPOSE 3000
 CMD [ "pnpm", "start" ]
