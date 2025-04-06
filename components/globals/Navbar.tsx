@@ -17,7 +17,7 @@ import {
   NavigationMenuContent,
 } from "#root/components/ui/navigation-menu";
 import { Link } from "../Link";
-import logoImage from "#root/assets/Lebsy-Logo-Light.svg";
+import logoImage from "#root/assets/Lebsy-Logo-Light.webp";
 import { AuthContext } from "#root/context/AuthContext.js";
 import { useCart } from "#root/lib/context/CartContext";
 import { trpc } from "#root/shared/trpc/client";

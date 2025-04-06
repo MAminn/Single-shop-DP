@@ -38,7 +38,7 @@ export default function Page() {
   };
 
   return (
-    <section className="w-full min-h-[90vh] flex justify-center items-center bg-[url(/assets/Women_s_banner.png)]">
+    <section className="w-full min-h-[90vh] flex justify-center items-center bg-[url(/assets/Women_s_banner.webp)]">
       <AnimatedContent
         distance={200}
         direction="vertical"
@@ -54,27 +54,13 @@ export default function Page() {
             <h1 className="text-2xl md:text-3xl text-center font-semibold mb-6">
               Log in for vendors!
             </h1>
-            {/* OAuth divs */}
-            {/* <div className="flex gap-4 justify-around items-center flex-wrap">
-              <h1 className="font-semibold">Login With:</h1>
-              <div className="flex justify-center items-center gap-4 flex-wrap">
-                <div className="header bg-background px-6 py-3 rounded-3xl hover:bg-gray-200 transition-all duration-300 cursor-pointer">
-                  Google
-                </div>
-              </div>
-            </div> */}
-            {/* Login form */}
+              
+              {/* Login form */}
             <div className="flex flex-col gap-4">
               <LoginForm onSubmit={onSubmit} />
             </div>
           </div>
-          {/* <div className="w-full h-full order-1 lg:order-2">
-            <img
-              src="/assets/Women_s_banner.png"
-              className="w-full h-full object-cover object-center bg-top lg:rounded-tr-3xl lg:rounded-br-3xl"
-              alt=""
-            />
-          </div> */}
+          
         </div>
       </AnimatedContent>
     </section>

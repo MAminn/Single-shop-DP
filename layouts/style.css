@@ -154,13 +154,13 @@ body.page-is-transitioning #page-content {
 }
 
 .men-section-image {
-  background-image: url("../assets/men-section.png");
+  background-image: url("../assets/men-section.webp");
 }
 .women-section-image {
-  background-image: url("../assets/women-section.png");
+  background-image: url("../assets/women-section.webp");
 }
 .img1 {
-  background-image: url("../assets/img1.png");
+  background-image: url("../assets/img1.webp");
 }
 
 .header {

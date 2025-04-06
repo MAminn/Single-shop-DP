@@ -5,13 +5,6 @@ import { Link } from "./Link";
 import AnimatedContent from "./AnimatedContent";
 import { usePageContext } from "vike-react/usePageContext";
 import { ArrowRight } from "lucide-react";
-import HeroImg from "#root/assets/landing-hero.png";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "#root/components/ui/accordion";
 
 interface HeroProps {
   lang: "en" | "ar";
@@ -35,7 +28,7 @@ interface HeroProps {
   textColor?: string;
 }
 
-const DEFAULT_IMAGE = "/assets/men-section.png";
+const DEFAULT_IMAGE = "/assets/men-section.webp";
 
 const Hero: React.FC<HeroProps> = ({
   lang = "en",
