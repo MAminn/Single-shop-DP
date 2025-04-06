@@ -160,7 +160,7 @@ export const ProductCard = ({
 
         <div className="flex justify-between items-center mt-2">
           <span className="text-lg font-bold text-gray-900 tracking-tight">
-            ${formattedPrice}
+            {formattedPrice} EGP
           </span>
 
           <Button
