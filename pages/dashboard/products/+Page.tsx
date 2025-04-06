@@ -196,7 +196,7 @@ export default function Products() {
                   )}
                 </TableCell>
                 <TableCell>{product.name}</TableCell>
-                <TableCell>${product.price}</TableCell>
+                <TableCell>{product.price} EGP</TableCell>
                 <TableCell>{product.stock} in stock</TableCell>
                 <TableCell>
                   {product.stock === 0 ? (

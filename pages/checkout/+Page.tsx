@@ -260,10 +260,10 @@ export default function CheckoutPage() {
                       </div>
                       <div className="text-right">
                         <p>
-                          ${item.price.toFixed(2)} × {item.quantity}
+                          {item.price.toFixed(2)} EGP × {item.quantity}
                         </p>
                         <p className="font-medium">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          {(item.price * item.quantity).toFixed(2)} EGP
                         </p>
                       </div>
                     </div>
@@ -281,20 +281,20 @@ export default function CheckoutPage() {
                 <div className="space-y-2 pl-6">
                   <div className="flex justify-between">
                     <p className="text-gray-500">Subtotal</p>
-                    <p>${orderDetails.subtotal.toFixed(2)}</p>
+                    <p>{orderDetails.subtotal.toFixed(2)} EGP</p>
                   </div>
                   <div className="flex justify-between">
                     <p className="text-gray-500">Shipping</p>
-                    <p>${orderDetails.shipping.toFixed(2)}</p>
+                    <p>{orderDetails.shipping.toFixed(2)} EGP</p>
                   </div>
                   <div className="flex justify-between">
                     <p className="text-gray-500">Tax</p>
-                    <p>${orderDetails.tax.toFixed(2)}</p>
+                    <p>{orderDetails.tax.toFixed(2)} EGP</p>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-semibold">
                     <p>Total</p>
-                    <p>${orderDetails.total.toFixed(2)}</p>
+                    <p>{orderDetails.total.toFixed(2)} EGP</p>
                   </div>
                 </div>
               </div>
@@ -581,7 +581,7 @@ function OrderSummary({
                   <span>
                     {item.name} × {item.quantity}
                   </span>
-                  <span>${(item.price * item.quantity).toFixed(2)}</span>
+                  <span>{(item.price * item.quantity).toFixed(2)} EGP</span>
                 </div>
               ))}
               {items.length > 3 && (
@@ -597,15 +597,15 @@ function OrderSummary({
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-neutral-600">Subtotal</span>
-              <span className="font-medium">${subtotal.toFixed(2)}</span>
+              <span className="font-medium">{subtotal.toFixed(2)} EGP</span>
             </div>
             <div className="flex justify-between">
               <span className="text-neutral-600">Shipping</span>
-              <span className="font-medium">${shipping.toFixed(2)}</span>
+              <span className="font-medium">{shipping.toFixed(2)} EGP</span>
             </div>
             <div className="flex justify-between">
               <span className="text-neutral-600">Tax</span>
-              <span className="font-medium">${tax.toFixed(2)}</span>
+              <span className="font-medium">{tax.toFixed(2)} EGP</span>
             </div>
           </div>
 
@@ -613,7 +613,7 @@ function OrderSummary({
 
           <div className="flex justify-between text-lg font-bold">
             <span>Total</span>
-            <span>${total.toFixed(2)}</span>
+            <span>{total.toFixed(2)} EGP</span>
           </div>
         </div>
       </CardContent>

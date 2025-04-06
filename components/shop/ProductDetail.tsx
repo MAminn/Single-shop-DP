@@ -539,10 +539,10 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
 
           <div className="flex items-center gap-4">
             <span className="text-3xl font-bold text-gray-900">
-              $
+              
               {typeof product.price === "number"
                 ? product.price.toFixed(2)
-                : Number.parseFloat(product.price as string).toFixed(2)}
+                : Number.parseFloat(product.price as string).toFixed(2)} EGP
             </span>
             {product.stock <= 10 && product.stock > 0 && (
               <span className="text-orange-500 text-sm">

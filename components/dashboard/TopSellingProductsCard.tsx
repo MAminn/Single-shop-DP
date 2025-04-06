@@ -135,10 +135,10 @@ export const TopSellingProductsCard = ({
                 {showVendor && (
                   <TableCell>{product.vendorName || "N/A"}</TableCell>
                 )}
-                <TableCell>${product.price.toFixed(2)}</TableCell>
+                <TableCell>{product.price.toFixed(2)} EGP</TableCell>
                 <TableCell>{product.sold}</TableCell>
                 <TableCell className="font-semibold">
-                  ${product.revenue.toFixed(2)}
+                  {product.revenue.toFixed(2)} EGP
                 </TableCell>
               </TableRow>
             ))}

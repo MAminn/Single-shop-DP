@@ -311,7 +311,7 @@ export default function Orders() {
                       )}
                       <TableCell>{order.items.length}</TableCell>
                       <TableCell>
-                        ${Number.parseFloat(order.total).toFixed(2)}
+                        {Number.parseFloat(order.total).toFixed(2)} EGP
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -415,13 +415,12 @@ export default function Orders() {
                         )}
                         <TableCell>{item.quantity}</TableCell>
                         <TableCell>
-                          ${Number.parseFloat(item.price).toFixed(2)}
+                          {Number.parseFloat(item.price).toFixed(2)} EGP
                         </TableCell>
                         <TableCell>
-                          $
                           {(
                             Number.parseFloat(item.price) * item.quantity
-                          ).toFixed(2)}
+                          ).toFixed(2)} EGP
                         </TableCell>
                       </TableRow>
                     ))}
@@ -464,20 +463,20 @@ export default function Orders() {
                   <h3 className="font-medium text-sm mb-2">Order Summary</h3>
                   <div className="space-y-1 text-sm">
                     <p>
-                      <span className="font-medium">Subtotal:</span> $
-                      {Number.parseFloat(selectedOrder.subtotal).toFixed(2)}
+                      <span className="font-medium">Subtotal:</span>{" "}
+                      {Number.parseFloat(selectedOrder.subtotal).toFixed(2)} EGP
                     </p>
                     <p>
-                      <span className="font-medium">Shipping:</span> $
-                      {Number.parseFloat(selectedOrder.shipping).toFixed(2)}
+                      <span className="font-medium">Shipping:</span>{" "}
+                      {Number.parseFloat(selectedOrder.shipping).toFixed(2)} EGP
                     </p>
                     <p>
-                      <span className="font-medium">Tax:</span> $
-                      {Number.parseFloat(selectedOrder.tax).toFixed(2)}
+                      <span className="font-medium">Tax:</span>{" "}
+                      {Number.parseFloat(selectedOrder.tax).toFixed(2)} EGP
                     </p>
                     <p className="font-bold">
-                      <span>Total:</span> $
-                      {Number.parseFloat(selectedOrder.total).toFixed(2)}
+                      <span>Total:</span>{" "}
+                      {Number.parseFloat(selectedOrder.total).toFixed(2)} EGP
                     </p>
                   </div>
                 </div>

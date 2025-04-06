@@ -55,8 +55,8 @@ export const RevenueStatsCard = ({
   // Format revenue as $X.XK if ≥ 1000, otherwise as $XXX
   const formattedRevenue =
     totalRevenue >= 1000
-      ? `$${(totalRevenue / 1000).toFixed(1)}K`
-      : `$${totalRevenue.toFixed(2)}`;
+      ? `${(totalRevenue / 1000).toFixed(1)}K EGP`
+      : `${totalRevenue.toFixed(2)} EGP`;
 
   return (
     <Card>
