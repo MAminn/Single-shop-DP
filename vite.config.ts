@@ -13,4 +13,7 @@ export default defineConfig({
       "#root": __dirname,
     },
   },
+  server: {
+    allowedHosts: ["www.lebsey.com", "lebsey.com"]
+  }
 });
