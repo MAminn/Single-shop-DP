@@ -4,76 +4,76 @@ import { deleteCookie, setCookie } from "hono/cookie";
 import { z } from "zod";
 import { validateSessionToken } from "./session";
 import {
-	runBackendEffect,
-	serializeBackendEffectResult,
+  runBackendEffect,
+  serializeBackendEffectResult,
 } from "#root/shared/backend/effect.js";
 import { DatabaseClientService } from "#root/shared/database/drizzle/db.js";
 import type { FastifyInstance, FastifyPluginCallback } from "fastify";
 import { register } from "./register/register";
 
 const saveTokenSchema = z.object({
-	token: z.string().nonempty(),
+  token: z.string().nonempty(),
 });
 
 export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
-	if(!process.env.ADMIN_EMAIL || !process.env.ADMIN_EMAIL) {
-		throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be set");
-	}
+  if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
+    throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be set");
+  }
 
-	runBackendEffect(
-		register({
-			email: process.env.ADMIN_EMAIL,
-			name: "Admin",
-			password: process.env.ADMIN_EMAIL,
-			phone: "+201001112233",
-			role: "admin",
-		}).pipe(Effect.provideService(DatabaseClientService, app.db)),
-	).then(serializeBackendEffectResult);
+  runBackendEffect(
+    register({
+      email: process.env.ADMIN_EMAIL,
+      name: "Admin",
+      password: process.env.ADMIN_PASSWORD,
+      phone: "+201001112233",
+      role: "admin",
+    }).pipe(Effect.provideService(DatabaseClientService, app.db))
+  ).then(serializeBackendEffectResult);
 
-	app.post("/token", async (req, res) => {
-		const validation = saveTokenSchema.safeParse(req.body);
+  app.post("/token", async (req, res) => {
+    const validation = saveTokenSchema.safeParse(req.body);
 
-		if (!validation.success) {
-			return res.status(400).send({ success: false, error: "Invalid data" });
-		}
+    if (!validation.success) {
+      return res.status(400).send({ success: false, error: "Invalid data" });
+    }
 
-		const { token } = validation.data;
+    const { token } = validation.data;
 
-		const getClientSession = await runBackendEffect(
-			validateSessionToken(token).pipe(
-				Effect.provideService(DatabaseClientService, req.db),
-			),
-		).then(serializeBackendEffectResult);
+    const getClientSession = await runBackendEffect(
+      validateSessionToken(token).pipe(
+        Effect.provideService(DatabaseClientService, req.db)
+      )
+    ).then(serializeBackendEffectResult);
 
-		if (!getClientSession.success) {
-			return res.status(400).send(getClientSession);
-		}
+    if (!getClientSession.success) {
+      return res.status(400).send(getClientSession);
+    }
 
-		const clientSession = getClientSession.result;
+    const clientSession = getClientSession.result;
 
-		res.setCookie("session", token, {
-			httpOnly: true,
-			secure: process.env.NODE_ENV === "production",
-			sameSite: "lax",
-			path: "/",
-			maxAge: Math.ceil(
-				(clientSession.expiresAt.getTime() - Date.now()) / 1000,
-			),
-		});
+    res.setCookie("session", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: Math.ceil(
+        (clientSession.expiresAt.getTime() - Date.now()) / 1000
+      ),
+    });
 
-		return res.status(200).send({
-			success: true,
-			result: clientSession,
-		});
-	});
+    return res.status(200).send({
+      success: true,
+      result: clientSession,
+    });
+  });
 
-	app.delete("/token", async (req, res) => {
-		res.clearCookie("session");
+  app.delete("/token", async (req, res) => {
+    res.clearCookie("session");
 
-		return res.status(200).send({
-			success: true,
-		});
-	});
+    return res.status(200).send({
+      success: true,
+    });
+  });
 
-	done();
+  done();
 }) satisfies FastifyPluginCallback;
