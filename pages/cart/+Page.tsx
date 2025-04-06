@@ -131,7 +131,7 @@ export default function CartPage() {
                           </div>
                         </div>
                         <div className="font-semibold mt-2 sm:mt-0">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          {(item.price * item.quantity).toFixed(2)} EGP
                         </div>
                       </div>
 
@@ -208,7 +208,9 @@ export default function CartPage() {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-neutral-600">Subtotal</span>
-                  <span className="font-semibold">${subtotal.toFixed(2)}</span>
+                  <span className="font-semibold">
+                    {subtotal.toFixed(2)} EGP
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-600">Shipping</span>
@@ -217,13 +219,15 @@ export default function CartPage() {
                 <div className="flex justify-between">
                   <span className="text-neutral-600">Tax</span>
                   <span className="font-semibold">
-                    ${(subtotal * 0.05).toFixed(2)}
+                    {(subtotal * 0.05).toFixed(2)} EGP
                   </span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>${(subtotal + subtotal * 0.05).toFixed(2)}</span>
+                  <span>
+                    {(subtotal + subtotal * 0.05).toFixed(2)} EGP
+                  </span>
                 </div>
               </div>
             </CardContent>

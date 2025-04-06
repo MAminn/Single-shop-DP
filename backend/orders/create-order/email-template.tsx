@@ -108,7 +108,7 @@ export const NewOrderEmailTemplate = ({
                   <Column style={tableCell}>{item.name}</Column>
                   <Column style={tableCell}>{item.quantity}</Column>
                   <Column style={tableCellRight}>
-                    ${formatPrice(item.price)}
+                    {formatPrice(item.price)} EGP
                   </Column>
                 </Row>
                 {item.vendorName && (
@@ -125,27 +125,29 @@ export const NewOrderEmailTemplate = ({
               <Column style={summaryLabelCell} colSpan={2}>
                 Subtotal
               </Column>
-              <Column style={summaryValueCell}>${formatPrice(subTotal)}</Column>
+              <Column style={summaryValueCell}>
+                {formatPrice(subTotal)} EGP
+              </Column>
             </Row>
             <Row style={summaryRow}>
               <Column style={summaryLabelCell} colSpan={2}>
                 Shipping
               </Column>
               <Column style={summaryValueCell}>
-                ${formatPrice(shippingFees)}
+                {formatPrice(shippingFees)} EGP
               </Column>
             </Row>
             <Row style={summaryRow}>
               <Column style={summaryLabelCell} colSpan={2}>
                 Tax
               </Column>
-              <Column style={summaryValueCell}>${formatPrice(tax)}</Column>
+              <Column style={summaryValueCell}>{formatPrice(tax)} EGP</Column>
             </Row>
             <Row style={totalRow}>
               <Column style={totalLabelCell} colSpan={2}>
                 Total
               </Column>
-              <Column style={totalValueCell}>${formatPrice(total)}</Column>
+              <Column style={totalValueCell}>{formatPrice(total)} EGP</Column>
             </Row>
           </Section>
 

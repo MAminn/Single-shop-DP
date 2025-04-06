@@ -400,7 +400,7 @@ const Sorting: React.FC<SortingProps> = ({
                 }`}
                 onClick={() => setSelectedPriceRange("0-50")}
               >
-                Under $50
+                Under 50 EGP
               </button>
               <button
                 type="button"
@@ -411,7 +411,7 @@ const Sorting: React.FC<SortingProps> = ({
                 }`}
                 onClick={() => setSelectedPriceRange("50-100")}
               >
-                $50 - $100
+                50 - 100 EGP
               </button>
               <button
                 type="button"
@@ -422,7 +422,7 @@ const Sorting: React.FC<SortingProps> = ({
                 }`}
                 onClick={() => setSelectedPriceRange("100-200")}
               >
-                $100 - $200
+                100 - 200 EGP
               </button>
               <button
                 type="button"
@@ -433,7 +433,7 @@ const Sorting: React.FC<SortingProps> = ({
                 }`}
                 onClick={() => setSelectedPriceRange("200-500")}
               >
-                $200 - $500
+                200 - 500 EGP
               </button>
               <button
                 type="button"
@@ -444,7 +444,7 @@ const Sorting: React.FC<SortingProps> = ({
                 }`}
                 onClick={() => setSelectedPriceRange("500-10000")}
               >
-                $500+
+                500+ EGP
               </button>
             </div>
           </div>
@@ -476,7 +476,7 @@ const Sorting: React.FC<SortingProps> = ({
               }`}
               onClick={() => setSelectedPriceRange("0-50")}
             >
-              Under $50
+              Under 50 EGP
             </button>
             <button
               type="button"
@@ -487,7 +487,7 @@ const Sorting: React.FC<SortingProps> = ({
               }`}
               onClick={() => setSelectedPriceRange("50-100")}
             >
-              $50 - $100
+              50 - 100 EGP
             </button>
             <button
               type="button"
@@ -498,7 +498,7 @@ const Sorting: React.FC<SortingProps> = ({
               }`}
               onClick={() => setSelectedPriceRange("100-200")}
             >
-              $100 - $200
+              100 - 200 EGP
             </button>
             <button
               type="button"
@@ -509,7 +509,7 @@ const Sorting: React.FC<SortingProps> = ({
               }`}
               onClick={() => setSelectedPriceRange("200-500")}
             >
-              $200 - $500
+              200 - 500 EGP
             </button>
             <button
               type="button"
@@ -520,7 +520,7 @@ const Sorting: React.FC<SortingProps> = ({
               }`}
               onClick={() => setSelectedPriceRange("500-10000")}
             >
-              $500+
+              500+ EGP
             </button>
           </div>
         </div>

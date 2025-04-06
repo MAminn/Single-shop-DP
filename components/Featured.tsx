@@ -78,7 +78,7 @@ export default function Featured() {
               className="w-full h-48 object-cover mb-2"
             />
             <h3 className="font-medium">{product.name}</h3>
-            <p className="text-gray-600">${product.price}</p>
+            <p className="text-gray-600">{product.price} EGP</p>
           </div>
         ))}
       </div>

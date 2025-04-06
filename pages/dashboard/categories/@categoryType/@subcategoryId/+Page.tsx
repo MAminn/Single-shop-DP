@@ -236,7 +236,7 @@ export default function SubcategoryProducts() {
                     <TableCell className="font-medium">
                       {product.name}
                     </TableCell>
-                    <TableCell>${product.price.toFixed(2)}</TableCell>
+                    <TableCell>{product.price.toFixed(2)} EGP</TableCell>
                     <TableCell>{product.stock} in stock</TableCell>
                     <TableCell className="flex justify-end space-x-2">
                       <Button size="sm" variant="outline" asChild>
@@ -288,7 +288,7 @@ export default function SubcategoryProducts() {
                         key={product.id}
                         value={product.id.toString()}
                       >
-                        {product.name} (${product.price.toFixed(2)})
+                        {product.name} ({product.price.toFixed(2)} EGP)
                       </SelectItem>
                     ))}
                   </SelectContent>
