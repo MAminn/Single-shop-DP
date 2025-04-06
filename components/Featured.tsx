@@ -72,9 +72,9 @@ export default function Featured() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {featuredProducts.map((product) => (
           <div key={product.id} className="border rounded-lg p-4">
-            <img 
-              src={product.imageUrl} 
-              alt={product.name} 
+            <img
+              src={product.imageUrl}
+              alt={product.name}
               className="w-full h-48 object-cover mb-2"
             />
             <h3 className="font-medium">{product.name}</h3>

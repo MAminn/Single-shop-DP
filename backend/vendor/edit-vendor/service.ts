@@ -5,6 +5,7 @@ import { ServerError } from "#root/shared/error/server";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
+import { hashPassword } from "#root/backend/auth/shared/utils";
 
 const socialLinkSchema = z.object({
   platform: z.string().min(1),
@@ -18,6 +19,8 @@ export const editVendorSchema = z.object({
   logoId: z.string().uuid().optional(),
   socialLinks: z.array(socialLinkSchema).optional(),
   featured: z.boolean().optional(),
+  email: z.string().email().optional(),
+  password: z.string().min(8).max(255).optional(),
 });
 
 export const editVendor = (
@@ -35,6 +38,22 @@ export const editVendor = (
           })
         )
       );
+    }
+
+    console.log("Edit vendor input:", {
+      id: input.id,
+      name: input.name,
+      hasEmail: !!input.email,
+      hasPassword: !!input.password,
+      email: input.email ? `${input.email.substring(0, 3)}...` : undefined,
+    });
+
+    // Pre-hash the password if provided
+    let passwordDigest: string | undefined;
+    if (input.password) {
+      console.log("Hashing password...");
+      passwordDigest = yield* $(hashPassword(input.password));
+      console.log("Password hashed successfully");
     }
 
     yield* $(
@@ -67,6 +86,56 @@ export const editVendor = (
             throw new Error("User not found");
           }
 
+          // If email or password are provided, update the vendor owner's information
+          if (input.email || passwordDigest) {
+            console.log("Attempting to update vendor owner's credentials");
+
+            // Find the vendor owner
+            const vendorOwner = await tx
+              .select()
+              .from(user)
+              .where(eq(user.vendorId, input.id))
+              .then((data) => data[0]);
+
+            if (!vendorOwner) {
+              console.error("Vendor owner not found for vendor ID:", input.id);
+              throw new Error("Vendor owner not found");
+            }
+
+            console.log("Found vendor owner:", {
+              id: vendorOwner.id,
+              email: vendorOwner.email,
+              hasPasswordDigest: !!vendorOwner.passwordDigest,
+              vendorId: vendorOwner.vendorId,
+            });
+
+            // Prepare updates
+            const updates: Record<string, unknown> = {};
+
+            if (input.email) {
+              console.log("Updating email to:", input.email);
+              updates.email = input.email;
+            }
+
+            if (passwordDigest) {
+              console.log("Updating password digest");
+              updates.passwordDigest = passwordDigest;
+            }
+
+            // Apply updates if any
+            if (Object.keys(updates).length > 0) {
+              console.log("Applying updates to user:", updates);
+
+              const result = await tx
+                .update(user)
+                .set(updates)
+                .where(eq(user.id, vendorOwner.id))
+                .returning();
+
+              console.log("Update result:", result);
+            }
+          }
+
           await tx.insert(vendorLog).values({
             vendorId: updatedVendor.id,
             userId: actionUser.id,
@@ -75,4 +144,6 @@ export const editVendor = (
         });
       })
     );
+
+    console.log("Vendor edit completed successfully");
   });

@@ -470,6 +470,7 @@ function EditVendorForm({
     logoId?: string;
     featured?: boolean;
     socialLinks: SocialLink[];
+    ownerEmail?: string;
   };
 
   const [vendorData, setVendorData] = useState<VendorFormData | null>(null);
@@ -487,6 +488,7 @@ function EditVendorForm({
           socialLinks: Array.isArray(res.result.socialLinks)
             ? res.result.socialLinks
             : [],
+          ownerEmail: res.result.ownerEmail || undefined,
         });
       } else {
         toast.error("Failed to fetch vendor data");
@@ -501,6 +503,8 @@ function EditVendorForm({
     logoId?: string;
     featured?: boolean;
     socialLinks: SocialLink[];
+    email?: string;
+    password?: string;
   }) => {
     if (!values.id) {
       alert(
@@ -509,6 +513,14 @@ function EditVendorForm({
       return;
     }
 
+    console.log("Submitting vendor edit with values:", {
+      id: values.id,
+      name: values.name,
+      hasEmail: !!values.email,
+      hasPassword: !!values.password,
+      email: values.email ? values.email : undefined,
+    });
+
     const res = await trpc.vendor.edit.mutate({
       id: values.id,
       name: values.name,
@@ -516,7 +528,11 @@ function EditVendorForm({
       logoId: values.logoId,
       featured: values.featured,
       socialLinks: values.socialLinks,
+      email: values.email,
+      password: values.password,
     });
+
+    console.log("Vendor edit result:", res);
 
     if (!res.success) {
       toast.error(res.error);
@@ -531,15 +547,18 @@ function EditVendorForm({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{Trigger}</DialogTrigger>
-      <DialogContent>
+      <DialogContent className=" max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Vendor</DialogTitle>
         </DialogHeader>
         {vendorData && (
           <VendorForm defaultValues={vendorData} onSubmit={onSubmit} />
         )}
-        {!vendorData && <div>Loading...</div>}
-        <DialogFooter></DialogFooter>
+        {!vendorData && (
+          <div className="flex items-center justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -586,7 +605,7 @@ function ViewVendorDetails({
             logoImagePath: res.result.logoImagePath,
             featured: res.result.featured,
             status: res.result.status,
-            ownerEmail: res.result.ownerEmail,
+            ownerEmail: res.result.ownerEmail || undefined,
             productCount: res.result.productCount,
             // Ensure socialLinks is always an array of the correct type
             socialLinks: Array.isArray(res.result.socialLinks)
@@ -604,16 +623,16 @@ function ViewVendorDetails({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{Trigger}</DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Vendor Details</DialogTitle>
         </DialogHeader>
 
         {vendorData ? (
-          <div className="grid gap-6">
-            <div className="flex items-start gap-4">
+          <div className="grid gap-6 py-4">
+            <div className="flex items-start gap-4 flex-wrap sm:flex-nowrap">
               {vendorData.logoImagePath && (
-                <div className="h-16 w-16 rounded-md overflow-hidden">
+                <div className="h-16 w-16 rounded-md overflow-hidden flex-shrink-0">
                   <img
                     src={`/uploads/${vendorData.logoImagePath}`}
                     alt={`${vendorData.name} logo`}
@@ -621,9 +640,11 @@ function ViewVendorDetails({
                   />
                 </div>
               )}
-              <div>
-                <h3 className="text-xl font-semibold">{vendorData.name}</h3>
-                <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-xl font-semibold truncate">
+                  {vendorData.name}
+                </h3>
+                <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
                   <Badge variant="outline" className="capitalize">
                     {vendorData.status}
                   </Badge>
@@ -643,10 +664,10 @@ function ViewVendorDetails({
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
                 <h4 className="font-medium mb-1">Owner Email</h4>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground break-all">
                   {vendorData.ownerEmail || "N/A"}
                 </p>
               </div>
@@ -668,7 +689,7 @@ function ViewVendorDetails({
                     return (
                       <div
                         key={key}
-                        className="flex items-center justify-between border-b pb-2"
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-2 gap-1"
                       >
                         <div className="font-medium">{link.platform}</div>
                         <a
