@@ -16,7 +16,7 @@ import { Tabs, TabsList, TabsTrigger } from "#root/components/ui/tabs.jsx";
 import { usePageContext } from "vike-react/usePageContext";
 import { RoleProvider, useRole } from "#root/lib/context/RoleContext";
 import { HomeIcon, Home, Menu } from "lucide-react";
-import logoImage from "#root/assets/Lebsy-Logo-Light.svg";
+import logoImage from "#root/assets/Lebsy-Logo-Light.webp";
 
 export default function DashboardLayout({
   children,

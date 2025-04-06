@@ -64,7 +64,7 @@ export default function Page() {
           </div>
           <div className="w-full h-full order-1 lg:order-2">
             <img
-              src="/assets/Women_s_banner.png"
+              src="/assets/Women_s_banner.webp"
               className="w-full h-full object-cover object-center bg-top lg:rounded-tr-3xl lg:rounded-br-3xl"
               alt=""
             />

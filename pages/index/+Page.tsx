@@ -112,7 +112,7 @@ export default function Page() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent z-[9]"></div>
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url(/assets/men-section.png)" }}
+          style={{ backgroundImage: "url(/assets/men-section.webp)" }}
           role="img"
           aria-label="Fashion collection banner image"
         ></div>
@@ -204,7 +204,7 @@ export default function Page() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-[9]"></div>
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                  style={{ backgroundImage: "url(/assets/men-section.png)" }}
+                  style={{ backgroundImage: "url(/assets/men-section.webp)" }}
                   role="img"
                   aria-label="Men's fashion category"
                 ></div>
@@ -228,7 +228,7 @@ export default function Page() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-[9]"></div>
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                  style={{ backgroundImage: "url(/assets/women-section.png)" }}
+                  style={{ backgroundImage: "url(/assets/women-section.webp)" }}
                   role="img"
                   aria-label="Women's fashion category"
                 ></div>
@@ -253,7 +253,7 @@ export default function Page() {
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                   style={{
-                    backgroundImage: "url(/assets/men-section.png)",
+                    backgroundImage: "url(/assets/men-section.webp)",
                   }}
                   role="img"
                   aria-label="Fashion brands category"
@@ -294,7 +294,7 @@ export default function Page() {
             >
               <div className="relative rounded-xl overflow-hidden">
                 <img
-                  src="/assets/men-section.png"
+                  src="/assets/men-section.webp"
                   alt="About Lebsy - Our fashion story"
                   className="w-full h-auto rounded-xl"
                 />
@@ -346,7 +346,7 @@ export default function Page() {
         <div className="absolute inset-0 bg-accent-lb/90"></div>
         <div
           className="absolute inset-0 bg-cover bg-center opacity-10"
-          style={{ backgroundImage: "url(/assets/men-section.png)" }}
+          style={{ backgroundImage: "url(/assets/men-section.webp)" }}
           aria-hidden="true"
         ></div>
 

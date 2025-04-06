@@ -1,4 +1,4 @@
-import logoUrl from "../assets/lebsy-favicon.png";
+import logoUrl from "../assets/Lebsy-Logo-Light.webp";
 
 export default function HeadDefault() {
   return (

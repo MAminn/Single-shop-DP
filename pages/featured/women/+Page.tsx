@@ -1,4 +1,4 @@
-import HeroImg from "#root/assets/Women_s_banner.png";
+import HeroImg from "#root/assets/Women_s_banner.webp";
 import { Link } from "#root/components/Link.jsx";
 import Magnet from "#root/components/Magnet.jsx";
 import { useData } from "vike-react/useData";
