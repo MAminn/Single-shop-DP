@@ -5,6 +5,7 @@ import {
   product,
   productVariant,
   vendor,
+  productImage,
 } from "#root/shared/database/drizzle/schema";
 import { ServerError } from "#root/shared/error/server";
 import { and, eq, inArray, not } from "drizzle-orm";
@@ -26,6 +27,14 @@ export const editProductSchema = z.object({
       z.object({
         name: z.string().nonempty().max(255),
         values: z.array(z.string().nonempty().max(255)),
+      })
+    )
+    .optional(),
+  productImages: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        isPrimary: z.boolean().optional(),
       })
     )
     .optional(),
@@ -102,7 +111,7 @@ export const editProduct = (
             .set({
               name: data.name,
               description: data.description,
-              imageId: data.imageId,
+              imageId: data.imageId, // Keep for backward compatibility
               categoryId: data.categoryId,
               price: data.price.toString(),
               stock: data.stock,
@@ -114,6 +123,23 @@ export const editProduct = (
 
           if (!updatedProduct) {
             throw new Error("Product not updated");
+          }
+
+          // Handle product images if provided
+          if (data.productImages && data.productImages.length > 0) {
+            // First, remove all existing product images
+            await tx
+              .delete(productImage)
+              .where(eq(productImage.productId, data.id));
+
+            // Then add the new images
+            for (const img of data.productImages) {
+              await tx.insert(productImage).values({
+                productId: data.id,
+                fileId: img.id,
+                isPrimary: img.isPrimary || false,
+              });
+            }
           }
 
           if (data.variants) {

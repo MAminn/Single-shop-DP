@@ -5,6 +5,7 @@ import {
   product,
   productVariant,
   vendor,
+  productImage,
 } from "#root/shared/database/drizzle/schema";
 import { ServerError } from "#root/shared/error/server";
 import { eq } from "drizzle-orm";
@@ -25,6 +26,14 @@ export const createProductSchema = z.object({
       z.object({
         name: z.string().nonempty().max(255),
         values: z.array(z.string().nonempty().max(255)),
+      })
+    )
+    .optional(),
+  productImages: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        isPrimary: z.boolean().optional(),
       })
     )
     .optional(),
@@ -88,7 +97,7 @@ export const createProduct = (
             .values({
               name: data.name,
               description: data.description,
-              imageId: data.imageId,
+              imageId: data.imageId, // Keep for backward compatibility
               categoryId: data.categoryId,
               vendorId: data.vendorId,
               price: data.price.toString(),
@@ -99,6 +108,25 @@ export const createProduct = (
 
           if (!newProduct) {
             throw new Error("Product not created");
+          }
+
+          // Handle product images
+          if (data.productImages && data.productImages.length > 0) {
+            // Add all product images
+            for (const img of data.productImages) {
+              await tx.insert(productImage).values({
+                productId: newProduct.id,
+                fileId: img.id,
+                isPrimary: img.isPrimary || false,
+              });
+            }
+          } else if (data.imageId) {
+            // If no product images but imageId is set, create one product image
+            await tx.insert(productImage).values({
+              productId: newProduct.id,
+              fileId: data.imageId,
+              isPrimary: true,
+            });
           }
 
           if (data.variants) {

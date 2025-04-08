@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { trpc } from "#root/shared/trpc/client";
 import {
   Loader2,
@@ -10,6 +10,10 @@ import {
   ChevronRight,
   ChevronLeft,
   ZoomIn,
+  Heart,
+  Minus,
+  Plus,
+  Clock,
 } from "lucide-react";
 import { Button } from "#root/components/ui/button";
 import { Badge } from "#root/components/ui/badge";
@@ -151,6 +155,7 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
         }
 
         console.log("Found product in search results:", productItem);
+        console.log("Product images:", productItem.images);
 
         // Get product variants
         const variantsResult = await trpc.product.view.query({
@@ -171,16 +176,40 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
         }
 
         // Process images to ensure correct format
-        const images = [];
-        if (productItem.imageUrl) {
-          images.push({ url: productItem.imageUrl });
+        let productImages: { url: string }[] = [];
+
+        // First check if we have the new images array with multiple images
+        if (productItem.images && productItem.images.length > 0) {
+          console.log(
+            "Using images array with",
+            productItem.images.length,
+            "images"
+          );
+          productImages = productItem.images.map((img) => ({
+            url: img.url.startsWith("/uploads/")
+              ? img.url
+              : `/uploads/${img.url}`,
+          }));
         }
+        // Fall back to the legacy single imageUrl if no images array
+        else if (productItem.imageUrl) {
+          console.log("Falling back to imageUrl:", productItem.imageUrl);
+          productImages = [
+            {
+              url: productItem.imageUrl.startsWith("/uploads/")
+                ? productItem.imageUrl
+                : `/uploads/${productItem.imageUrl}`,
+            },
+          ];
+        }
+
+        console.log("Final processed images:", productImages);
 
         setProduct({
           ...productItem,
           available: productItem.stock > 0,
           variants,
-          images,
+          images: productImages,
         });
       } catch (err) {
         console.error("Error fetching product:", err);
@@ -335,19 +364,42 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
     }
   };
 
-  const nextImage = () => {
-    if (!product?.images) return;
-    setCurrentImageIndex((prev) =>
-      prev === (product.images?.length ?? 1) - 1 ? 0 : prev + 1
-    );
-  };
+  const nextImage = useCallback(() => {
+    if (!product?.images?.length) return;
+    const maxIndex = product.images.length - 1;
+    setCurrentImageIndex((current) => (current >= maxIndex ? 0 : current + 1));
+  }, [product]);
 
-  const prevImage = () => {
-    if (!product?.images) return;
-    setCurrentImageIndex((prev) =>
-      prev === 0 ? (product.images?.length ?? 1) - 1 : prev - 1
-    );
-  };
+  const prevImage = useCallback(() => {
+    if (!product?.images?.length) return;
+    const maxIndex = product.images.length - 1;
+    setCurrentImageIndex((current) => (current <= 0 ? maxIndex : current - 1));
+  }, [product]);
+
+  // Reset current image index when product changes
+  useEffect(() => {
+    if (product) {
+      setCurrentImageIndex(0);
+    }
+  }, [product]);
+
+  // Add keyboard navigation for the image gallery
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (product?.images && product.images.length > 1) {
+        if (e.key === "ArrowLeft") {
+          prevImage();
+        } else if (e.key === "ArrowRight") {
+          nextImage();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [product, prevImage, nextImage]);
 
   const toggleZoom = () => {
     setIsZoomed(!isZoomed);
@@ -423,94 +475,112 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
         {/* Product Images Section */}
         <div className="md:w-1/2 space-y-4">
           <div className="mb-6">
-            <button
-              type="button"
-              tabIndex={0}
-              aria-label="View product image gallery"
-              className="relative rounded-lg overflow-hidden bg-gray-100 border border-gray-200"
-              onClick={() => setIsZoomed(!isZoomed)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  setIsZoomed(!isZoomed);
-                }
-              }}
-            >
-              <img
-                src={
-                  images[currentImageIndex]?.url.startsWith("http")
-                    ? images[currentImageIndex]?.url
-                    : images[currentImageIndex]?.url.startsWith("/uploads/")
-                      ? images[currentImageIndex]?.url
-                      : `/uploads/${images[currentImageIndex]?.url}`
-                }
-                alt={product.name}
-                className={`w-full h-auto object-cover transition-transform duration-300 ${
-                  isZoomed ? "scale-110" : "scale-100"
-                }`}
-              />
-
-              {images.length > 1 && (
-                <div className="flex items-center justify-center mt-4 space-x-2">
+            <div className="relative rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+              {/* Image navigation overlay buttons - ALWAYS VISIBLE */}
+              {product.images && product.images.length > 1 && (
+                <>
                   <button
                     type="button"
                     onClick={prevImage}
-                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+                    className="absolute left-2 top-1/2 transform -translate-y-1/2 p-2 bg-white/80 hover:bg-white rounded-full shadow-md z-20 transition-all"
                     aria-label="Previous image"
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      role="img"
+                    <ChevronLeft
+                      className="h-6 w-6 text-gray-700"
                       aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                    />
                   </button>
-                  <div className="flex space-x-1">
-                    {images.map((img, i) => (
-                      <button
-                        key={`thumb-${img.url || i}`}
-                        type="button"
-                        onClick={() => setCurrentImageIndex(i)}
-                        className={`w-3 h-3 rounded-full ${
-                          i === currentImageIndex
-                            ? "bg-accent-lb"
-                            : "bg-gray-300"
-                        }`}
-                        aria-label={`View image ${i + 1}`}
-                      />
-                    ))}
-                  </div>
                   <button
                     type="button"
                     onClick={nextImage}
-                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-white/80 hover:bg-white rounded-full shadow-md z-20 transition-all"
                     aria-label="Next image"
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      role="img"
+                    <ChevronRight
+                      className="h-6 w-6 text-gray-700"
                       aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                    />
                   </button>
-                </div>
+                </>
               )}
-            </button>
+
+              {/* Main product image */}
+              <button
+                type="button"
+                className="w-full aspect-square flex items-center justify-center overflow-hidden cursor-zoom-in bg-transparent border-0 p-0"
+                onClick={toggleZoom}
+                aria-label="Zoom product image"
+              >
+                {product.images && product.images.length > 0 ? (
+                  <img
+                    src={
+                      product.images[currentImageIndex]?.url ||
+                      "/placeholder.jpg"
+                    }
+                    alt={product.name}
+                    className={`w-full h-full object-contain transition-transform duration-300 ${
+                      isZoomed ? "scale-110" : "scale-100"
+                    }`}
+                    onError={(e) => {
+                      e.currentTarget.src = "/placeholder.jpg";
+                      e.currentTarget.onerror = null;
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-64 flex items-center justify-center bg-gray-100">
+                    <ZoomIn className="h-10 w-10 text-gray-400" />
+                  </div>
+                )}
+
+                {isZoomed && (
+                  <div className="absolute inset-0 bg-white/10 backdrop-blur-sm flex items-center justify-center z-10">
+                    <ZoomIn className="text-white h-8 w-8" />
+                  </div>
+                )}
+              </button>
+            </div>
+
+            {/* Image counter for mobile */}
+            {product.images && product.images.length > 1 && (
+              <div className="mt-2 flex justify-center">
+                <span className="text-sm bg-gray-100 px-3 py-1 rounded-full">
+                  {currentImageIndex + 1} / {product.images.length}
+                </span>
+              </div>
+            )}
+
+            {/* Thumbnails row */}
+            {product.images && product.images.length > 1 && (
+              <div className="mt-4">
+                <div className="grid grid-cols-5 sm:grid-cols-6 gap-2">
+                  {product.images.map((img, i) => (
+                    <button
+                      key={`gallery-${img.url}-${i}`}
+                      type="button"
+                      onClick={() => setCurrentImageIndex(i)}
+                      className={`relative rounded border overflow-hidden aspect-square ${
+                        i === currentImageIndex
+                          ? "border-accent-lb ring-2 ring-accent-lb/30"
+                          : "border-gray-200 hover:border-accent-lb/50"
+                      }`}
+                    >
+                      <img
+                        src={img.url}
+                        alt={`${product.name} - view ${i + 1}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = "/placeholder.jpg";
+                          e.currentTarget.onerror = null;
+                        }}
+                      />
+                      {i === currentImageIndex && (
+                        <div className="absolute inset-0 bg-accent-lb/10 border-2 border-accent-lb"></div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -539,10 +609,10 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
 
           <div className="flex items-center gap-4">
             <span className="text-3xl font-bold text-gray-900">
-              
               {typeof product.price === "number"
                 ? product.price.toFixed(2)
-                : Number.parseFloat(product.price as string).toFixed(2)} EGP
+                : Number.parseFloat(product.price as string).toFixed(2)}{" "}
+              EGP
             </span>
             {product.stock <= 10 && product.stock > 0 && (
               <span className="text-orange-500 text-sm">
