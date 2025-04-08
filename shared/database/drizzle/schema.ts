@@ -153,8 +153,8 @@ export const category = pgTable("category", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => v7()),
-  name: text("name").notNull().unique(),
-  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull(),
   imageId: uuid("image_id")
     .references(() => file.id, {
       onDelete: "cascade",
@@ -369,6 +369,36 @@ export const productReview = pgTable("product_review", {
   userName: text("user_name").notNull(),
   rating: integer("rating").notNull(),
   comment: text("comment").notNull(),
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+    mode: "date",
+  })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", {
+    withTimezone: true,
+    mode: "date",
+  }),
+});
+
+// Table to store multiple images for products
+export const productImage = pgTable("product_image", {
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => v7()),
+  productId: uuid("product_id")
+    .notNull()
+    .references(() => product.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  fileId: uuid("file_id")
+    .notNull()
+    .references(() => file.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  isPrimary: boolean("is_primary").notNull().default(false),
   createdAt: timestamp("created_at", {
     withTimezone: true,
     mode: "date",

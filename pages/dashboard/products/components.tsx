@@ -31,55 +31,168 @@ import {
 } from "#root/components/ui/popover";
 import { Check, ChevronsUpDown, XIcon } from "lucide-react";
 import { FileUploadInput } from "#root/components/file-uploads/FileUpload";
+import { MultiFileUploadInput } from "#root/components/file-uploads/MultiFileUpload";
 import { TagsInput } from "#root/components/ui/tags-input";
 import { Label } from "#root/components/ui/label";
 
-const formSchema = z.object({
-  id: z.string().uuid().optional().catch(undefined),
-  name: z.string().min(1).max(255),
-  description: z.string().max(255),
-  price: z.coerce.number(),
-  stock: z.coerce.number(),
-  imageId: z.string(),
-  categoryId: z.string(),
-  vendorId: z.string(),
-  variants: z
-    .array(
-      z.object({
-        name: z.string().min(1).max(255),
-        values: z.array(z.string().min(1).max(255)),
-      })
-    )
-    .optional(),
-});
+// Define the interface to match our component
+export interface FileMetadata {
+  id: string;
+  url?: string;
+  diskname?: string;
+  isPrimary?: boolean;
+}
 
-export type ProductFormSchema = z.infer<typeof formSchema>;
-
-export default function ProductForm({
+export function ProductForm({
+  initialValues,
   categories,
-  vendors,
+  vendors = [],
   vendorId,
-  defaultValues,
-  onSubmit,
+  onSuccess,
 }: {
-  defaultValues?: z.infer<typeof formSchema>;
+  initialValues?: Partial<{
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    stock: number;
+    imageId: string;
+    productImages: FileMetadata[];
+    categoryId: string;
+    vendorId: string;
+    variants: { name: string; values: string[] }[];
+  }>;
   categories: { id: string; name: string }[];
-  vendors: { id: string; name: string }[];
+  vendors?: { id: string; name: string }[];
   vendorId?: string;
-  onSubmit: (values: z.infer<typeof formSchema>) => PromiseLike<void>;
+  onSuccess?: () => void;
 }) {
-  const [submitting, setSubmitting] = useState(false);
+  const formSchema = z.object({
+    name: z.string().min(1, "Product name is required"),
+    description: z.string(),
+    price: z.coerce.number().min(0, "Price must be greater than 0"),
+    stock: z.coerce.number().int().min(0, "Stock must be greater than 0"),
+    imageId: z.string().default(""),
+    productImages: z
+      .array(
+        z.object({
+          id: z.string(),
+          url: z.string().optional(),
+          diskname: z.string().optional(),
+          isPrimary: z.boolean().optional(),
+        })
+      )
+      .min(1, "At least one product image is required")
+      .default([]),
+    categoryId: z.string().min(1, "Category is required"),
+    vendorId: z.string(),
+    variants: z
+      .array(
+        z.object({
+          name: z.string(),
+          values: z.array(z.string()),
+        })
+      )
+      .optional(),
+  });
+
+  // Convert initialValues to ensure compatibility
+  const defaultValues = {
+    ...initialValues,
+    // If we have an imageId but no productImages, create a productImages array
+    productImages:
+      initialValues?.productImages ||
+      (initialValues?.imageId
+        ? [
+            {
+              id: initialValues.imageId,
+              url: `/uploads/${initialValues.imageId}`,
+              isPrimary: true,
+            },
+          ]
+        : []),
+  };
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues,
-    disabled: submitting,
   });
+
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleFormSubmit = async (values: z.infer<typeof formSchema>) => {
+    setSubmitting(true);
+
+    // Ensure we have at least one image that is primary
+    if (values.productImages && values.productImages.length > 0) {
+      // If no primary image is set, make the first one primary
+      if (!values.productImages.some((img) => img?.isPrimary)) {
+        if (values.productImages[0]) {
+          values.productImages[0].isPrimary = true;
+        }
+      }
+
+      // Set the primary image's ID as the main imageId for backward compatibility
+      const primaryImage = values.productImages.find((img) => img?.isPrimary);
+      if (primaryImage?.id) {
+        values.imageId = primaryImage.id;
+      } else if (values.productImages[0]?.id) {
+        values.imageId = values.productImages[0].id;
+      }
+    }
+
+    // Ensure imageId is a string (required by the mutations)
+    if (!values.imageId) {
+      toast.error("At least one product image is required");
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      const { trpc } = await import("#root/shared/trpc/client");
+
+      let result: { success: boolean; error?: string };
+      if (initialValues?.id) {
+        // Update existing product
+        result = await trpc.product.edit.mutate({
+          id: initialValues.id,
+          ...values,
+          imageId: values.imageId,
+        });
+      } else {
+        // Create new product
+        result = await trpc.product.create.mutate({
+          ...values,
+          imageId: values.imageId,
+        });
+      }
+
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(
+        initialValues?.id ? "Product updated!" : "Product created!"
+      );
+      onSuccess?.();
+      if (!initialValues?.id) {
+        form.reset();
+      }
+    } catch (error) {
+      toast.error("Something went wrong");
+      console.error(error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 py-10">
-        {/* <input type="hidden" {...form.register("id")} /> */}
+      <form
+        onSubmit={form.handleSubmit(handleFormSubmit)}
+        className="space-y-4"
+      >
         <FormField
           control={form.control}
           name="name"
@@ -87,9 +200,8 @@ export default function ProductForm({
             <FormItem>
               <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input placeholder="" type="text" {...field} />
+                <Input placeholder="Awesome Product" {...field} />
               </FormControl>
-
               <FormMessage />
             </FormItem>
           )}
@@ -103,58 +215,79 @@ export default function ProductForm({
               <FormLabel>Description</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Product description"
+                  placeholder="This product is awesome because..."
                   className="resize-none"
                   {...field}
                 />
               </FormControl>
-
               <FormMessage />
             </FormItem>
           )}
         />
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Price</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="99.99"
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e.target.valueAsNumber);
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="stock"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Stock</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="100"
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e.target.valueAsNumber);
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}
-          name="price"
+          name="productImages"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Price</FormLabel>
+              <FormLabel>Product Images</FormLabel>
               <FormControl>
-                <Input placeholder="" type="number" {...field} />
+                <MultiFileUploadInput
+                  name="productImages"
+                  id="productImages"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="stock"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Stock</FormLabel>
-              <FormControl>
-                <Input placeholder="" type="number" {...field} />
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="imageId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Image</FormLabel>
-              <FormControl>
-                <FileUploadInput id="image" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <FormField
           control={form.control}
           name="categoryId"

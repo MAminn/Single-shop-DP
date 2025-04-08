@@ -26,11 +26,26 @@ import { Tabs, TabsList, TabsTrigger } from "#root/components/ui/tabs";
 import type { Data } from "./+data";
 import { useData } from "vike-react/useData";
 import { ErrorSection } from "#root/components/error-section";
-import ProductForm, { type ProductFormSchema } from "./components";
+import { ProductForm } from "./components";
+import type { FileMetadata } from "./components";
 import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
 import { usePageContext } from "vike-react/usePageContext";
 import { useDebounce } from "use-debounce";
+import { z } from "zod";
+
+// Define product form schema type to match server expectations
+type ProductFormSchema = {
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  imageId: string;
+  productImages?: FileMetadata[];
+  categoryId: string;
+  vendorId: string;
+  variants?: { name: string; values: string[] }[];
+};
 
 interface Product {
   id: number;
@@ -60,7 +75,8 @@ export default function Products() {
   });
   const [search, setSearch] = useState("");
   const [searchQueryValue] = useDebounce(search, 1000);
-  const [sortBy, setSortBy] = useState("name");
+  const [sortBy, setSortBy] = useState<"name" | "price" | "stock">("name");
+
   if (!fetchData.success) {
     return <ErrorSection error={fetchData.error} />;
   }
@@ -103,6 +119,16 @@ export default function Products() {
   }, [searchQueryValue, sortBy, initialData, lastFetchDate, categoryId]);
 
   const handleAddProduct = async (values: ProductFormSchema) => {
+    // Ensure imageId is set - use first product image as imageId if not explicitly provided
+    if (
+      !values.imageId &&
+      values.productImages &&
+      values.productImages.length > 0
+    ) {
+      const primaryImage = values.productImages.find((img) => img.isPrimary);
+      values.imageId = primaryImage?.id || values.productImages[0].id;
+    }
+
     const res = await trpc.product.create.mutate(values);
 
     if (!res.success) {
@@ -130,6 +156,16 @@ export default function Products() {
       return;
     }
 
+    // Ensure imageId is set - use first product image as imageId if not explicitly provided
+    if (
+      !values.imageId &&
+      values.productImages &&
+      values.productImages.length > 0
+    ) {
+      const primaryImage = values.productImages.find((img) => img.isPrimary);
+      values.imageId = primaryImage?.id || values.productImages[0].id;
+    }
+
     const res = await trpc.product.edit.mutate({
       id: selectedProductData.product.id,
       ...values,
@@ -141,7 +177,6 @@ export default function Products() {
     }
 
     setLastFetchDate(new Date());
-
     setIsEditModalOpen(false);
   };
 
@@ -161,7 +196,12 @@ export default function Products() {
             onChange={(e) => setSearch(e.target.value)}
             className="w-40"
           />
-          <Tabs value={sortBy} onValueChange={setSortBy}>
+          <Tabs
+            value={sortBy}
+            onValueChange={(value) =>
+              setSortBy(value as "name" | "price" | "stock")
+            }
+          >
             <TabsList>
               <TabsTrigger value="name">Name</TabsTrigger>
               <TabsTrigger value="price">Price</TabsTrigger>
@@ -231,14 +271,14 @@ export default function Products() {
       </CardContent>
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="lg:max-w-screen-lg overflow-y-scroll max-h-screen">
+        <DialogContent className=" overflow-y-scroll max-h-screen">
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
           </DialogHeader>
           <ProductForm
             categories={categories}
             vendors={vendors}
-            defaultValues={
+            initialValues={
               selectedProductData
                 ? {
                     id: selectedProductData.product.id,
@@ -249,26 +289,50 @@ export default function Products() {
                     description: selectedProductData.product.description,
                     price: Number(selectedProductData.product.price),
                     stock: selectedProductData.product.stock,
-                    variants: selectedProductData.variants,
+                    // Add productImages if they exist
+                    ...(selectedProductData.productImages
+                      ? {
+                          productImages: selectedProductData.productImages.map(
+                            (img) => ({
+                              id: img.fileId,
+                              url: `/uploads/${img.diskname}`,
+                              diskname: img.diskname,
+                              isPrimary: img.isPrimary,
+                            })
+                          ),
+                        }
+                      : {}),
                   }
                 : undefined
             }
-            onSubmit={handleEditProduct}
-            vendorId={session?.role === "vendor" ? session.vendorId : undefined}
+            onSuccess={() => {
+              setIsEditModalOpen(false);
+              setLastFetchDate(new Date());
+            }}
           />
         </DialogContent>
       </Dialog>
 
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="lg:max-w-screen-lg overflow-y-scroll max-h-screen">
+        <DialogContent className="overflow-y-scroll max-h-screen">
           <DialogHeader>
-            <DialogTitle>Add New Product</DialogTitle>
+            <DialogTitle>Add Product</DialogTitle>
           </DialogHeader>
           <ProductForm
             categories={categories}
             vendors={vendors}
-            onSubmit={handleAddProduct}
-            vendorId={session?.role === "vendor" ? session.vendorId : undefined}
+            vendorId={fetchData.vendorId}
+            initialValues={
+              fetchData.vendorId
+                ? {
+                    vendorId: fetchData.vendorId,
+                  }
+                : undefined
+            }
+            onSuccess={() => {
+              setIsAddModalOpen(false);
+              setLastFetchDate(new Date());
+            }}
           />
         </DialogContent>
       </Dialog>

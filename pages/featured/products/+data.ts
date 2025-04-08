@@ -16,6 +16,10 @@ type ProductSuccess = {
     price: string | number;
     stock: number;
     imageUrl: string | null;
+    images?: Array<{
+      url: string;
+      isPrimary?: boolean;
+    }>;
     available: boolean;
     categoryId: string;
     categoryName: string | null;

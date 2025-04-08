@@ -4,6 +4,7 @@ import {
   file,
   product,
   vendor,
+  productImage,
 } from "#root/shared/database/drizzle/schema";
 import { and, eq, ilike, inArray, or, count, gt, sql } from "drizzle-orm";
 import { Effect } from "effect";
@@ -99,15 +100,47 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
           `Found ${items.length} products out of ${totalCount[0]?.count || 0} total`
         );
 
+        // Fetch additional product images for all products
+        const productIds = items.map((item) => item.id);
+
+        // Get all product images
+        const productImagesQuery = await db
+          .select({
+            productId: productImage.productId,
+            fileId: productImage.fileId,
+            isPrimary: productImage.isPrimary,
+            diskname: file.diskname,
+          })
+          .from(productImage)
+          .innerJoin(file, eq(productImage.fileId, file.id))
+          .where(inArray(productImage.productId, productIds))
+          .execute();
+
         // Process and add available flag to each item
-        const processedItems = items.map((item) => ({
-          ...item,
-          available: item.stock > 0,
-        }));
+        const processedItems = items.map((item) => {
+          // Get all images for this product
+          const productImages = productImagesQuery
+            .filter((img) => img.productId === item.id)
+            .map((img) => ({
+              url: img.diskname,
+              isPrimary: img.isPrimary,
+            }));
+
+          return {
+            ...item,
+            available: item.stock > 0,
+            images:
+              productImages.length > 0
+                ? productImages
+                : item.imageUrl
+                  ? [{ url: item.imageUrl, isPrimary: true }]
+                  : [],
+          };
+        });
 
         return {
           items: processedItems,
-          totalCount: totalCount[0]?.count || 0,
+          total: totalCount[0]?.count || 0,
         };
       })
     );

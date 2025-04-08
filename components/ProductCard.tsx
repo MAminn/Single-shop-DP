@@ -7,11 +7,17 @@ import { useToast } from "./ui/use-toast";
 import { useCart } from "#root/lib/context/CartContext";
 import { getProductUrl, getVendorUrl } from "#root/lib/utils/route-helpers";
 
+interface ProductImage {
+  url: string;
+  isPrimary?: boolean;
+}
+
 interface Product {
   id: string;
   name: string;
   price: number | string;
   imageUrl?: string | null;
+  images?: ProductImage[];
   available: boolean;
   categoryName?: string | null;
   vendorId: string;
@@ -48,7 +54,7 @@ export const ProductCard = ({
             typeof product.price === "number"
               ? product.price
               : Number(product.price),
-          imageUrl: product.imageUrl?.toString(),
+          imageUrl: getDisplayImageUrl(),
           vendorId: Number(product.vendorId),
           stock: 100, // Assuming available products have stock
         },
@@ -72,10 +78,48 @@ export const ProductCard = ({
     }
   };
 
+  const getDisplayImageUrl = (): string => {
+    // If we have multiple images, find the primary one or use the first
+    if (product.images && product.images.length > 0) {
+      const primaryImage = product.images.find((img) => img.isPrimary);
+      const imageToUse = primaryImage || product.images[0];
+
+      if (imageToUse?.url) {
+        if (imageToUse.url.startsWith("http")) {
+          return imageToUse.url;
+        }
+
+        if (imageToUse.url.startsWith("/uploads/")) {
+          return imageToUse.url;
+        }
+
+        return `/uploads/${imageToUse.url}`;
+      }
+    }
+
+    // Fallback to legacy imageUrl if available
+    if (product.imageUrl) {
+      if (product.imageUrl.startsWith("http")) {
+        return product.imageUrl;
+      }
+
+      if (product.imageUrl.startsWith("/uploads/")) {
+        return product.imageUrl;
+      }
+
+      return `/uploads/${product.imageUrl}`;
+    }
+
+    return "";
+  };
+
   const formattedPrice =
     typeof product.price === "number"
       ? product.price.toFixed(2)
       : Number(product.price).toFixed(2);
+
+  const hasImage = !!(product.images?.length || product.imageUrl);
+  const displayImageUrl = getDisplayImageUrl();
 
   return (
     <div
@@ -87,15 +131,9 @@ export const ProductCard = ({
         href={getProductUrl(product.id)}
         className="overflow-hidden w-full aspect-square relative bg-gray-50 flex items-center justify-center"
       >
-        {product.imageUrl ? (
+        {hasImage ? (
           <img
-            src={
-              product.imageUrl.startsWith("http")
-                ? product.imageUrl
-                : product.imageUrl.startsWith("/uploads/")
-                  ? product.imageUrl
-                  : `/uploads/${product.imageUrl}`
-            }
+            src={displayImageUrl}
             alt={product.name}
             className={`w-full h-full object-cover transform transition-transform duration-500 
               ${isHovered ? "scale-110" : "scale-100"}`}

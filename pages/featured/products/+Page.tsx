@@ -18,6 +18,7 @@ interface Product {
   price: number | string;
   stock: number;
   imageUrl: string | null;
+  images?: { url: string; isPrimary?: boolean }[];
   available: boolean;
   categoryId: string;
   categoryName: string | null;
@@ -152,13 +153,17 @@ const Page = () => {
                   id: product.id,
                   name: product.name,
                   price: product.price,
-                  imageUrl: product.imageUrl?.startsWith("http")
-                    ? product.imageUrl
-                    : product.imageUrl?.startsWith("/uploads/")
-                      ? product.imageUrl
-                      : product.imageUrl
-                        ? `/uploads/${product.imageUrl}`
-                        : null,
+                  images: product.images,
+                  imageUrl:
+                    !product.images?.length && product.imageUrl
+                      ? product.imageUrl?.startsWith("http")
+                        ? product.imageUrl
+                        : product.imageUrl?.startsWith("/uploads/")
+                          ? product.imageUrl
+                          : product.imageUrl
+                            ? `/uploads/${product.imageUrl}`
+                            : null
+                      : null,
                   available: product.available,
                   categoryName: product.categoryName,
                   vendorId: product.vendorId,
