@@ -112,7 +112,7 @@ export default function Page() {
         <div className='absolute inset-0 bg-gradient-to-r from-black/70 to-transparent z-[9]'></div>
         <div
           className='absolute inset-0 bg-cover bg-center'
-          style={{ backgroundImage: "url(/assets/men-section.webp)" }}
+          style={{ backgroundImage: "url(/assets/landing.webp)" }}
           role='img'
           aria-label='Fashion collection banner image'></div>
 
@@ -281,7 +281,7 @@ export default function Page() {
               threshold={0.2}>
               <div className='relative rounded-xl overflow-hidden'>
                 <img
-                  src='/assets/men-section.webp'
+                  src='/assets/story.webp'
                   alt='About Lebsy - Our fashion story'
                   className='w-full h-auto rounded-xl'
                 />
