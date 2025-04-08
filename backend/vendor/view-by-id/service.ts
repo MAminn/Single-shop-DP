@@ -73,7 +73,6 @@ export const viewVendorById = (input: z.infer<typeof viewVendorByIdSchema>) =>
   Effect.gen(function* ($) {
     return yield* $(
       query(async (db) => {
-        console.log("Fetching vendor by ID:", input.vendorId);
 
         // First check if the vendor exists
         const vendorResult = await db
@@ -106,13 +105,6 @@ export const viewVendorById = (input: z.infer<typeof viewVendorByIdSchema>) =>
         const vendorData = vendorResult[0] || null;
 
         if (vendorData) {
-          console.log(
-            "Vendor found:",
-            vendorData.name,
-            "Status:",
-            vendorData.status
-          );
-          console.log("Product count:", productCountResult[0]?.count || 0);
 
           // Ensure socialLinks is always a properly typed array
           const typedSocialLinks: Array<{ platform: string; url: string }> =
@@ -141,7 +133,6 @@ export const viewVendorById = (input: z.infer<typeof viewVendorByIdSchema>) =>
           };
         }
 
-        console.log("No vendor found with ID:", input.vendorId);
         return null;
       })
     );

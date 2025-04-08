@@ -57,7 +57,6 @@ const Sorting: React.FC<SortingProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   const { toast } = useToast();
 
-  console.log("Sorting component props:", { categoryId, vendorId });
 
   useEffect(() => {
     setIsLoading(true);
@@ -65,7 +64,6 @@ const Sorting: React.FC<SortingProps> = ({
 
     if (categoryId) {
       // Fetch by category
-      console.log("Fetching by category:", categoryId);
       trpc.product.search
         .query({
           categoryIds: [categoryId],
@@ -73,7 +71,6 @@ const Sorting: React.FC<SortingProps> = ({
           includeOutOfStock: true,
         })
         .then((res) => {
-          console.log("Category products response:", res);
           if (res.success && res.result) {
             setProducts(
               res.result.items.map((item) => ({
@@ -112,7 +109,6 @@ const Sorting: React.FC<SortingProps> = ({
         });
     } else if (vendorId) {
       // Fetch by vendor
-      console.log("Fetching by vendor ID:", vendorId, typeof vendorId);
 
       // Ensure vendorId is valid
       if (typeof vendorId !== "string" || !vendorId) {
@@ -133,11 +129,7 @@ const Sorting: React.FC<SortingProps> = ({
           includeOutOfStock: true,
         })
         .then((res) => {
-          console.log("Vendor products response:", res);
           if (res.success && res.result) {
-            console.log(
-              `Found ${res.result.items.length} products for vendor ${vendorId}`
-            );
             setProducts(
               res.result.items.map((item) => ({
                 id: item.id,
@@ -175,14 +167,12 @@ const Sorting: React.FC<SortingProps> = ({
         });
     } else {
       // Fetch all products if no categoryId or vendorId
-      console.log("Fetching all products");
       trpc.product.search
         .query({
           limit: 100,
           includeOutOfStock: true,
         })
         .then((res) => {
-          console.log("All products response:", res);
           if (res.success && res.result) {
             setProducts(
               res.result.items.map((item) => ({

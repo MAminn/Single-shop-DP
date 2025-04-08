@@ -8,14 +8,13 @@ import type { Pool } from "pg";
  * It should be run manually when migrations fail due to "type already exists" errors
  */
 async function fixEnumTypes() {
-  console.log("Starting enum type fix...");
 
   const dbInstance = db();
 
   try {
     // Test connection
     await dbInstance.execute(sql`SELECT 1 as connection_test`);
-    console.log("Database connection successful");
+
 
     // Get a list of all enum types in the database
     const enumTypes = await dbInstance.execute(sql`
@@ -24,8 +23,6 @@ async function fixEnumTypes() {
       JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
       WHERE t.typtype = 'e' AND n.nspname = 'public'
     `);
-
-    console.log("Found enum types:", enumTypes);
 
     // Safely drop and recreate problematic enum types
     // This approach requires manually adding the enum types that need fixing
@@ -56,22 +53,17 @@ async function fixEnumTypes() {
 
           // Check if the array has any items
           if (Array.isArray(usages) && usages.length > 0) {
-            console.log(`Enum ${enumName} is in use by tables:`, usages);
-            console.log(`Skipping ${enumName} as it's currently in use`);
             continue;
           }
 
           // Drop the enum if it exists and isn't in use
-          console.log(`Dropping enum type: ${enumName}`);
           await tx.execute(sql.raw(`DROP TYPE IF EXISTS "${enumName}"`));
-          console.log(`Successfully dropped enum type: ${enumName}`);
         } catch (error) {
           console.error(`Error processing enum ${enumName}:`, error);
         }
       }
     });
 
-    console.log("Enum type fix completed. You can now run migrations again.");
     return true;
   } catch (error) {
     console.error("Error fixing enum types:", error);
@@ -95,7 +87,6 @@ if (process.argv[1]?.includes("fix-enum-types")) {
   fixEnumTypes()
     .then((success) => {
       if (success) {
-        console.log("Enum type fix completed successfully");
         process.exit(0);
       } else {
         console.error("Enum type fix failed");

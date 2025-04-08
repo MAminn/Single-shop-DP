@@ -80,13 +80,7 @@ export default function VendorForm({
       logoId: values.logoId || uploadedLogoId || undefined,
     };
 
-    // console.log("Form submitted with values:", {
-    //   id: cleanedValues.id,
-    //   name: cleanedValues.name,
-    //   hasEmail: !!cleanedValues.email,
-    //   hasPassword: !!cleanedValues.password,
-    //   email: cleanedValues.email,
-    // });
+    
 
     await onSubmit(cleanedValues);
     setSubmitting(false);

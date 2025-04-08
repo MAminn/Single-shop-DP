@@ -48,16 +48,6 @@ export function RouteDebugger({
           )}
         </div>
       )}
-
-      <button
-        className="mt-2 bg-red-500 text-white px-2 py-1 rounded text-xs"
-        onClick={() => {
-          console.log("Page Context:", ctx);
-        }}
-        type="button"
-      >
-        Log Context to Console
-      </button>
     </div>
   );
 }

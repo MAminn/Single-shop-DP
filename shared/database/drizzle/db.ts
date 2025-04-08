@@ -11,18 +11,15 @@ export function db() {
     throw new Error("DATABASE_URL is not set");
   }
 
-  // Log a sanitized version of the connection string for debugging
   const sanitizedUrl = dbUrl.replace(
     /(postgres:\/\/[^:]+):([^@]+)@/,
     "postgres://$1:***@"
   );
-  console.log(`[DB Connection] Connecting to database: ${sanitizedUrl}`);
 
   try {
     const connection = drizzle(dbUrl, {
       schema,
     });
-    console.log("[DB Connection] Database connection created successfully");
     return connection;
   } catch (error) {
     console.error(

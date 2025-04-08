@@ -215,16 +215,12 @@ async function buildServer() {
   // Add a manual migration initialization endpoint
   instance.get("/api/debug/init-migrations", async (request, reply) => {
     try {
-      console.log(
-        "[Manual Migration] Starting manual migration initialization"
-      );
+      
 
       // First test the connection
       await request.db.execute("SELECT 1 as test");
-      console.log("[Manual Migration] Database connection successful");
 
       // Create the migration table
-      console.log("[Manual Migration] Creating migration table");
       await request.db.execute(`
         CREATE TABLE IF NOT EXISTS "__drizzle_migrations" (
           id SERIAL PRIMARY KEY,
@@ -232,7 +228,6 @@ async function buildServer() {
           created_at timestamp with time zone DEFAULT now()
         )
       `);
-      console.log("[Manual Migration] Migration table created");
 
       // Check if we have migrations in the table
       const migrationCheck = await request.db.execute(`
@@ -244,14 +239,12 @@ async function buildServer() {
           ? Number(migrationCheck[0].count)
           : 0;
 
-      console.log(`[Manual Migration] Found ${count} existing migrations`);
 
       if (count === 0) {
         // Find the first migration file
         const fs = await import("node:fs");
         const path = await import("node:path");
 
-        console.log("[Manual Migration] Looking for migration files");
         const { fileURLToPath } = await import("node:url");
         const __filename = fileURLToPath(import.meta.url);
         const __dirname = path.dirname(__filename);
@@ -263,55 +256,36 @@ async function buildServer() {
           "migrations"
         );
 
-        console.log(
-          `[Manual Migration] Checking migrations folder: ${migrationsFolder}`
-        );
 
         if (fs.existsSync(migrationsFolder)) {
           const files = fs.readdirSync(migrationsFolder);
-          console.log(
-            `[Manual Migration] Found ${files.length} files in migrations folder`
-          );
 
           // Filter SQL files that aren't the safety file
           const sqlFiles = files.filter(
             (file) => file.endsWith(".sql") && !file.includes("safety")
           );
 
-          console.log(
-            `[Manual Migration] Found ${sqlFiles.length} SQL migration files`
-          );
 
           if (sqlFiles.length > 0) {
             // Sort the files
             sqlFiles.sort();
-            console.log(
-              `[Manual Migration] Sorted migration files: ${sqlFiles.join(", ")}`
-            );
+            
 
             // Mark the first migration as applied
             const firstMigration = sqlFiles[0];
             if (firstMigration) {
               const migrationName = firstMigration.replace(".sql", "");
 
-              console.log(
-                `[Manual Migration] Marking first migration as applied: ${migrationName}`
-              );
+              
               await request.db.execute(`
                 INSERT INTO "__drizzle_migrations" (hash)
                 VALUES ('${migrationName}')
                 ON CONFLICT DO NOTHING
               `);
 
-              console.log(
-                `[Manual Migration] Successfully marked migration ${migrationName} as applied`
-              );
+              
             }
           }
-        } else {
-          console.log(
-            `[Manual Migration] Migrations folder not found at: ${migrationsFolder}`
-          );
         }
       }
 

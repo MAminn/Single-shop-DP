@@ -132,7 +132,6 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
 
       try {
         setLoading(true);
-        console.log("Fetching product details for ID:", productId);
 
         // Get product details by searching with productId
         const productsResult = await trpc.product.search.query({
@@ -154,8 +153,6 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
           return;
         }
 
-        console.log("Found product in search results:", productItem);
-        console.log("Product images:", productItem.images);
 
         // Get product variants
         const variantsResult = await trpc.product.view.query({
@@ -180,11 +177,6 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
 
         // First check if we have the new images array with multiple images
         if (productItem.images && productItem.images.length > 0) {
-          console.log(
-            "Using images array with",
-            productItem.images.length,
-            "images"
-          );
           productImages = productItem.images.map((img) => ({
             url: img.url.startsWith("/uploads/")
               ? img.url
@@ -193,7 +185,6 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
         }
         // Fall back to the legacy single imageUrl if no images array
         else if (productItem.imageUrl) {
-          console.log("Falling back to imageUrl:", productItem.imageUrl);
           productImages = [
             {
               url: productItem.imageUrl.startsWith("/uploads/")
@@ -203,7 +194,6 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
           ];
         }
 
-        console.log("Final processed images:", productImages);
 
         setProduct({
           ...productItem,

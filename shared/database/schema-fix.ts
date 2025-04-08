@@ -14,18 +14,15 @@ const log = {
  * It safely adds missing objects if they don't exist
  */
 export async function fixDatabaseSchema() {
-  log.info("Starting database schema repair...");
 
   try {
     const dbInstance = db();
-    log.info("Database connection established");
 
     // Test connection
     await dbInstance.execute(sql`SELECT 1 as connection_test`);
-    log.info("Database connection successful");
+
 
     // ========== Fix migrations table if needed ==========
-    log.info("Creating migrations table if it doesn't exist...");
     await dbInstance.execute(sql`
       CREATE TABLE IF NOT EXISTS "__drizzle_migrations" (
         id SERIAL PRIMARY KEY,
@@ -35,7 +32,6 @@ export async function fixDatabaseSchema() {
     `);
 
     // Check if we have duplicate migrations
-    log.info("Checking for duplicate migrations...");
     const duplicates = await dbInstance.execute(sql`
       SELECT hash, COUNT(*) as count
       FROM "__drizzle_migrations"
@@ -44,9 +40,6 @@ export async function fixDatabaseSchema() {
     `);
 
     if (Array.isArray(duplicates) && duplicates.length > 0) {
-      log.info(
-        `Found ${duplicates.length} duplicate migrations, cleaning up...`
-      );
 
       for (const dup of duplicates) {
         if (
@@ -56,7 +49,6 @@ export async function fixDatabaseSchema() {
           typeof dup.hash === "string"
         ) {
           const hash = dup.hash;
-          log.info(`Removing duplicate entries for migration: ${hash}`);
 
           // Keep only the oldest entry for each migration
           await dbInstance.execute(sql`
@@ -73,14 +65,10 @@ export async function fixDatabaseSchema() {
           `);
         }
       }
-    } else {
-      log.info("No duplicate migrations found");
     }
 
-    log.info("Database schema repair completed successfully");
     return true;
   } catch (error) {
-    log.error("Error during schema repair:", error);
     return false;
   }
 }
@@ -90,15 +78,13 @@ if (process.argv[1]?.includes("schema-fix")) {
   fixDatabaseSchema()
     .then((success) => {
       if (success) {
-        log.info("Schema repair completed successfully");
         process.exit(0);
       } else {
-        log.error("Schema repair failed");
         process.exit(1);
       }
     })
     .catch((err) => {
-      log.error("Unhandled error during schema repair:", err);
+      console.error("Unhandled error during schema repair:", err);
       process.exit(1);
     });
 }

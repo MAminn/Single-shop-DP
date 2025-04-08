@@ -513,13 +513,7 @@ function EditVendorForm({
       return;
     }
 
-    console.log("Submitting vendor edit with values:", {
-      id: values.id,
-      name: values.name,
-      hasEmail: !!values.email,
-      hasPassword: !!values.password,
-      email: values.email ? values.email : undefined,
-    });
+    
 
     const res = await trpc.vendor.edit.mutate({
       id: values.id,
@@ -531,8 +525,6 @@ function EditVendorForm({
       email: values.email,
       password: values.password,
     });
-
-    console.log("Vendor edit result:", res);
 
     if (!res.success) {
       toast.error(res.error);

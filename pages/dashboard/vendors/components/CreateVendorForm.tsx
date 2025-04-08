@@ -103,7 +103,6 @@ export function CreateVendorForm({ onSuccess }: { onSuccess: () => void }) {
         values.vendor.logoId = uploadedLogoId;
       }
 
-      console.log("Creating vendor with values:", values);
 
       // First register the vendor
       const result = await trpc.vendor.register.mutate(values);
@@ -134,7 +133,6 @@ export function CreateVendorForm({ onSuccess }: { onSuccess: () => void }) {
 
       onSuccess();
     } catch (error) {
-      console.error("Error creating vendor:", error);
       toast.error("An error occurred while creating the vendor");
     } finally {
       setSubmitting(false);

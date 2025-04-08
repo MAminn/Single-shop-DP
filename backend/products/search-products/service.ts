@@ -23,7 +23,6 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
   Effect.gen(function* ($) {
     return yield* $(
       query(async (db) => {
-        console.log("Searching products with params:", input);
 
         // Build count query first
         const countQuery = db
@@ -96,9 +95,6 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
           productsQuery,
         ]);
 
-        console.log(
-          `Found ${items.length} products out of ${totalCount[0]?.count || 0} total`
-        );
 
         // Fetch additional product images for all products
         const productIds = items.map((item) => item.id);
