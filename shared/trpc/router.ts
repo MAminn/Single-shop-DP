@@ -3,6 +3,7 @@ import { logoutProcedure } from "#root/backend/auth/logout/trpc.js";
 import { meProcedure } from "#root/backend/auth/me/trpc.js";
 import { registerProcedure } from "#root/backend/auth/register/trpc.js";
 import { categoriesRouter } from "#root/backend/categories/trpc";
+import { fileRouter } from "#root/backend/file/trpc";
 import { orderRouter } from "#root/backend/orders/trpc";
 import { productRouter } from "#root/backend/products/trpc";
 import { vendorRouter } from "#root/backend/vendor/trpc";
@@ -24,6 +25,7 @@ export const appRouter = router({
   category: categoriesRouter,
   product: productRouter,
   order: orderRouter,
+  file: fileRouter,
 });
 
 export type AppRouter = typeof appRouter;

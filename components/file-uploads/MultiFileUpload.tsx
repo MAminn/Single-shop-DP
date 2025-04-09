@@ -49,33 +49,41 @@ export const MultiFileUploadInput = ({
           return;
         }
 
-        // Convert to Uint8Array which is what the server expects
-        const buffer = new Uint8Array(event.target.result as ArrayBuffer);
+        try {
+          // Convert to Uint8Array which is what the server expects
+          const buffer = new Uint8Array(event.target.result as ArrayBuffer);
 
-        const result = await trpc.file.upload.mutate({
-          file: {
-            name: file.name,
-            type: file.type,
-            buffer: buffer,
-          },
-        });
+          const result = await trpc.file.upload.mutate({
+            file: {
+              name: file.name,
+              type: file.type,
+              buffer: buffer,
+            },
+          });
 
-        if (result.success) {
-          const newFile = {
-            id: result.result.id,
-            diskname: result.result.diskname,
-            url: `/uploads/${result.result.diskname}`,
-            isPrimary: value.length === 0, // First uploaded image is primary by default
-          };
+          if (result.success && result.result) {
+            const newFile = {
+              id: result.result.id,
+              diskname: result.result.diskname,
+              url: `/uploads/${result.result.diskname}`,
+              isPrimary: value.length === 0, // First uploaded image is primary by default
+            };
 
-          // Add the new file to the list
-          const newFiles = [...value, newFile];
-          onChange(newFiles);
-          toast.success("File uploaded successfully");
-        } else {
-          toast.error(result.error || "Failed to upload file");
+            // Add the new file to the list
+            const newFiles = [...value, newFile];
+            onChange(newFiles);
+            toast.success("File uploaded successfully");
+          } else {
+            toast.error(
+              result.success === false ? result.error : "Failed to upload file"
+            );
+          }
+        } catch (error) {
+          console.error("tRPC mutation error:", error);
+          toast.error("Failed to upload file. Server error.");
+        } finally {
+          setUploading(false);
         }
-        setUploading(false);
       };
 
       reader.onerror = () => {
