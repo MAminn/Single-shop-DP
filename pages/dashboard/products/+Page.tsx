@@ -98,7 +98,7 @@ export default function Products() {
         sortBy,
         vendorId,
         categoryId,
-        limit: 300,
+        limit: 100,
       });
 
       if (!res.success) {
