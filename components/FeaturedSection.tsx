@@ -10,10 +10,12 @@ interface Product {
   name: string;
   price: number | string;
   imageUrl?: string | null;
+  images?: { url: string; isPrimary?: boolean }[];
   available: boolean;
   categoryName?: string | null;
   vendorId: string;
   vendorName: string | null;
+  categories?: { id: string; name: string }[];
 }
 
 interface FeaturedSectionProps {

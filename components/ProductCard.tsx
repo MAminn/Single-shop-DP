@@ -22,6 +22,7 @@ interface Product {
   categoryName?: string | null;
   vendorId: string;
   vendorName: string | null;
+  categories?: { id: string; name: string }[];
 }
 
 interface ProductCardProps {
@@ -150,10 +151,17 @@ export const ProductCard = ({
           </Badge>
         )}
 
-        {product.categoryName && (
+        {/* Display primary category from categories array if available, otherwise fall back to categoryName */}
+        {product.categories && product.categories.length > 0 ? (
           <Badge className="absolute top-2 left-2 bg-accent-lb/90 hover:bg-accent-lb backdrop-blur-sm">
-            {product.categoryName}
+            {product.categories[0]?.name || "Category"}
           </Badge>
+        ) : (
+          product.categoryName && (
+            <Badge className="absolute top-2 left-2 bg-accent-lb/90 hover:bg-accent-lb backdrop-blur-sm">
+              {product.categoryName}
+            </Badge>
+          )
         )}
 
         {/* Quick add button that appears on hover */}

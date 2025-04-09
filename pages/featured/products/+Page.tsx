@@ -24,6 +24,7 @@ interface Product {
   categoryName: string | null;
   vendorId: string;
   vendorName: string | null;
+  categories?: { id: string; name: string }[];
 }
 
 type SortCriteria =
@@ -149,26 +150,7 @@ const Page = () => {
             {sortedProducts.map((product) => (
               <ProductCard
                 key={product.id}
-                product={{
-                  id: product.id,
-                  name: product.name,
-                  price: product.price,
-                  images: product.images,
-                  imageUrl:
-                    !product.images?.length && product.imageUrl
-                      ? product.imageUrl?.startsWith("http")
-                        ? product.imageUrl
-                        : product.imageUrl?.startsWith("/uploads/")
-                          ? product.imageUrl
-                          : product.imageUrl
-                            ? `/uploads/${product.imageUrl}`
-                            : null
-                      : null,
-                  available: product.available,
-                  categoryName: product.categoryName,
-                  vendorId: product.vendorId,
-                  vendorName: product.vendorName,
-                }}
+                product={product}
                 showVendor={true}
               />
             ))}

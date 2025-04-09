@@ -30,6 +30,8 @@ interface SortableProduct {
   sku?: string;
   vendor?: string;
   dateAdded?: string;
+  categories?: { id: string; name: string }[];
+  images?: { url: string; isPrimary?: boolean }[];
 }
 
 interface SortingProps {
@@ -57,7 +59,6 @@ const Sorting: React.FC<SortingProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   const { toast } = useToast();
 
-
   useEffect(() => {
     setIsLoading(true);
     setProducts([]); // Clear previous products on parameters change
@@ -72,6 +73,7 @@ const Sorting: React.FC<SortingProps> = ({
         })
         .then((res) => {
           if (res.success && res.result) {
+            console.log("Category search results:", res.result);
             setProducts(
               res.result.items.map((item) => ({
                 id: item.id,
@@ -86,10 +88,12 @@ const Sorting: React.FC<SortingProps> = ({
                       ? item.imageUrl
                       : `/uploads/${item.imageUrl}`
                   : undefined,
+                images: item.images,
                 vendor: item.vendorName || "",
                 vendorId: item.vendorId || "",
                 vendorName: item.vendorName || "",
                 categoryName: item.categoryName,
+                categories: item.categories,
                 available: item.stock > 0,
               }))
             );
@@ -144,10 +148,12 @@ const Sorting: React.FC<SortingProps> = ({
                       ? item.imageUrl
                       : `/uploads/${item.imageUrl}`
                   : undefined,
+                images: item.images,
                 vendor: item.vendorName || "",
                 vendorId: item.vendorId || "",
                 vendorName: item.vendorName || "",
                 categoryName: item.categoryName,
+                categories: item.categories,
                 available: item.stock > 0,
               }))
             );
@@ -188,10 +194,12 @@ const Sorting: React.FC<SortingProps> = ({
                       ? item.imageUrl
                       : `/uploads/${item.imageUrl}`
                   : undefined,
+                images: item.images,
                 vendor: item.vendorName || "",
                 vendorId: item.vendorId || "",
                 vendorName: item.vendorName || "",
                 categoryName: item.categoryName || "",
+                categories: item.categories,
                 available: item.stock > 0,
               }))
             );
