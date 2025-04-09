@@ -9,6 +9,7 @@ import fp from "fastify-plugin";
 export const fastifyTRPCMiddleware = fp((app) => {
   app.register(fastifyTRPCPlugin, {
     prefix: "/api/trpc",
+    maxBodySize: 100 * 1024 * 1024, // 100MB max request size
     trpcOptions: {
       router: appRouter,
       createContext,

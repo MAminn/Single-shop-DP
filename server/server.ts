@@ -43,6 +43,17 @@ export const instance = Fastify(
   isProduction ? productionFastifyConfig : developmentFastifyConfig
 );
 
+// Configure body size limit for all routes
+instance.addHook("onRoute", (routeOptions) => {
+  if (
+    routeOptions.method === "POST" ||
+    routeOptions.method === "PUT" ||
+    routeOptions.method === "PATCH"
+  ) {
+    routeOptions.bodyLimit = 100 * 1024 * 1024; // 100MB
+  }
+});
+
 async function buildServer() {
   await instance.register(import("@fastify/compress"), {
     global: true,
@@ -52,8 +63,11 @@ async function buildServer() {
 
   await instance.register(import("@fastify/multipart"), {
     limits: {
-      fileSize: 20 * 1024 * 1024,
-      files: 1,
+      fileSize: 30 * 1024 * 1024, // 30MB per file
+      files: 10, // Allow up to 10 files
+      fieldSize: 5 * 1024 * 1024, // 5MB for non-file fields
+      parts: 50, // Allow up to 50 parts in the request
+      headerPairs: 100, // Allow up to 100 header pairs
     },
   });
 
@@ -215,8 +229,6 @@ async function buildServer() {
   // Add a manual migration initialization endpoint
   instance.get("/api/debug/init-migrations", async (request, reply) => {
     try {
-      
-
       // First test the connection
       await request.db.execute("SELECT 1 as test");
 
@@ -239,7 +251,6 @@ async function buildServer() {
           ? Number(migrationCheck[0].count)
           : 0;
 
-
       if (count === 0) {
         // Find the first migration file
         const fs = await import("node:fs");
@@ -256,7 +267,6 @@ async function buildServer() {
           "migrations"
         );
 
-
         if (fs.existsSync(migrationsFolder)) {
           const files = fs.readdirSync(migrationsFolder);
 
@@ -265,25 +275,20 @@ async function buildServer() {
             (file) => file.endsWith(".sql") && !file.includes("safety")
           );
 
-
           if (sqlFiles.length > 0) {
             // Sort the files
             sqlFiles.sort();
-            
 
             // Mark the first migration as applied
             const firstMigration = sqlFiles[0];
             if (firstMigration) {
               const migrationName = firstMigration.replace(".sql", "");
 
-              
               await request.db.execute(`
                 INSERT INTO "__drizzle_migrations" (hash)
                 VALUES ('${migrationName}')
                 ON CONFLICT DO NOTHING
               `);
-
-              
             }
           }
         }

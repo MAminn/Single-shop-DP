@@ -1,3 +1,4 @@
+import { formatCategoryName } from "#root/lib/utils";
 import { query } from "#root/shared/database/drizzle/db";
 import {
   category,
@@ -6,7 +7,7 @@ import {
   vendor,
   productImage,
 } from "#root/shared/database/drizzle/schema";
-import { and, eq, ilike, inArray, or, count, gt, sql } from "drizzle-orm";
+import { and, eq, ilike, inArray, or, count, gt } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 
@@ -23,7 +24,6 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
   Effect.gen(function* ($) {
     return yield* $(
       query(async (db) => {
-
         // Build count query first
         const countQuery = db
           .select({
@@ -95,7 +95,6 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
           productsQuery,
         ]);
 
-
         // Fetch additional product images for all products
         const productIds = items.map((item) => item.id);
 
@@ -124,6 +123,9 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
 
           return {
             ...item,
+            categoryName: item.categoryName
+              ? formatCategoryName(item.categoryName)
+              : null,
             available: item.stock > 0,
             images:
               productImages.length > 0

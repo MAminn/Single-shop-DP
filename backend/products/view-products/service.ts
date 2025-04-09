@@ -1,96 +1,101 @@
+import { formatCategoryName } from "#root/lib/utils";
 import { query } from "#root/shared/database/drizzle/db";
 import {
-	category,
-	file,
-	product,
-	productVariant,
-	vendor,
+  category,
+  file,
+  product,
+  productVariant,
+  vendor,
 } from "#root/shared/database/drizzle/schema";
 import { and, asc, eq, ilike, inArray, or } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 
 export const viewProductsSchema = z.object({
-	limit: z.number().min(1).max(100).optional(),
-	offset: z.number().min(0).optional(),
-	search: z.string().trim().max(255).optional(),
-	sortBy: z.enum(["name", "price", "stock"]).optional(),
-	categoryId: z.string().uuid().optional(),
-	vendorId: z.string().uuid().optional(),
+  limit: z.number().min(1).max(100).optional(),
+  offset: z.number().min(0).optional(),
+  search: z.string().trim().max(255).optional(),
+  sortBy: z.enum(["name", "price", "stock"]).optional(),
+  categoryId: z.string().uuid().optional(),
+  vendorId: z.string().uuid().optional(),
 });
 
 export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
-	Effect.gen(function* ($) {
-		return yield* $(
-			query(async (db) => {
-				return await db.transaction(async (tx) => {
-					const pQuery = tx
-						.select()
-						.from(product)
-						.innerJoin(vendor, eq(product.vendorId, vendor.id))
-						.innerJoin(category, eq(product.categoryId, category.id))
-						.leftJoin(file, eq(product.imageId, file.id))
-						.$dynamic();
+  Effect.gen(function* ($) {
+    return yield* $(
+      query(async (db) => {
+        return await db.transaction(async (tx) => {
+          const pQuery = tx
+            .select()
+            .from(product)
+            .innerJoin(vendor, eq(product.vendorId, vendor.id))
+            .innerJoin(category, eq(product.categoryId, category.id))
+            .leftJoin(file, eq(product.imageId, file.id))
+            .$dynamic();
 
-					pQuery.where(eq(vendor.status, "active"));
-					pQuery.where(eq(category.deleted, false));
+          pQuery.where(eq(vendor.status, "active"));
+          pQuery.where(eq(category.deleted, false));
 
-					if (input.search) {
-						pQuery.where(
-							or(
-								ilike(product.name, `%${input.search}%`),
-								ilike(product.description, `%${input.search}%`),
-								ilike(vendor.name, `%${input.search}%`),
-								ilike(category.name, `%${input.search}%`),
-							),
-						);
-					}
+          if (input.search) {
+            pQuery.where(
+              or(
+                ilike(product.name, `%${input.search}%`),
+                ilike(product.description, `%${input.search}%`),
+                ilike(vendor.name, `%${input.search}%`),
+                ilike(category.name, `%${input.search}%`)
+              )
+            );
+          }
 
-					if (input.vendorId) {
-						pQuery.where(eq(product.vendorId, input.vendorId));
-					}
+          if (input.vendorId) {
+            pQuery.where(eq(product.vendorId, input.vendorId));
+          }
 
-					if (input.categoryId) {
-						pQuery.where(eq(product.categoryId, input.categoryId));
-					}
+          if (input.categoryId) {
+            pQuery.where(eq(product.categoryId, input.categoryId));
+          }
 
-					if (input.sortBy) {
-						pQuery.orderBy(
-							asc(
-								input.sortBy === "name"
-									? product.name
-									: input.sortBy === "price"
-										? product.price
-										: product.stock,
-							),
-						);
-					}
+          if (input.sortBy) {
+            pQuery.orderBy(
+              asc(
+                input.sortBy === "name"
+                  ? product.name
+                  : input.sortBy === "price"
+                    ? product.price
+                    : product.stock
+              )
+            );
+          }
 
-					const products = await pQuery
-						.limit(input.limit ?? 10)
-						.offset(input.offset ?? 0)
-						.execute();
+          const products = await pQuery
+            .limit(input.limit ?? 10)
+            .offset(input.offset ?? 0)
+            .execute();
 
-					const variants = await tx
-						.select()
-						.from(productVariant)
-						.where(
-							inArray(
-								productVariant.productId,
-								products.map(({ product }) => product.id),
-							),
-						)
-						.execute();
+          const variants = await tx
+            .select()
+            .from(productVariant)
+            .where(
+              inArray(
+                productVariant.productId,
+                products.map(({ product }) => product.id)
+              )
+            )
+            .execute();
 
-					return products.map((product) => {
-						return {
-							...product,
-							variants: variants.filter(
-								(variant) => variant.productId === product.product.id,
-							),
-						};
-					});
-				});
-			}),
-		);
-	});
+          return products.map((product) => {
+            return {
+              ...product,
+              category: {
+                ...product.category,
+                name: formatCategoryName(product.category.name),
+              },
+              variants: variants.filter(
+                (variant) => variant.productId === product.product.id
+              ),
+            };
+          });
+        });
+      })
+    );
+  });

@@ -4,7 +4,7 @@ import Magnet from "#root/components/Magnet.jsx";
 import { useData } from "vike-react/useData";
 import type { Data } from "./+data";
 import { ErrorSection } from "#root/components/error-section";
-
+import { formatCategoryName } from "#root/lib/utils";
 const Page: React.FC = () => {
   const fetchData = useData<Data>();
 
@@ -38,7 +38,7 @@ const Page: React.FC = () => {
                   className="max-w-[200px]  xl:max-w-[300px] object-center object-cover"
                 />
                 <h1 className="text-xl md:text-2xl text-center font-semibold mb-6 mt-10">
-                  {card.title}
+                  {formatCategoryName(card.title)}
                 </h1>
               </div>
             </Magnet>
