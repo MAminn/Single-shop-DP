@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import { Link } from "./Link";
 import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
-
+import { formatCategoryName } from "#root/lib/utils";
 export function AppSidebar() {
   const [isMenOpen, setIsMenOpen] = useState(false);
   const [isWomenOpen, setIsWomenOpen] = useState(false);
@@ -67,7 +67,7 @@ export function AppSidebar() {
               {menCategories.map((category) => (
                 <Link key={category.label} href={category.to}>
                   <Button variant="ghost" className="w-full justify-start">
-                    {category.label}
+                    {formatCategoryName(category.label)}
                   </Button>
                 </Link>
               ))}
@@ -90,7 +90,7 @@ export function AppSidebar() {
               {womenCategories.map((category) => (
                 <Link key={category.label} href={category.to}>
                   <Button variant="ghost" className="w-full justify-start">
-                    {category.label}
+                    {formatCategoryName(category.label)}
                   </Button>
                 </Link>
               ))}
