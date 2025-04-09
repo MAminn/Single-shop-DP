@@ -8,6 +8,7 @@ import {
   text,
   timestamp,
   uuid,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { v7 } from "uuid";
 
@@ -410,3 +411,44 @@ export const productImage = pgTable("product_image", {
     mode: "date",
   }),
 });
+
+// Junction table for many-to-many relationship between products and categories
+export const productCategory = pgTable(
+  "product_category",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .$defaultFn(() => v7()),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => product.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => category.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    isPrimary: boolean("is_primary").notNull().default(false),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+      mode: "date",
+    })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
+  },
+  (table) => {
+    return {
+      productCategoryUnique: uniqueIndex("product_category_unique").on(
+        table.productId,
+        table.categoryId
+      ),
+    };
+  }
+);

@@ -34,6 +34,7 @@ import { FileUploadInput } from "#root/components/file-uploads/FileUpload";
 import { MultiFileUploadInput } from "#root/components/file-uploads/MultiFileUpload";
 import { TagsInput } from "#root/components/ui/tags-input";
 import { Label } from "#root/components/ui/label";
+import { Badge } from "#root/components/ui/badge";
 
 // Define the interface to match our component
 export interface FileMetadata {
@@ -49,6 +50,7 @@ export function ProductForm({
   vendors = [],
   vendorId,
   onSuccess,
+  isLoading = false,
 }: {
   initialValues?: Partial<{
     id: string;
@@ -59,6 +61,7 @@ export function ProductForm({
     imageId: string;
     productImages: FileMetadata[];
     categoryId: string;
+    categoryIds: string[];
     vendorId: string;
     variants: { name: string; values: string[] }[];
   }>;
@@ -66,6 +69,7 @@ export function ProductForm({
   vendors?: { id: string; name: string }[];
   vendorId?: string;
   onSuccess?: () => void;
+  isLoading?: boolean;
 }) {
   const formSchema = z.object({
     name: z.string().min(1, "Product name is required"),
@@ -84,7 +88,10 @@ export function ProductForm({
       )
       .min(1, "At least one product image is required")
       .default([]),
-    categoryId: z.string().min(1, "Category is required"),
+    categoryId: z.string().min(1, "Primary category is required"),
+    categoryIds: z
+      .array(z.string())
+      .min(1, "At least one category is required"),
     vendorId: z.string(),
     variants: z
       .array(
@@ -111,12 +118,28 @@ export function ProductForm({
             },
           ]
         : []),
+    // Ensure variants are properly initialized
+    variants: initialValues?.variants || [],
+    // Initialize categoryIds with the initial categoryId if available
+    categoryIds:
+      initialValues?.categoryIds ||
+      (initialValues?.categoryId ? [initialValues.categoryId] : []),
   };
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
+
+  // Watch categoryIds to update categoryId (primary category)
+  const categoryIds = form.watch("categoryIds");
+
+  // Update the primary categoryId whenever categoryIds changes
+  useEffect(() => {
+    if (categoryIds && categoryIds.length > 0 && categoryIds[0]) {
+      form.setValue("categoryId", categoryIds[0], { shouldValidate: true });
+    }
+  }, [categoryIds, form]);
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -153,12 +176,13 @@ export function ProductForm({
 
       let result: { success: boolean; error?: string };
       if (initialValues?.id) {
-        // Update existing product
-        result = await trpc.product.edit.mutate({
+        // Update existing product - only include variants and images if they've been modified
+        // This prevents clearing them out when editing other fields
+        const payload = {
           id: initialValues.id,
           ...values,
-          imageId: values.imageId,
-        });
+        };
+        result = await trpc.product.edit.mutate(payload);
       } else {
         // Create new product
         result = await trpc.product.create.mutate({
@@ -189,240 +213,200 @@ export function ProductForm({
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(handleFormSubmit)}
-        className="space-y-4"
-      >
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Awesome Product" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="This product is awesome because..."
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Price</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="99.99"
-                    {...field}
-                    onChange={(e) => {
-                      field.onChange(e.target.valueAsNumber);
-                    }}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="stock"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Stock</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="100"
-                    {...field}
-                    onChange={(e) => {
-                      field.onChange(e.target.valueAsNumber);
-                    }}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      {isLoading ? (
+        <div className="flex justify-center items-center p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          <p className="ml-3">Loading product data...</p>
         </div>
-
-        <FormField
-          control={form.control}
-          name="productImages"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Product Images</FormLabel>
-              <FormControl>
-                <MultiFileUploadInput
-                  name="productImages"
-                  id="productImages"
-                  value={field.value}
-                  onChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="categoryId"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Category</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      // biome-ignore lint/a11y/useSemanticElements: <explanation>
-                      role="combobox"
-                      className={cn(
-                        "w-[200px] justify-between",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value
-                        ? categories.find((c) => c.id === field.value)?.name
-                        : "Select category"}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-[200px] p-0">
-                  <Command>
-                    <CommandInput placeholder="Search language..." />
-                    <CommandList>
-                      <CommandEmpty>No categories found.</CommandEmpty>
-                      <CommandGroup>
-                        {categories.map((c) => (
-                          <CommandItem
-                            value={c.id}
-                            key={c.id}
-                            onSelect={() => {
-                              form.setValue("categoryId", c.id);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                c.id === field.value
-                                  ? "opacity-100"
-                                  : "opacity-0"
-                              )}
-                            />
-                            {c.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          name="variants"
-          control={form.control}
-          render={({ field }) => {
-            return (
-              <FormItem>
-                <FormLabel className="text-lg">Variants</FormLabel>
-                <FormControl>
-                  <VariantsInput
-                    value={field.value}
-                    onChange={(v) => field.onChange(v)}
-                  />
-                </FormControl>
-              </FormItem>
-            );
-          }}
-        />
-
-        {vendorId && (
-          <input
-            type="hidden"
-            {...form.register("vendorId")}
-            value={vendorId}
-          />
-        )}
-        {!vendorId && (
+      ) : (
+        <form
+          onSubmit={form.handleSubmit(handleFormSubmit)}
+          className="space-y-4"
+        >
           <FormField
             control={form.control}
-            name="vendorId"
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Awesome Product" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="This product is awesome because..."
+                    className="resize-none"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Price</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="99.99"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e.target.valueAsNumber);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="stock"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Stock</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="100"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e.target.valueAsNumber);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="productImages"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Product Images</FormLabel>
+                <FormControl>
+                  <MultiFileUploadInput
+                    name="productImages"
+                    id="productImages"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="categoryIds"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Vendor</FormLabel>
+                <FormLabel>Categories (select multiple)</FormLabel>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {field.value.map((categoryId) => {
+                    const category = categories.find(
+                      (c) => c.id === categoryId
+                    );
+                    return category ? (
+                      <Badge key={categoryId} className="p-2">
+                        {category.name}
+                        <button
+                          type="button"
+                          className="ml-1"
+                          onClick={() => {
+                            const newCategoryIds = field.value.filter(
+                              (id) => id !== categoryId
+                            );
+                            field.onChange(newCategoryIds);
+                          }}
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
+                        type="button"
                         variant="outline"
-                        // biome-ignore lint/a11y/useSemanticElements: <explanation>
-                        role="combobox"
                         className={cn(
-                          "w-[200px] justify-between",
-                          !field.value && "text-muted-foreground"
+                          "w-full justify-between",
+                          field.value.length === 0 && "text-muted-foreground"
                         )}
                       >
-                        {field.value
-                          ? vendors.find((v) => v.id === field.value)?.name
-                          : "Select vendor"}
+                        {field.value.length === 0
+                          ? "Select categories"
+                          : `${field.value.length} ${
+                              field.value.length === 1
+                                ? "category"
+                                : "categories"
+                            } selected`}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[200px] p-0">
+                  <PopoverContent className="w-full p-0">
                     <Command>
-                      <CommandInput placeholder="Search language..." />
+                      <CommandInput placeholder="Search categories..." />
                       <CommandList>
-                        <CommandEmpty>No language found.</CommandEmpty>
+                        <CommandEmpty>No categories found.</CommandEmpty>
                         <CommandGroup>
-                          {vendors.map((v) => (
+                          {categories.map((c) => (
                             <CommandItem
-                              value={v.name}
-                              key={v.id}
+                              key={c.id}
                               onSelect={() => {
-                                form.setValue("vendorId", v.id);
+                                const isSelected = field.value.includes(c.id);
+                                let newCategoryIds = [...field.value];
+
+                                if (isSelected) {
+                                  // Remove if already selected
+                                  newCategoryIds = newCategoryIds.filter(
+                                    (id) => id !== c.id
+                                  );
+                                } else {
+                                  // Add if not selected
+                                  newCategoryIds.push(c.id);
+                                }
+
+                                field.onChange(newCategoryIds);
                               }}
                             >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  v.id === field.value
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                              {v.name}
+                              <div className="flex items-center">
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    field.value.includes(c.id)
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                                {c.name}
+                              </div>
                             </CommandItem>
                           ))}
                         </CommandGroup>
@@ -430,16 +414,106 @@ export function ProductForm({
                     </Command>
                   </PopoverContent>
                 </Popover>
-
                 <FormMessage />
               </FormItem>
             )}
           />
-        )}
-        <Button type="submit" size="lg" className="w-full">
-          Submit
-        </Button>
-      </form>
+
+          {/* Hidden field for storing the primary categoryId */}
+          <input type="hidden" {...form.register("categoryId")} />
+
+          <FormField
+            name="variants"
+            control={form.control}
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel className="text-lg">Variants</FormLabel>
+                  <FormControl>
+                    <VariantsInput
+                      value={field.value}
+                      onChange={(v) => field.onChange(v)}
+                    />
+                  </FormControl>
+                </FormItem>
+              );
+            }}
+          />
+
+          {vendorId && (
+            <input
+              type="hidden"
+              {...form.register("vendorId")}
+              value={vendorId}
+            />
+          )}
+          {!vendorId && (
+            <FormField
+              control={form.control}
+              name="vendorId"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Vendor</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          // biome-ignore lint/a11y/useSemanticElements: <explanation>
+                          role="combobox"
+                          className={cn(
+                            "w-[200px] justify-between",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value
+                            ? vendors.find((v) => v.id === field.value)?.name
+                            : "Select vendor"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[200px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Search language..." />
+                        <CommandList>
+                          <CommandEmpty>No language found.</CommandEmpty>
+                          <CommandGroup>
+                            {vendors.map((v) => (
+                              <CommandItem
+                                value={v.name}
+                                key={v.id}
+                                onSelect={() => {
+                                  form.setValue("vendorId", v.id);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    v.id === field.value
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                                {v.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+          <Button type="submit" size="lg" className="w-full">
+            Submit
+          </Button>
+        </form>
+      )}
     </Form>
   );
 }

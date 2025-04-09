@@ -43,6 +43,7 @@ type ProductFormSchema = {
   imageId: string;
   productImages?: FileMetadata[];
   categoryId: string;
+  categoryIds: string[];
   vendorId: string;
   variants?: { name: string; values: string[] }[];
 };
@@ -56,6 +57,14 @@ interface Product {
   isOutOfStock: boolean;
 }
 
+// Type definition for product image from API
+interface ProductImageResponse {
+  productId: string;
+  fileId: string;
+  isPrimary: boolean;
+  diskname: string;
+}
+
 export default function Products() {
   const pageContext = usePageContext();
   const session = pageContext.clientSession;
@@ -66,6 +75,8 @@ export default function Products() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [productImages, setProductImages] = useState<FileMetadata[]>([]);
+  const [isLoadingImages, setIsLoadingImages] = useState(false);
   const [newProduct, setNewProduct] = useState<Product>({
     id: 0,
     name: "",
@@ -76,6 +87,9 @@ export default function Products() {
   const [search, setSearch] = useState("");
   const [searchQueryValue] = useDebounce(search, 1000);
   const [sortBy, setSortBy] = useState<"name" | "price" | "stock">("name");
+  const [selectedProductCategories, setSelectedProductCategories] = useState<
+    string[]
+  >([]);
 
   if (!fetchData.success) {
     return <ErrorSection error={fetchData.error} />;
@@ -119,15 +133,99 @@ export default function Products() {
     fetchProducts();
   }, [searchQueryValue, sortBy, initialData, lastFetchDate, categoryId]);
 
+  // Fetch product images when a product is selected for editing
+  useEffect(() => {
+    if (selectedProduct && isEditModalOpen) {
+      setIsLoadingImages(true);
+
+      // Load categories for this product
+      trpc.product.getCategories
+        .query({ productId: selectedProduct })
+        .then((categoryResult) => {
+          if (categoryResult.success) {
+            // Store category IDs in the selectedProductCategories state
+            const categoryIds = categoryResult.result.map((c) => c.id);
+            setSelectedProductCategories(categoryIds);
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching product categories:", err);
+        });
+
+      // Fetch all product images for this product
+      trpc.product.getProductImages
+        .query({ productId: selectedProduct })
+        .then((result) => {
+          if (result.success && result.result.length > 0) {
+            // Transform the images into the format needed by the form
+            const images = result.result.map((img: ProductImageResponse) => ({
+              id: img.fileId,
+              url: `/uploads/${img.diskname}`,
+              diskname: img.diskname,
+              isPrimary: img.isPrimary,
+            }));
+
+            // Debug log
+            console.log("Loaded product images:", images);
+
+            setProductImages(images);
+          } else {
+            console.log("No product images found or failed to load:", result);
+            // Fallback to just the main image
+            if (selectedProductData?.file) {
+              setProductImages([
+                {
+                  id: selectedProductData.file.id,
+                  url: `/uploads/${selectedProductData.file.diskname}`,
+                  diskname: selectedProductData.file.diskname,
+                  isPrimary: true,
+                },
+              ]);
+            } else {
+              setProductImages([]);
+            }
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching product images:", err);
+          // Fallback to just the main image
+          if (selectedProductData?.file) {
+            setProductImages([
+              {
+                id: selectedProductData.file.id,
+                url: `/uploads/${selectedProductData.file.diskname}`,
+                diskname: selectedProductData.file.diskname,
+                isPrimary: true,
+              },
+            ]);
+          } else {
+            setProductImages([]);
+          }
+        })
+        .finally(() => {
+          setIsLoadingImages(false);
+        });
+    } else {
+      setProductImages([]);
+      setSelectedProductCategories([]);
+    }
+  }, [selectedProduct, isEditModalOpen, selectedProductData]);
+
   const handleAddProduct = async (values: ProductFormSchema) => {
     // Ensure imageId is set - use first product image as imageId if not explicitly provided
+
     if (
       !values.imageId &&
       values.productImages &&
       values.productImages.length > 0
     ) {
       const primaryImage = values.productImages.find((img) => img.isPrimary);
-      values.imageId = primaryImage?.id || values.productImages[0].id;
+      // Ensure we handle the case where productImages[0] might be undefined
+      if (primaryImage?.id) {
+        values.imageId = primaryImage.id;
+      } else if (values.productImages[0]?.id) {
+        values.imageId = values.productImages[0].id;
+      }
     }
 
     const res = await trpc.product.create.mutate(values);
@@ -164,7 +262,12 @@ export default function Products() {
       values.productImages.length > 0
     ) {
       const primaryImage = values.productImages.find((img) => img.isPrimary);
-      values.imageId = primaryImage?.id || values.productImages[0].id;
+      // Ensure we handle the case where productImages[0] might be undefined
+      if (primaryImage?.id) {
+        values.imageId = primaryImage.id;
+      } else if (values.productImages[0]?.id) {
+        values.imageId = values.productImages[0].id;
+      }
     }
 
     const res = await trpc.product.edit.mutate({
@@ -182,37 +285,38 @@ export default function Products() {
   };
 
   return (
-    <Card className='p-6 w-full h-full mx-auto flex-1'>
-      <CardHeader className='flex justify-between items-center'>
-        <div className='flex flex-col justify-center items-center lg:items-start lg:justify-start gap-2'>
+    <Card className="p-6 w-full h-full mx-auto flex-1">
+      <CardHeader className="flex justify-between items-center">
+        <div className="flex flex-col justify-center items-center lg:items-start lg:justify-start gap-2">
           <CardTitle>Products</CardTitle>
-          <CardDescription className='text-center lg:text-left'>
+          <CardDescription className="text-center lg:text-left">
             Manage your product inventory.
           </CardDescription>
         </div>
-        <div className='flex gap-4 flex-wrap justify-center lg:justify-start items-center'>
+        <div className="flex gap-4 flex-wrap justify-center lg:justify-start items-center">
           <Input
-            placeholder='Search...'
+            placeholder="Search..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className='w-40'
+            className="w-40"
           />
           <Tabs
             value={sortBy}
             onValueChange={(value) =>
               setSortBy(value as "name" | "price" | "stock")
-            }>
+            }
+          >
             <TabsList>
-              <TabsTrigger value='name'>Name</TabsTrigger>
-              <TabsTrigger value='price'>Price</TabsTrigger>
-              <TabsTrigger value='stock'>Stock</TabsTrigger>
+              <TabsTrigger value="name">Name</TabsTrigger>
+              <TabsTrigger value="price">Price</TabsTrigger>
+              <TabsTrigger value="stock">Stock</TabsTrigger>
             </TabsList>
           </Tabs>
           <Button onClick={() => setIsAddModalOpen(true)}>Add Product</Button>
         </div>
       </CardHeader>
       <CardContent>
-        <Table className='w-full text-sm mt-4'>
+        <Table className="w-full text-sm mt-4">
           <TableHeader>
             <TableRow>
               <TableHead>Image</TableHead>
@@ -220,7 +324,7 @@ export default function Products() {
               <TableHead>Price</TableHead>
               <TableHead>Stock</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className='text-right'>Actions</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -231,7 +335,7 @@ export default function Products() {
                     <img
                       src={`/uploads/${image.diskname}`}
                       alt={product.name}
-                      className='w-12 h-12 object-cover rounded'
+                      className="w-12 h-12 object-cover rounded"
                     />
                   )}
                 </TableCell>
@@ -240,25 +344,27 @@ export default function Products() {
                 <TableCell>{product.stock} in stock</TableCell>
                 <TableCell>
                   {product.stock === 0 ? (
-                    <span className='text-red-500'>Out of Stock</span>
+                    <span className="text-red-500">Out of Stock</span>
                   ) : (
-                    <span className='text-green-500'>In Stock</span>
+                    <span className="text-green-500">In Stock</span>
                   )}
                 </TableCell>
-                <TableCell className='flex justify-end gap-2'>
+                <TableCell className="flex justify-end gap-2">
                   <Button
-                    size='sm'
-                    variant='outline'
+                    size="sm"
+                    variant="outline"
                     onClick={() => {
                       setSelectedProduct(product.id);
                       setIsEditModalOpen(true);
-                    }}>
+                    }}
+                  >
                     Edit
                   </Button>
                   <Button
-                    size='sm'
-                    variant='destructive'
-                    onClick={() => handleDeleteProduct(product.id)}>
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleDeleteProduct(product.id)}
+                  >
                     Delete
                   </Button>
                 </TableCell>
@@ -269,50 +375,49 @@ export default function Products() {
       </CardContent>
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className=' overflow-y-scroll max-h-screen'>
+        <DialogContent className=" overflow-y-scroll max-h-screen">
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
           </DialogHeader>
-          <ProductForm
-            categories={categories}
-            vendors={vendors}
-            initialValues={
-              selectedProductData
-                ? {
-                    id: selectedProductData.product.id,
-                    categoryId: selectedProductData.product.categoryId,
-                    vendorId: selectedProductData.product.vendorId,
-                    imageId: selectedProductData.product.imageId,
-                    name: selectedProductData.product.name,
-                    description: selectedProductData.product.description,
-                    price: Number(selectedProductData.product.price),
-                    stock: selectedProductData.product.stock,
-                    // Add productImages if they exist
-                    ...(selectedProductData.productImages
-                      ? {
-                          productImages: selectedProductData.productImages.map(
-                            (img) => ({
-                              id: img.fileId,
-                              url: `/uploads/${img.diskname}`,
-                              diskname: img.diskname,
-                              isPrimary: img.isPrimary,
-                            })
-                          ),
-                        }
-                      : {}),
-                  }
-                : undefined
-            }
-            onSuccess={() => {
-              setIsEditModalOpen(false);
-              setLastFetchDate(new Date());
-            }}
-          />
+          {isLoadingImages ? (
+            <div className="flex justify-center items-center p-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+              <p className="ml-3">Loading product data...</p>
+            </div>
+          ) : (
+            <ProductForm
+              categories={categories}
+              vendors={vendors}
+              initialValues={
+                selectedProductData
+                  ? {
+                      id: selectedProductData.product.id,
+                      categoryId: selectedProductData.product.categoryId,
+                      categoryIds: selectedProductCategories,
+                      vendorId: selectedProductData.product.vendorId,
+                      imageId: selectedProductData.product.imageId,
+                      name: selectedProductData.product.name,
+                      description: selectedProductData.product.description,
+                      price: Number(selectedProductData.product.price),
+                      stock: selectedProductData.product.stock,
+                      // Use product images from state which includes all images
+                      productImages: productImages,
+                      // Add product variants if they exist
+                      variants: selectedProductData.variants || [],
+                    }
+                  : undefined
+              }
+              onSuccess={() => {
+                setIsEditModalOpen(false);
+                setLastFetchDate(new Date());
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className='overflow-y-scroll max-h-screen'>
+        <DialogContent className="overflow-y-scroll max-h-screen">
           <DialogHeader>
             <DialogTitle>Add Product</DialogTitle>
           </DialogHeader>

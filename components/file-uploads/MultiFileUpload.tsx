@@ -182,12 +182,12 @@ export const MultiFileUploadInput = ({
                 alt="Preview"
                 className="w-full h-32 object-cover"
               />
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+              <div className="absolute p-2 inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                 {!file.isPrimary && (
                   <Button
                     size="sm"
                     variant="secondary"
-                    className="w-3/4 text-xs"
+                    className="w-full text-[8px]"
                     onClick={() => setPrimaryImage(file.id)}
                   >
                     Set as Primary
@@ -196,7 +196,7 @@ export const MultiFileUploadInput = ({
                 <Button
                   size="sm"
                   variant="destructive"
-                  className="w-3/4 text-xs"
+                  className="w-full text-[8px]"
                   onClick={() => removeFile(file.id)}
                 >
                   <X className="h-3 w-3 mr-1" /> Remove

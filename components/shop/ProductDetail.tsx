@@ -70,6 +70,7 @@ interface Product {
   images?: { url: string }[];
   rating?: number;
   reviewCount?: number;
+  categories?: { id: string; name: string }[];
 }
 
 interface Review {
@@ -153,6 +154,38 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
           return;
         }
 
+        // Fetch full product details to get description
+        let description = productItem.description || "";
+        let allCategories = productItem.categories || [];
+
+        try {
+          // Use view endpoint to get specific product with description
+          const detailsResult = await trpc.product.view.query({
+            categoryId: productItem.categoryId,
+          });
+
+          if (detailsResult.success) {
+            const productWithDetails = detailsResult.result.find(
+              (item) => item.product.id === productId
+            );
+
+            if (productWithDetails?.product?.description) {
+              description = productWithDetails.product.description;
+              console.log("Found description:", description);
+            }
+
+            // If view API returned categories, use those (they should be more complete)
+            if (
+              productWithDetails?.categories &&
+              productWithDetails.categories.length > 0
+            ) {
+              allCategories = productWithDetails.categories;
+            }
+          }
+        } catch (detailsError) {
+          console.error("Error fetching product description:", detailsError);
+          // Continue with original data even if description fetch fails
+        }
 
         // Get product variants
         const variantsResult = await trpc.product.view.query({
@@ -194,13 +227,21 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
           ];
         }
 
-
-        setProduct({
-          ...productItem,
+        // Create a complete product with the description and categories
+        const completeProduct = {
+          ...(productItem as Product),
+          description,
           available: productItem.stock > 0,
           variants,
           images: productImages,
-        });
+          categories: allCategories,
+        };
+
+        console.log(
+          "Setting product with description:",
+          completeProduct.description
+        );
+        setProduct(completeProduct);
       } catch (err) {
         console.error("Error fetching product:", err);
         setError("An error occurred while loading the product");
@@ -577,11 +618,27 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
         {/* Product Details Section */}
         <div className="md:w-1/2 space-y-6">
           <div>
-            {product.categoryName && (
-              <Badge className="mb-2 bg-accent-lb/20 text-accent-lb hover:bg-accent-lb/30">
-                {product.categoryName}
-              </Badge>
-            )}
+            {/* Show all categories as badges */}
+            <div className="flex flex-wrap gap-1 mb-2">
+              {product.categories && product.categories.length > 0
+                ? product.categories.map((cat) => (
+                    <Badge
+                      key={cat.id}
+                      className={
+                        cat.id === product.categoryId
+                          ? "bg-accent-lb/20 text-accent-lb hover:bg-accent-lb/30"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      }
+                    >
+                      {cat.name}
+                    </Badge>
+                  ))
+                : product.categoryName && (
+                    <Badge className="bg-accent-lb/20 text-accent-lb hover:bg-accent-lb/30">
+                      {product.categoryName}
+                    </Badge>
+                  )}
+            </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               {product.name}
             </h1>
@@ -738,10 +795,27 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
               {product.categoryName && (
                 <div className="border-b border-gray-200 pb-3">
                   <dt className="text-sm font-medium text-gray-500">
-                    Category
+                    Categories
                   </dt>
                   <dd className="mt-1 text-sm text-gray-900">
-                    {product.categoryName}
+                    <div className="flex flex-col gap-1">
+                      {product.categories && product.categories.length > 0 ? (
+                        product.categories.map((cat) => (
+                          <span
+                            key={cat.id}
+                            className={
+                              cat.id === product.categoryId
+                                ? "font-medium"
+                                : "text-gray-600"
+                            }
+                          >
+                            {cat.name}
+                          </span>
+                        ))
+                      ) : (
+                        <span>{product.categoryName}</span>
+                      )}
+                    </div>
                   </dd>
                 </div>
               )}

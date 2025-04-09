@@ -5,6 +5,7 @@ import {
   file,
   product,
   productVariant,
+  productCategory,
   vendor,
 } from "#root/shared/database/drizzle/schema";
 import { and, asc, eq, ilike, inArray, or } from "drizzle-orm";
@@ -52,7 +53,24 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
           }
 
           if (input.categoryId) {
-            pQuery.where(eq(product.categoryId, input.categoryId));
+            // First, get all product IDs that belong to this category (via junction table)
+            const productsInCategory = await tx
+              .select({
+                productId: productCategory.productId,
+              })
+              .from(productCategory)
+              .where(eq(productCategory.categoryId, input.categoryId))
+              .execute();
+
+            const productIds = productsInCategory.map((p) => p.productId);
+
+            if (productIds.length > 0) {
+              // Filter products to those in the category (either as primary or additional)
+              pQuery.where(inArray(product.id, productIds));
+            } else {
+              // Fallback to the old way if no products found in junction table
+              pQuery.where(eq(product.categoryId, input.categoryId));
+            }
           }
 
           if (input.sortBy) {
@@ -83,13 +101,50 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
             )
             .execute();
 
+          // Fetch all category associations for these products
+          const productCategoryMap = new Map<
+            string,
+            { id: string; name: string }[]
+          >();
+
+          const productIds = products.map((p) => p.product.id);
+          if (productIds.length > 0) {
+            const productCategories = await tx
+              .select({
+                productId: productCategory.productId,
+                categoryId: productCategory.categoryId,
+                categoryName: category.name,
+                isPrimary: productCategory.isPrimary,
+              })
+              .from(productCategory)
+              .innerJoin(category, eq(productCategory.categoryId, category.id))
+              .where(inArray(productCategory.productId, productIds))
+              .execute();
+
+            // Build a map of productId -> categories
+            for (const pc of productCategories) {
+              if (!productCategoryMap.has(pc.productId)) {
+                productCategoryMap.set(pc.productId, []);
+              }
+              productCategoryMap.get(pc.productId)?.push({
+                id: pc.categoryId,
+                name: formatCategoryName(pc.categoryName),
+              });
+            }
+          }
+
           return products.map((product) => {
+            // Get all categories for this product
+            const productCategories =
+              productCategoryMap.get(product.product.id) || [];
+
             return {
               ...product,
               category: {
                 ...product.category,
                 name: formatCategoryName(product.category.name),
               },
+              categories: productCategories,
               variants: variants.filter(
                 (variant) => variant.productId === product.product.id
               ),

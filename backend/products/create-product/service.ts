@@ -6,6 +6,7 @@ import {
   productVariant,
   vendor,
   productImage,
+  productCategory,
 } from "#root/shared/database/drizzle/schema";
 import { ServerError } from "#root/shared/error/server";
 import { eq } from "drizzle-orm";
@@ -18,6 +19,9 @@ export const createProductSchema = z.object({
   description: z.string().nonempty().max(3000),
   imageId: z.string().uuid(),
   categoryId: z.string().uuid(),
+  categoryIds: z
+    .array(z.string().uuid())
+    .min(1, "At least one category is required"),
   price: z.number().min(0).max(10000),
   vendorId: z.string().uuid(),
   stock: z.number().min(0).max(10000),
@@ -98,7 +102,7 @@ export const createProduct = (
               name: data.name,
               description: data.description,
               imageId: data.imageId, // Keep for backward compatibility
-              categoryId: data.categoryId,
+              categoryId: data.categoryId, // Keep the primary category for backward compatibility
               vendorId: data.vendorId,
               price: data.price.toString(),
               stock: data.stock,
@@ -108,6 +112,22 @@ export const createProduct = (
 
           if (!newProduct) {
             throw new Error("Product not created");
+          }
+
+          // Create product-category relationships
+          if (data.categoryIds && data.categoryIds.length > 0) {
+            for (let i = 0; i < data.categoryIds.length; i++) {
+              const categoryId = data.categoryIds[i];
+              if (categoryId) {
+                const isPrimary = categoryId === data.categoryId;
+
+                await tx.insert(productCategory).values({
+                  productId: newProduct.id,
+                  categoryId: categoryId,
+                  isPrimary: isPrimary,
+                });
+              }
+            }
           }
 
           // Handle product images

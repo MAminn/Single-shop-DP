@@ -6,8 +6,19 @@ import {
   product,
   vendor,
   productImage,
+  productCategory,
 } from "#root/shared/database/drizzle/schema";
-import { and, eq, ilike, inArray, or, count, gt } from "drizzle-orm";
+import {
+  and,
+  eq,
+  ilike,
+  inArray,
+  or,
+  count,
+  gt,
+  exists,
+  sql,
+} from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 
@@ -24,6 +35,22 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
   Effect.gen(function* ($) {
     return yield* $(
       query(async (db) => {
+        // Prepare category filter condition
+        let categoryCondition = undefined;
+        if (input.categoryIds && input.categoryIds.length > 0) {
+          categoryCondition = exists(
+            db
+              .select({ productId: productCategory.productId })
+              .from(productCategory)
+              .where(
+                and(
+                  eq(productCategory.productId, product.id),
+                  inArray(productCategory.categoryId, input.categoryIds)
+                )
+              )
+          );
+        }
+
         // Build count query first
         const countQuery = db
           .select({
@@ -34,10 +61,8 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
             and(
               // Filter by vendor if specified
               input.vendorId ? eq(product.vendorId, input.vendorId) : undefined,
-              // Filter by categories if specified
-              input.categoryIds && input.categoryIds.length > 0
-                ? inArray(product.categoryId, input.categoryIds)
-                : undefined,
+              // Filter by categories (using junction table)
+              categoryCondition,
               // Filter by search term if specified
               input.search
                 ? or(
@@ -55,6 +80,7 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
           .select({
             id: product.id,
             name: product.name,
+            description: product.description,
             price: product.price,
             stock: product.stock,
             imageUrl: file.diskname,
@@ -71,10 +97,8 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
             and(
               // Filter by vendor if specified
               input.vendorId ? eq(product.vendorId, input.vendorId) : undefined,
-              // Filter by categories if specified
-              input.categoryIds && input.categoryIds.length > 0
-                ? inArray(product.categoryId, input.categoryIds)
-                : undefined,
+              // Filter by categories (using junction table)
+              categoryCondition,
               // Filter by search term if specified
               input.search
                 ? or(
@@ -111,6 +135,34 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
           .where(inArray(productImage.productId, productIds))
           .execute();
 
+        // Fetch all categories for these products
+        const productCategoriesQuery = await db
+          .select({
+            productId: productCategory.productId,
+            categoryId: productCategory.categoryId,
+            categoryName: category.name,
+            isPrimary: productCategory.isPrimary,
+          })
+          .from(productCategory)
+          .innerJoin(category, eq(productCategory.categoryId, category.id))
+          .where(inArray(productCategory.productId, productIds))
+          .execute();
+
+        // Organize categories by product ID
+        const productCategoriesMap = new Map<
+          string,
+          Array<{ id: string; name: string }>
+        >();
+        for (const pc of productCategoriesQuery) {
+          if (!productCategoriesMap.has(pc.productId)) {
+            productCategoriesMap.set(pc.productId, []);
+          }
+          productCategoriesMap.get(pc.productId)?.push({
+            id: pc.categoryId,
+            name: formatCategoryName(pc.categoryName),
+          });
+        }
+
         // Process and add available flag to each item
         const processedItems = items.map((item) => {
           // Get all images for this product
@@ -120,6 +172,9 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
               url: img.diskname,
               isPrimary: img.isPrimary,
             }));
+
+          // Get all categories for this product
+          const categories = productCategoriesMap.get(item.id) || [];
 
           return {
             ...item,
@@ -133,6 +188,7 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
                 : item.imageUrl
                   ? [{ url: item.imageUrl, isPrimary: true }]
                   : [],
+            categories: categories,
           };
         });
 

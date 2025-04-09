@@ -6,6 +6,7 @@ import {
   productVariant,
   vendor,
   productImage,
+  productCategory,
 } from "#root/shared/database/drizzle/schema";
 import { ServerError } from "#root/shared/error/server";
 import { and, eq, inArray, not } from "drizzle-orm";
@@ -19,6 +20,9 @@ export const editProductSchema = z.object({
   description: z.string().nonempty().max(3000),
   imageId: z.string().uuid(),
   categoryId: z.string().uuid(),
+  categoryIds: z
+    .array(z.string().uuid())
+    .min(1, "At least one category is required"),
   price: z.number().min(0).max(10000),
   vendorId: z.string().uuid(),
   stock: z.number().min(0).max(10000),
@@ -112,7 +116,7 @@ export const editProduct = (
               name: data.name,
               description: data.description,
               imageId: data.imageId, // Keep for backward compatibility
-              categoryId: data.categoryId,
+              categoryId: data.categoryId, // Keep the primary category for backward compatibility
               price: data.price.toString(),
               stock: data.stock,
               updatedAt: new Date(),
@@ -123,6 +127,26 @@ export const editProduct = (
 
           if (!updatedProduct) {
             throw new Error("Product not updated");
+          }
+
+          // Update product categories
+          if (data.categoryIds && data.categoryIds.length > 0) {
+            // First, remove all existing product-category relationships
+            await tx
+              .delete(productCategory)
+              .where(eq(productCategory.productId, data.id));
+
+            // Then add the new relationships
+            for (let i = 0; i < data.categoryIds.length; i++) {
+              const categoryId = data.categoryIds[i];
+              const isPrimary = categoryId === data.categoryId;
+
+              await tx.insert(productCategory).values({
+                productId: data.id,
+                categoryId: categoryId,
+                isPrimary: isPrimary,
+              });
+            }
           }
 
           // Handle product images if provided
@@ -141,8 +165,9 @@ export const editProduct = (
               });
             }
           }
+          // We only update images if explicitly provided - otherwise keep existing ones
 
-          if (data.variants) {
+          if (data.variants && data.variants.length > 0) {
             // Delete existing variants that are not in the new list
             const newVariantNames = data.variants.map((v) => v.name);
             if (newVariantNames.length > 0) {
@@ -186,12 +211,9 @@ export const editProduct = (
                 });
               }
             }
-          } else {
-            // Delete all variants if none provided
-            await tx
-              .delete(productVariant)
-              .where(eq(productVariant.productId, data.id));
           }
+          // We only update variants if explicitly provided with values - otherwise keep existing ones
+          // Don't delete all variants if variants key exists but is empty
 
           return updatedProduct;
         });
