@@ -98,6 +98,7 @@ export default function Products() {
         sortBy,
         vendorId,
         categoryId,
+        limit: 50,
       });
 
       if (!res.success) {
@@ -181,38 +182,37 @@ export default function Products() {
   };
 
   return (
-    <Card className="p-6 w-full h-full mx-auto flex-1">
-      <CardHeader className="flex justify-between items-center">
-        <div className="flex flex-col justify-center items-center lg:items-start lg:justify-start gap-2">
+    <Card className='p-6 w-full h-full mx-auto flex-1'>
+      <CardHeader className='flex justify-between items-center'>
+        <div className='flex flex-col justify-center items-center lg:items-start lg:justify-start gap-2'>
           <CardTitle>Products</CardTitle>
-          <CardDescription className="text-center lg:text-left">
+          <CardDescription className='text-center lg:text-left'>
             Manage your product inventory.
           </CardDescription>
         </div>
-        <div className="flex gap-4 flex-wrap justify-center lg:justify-start items-center">
+        <div className='flex gap-4 flex-wrap justify-center lg:justify-start items-center'>
           <Input
-            placeholder="Search..."
+            placeholder='Search...'
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-40"
+            className='w-40'
           />
           <Tabs
             value={sortBy}
             onValueChange={(value) =>
               setSortBy(value as "name" | "price" | "stock")
-            }
-          >
+            }>
             <TabsList>
-              <TabsTrigger value="name">Name</TabsTrigger>
-              <TabsTrigger value="price">Price</TabsTrigger>
-              <TabsTrigger value="stock">Stock</TabsTrigger>
+              <TabsTrigger value='name'>Name</TabsTrigger>
+              <TabsTrigger value='price'>Price</TabsTrigger>
+              <TabsTrigger value='stock'>Stock</TabsTrigger>
             </TabsList>
           </Tabs>
           <Button onClick={() => setIsAddModalOpen(true)}>Add Product</Button>
         </div>
       </CardHeader>
       <CardContent>
-        <Table className="w-full text-sm mt-4">
+        <Table className='w-full text-sm mt-4'>
           <TableHeader>
             <TableRow>
               <TableHead>Image</TableHead>
@@ -220,7 +220,7 @@ export default function Products() {
               <TableHead>Price</TableHead>
               <TableHead>Stock</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className='text-right'>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -231,7 +231,7 @@ export default function Products() {
                     <img
                       src={`/uploads/${image.diskname}`}
                       alt={product.name}
-                      className="w-12 h-12 object-cover rounded"
+                      className='w-12 h-12 object-cover rounded'
                     />
                   )}
                 </TableCell>
@@ -240,27 +240,25 @@ export default function Products() {
                 <TableCell>{product.stock} in stock</TableCell>
                 <TableCell>
                   {product.stock === 0 ? (
-                    <span className="text-red-500">Out of Stock</span>
+                    <span className='text-red-500'>Out of Stock</span>
                   ) : (
-                    <span className="text-green-500">In Stock</span>
+                    <span className='text-green-500'>In Stock</span>
                   )}
                 </TableCell>
-                <TableCell className="flex justify-end gap-2">
+                <TableCell className='flex justify-end gap-2'>
                   <Button
-                    size="sm"
-                    variant="outline"
+                    size='sm'
+                    variant='outline'
                     onClick={() => {
                       setSelectedProduct(product.id);
                       setIsEditModalOpen(true);
-                    }}
-                  >
+                    }}>
                     Edit
                   </Button>
                   <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDeleteProduct(product.id)}
-                  >
+                    size='sm'
+                    variant='destructive'
+                    onClick={() => handleDeleteProduct(product.id)}>
                     Delete
                   </Button>
                 </TableCell>
@@ -271,7 +269,7 @@ export default function Products() {
       </CardContent>
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className=" overflow-y-scroll max-h-screen">
+        <DialogContent className=' overflow-y-scroll max-h-screen'>
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
           </DialogHeader>
@@ -314,7 +312,7 @@ export default function Products() {
       </Dialog>
 
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="overflow-y-scroll max-h-screen">
+        <DialogContent className='overflow-y-scroll max-h-screen'>
           <DialogHeader>
             <DialogTitle>Add Product</DialogTitle>
           </DialogHeader>
