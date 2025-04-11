@@ -149,7 +149,8 @@ export const createProduct = (
             });
           }
 
-          if (data.variants) {
+          // Only insert variants if they exist and have elements
+          if (data.variants && data.variants.length > 0) {
             await tx
               .insert(productVariant)
               .values(

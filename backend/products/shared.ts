@@ -3,11 +3,14 @@ import type { createProductSchema } from "./create-product/service";
 import { Effect } from "effect";
 import { ServerError } from "#root/shared/error/server";
 
-export const validateProductRules = (data: z.infer<typeof createProductSchema>) =>
+export const validateProductRules = (
+  data: z.infer<typeof createProductSchema>
+) =>
   Effect.gen(function* ($) {
     const { variants } = data;
 
-    if (!variants) return;
+    // Early return if variants is undefined or empty array
+    if (!variants || variants.length === 0) return;
 
     // Check for duplicated variant names
     const variantNames = variants.map((variant) => variant.name);
@@ -32,7 +35,7 @@ export const validateProductRules = (data: z.infer<typeof createProductSchema>) 
     for (const variant of variants) {
       const variantValues = variant.values;
 
-      if(variantValues.length === 0) {
+      if (variantValues.length === 0) {
         return yield* $(
           Effect.fail(
             new ServerError({

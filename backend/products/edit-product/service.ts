@@ -143,7 +143,7 @@ export const editProduct = (
 
               await tx.insert(productCategory).values({
                 productId: data.id,
-                categoryId: categoryId,
+                categoryId: categoryId ?? "", // Ensure categoryId is never undefined
                 isPrimary: isPrimary,
               });
             }
@@ -167,10 +167,17 @@ export const editProduct = (
           }
           // We only update images if explicitly provided - otherwise keep existing ones
 
-          if (data.variants && data.variants.length > 0) {
-            // Delete existing variants that are not in the new list
-            const newVariantNames = data.variants.map((v) => v.name);
-            if (newVariantNames.length > 0) {
+          // Handle variants - check if variants array exists in the request
+          if (data.variants !== undefined) {
+            if (data.variants.length === 0) {
+              // If empty array is provided, remove all variants for this product
+              await tx
+                .delete(productVariant)
+                .where(eq(productVariant.productId, data.id));
+            } else {
+              // If variants exist, update them
+              // Delete existing variants that are not in the new list
+              const newVariantNames = data.variants.map((v) => v.name);
               await tx
                 .delete(productVariant)
                 .where(
@@ -179,41 +186,40 @@ export const editProduct = (
                     not(inArray(productVariant.name, newVariantNames))
                   )
                 );
-            }
 
-            // Update or insert variants
-            for (const variant of data.variants) {
-              const existingVariant = await tx
-                .select()
-                .from(productVariant)
-                .where(
-                  and(
-                    eq(productVariant.productId, data.id),
-                    eq(productVariant.name, variant.name)
+              // Update or insert variants
+              for (const variant of data.variants) {
+                const existingVariant = await tx
+                  .select()
+                  .from(productVariant)
+                  .where(
+                    and(
+                      eq(productVariant.productId, data.id),
+                      eq(productVariant.name, variant.name)
+                    )
                   )
-                )
-                .then((data) => data[0]);
+                  .then((data) => data[0]);
 
-              if (existingVariant) {
-                // Update existing variant
-                await tx
-                  .update(productVariant)
-                  .set({
+                if (existingVariant) {
+                  // Update existing variant
+                  await tx
+                    .update(productVariant)
+                    .set({
+                      values: variant.values,
+                    })
+                    .where(eq(productVariant.id, existingVariant.id));
+                } else {
+                  // Insert new variant
+                  await tx.insert(productVariant).values({
+                    name: variant.name,
                     values: variant.values,
-                  })
-                  .where(eq(productVariant.id, existingVariant.id));
-              } else {
-                // Insert new variant
-                await tx.insert(productVariant).values({
-                  name: variant.name,
-                  values: variant.values,
-                  productId: data.id,
-                });
+                    productId: data.id,
+                  });
+                }
               }
             }
           }
-          // We only update variants if explicitly provided with values - otherwise keep existing ones
-          // Don't delete all variants if variants key exists but is empty
+          // We only update variants if explicitly provided - otherwise keep existing ones
 
           return updatedProduct;
         });

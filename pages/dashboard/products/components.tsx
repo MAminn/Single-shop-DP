@@ -176,11 +176,13 @@ export function ProductForm({
 
       let result: { success: boolean; error?: string };
       if (initialValues?.id) {
-        // Update existing product - only include variants and images if they've been modified
-        // This prevents clearing them out when editing other fields
+        // Update existing product - always include variants to ensure we can remove them
+        // This allows clearing all variants when editing
         const payload = {
           id: initialValues.id,
           ...values,
+          // Make sure variants is included as at least an empty array
+          variants: values.variants || [],
         };
         result = await trpc.product.edit.mutate(payload);
       } else {
@@ -428,7 +430,10 @@ export function ProductForm({
             render={({ field }) => {
               return (
                 <FormItem>
-                  <FormLabel className="text-lg">Variants</FormLabel>
+                  <FormLabel className="text-lg">Variants (Optional)</FormLabel>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Add product variants like size, color, etc. if needed
+                  </p>
                   <FormControl>
                     <VariantsInput
                       value={field.value}
@@ -525,9 +530,12 @@ export function VariantsInput({
   value: { name: string; values: string[] }[] | undefined;
   onChange: (value: { name: string; values: string[] }[]) => void;
 }) {
+  // Ensure value is always an array
+  const variants = value || [];
+
   return (
     <div className="flex flex-col gap-2">
-      {value?.map((v, i) => (
+      {variants.map((v, i) => (
         <Fragment
           key={`variant.${
             // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
@@ -537,7 +545,7 @@ export function VariantsInput({
           <VariantInput
             value={v}
             onChange={(v) => {
-              const newValue = [...value];
+              const newValue = [...variants];
               newValue[i] = v;
               onChange(newValue);
             }}
@@ -548,7 +556,7 @@ export function VariantsInput({
             variant={"destructive"}
             type="button"
             onClick={() => {
-              const newValue = [...value];
+              const newValue = [...variants];
               newValue.splice(i, 1);
               onChange(newValue);
             }}
@@ -563,8 +571,8 @@ export function VariantsInput({
         type="button"
         onClick={() =>
           onChange([
-            ...(value ?? []),
-            { name: `Variant ${(value?.length ?? 0) + 1}`, values: [] },
+            ...variants,
+            { name: `Variant ${variants.length + 1}`, values: [] },
           ])
         }
       >
