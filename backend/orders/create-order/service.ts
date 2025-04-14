@@ -261,28 +261,59 @@ export const createOrder = (
       )
     );
 
-    yield* $(
-      emailService.sendEmail(
-        input.customerEmail,
-        "Lebsy Order Confirmation",
-        emailTemplate
-      )
-    );
-
-    for (const admin of admins) {
-      yield* $(
-        emailService.sendEmail(admin.email, "New Order Received", emailTemplate)
-      );
-    }
-
-    for (const vendor of vendors) {
+    // Send emails, but don't let failures block the order creation
+    try {
       yield* $(
         emailService.sendEmail(
-          vendor.email,
-          "New Order Received",
+          input.customerEmail,
+          "Lebsy Order Confirmation",
           emailTemplate
         )
       );
+    } catch (error) {
+      console.error(
+        `Failed to send confirmation email to customer ${input.customerEmail}:`,
+        error
+      );
+      // Continue with order creation even if email fails
+    }
+
+    // Send admin notifications
+    for (const admin of admins) {
+      try {
+        yield* $(
+          emailService.sendEmail(
+            admin.email,
+            "New Order Received",
+            emailTemplate
+          )
+        );
+      } catch (error) {
+        console.error(
+          `Failed to send notification email to admin ${admin.email}:`,
+          error
+        );
+        // Continue with order creation even if email fails
+      }
+    }
+
+    // Send vendor notifications
+    for (const vendor of vendors) {
+      try {
+        yield* $(
+          emailService.sendEmail(
+            vendor.email,
+            "New Order Received",
+            emailTemplate
+          )
+        );
+      } catch (error) {
+        console.error(
+          `Failed to send notification email to vendor ${vendor.email}:`,
+          error
+        );
+        // Continue with order creation even if email fails
+      }
     }
 
     return result;
