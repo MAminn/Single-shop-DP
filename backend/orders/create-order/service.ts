@@ -65,52 +65,112 @@ const sendOrderToFincart = async (
   orderData: FincartOrderData
 ): Promise<FincartResponse> => {
   try {
-    const FINCART_API_URL =
-      process.env.FINCART_API_URL;
+    const FINCART_API_URL = process.env.FINCART_API_URL;
     const FINCART_API_KEY = process.env.FINCART_API_KEY;
+
+    console.log(`Sending order to Fincart at: ${FINCART_API_URL}/orders`);
 
     if (!FINCART_API_KEY) {
       console.error("FINCART_API_KEY is not set in the environment variables");
       return { success: false, error: "API Key not configured" };
     }
 
+    // Construct the API URL for creating orders
+    const fincartOrdersEndpoint = `${FINCART_API_URL}/orders/create`;
+
     // Format the data according to Fincart's API requirements
     const payload = {
-      orderId: orderData.id,
-      orderNumber: orderData.id, // You might want to use a different format
-      customerName: orderData.customerName,
-      customerPhone: orderData.customerPhone,
-      customerEmail: orderData.customerEmail,
-      shippingAddress: {
-        addressLine: orderData.shippingAddress,
+      reference_id: orderData.id,
+      customer: {
+        name: orderData.customerName,
+        phone: orderData.customerPhone,
+        email: orderData.customerEmail,
+      },
+      shipping_address: {
+        address: orderData.shippingAddress,
         city: orderData.shippingCity,
         state: orderData.shippingState,
         country: orderData.shippingCountry,
-        postalCode: orderData.shippingPostalCode,
+        zip_code: orderData.shippingPostalCode,
       },
       items: orderData.items.map((item) => ({
-        name: item.name || "",
+        name: item.name || "Product",
+        sku: `SKU-${Math.random().toString(36).substring(2, 10)}`,
         quantity: item.quantity,
-        price: item.price,
+        price: Number.parseFloat(item.price.toString()),
+        weight: 0.5, // Default weight in kg
+        height: 10, // Default dimensions in cm
+        width: 10,
+        length: 10,
       })),
-      subtotal: orderData.subtotal,
-      shipping: orderData.shipping,
-      tax: orderData.tax,
-      total: orderData.total,
+      payment: {
+        method: "cod", // Cash on delivery as default
+        amount: Number.parseFloat(orderData.total.toString()),
+      },
+      shipping_cost: Number.parseFloat(orderData.shipping.toString()),
+      webhook_url: `${process.env.PUBLIC_ORIGIN}/api/webhooks/fincart`,
     };
 
+    console.log(
+      "Payload being sent to Fincart:",
+      JSON.stringify(payload, null, 2)
+    );
+
     // Send the data to Fincart
-    const response = await axios.post(`${FINCART_API_URL}/orders`, payload, {
+    const response = await axios.post(fincartOrdersEndpoint, payload, {
       headers: {
         Authorization: `Bearer ${FINCART_API_KEY}`,
         "Content-Type": "application/json",
       },
+      // Set a timeout to prevent long-running requests
+      timeout: 10000,
     });
+
+    // Check if the response is HTML (which would indicate we're hitting a website not an API)
+    const contentType =
+      response?.headers && "content-type" in response.headers
+        ? response.headers["content-type"]
+        : null;
+    if (
+      contentType &&
+      typeof contentType === "string" &&
+      contentType.includes("text/html")
+    ) {
+      console.error(
+        "Received HTML response from Fincart API. This indicates the URL is incorrect and points to a webpage, not an API endpoint."
+      );
+      return {
+        success: false,
+        error: "Received HTML instead of JSON. API URL is likely incorrect.",
+      };
+    }
 
     console.log("Order sent to Fincart successfully:", response.data);
     return { success: true, data: response.data };
   } catch (error) {
     console.error("Failed to send order to Fincart:", error);
+
+    // Provide more detailed error information
+    if (axios.isAxiosError(error)) {
+      const statusCode = error.response?.status;
+      const responseData = error.response?.data;
+      const errorMessage = error.message;
+
+      console.error(`Fincart API error (${statusCode}): ${errorMessage}`);
+      if (responseData) {
+        console.error("Response data:", responseData);
+      }
+
+      return {
+        success: false,
+        error: {
+          statusCode,
+          message: errorMessage,
+          data: responseData,
+        },
+      };
+    }
+
     return { success: false, error };
   }
 };
