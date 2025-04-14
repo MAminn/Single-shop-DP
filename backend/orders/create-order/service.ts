@@ -119,7 +119,7 @@ const sendOrderToFincart = async (
     // Send the data to Fincart
     const response = await axios.post(fincartOrdersEndpoint, payload, {
       headers: {
-        Authorization: `<${FINCART_API_KEY}>`,
+        Authorization: `${FINCART_API_KEY}`,
         "Content-Type": "application/json",
       },
       // Set a timeout to prevent long-running requests
