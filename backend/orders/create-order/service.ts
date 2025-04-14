@@ -68,7 +68,9 @@ const sendOrderToFincart = async (
     const FINCART_API_URL = process.env.FINCART_API_URL;
     const FINCART_API_KEY = process.env.FINCART_API_KEY;
 
-    console.log(`Sending order to Fincart at: ${FINCART_API_URL}/orders`);
+    console.log(
+      `Sending order to Fincart at: ${FINCART_API_URL}/merchant/app/s2s`
+    );
 
     if (!FINCART_API_KEY) {
       console.error("FINCART_API_KEY is not set in the environment variables");
@@ -76,38 +78,25 @@ const sendOrderToFincart = async (
     }
 
     // Construct the API URL for creating orders
-    const fincartOrdersEndpoint = `${FINCART_API_URL}/orders/create`;
+    const fincartOrdersEndpoint = `${FINCART_API_URL}/merchant/app/s2s`;
 
     // Format the data according to Fincart's API requirements
     const payload = {
-      reference_id: orderData.id,
-      customer: {
-        name: orderData.customerName,
-        phone: orderData.customerPhone,
-        email: orderData.customerEmail,
-      },
-      shipping_address: {
-        address: orderData.shippingAddress,
-        city: orderData.shippingCity,
-        state: orderData.shippingState,
-        country: orderData.shippingCountry,
-        zip_code: orderData.shippingPostalCode,
-      },
+      city: orderData.shippingCity,
+      zone: `${orderData.shippingState} - ${orderData.shippingCity}`,
+      customer_name: orderData.customerName,
+      customer_address: orderData.shippingAddress,
+      customer_phone: orderData.customerPhone,
+      customer_email: orderData.customerEmail,
       items: orderData.items.map((item) => ({
         name: item.name || "Product",
-        sku: `SKU-${Math.random().toString(36).substring(2, 10)}`,
         quantity: item.quantity,
         price: Number.parseFloat(item.price.toString()),
-        weight: 0.5, // Default weight in kg
-        height: 10, // Default dimensions in cm
-        width: 10,
-        length: 10,
       })),
-      payment: {
-        method: "cod", // Cash on delivery as default
-        amount: Number.parseFloat(orderData.total.toString()),
-      },
-      shipping_cost: Number.parseFloat(orderData.shipping.toString()),
+      reference_id: orderData.id,
+      payment_method: "cod",
+      shipping_amount: Number.parseFloat(orderData.shipping.toString()),
+      total: Number.parseFloat(orderData.total.toString()),
       webhook_url: `${process.env.PUBLIC_ORIGIN}/api/webhooks/fincart`,
     };
 
@@ -119,7 +108,7 @@ const sendOrderToFincart = async (
     // Send the data to Fincart
     const response = await axios.post(fincartOrdersEndpoint, payload, {
       headers: {
-        Authorization: `Bearer ${FINCART_API_KEY}`,
+        Authorization: FINCART_API_KEY,
         "Content-Type": "application/json",
       },
       // Set a timeout to prevent long-running requests
