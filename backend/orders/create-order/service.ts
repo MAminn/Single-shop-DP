@@ -93,7 +93,10 @@ const sendOrderToFincart = async (
     const payload = {
       city: orderData.shippingCity,
       zone: `${orderData.shippingState} - ${orderData.shippingCity}`,
-      merchant_location: FINCART_MERCHANT_LOCATION || "LEBSY-MAIN", // Use specific merchant location env var
+      merchant_location: "CAIF", // Try a specific location code format
+      location_id: "CAIF", // Add location_id field which might be what they're looking for
+      merchantLocation: "CAIF", // Camel case variant
+      merchant_loc: "CAIF", // Abbreviated variant
       customer_name: orderData.customerName,
       customer_address: orderData.shippingAddress,
       customer_phone: orderData.customerPhone,
@@ -120,6 +123,7 @@ const sendOrderToFincart = async (
       })),
     };
 
+    // For debugging, log the exact payload that will be sent
     console.log(
       "Payload being sent to Fincart:",
       JSON.stringify(payload, null, 2)
@@ -128,7 +132,7 @@ const sendOrderToFincart = async (
     // Send the data to Fincart
     const response = await axios.post(fincartOrdersEndpoint, payload, {
       headers: {
-        Authorization: `${FINCART_API_KEY}`,
+        Authorization: FINCART_API_KEY, // Use the API key directly without any formatting
         "Content-Type": "application/json",
       },
       // Set a timeout to prevent long-running requests
