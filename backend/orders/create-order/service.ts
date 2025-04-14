@@ -91,29 +91,31 @@ const sendOrderToFincart = async (
 
     // Format the data according to Fincart's API requirements
     const payload = {
+      _id: "67115a8c16713e3eaec19384", // Add this ID field based on API response
       city: orderData.shippingCity,
+      location: "67115a8c16713e3eaec19384", // Add location field
       zone: `${orderData.shippingState} - ${orderData.shippingCity}`,
-      merchant_location:
-        FINCART_MERCHANT_LOCATION || "67115a8c16713e3eaec19384", // Use env var
       customer_name: orderData.customerName,
       customer_address: orderData.shippingAddress,
       customer_phone: orderData.customerPhone,
       customer_email: orderData.customerEmail,
-      customer_backup_phone: orderData.customerPhone, // Use primary phone as backup
-      customer_landmark: `Near ${orderData.shippingCity} Center`, // More descriptive landmark
-      ref_id: orderData.id, // Order reference in your system
-      pickup_id: FINCART_PICKUP_ID || "67115a8c16713e3eaec19384", // Use env var
-      desc: `Order #${orderData.id.substring(0, 8)} from ${orderData.customerName}`, // More descriptive
+      customer_backup_phone: orderData.customerPhone,
+      customer_landmark: `Near ${orderData.shippingCity} Center`,
+      ref_id: orderData.id.substring(0, 24), // Limit length to match their format
+      pickup_id: "67115a8c16713e3eaec19384", // Use the literal ID from documentation
+      id_default: true, // Add this based on API response example
+      desc: `Order #${orderData.id.substring(0, 8)} from ${orderData.customerName}`,
       no_items: orderData.items.reduce(
         (total, item) => total + item.quantity,
         0
-      ), // Sum of quantities
-      weight: orderData.items.length > 0 ? orderData.items.length * 0.5 : 1, // Estimate weight based on items
+      ),
+      weight: orderData.items.length > 0 ? orderData.items.length * 0.5 : 1,
       note:
         orderData.notes ||
         `Order for ${orderData.customerName} in ${orderData.shippingCity}`,
       open_shipment_allowed: false,
-      cod: Number.parseFloat(orderData.total.toString()), // Set COD amount to match total
+      cod: Number.parseFloat(orderData.total.toString()),
+      country: "EG", // Added required country code based on API example
       items: orderData.items.map((item) => ({
         name: item.name || "Product",
         quantity: item.quantity,
