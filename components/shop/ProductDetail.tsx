@@ -279,6 +279,16 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
   const handleAddToCart = () => {
     if (!product || !product.available) return;
 
+    // Check if quantity exceeds stock
+    if (quantity > product.stock) {
+      toast({
+        title: "Invalid quantity",
+        description: `Only ${product.stock} item(s) available in stock.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Check if all required variants are selected
     if (product.variants && product.variants.length > 0) {
       for (const variant of product.variants) {
@@ -390,7 +400,7 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number.parseInt(e.target.value, 10);
-    if (!Number.isNaN(value) && value > 0 && value <= 99) {
+    if (!Number.isNaN(value) && value > 0 && value <= (product?.stock || 1)) {
       setQuantity(value);
     }
   };
@@ -751,7 +761,7 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
                   id="quantity"
                   name="quantity"
                   min="1"
-                  max="99"
+                  max={product.stock || 1}
                   className="flex-1 text-center border-x border-gray-300 focus:outline-none"
                   value={quantity}
                   onChange={handleQuantityChange}
@@ -759,7 +769,10 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
                 <button
                   type="button"
                   className="px-3 py-2 text-gray-600 hover:bg-gray-100 focus:outline-none"
-                  onClick={() => quantity < 99 && setQuantity(quantity + 1)}
+                  onClick={() =>
+                    quantity < (product?.stock || 1) &&
+                    setQuantity(quantity + 1)
+                  }
                 >
                   +
                 </button>

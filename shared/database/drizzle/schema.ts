@@ -314,6 +314,18 @@ export const order = pgTable("order", {
     withTimezone: true,
     mode: "date",
   }),
+  // Fincart integration fields
+  fincartTrackingNumber: text("fincart_tracking_number"),
+  fincartStatus: text("fincart_status"),
+  fincartSubStatus: text("fincart_sub_status"),
+  fincartRejectionReason: text("fincart_rejection_reason"),
+  fincartSupportNote: text("fincart_support_note"),
+  fincartReturnTrackingNumber: text("fincart_return_tracking_number"),
+  fincartStatusUpdatedDate: timestamp("fincart_status_updated_date", {
+    withTimezone: true,
+    mode: "date",
+  }),
+  fincartWebhookData: jsonb("fincart_webhook_data"),
 });
 
 export const orderItem = pgTable("order_item", {
