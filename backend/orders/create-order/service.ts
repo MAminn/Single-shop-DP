@@ -74,8 +74,8 @@ const sendOrderToFincart = async (
     console.log(
       `Sending order to Fincart at: ${FINCART_API_URL}/merchant/app/s2s`
     );
-    console.log(`Using merchant location: ${FINCART_MERCHANT_LOCATION}`);
-    console.log(`Using pickup ID: ${FINCART_PICKUP_ID}`);
+    console.log(`Using merchant location ID: "${FINCART_MERCHANT_LOCATION}"`);
+    console.log(`Using pickup ID: "${FINCART_PICKUP_ID}"`);
 
     if (!FINCART_API_KEY) {
       console.error("FINCART_API_KEY is not set in the environment variables");
@@ -93,10 +93,8 @@ const sendOrderToFincart = async (
     const payload = {
       city: orderData.shippingCity,
       zone: `${orderData.shippingState} - ${orderData.shippingCity}`,
-      merchant_location: "CAIF", // Try a specific location code format
-      location_id: "CAIF", // Add location_id field which might be what they're looking for
-      merchantLocation: "CAIF", // Camel case variant
-      merchant_loc: "CAIF", // Abbreviated variant
+      merchant_location:
+        FINCART_MERCHANT_LOCATION || "67115a8c16713e3eaec19384", // Use env var
       customer_name: orderData.customerName,
       customer_address: orderData.shippingAddress,
       customer_phone: orderData.customerPhone,
@@ -104,7 +102,7 @@ const sendOrderToFincart = async (
       customer_backup_phone: orderData.customerPhone, // Use primary phone as backup
       customer_landmark: `Near ${orderData.shippingCity} Center`, // More descriptive landmark
       ref_id: orderData.id, // Order reference in your system
-      pickup_id: FINCART_PICKUP_ID || "LEBSY-001", // Get from env or use default
+      pickup_id: FINCART_PICKUP_ID || "67115a8c16713e3eaec19384", // Use env var
       desc: `Order #${orderData.id.substring(0, 8)} from ${orderData.customerName}`, // More descriptive
       no_items: orderData.items.reduce(
         (total, item) => total + item.quantity,
