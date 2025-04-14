@@ -48,6 +48,7 @@ interface FincartOrderData {
   shipping: string | number;
   tax: string | number;
   total: string | number;
+  notes: string | null | undefined;
   items: Array<{
     name?: string;
     quantity: number;
@@ -88,16 +89,26 @@ const sendOrderToFincart = async (
       customer_address: orderData.shippingAddress,
       customer_phone: orderData.customerPhone,
       customer_email: orderData.customerEmail,
+      customer_backup_phone: orderData.customerPhone, // Use primary phone as backup
+      customer_landmark: `Near ${orderData.shippingCity} Center`, // More descriptive landmark
+      ref_id: orderData.id, // Order reference in your system
+      pickup_id: process.env.FINCART_PICKUP_ID || "LEBSY-001", // Get from env or use default
+      desc: `Order #${orderData.id.substring(0, 8)} from ${orderData.customerName}`, // More descriptive
+      no_items: orderData.items.reduce(
+        (total, item) => total + item.quantity,
+        0
+      ), // Sum of quantities
+      weight: orderData.items.length > 0 ? orderData.items.length * 0.5 : 1, // Estimate weight based on items
+      note:
+        orderData.notes ||
+        `Order for ${orderData.customerName} in ${orderData.shippingCity}`,
+      open_shipment_allowed: false,
+      cod: Number.parseFloat(orderData.total.toString()), // Set COD amount to match total
       items: orderData.items.map((item) => ({
         name: item.name || "Product",
         quantity: item.quantity,
         price: Number.parseFloat(item.price.toString()),
       })),
-      reference_id: orderData.id,
-      payment_method: "cod",
-      shipping_amount: Number.parseFloat(orderData.shipping.toString()),
-      total: Number.parseFloat(orderData.total.toString()),
-      webhook_url: `${process.env.PUBLIC_ORIGIN}/api/webhooks/fincart`,
     };
 
     console.log(
@@ -108,7 +119,7 @@ const sendOrderToFincart = async (
     // Send the data to Fincart
     const response = await axios.post(fincartOrdersEndpoint, payload, {
       headers: {
-        Authorization: FINCART_API_KEY,
+        Authorization: `<${FINCART_API_KEY}>`,
         "Content-Type": "application/json",
       },
       // Set a timeout to prevent long-running requests
@@ -134,8 +145,25 @@ const sendOrderToFincart = async (
       };
     }
 
-    console.log("Order sent to Fincart successfully:", response.data);
-    return { success: true, data: response.data };
+    // Log the full response for debugging
+    console.log("Full Fincart API response:", {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+      data: response.data,
+    });
+
+    // Check if the response indicates success
+    if (response.data && response.data.status === "success") {
+      console.log("Order sent to Fincart successfully:", response.data);
+      return { success: true, data: response.data };
+    }
+
+    console.error("Fincart API returned an error:", response.data);
+    return {
+      success: false,
+      error: response.data?.msg || "Unknown error from Fincart API",
+    };
   } catch (error) {
     console.error("Failed to send order to Fincart:", error);
 
