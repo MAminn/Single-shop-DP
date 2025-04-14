@@ -13,6 +13,7 @@ import type { ClientSession } from "#root/backend/auth/shared/entities";
 import { ServerError } from "#root/shared/error/server";
 import { EmailService, renderEmailTemplate } from "#root/shared/email/service";
 import { NewOrderEmailTemplate } from "./email-template";
+import axios from "axios";
 
 const OrderItemSchema = z.object({
   productId: z.string().uuid(),
@@ -31,6 +32,88 @@ export const createOrderSchema = z.object({
   items: z.array(OrderItemSchema).min(1),
   notes: z.string().optional(),
 });
+
+// Function to send order data to Fincart
+interface FincartOrderData {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingState: string;
+  shippingCountry: string;
+  shippingPostalCode: string;
+  subtotal: string | number;
+  shipping: string | number;
+  tax: string | number;
+  total: string | number;
+  items: Array<{
+    name?: string;
+    quantity: number;
+    price: string | number;
+  }>;
+}
+
+interface FincartResponse {
+  success: boolean;
+  data?: Record<string, unknown>;
+  error?: unknown;
+}
+
+const sendOrderToFincart = async (
+  orderData: FincartOrderData
+): Promise<FincartResponse> => {
+  try {
+    const FINCART_API_URL =
+      process.env.FINCART_API_URL;
+    const FINCART_API_KEY = process.env.FINCART_API_KEY;
+
+    if (!FINCART_API_KEY) {
+      console.error("FINCART_API_KEY is not set in the environment variables");
+      return { success: false, error: "API Key not configured" };
+    }
+
+    // Format the data according to Fincart's API requirements
+    const payload = {
+      orderId: orderData.id,
+      orderNumber: orderData.id, // You might want to use a different format
+      customerName: orderData.customerName,
+      customerPhone: orderData.customerPhone,
+      customerEmail: orderData.customerEmail,
+      shippingAddress: {
+        addressLine: orderData.shippingAddress,
+        city: orderData.shippingCity,
+        state: orderData.shippingState,
+        country: orderData.shippingCountry,
+        postalCode: orderData.shippingPostalCode,
+      },
+      items: orderData.items.map((item) => ({
+        name: item.name || "",
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      subtotal: orderData.subtotal,
+      shipping: orderData.shipping,
+      tax: orderData.tax,
+      total: orderData.total,
+    };
+
+    // Send the data to Fincart
+    const response = await axios.post(`${FINCART_API_URL}/orders`, payload, {
+      headers: {
+        Authorization: `Bearer ${FINCART_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log("Order sent to Fincart successfully:", response.data);
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error("Failed to send order to Fincart:", error);
+    return { success: false, error };
+  }
+};
 
 export const createOrder = (
   input: z.infer<typeof createOrderSchema>,
@@ -314,6 +397,27 @@ export const createOrder = (
         );
         // Continue with order creation even if email fails
       }
+    }
+
+    // Send order to Fincart
+    try {
+      // Use Effect to handle the async operation correctly
+      yield* $(Effect.promise(() => sendOrderToFincart(result))).pipe(
+        Effect.tap((fincartResult) => {
+          if (!fincartResult.success) {
+            console.error(
+              "Failed to send order to Fincart:",
+              fincartResult.error
+            );
+          }
+        }),
+        Effect.catchAll((error) => {
+          console.error("Exception when sending order to Fincart:", error);
+          return Effect.succeed(undefined);
+        })
+      );
+    } catch (error) {
+      console.error("Exception when sending order to Fincart:", error);
     }
 
     return result;
