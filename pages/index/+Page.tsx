@@ -148,25 +148,14 @@ export default function Page() {
             <div
               className="absolute inset-0 bg-gray-100"
               style={{
+                backgroundImage: "url(/assets/landing.webp)",
                 backgroundSize: "cover",
                 backgroundPosition: "center",
               }}
             ></div>
           )}
 
-          {/* Single image source for all devices with responsive sizing */}
-          <source
-            media="(max-width: 640px)"
-            srcSet="/assets/landing.webp?width=640"
-            width="640"
-            height="960"
-          />
-          <source
-            media="(max-width: 1024px)"
-            srcSet="/assets/landing.webp?width=1024"
-            width="1024"
-            height="1536"
-          />
+          {/* Single image source for all devices */}
           <img
             src="/assets/landing.webp"
             alt="Fashion collection banner"

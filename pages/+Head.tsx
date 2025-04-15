@@ -29,23 +29,6 @@ export default function HeadDefault() {
         href="/assets/landing.webp"
         as="image"
         type="image/webp"
-        media="(min-width: 1025px)"
-        fetchPriority="high"
-      />
-      <link
-        rel="preload"
-        href="/assets/landing.webp?width=1024"
-        as="image"
-        type="image/webp"
-        media="(min-width: 641px) and (max-width: 1024px)"
-        fetchPriority="high"
-      />
-      <link
-        rel="preload"
-        href="/assets/landing.webp?width=640"
-        as="image"
-        type="image/webp"
-        media="(max-width: 640px)"
         fetchPriority="high"
       />
 
