@@ -23,9 +23,31 @@ export default function HeadDefault() {
         crossOrigin="anonymous"
       />
 
-      {/* Preload critical assets */}
-      <link rel="preload" href="/assets/landing-hero.webp" as="image" />
-      <link rel="preload" href="/assets/landing.webp" as="image" />
+      {/* Preload critical assets - only preload landing.webp */}
+      <link
+        rel="preload"
+        href="/assets/landing.webp"
+        as="image"
+        type="image/webp"
+        media="(min-width: 1025px)"
+        fetchPriority="high"
+      />
+      <link
+        rel="preload"
+        href="/assets/landing.webp?width=1024"
+        as="image"
+        type="image/webp"
+        media="(min-width: 641px) and (max-width: 1024px)"
+        fetchPriority="high"
+      />
+      <link
+        rel="preload"
+        href="/assets/landing.webp?width=640"
+        as="image"
+        type="image/webp"
+        media="(max-width: 640px)"
+        fetchPriority="high"
+      />
 
       {/* Font display optimization with React-friendly approach */}
       <link
@@ -41,6 +63,10 @@ export default function HeadDefault() {
         content="width=device-width, initial-scale=1.0, viewport-fit=cover"
       />
       <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
+
+      {/* Core Web Vitals hints */}
+      <meta name="theme-color" content="#ffffff" />
+      <meta name="color-scheme" content="light" />
 
       {/* Critical CSS as separate style tags */}
       <style>{`
@@ -59,6 +85,27 @@ export default function HeadDefault() {
       <style>{`
         /* Prevent layout shifts */
         img { display: block; max-width: 100%; height: auto; }
+        
+        /* Responsive containers for mobile first approach */
+        .container { 
+          width: 100%; 
+          padding-right: 1rem; 
+          padding-left: 1rem; 
+          margin-right: auto; 
+          margin-left: auto; 
+        }
+        @media (min-width: 640px) { 
+          .container { max-width: 640px; } 
+        }
+        @media (min-width: 768px) { 
+          .container { max-width: 768px; } 
+        }
+        @media (min-width: 1024px) { 
+          .container { max-width: 1024px; }
+        }
+        @media (min-width: 1280px) { 
+          .container { max-width: 1280px; }
+        }
       `}</style>
 
       <style>{`

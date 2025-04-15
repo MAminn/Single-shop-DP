@@ -55,20 +55,12 @@ const faqData = [
 
 // Preload critical images
 const preloadImages = () => {
-  const criticalImages = [
-    "/assets/landing.webp",
-    "/assets/men-section.webp",
-    "/assets/women-section.webp",
-    "/assets/brands.webp",
-  ];
+  const criticalImages = ["/assets/landing.webp"];
 
   for (const src of criticalImages) {
     const img = new Image();
     img.src = src;
-    // Add fetchpriority to the most important images
-    if (src.includes("landing")) {
-      img.fetchPriority = "high";
-    }
+    img.fetchPriority = "high";
   }
 };
 
@@ -154,18 +146,27 @@ export default function Page() {
           {/* Low quality image placeholder */}
           {!heroImageLoaded && (
             <div
-              className="absolute inset-0 bg-gray-300"
+              className="absolute inset-0 bg-gray-100"
               style={{
-                backgroundImage: "url(/assets/landing.webp)",
                 backgroundSize: "cover",
                 backgroundPosition: "center",
-                filter: "blur(10px)",
-                transform: "scale(1.1)",
               }}
             ></div>
           )}
 
-          {/* Single image source for all devices */}
+          {/* Single image source for all devices with responsive sizing */}
+          <source
+            media="(max-width: 640px)"
+            srcSet="/assets/landing.webp?width=640"
+            width="640"
+            height="960"
+          />
+          <source
+            media="(max-width: 1024px)"
+            srcSet="/assets/landing.webp?width=1024"
+            width="1024"
+            height="1536"
+          />
           <img
             src="/assets/landing.webp"
             alt="Fashion collection banner"
@@ -178,6 +179,7 @@ export default function Page() {
             width="1920"
             height="1080"
             fetchPriority="high"
+            decoding="async"
           />
         </picture>
 
@@ -273,9 +275,10 @@ export default function Page() {
                   src="/assets/men-section.webp"
                   alt="Men's fashion category"
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-400 group-hover:scale-105"
-                  width="600"
-                  height="800"
+                  width="400"
+                  height="533"
                   loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 z-[9]">
                   <h3 className="text-2xl font-bold text-white mb-2">Men</h3>
@@ -299,9 +302,10 @@ export default function Page() {
                   src="/assets/women-section.webp"
                   alt="Women's fashion category"
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-400 group-hover:scale-105"
-                  width="600"
-                  height="800"
+                  width="400"
+                  height="533"
                   loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 z-[9]">
                   <h3 className="text-2xl font-bold text-white mb-2">Women</h3>
@@ -325,9 +329,10 @@ export default function Page() {
                   src="/assets/brands.webp"
                   alt="Fashion brands category"
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-400 group-hover:scale-105"
-                  width="600"
-                  height="800"
+                  width="400"
+                  height="533"
                   loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 z-[9]">
                   <h3 className="text-2xl font-bold text-white mb-2">Brands</h3>
@@ -371,9 +376,10 @@ export default function Page() {
                   src="/assets/story.webp"
                   alt="About Lebsy - Our fashion story"
                   className="w-full h-auto rounded-xl"
-                  width="600"
-                  height="400"
+                  width="500"
+                  height="333"
                   loading="lazy"
+                  decoding="async"
                 />
               </div>
             </AnimatedContent>
@@ -429,8 +435,9 @@ export default function Page() {
           className="absolute inset-0 w-full h-full object-cover opacity-10"
           aria-hidden="true"
           loading="lazy"
-          width="1920"
-          height="1080"
+          width="800"
+          height="600"
+          fetchPriority="low"
         />
 
         <div className="relative z-[9] container mx-auto px-4 text-center">
