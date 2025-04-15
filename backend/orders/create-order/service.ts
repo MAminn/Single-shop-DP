@@ -91,9 +91,9 @@ const sendOrderToFincart = async (
 
     // Format the data according to Fincart's API requirements
     const payload = {
-      _id: "67115a8c16713e3eaec19384", // Add this ID field based on API response
+      _id: FINCART_MERCHANT_LOCATION || "67115a8c16713e3eaec19384", // Use the provided merchant location ID
       city: orderData.shippingCity,
-      location: "67115a8c16713e3eaec19384", // Add location field
+      location: FINCART_MERCHANT_LOCATION || "67115a8c16713e3eaec19384", // Use the provided merchant location ID
       zone: `${orderData.shippingState} - ${orderData.shippingCity}`,
       customer_name: orderData.customerName,
       customer_address: orderData.shippingAddress,
@@ -102,7 +102,7 @@ const sendOrderToFincart = async (
       customer_backup_phone: orderData.customerPhone,
       customer_landmark: `Near ${orderData.shippingCity} Center`,
       ref_id: orderData.id.substring(0, 24), // Limit length to match their format
-      pickup_id: "67115a8c16713e3eaec19384", // Use the literal ID from documentation
+      pickup_id: FINCART_PICKUP_ID || "67115a8c16713e3eaec19384", // Use the provided pickup ID
       id_default: true, // Add this based on API response example
       desc: `Order #${orderData.id.substring(0, 8)} from ${orderData.customerName}`,
       no_items: orderData.items.reduce(
@@ -116,6 +116,8 @@ const sendOrderToFincart = async (
       open_shipment_allowed: false,
       cod: Number.parseFloat(orderData.total.toString()),
       country: "EG", // Added required country code based on API example
+      coordinates: "30.049683060160454, 31.333328930893973", // Use the coordinates provided for the merchant location
+      merchant_address: "43 Al Gahez, St, Nasr City, Cairo Governorate 4441452", // Use the address provided for the merchant location
       items: orderData.items.map((item) => ({
         name: item.name || "Product",
         quantity: item.quantity,
