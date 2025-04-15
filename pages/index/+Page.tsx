@@ -1,12 +1,20 @@
-import { useState, useEffect } from "react";
-import { FeaturedSection } from "#root/components/FeaturedSection";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Button } from "#root/components/ui/button";
 import { Link } from "#root/components/Link";
 import { ShoppingBag, Users, Store, ChevronRight } from "lucide-react";
 import AnimatedContent from "#root/components/AnimatedContent";
 import { trpc } from "#root/shared/trpc/client";
-import { FAQ } from "#root/components/globals/FAQ";
 import { Footer } from "#root/components/globals/Footer";
+
+// Lazy load non-critical components
+const FAQ = lazy(() =>
+  import("#root/components/globals/FAQ").then((mod) => ({ default: mod.FAQ }))
+);
+const FeaturedSection = lazy(() =>
+  import("#root/components/FeaturedSection").then((mod) => ({
+    default: mod.FeaturedSection,
+  }))
+);
 
 interface FeaturedProduct {
   id: string;
@@ -31,12 +39,6 @@ const faqData = [
     answer:
       "Lebsey brings together fashion vendors and brands into one marketplace, making it easy for you to shop from multiple sellers without having to visit different websites. Browse collections, add items to your cart, and checkout seamlessly.",
   },
-  // {
-  //   id: "payment-methods",
-  //   question: "What payment methods do you accept?",
-  //   answer:
-  //     "We accept all major credit cards, debit cards, PayPal, and Apple Pay. All transactions are secure and encrypted to ensure your financial information is protected.",
-  // },
   {
     id: "shipping-time",
     question: "How long does shipping take?",
@@ -49,18 +51,6 @@ const faqData = [
     answer:
       "You can return items within 14 days if they are unused and in their original packaging. To start a return, contact us at CS@Lebsey.com or WhatsApp +201507135600. Return fees match the original delivery cost, and refunds are processed within 14 days. Damaged items must be reported within 1 day for a free replacement or refund.",
   },
-  // {
-  //   id: "order-tracking",
-  //   question: "How do I track my order?",
-  //   answer:
-  //     "Once your order ships, you'll receive a tracking number via email. You can also track your order in your account dashboard under 'Order History'.",
-  // },
-  // {
-  //   id: "international-shipping",
-  //   question: "Do you ship internationally?",
-  //   answer:
-  //     "Yes, we ship to many countries worldwide. International shipping rates and delivery times vary by location. You can view available shipping options during checkout.",
-  // },
 ];
 
 // Preload critical images
@@ -75,20 +65,33 @@ const preloadImages = () => {
   for (const src of criticalImages) {
     const img = new Image();
     img.src = src;
+    // Add fetchpriority to the most important images
+    if (src.includes("landing")) {
+      img.fetchPriority = "high";
+    }
   }
 };
+
+// Loading placeholder component for Suspense
+const LoadingPlaceholder = () => (
+  <div className="w-full py-8 flex justify-center">
+    <div className="w-12 h-12 rounded-full border-4 border-accent-lb border-t-transparent animate-spin"></div>
+  </div>
+);
 
 export default function Page() {
   const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>(
     []
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [heroImageLoaded, setHeroImageLoaded] = useState(false);
 
   useEffect(() => {
     // Preload critical images
     preloadImages();
 
-    const fetchFeaturedProducts = async () => {
+    // Use requestIdleCallback to defer non-critical operations
+    const fetchProducts = async () => {
       try {
         const result = await trpc.product.search.query({
           limit: 8,
@@ -124,32 +127,61 @@ export default function Page() {
       }
     };
 
-    fetchFeaturedProducts();
+    // Defer non-critical data fetching
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(() => {
+        fetchProducts();
+      });
+    } else {
+      // Fallback for browsers that don't support requestIdleCallback
+      setTimeout(fetchProducts, 1000);
+    }
   }, []);
+
+  // Handle hero image load
+  const handleHeroImageLoad = () => {
+    setHeroImageLoaded(true);
+  };
 
   return (
     <main>
       {/* Hero Section */}
-      <section className="relative h-[90vh] overflow-hidden">
+      <section className="hero-section relative h-[90vh] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent z-[9]"></div>
-        {/* Responsive background image for better performance on mobile */}
+
+        {/* Responsive background image for better performance */}
         <picture>
-          {/* Smaller image for mobile devices */}
-          <source
-            media="(max-width: 640px)"
-            srcSet="/assets/landing-hero.webp"
+          {/* Low quality image placeholder */}
+          {!heroImageLoaded && (
+            <div
+              className="absolute inset-0 bg-gray-300"
+              style={{
+                backgroundImage: "url(/assets/landing.webp)",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                filter: "blur(10px)",
+                transform: "scale(1.1)",
+              }}
+            ></div>
+          )}
+
+          {/* Single image source for all devices */}
+          <img
+            src="/assets/landing.webp"
+            alt="Fashion collection banner"
+            className="absolute inset-0 w-full h-full object-cover"
+            onLoad={handleHeroImageLoad}
+            style={{
+              opacity: heroImageLoaded ? 1 : 0,
+              transition: "opacity 0.3s ease-in",
+            }}
+            width="1920"
+            height="1080"
+            fetchPriority="high"
           />
-          {/* Default image for larger screens */}
-          <source srcSet="/assets/landing.webp" />
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: "url(/assets/landing.webp)" }}
-            role="img"
-            aria-label="Fashion collection banner image"
-          ></div>
         </picture>
 
-        <div className="relative z-[9] container mx-auto h-full flex flex-col justify-center px-4">
+        <div className="hero-content relative z-[9] container mx-auto h-full flex flex-col justify-center px-4">
           <AnimatedContent
             distance={30}
             direction="vertical"
@@ -201,9 +233,11 @@ export default function Page() {
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 1440 100"
             className="w-full"
-            role="img"
-            aria-label="Wave shape divider"
+            aria-labelledby="wave-divider-title"
           >
+            <title id="wave-divider-title">
+              Decorative wave shape divider at the bottom of the hero section
+            </title>
             <path
               fill="#ffffff"
               fillOpacity="1"
@@ -235,12 +269,14 @@ export default function Page() {
             >
               <Link href="/featured/men" className="block h-full">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-[9]"></div>
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-400 group-hover:scale-105"
-                  style={{ backgroundImage: "url(/assets/men-section.webp)" }}
-                  role="img"
-                  aria-label="Men's fashion category"
-                ></div>
+                <img
+                  src="/assets/men-section.webp"
+                  alt="Men's fashion category"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-400 group-hover:scale-105"
+                  width="600"
+                  height="800"
+                  loading="lazy"
+                />
                 <div className="absolute bottom-0 left-0 right-0 p-6 z-[9]">
                   <h3 className="text-2xl font-bold text-white mb-2">Men</h3>
                   <div className="flex items-center text-white">
@@ -259,12 +295,14 @@ export default function Page() {
             >
               <Link href="/featured/women" className="block h-full">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-[9]"></div>
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-400 group-hover:scale-105"
-                  style={{ backgroundImage: "url(/assets/women-section.webp)" }}
-                  role="img"
-                  aria-label="Women's fashion category"
-                ></div>
+                <img
+                  src="/assets/women-section.webp"
+                  alt="Women's fashion category"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-400 group-hover:scale-105"
+                  width="600"
+                  height="800"
+                  loading="lazy"
+                />
                 <div className="absolute bottom-0 left-0 right-0 p-6 z-[9]">
                   <h3 className="text-2xl font-bold text-white mb-2">Women</h3>
                   <div className="flex items-center text-white">
@@ -283,14 +321,14 @@ export default function Page() {
             >
               <Link href="/featured/brands" className="block h-full">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-[9]"></div>
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-400 group-hover:scale-105"
-                  style={{
-                    backgroundImage: "url(/assets/brands.webp)",
-                  }}
-                  role="img"
-                  aria-label="Fashion brands category"
-                ></div>
+                <img
+                  src="/assets/brands.webp"
+                  alt="Fashion brands category"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-400 group-hover:scale-105"
+                  width="600"
+                  height="800"
+                  loading="lazy"
+                />
                 <div className="absolute bottom-0 left-0 right-0 p-6 z-[9]">
                   <h3 className="text-2xl font-bold text-white mb-2">Brands</h3>
                   <div className="flex items-center text-white">
@@ -304,17 +342,20 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Featured Products Section */}
-      {!isLoading && featuredProducts.length > 0 && (
-        <FeaturedSection
-          title="Featured Products"
-          description="Our latest and most popular items carefully selected for you"
-          products={featuredProducts}
-          viewAllLink="/featured/products"
-          backgroundColor="white"
-          limit={4}
-        />
-      )}
+      {/* Lazy load non-critical components */}
+      <Suspense fallback={<LoadingPlaceholder />}>
+        {/* Featured Products Section */}
+        {!isLoading && featuredProducts.length > 0 && (
+          <FeaturedSection
+            title="Featured Products"
+            description="Our latest and most popular items carefully selected for you"
+            products={featuredProducts}
+            viewAllLink="/featured/products"
+            backgroundColor="white"
+            limit={4}
+          />
+        )}
+      </Suspense>
 
       {/* About Section */}
       <section className="py-20 bg-accent-lb/5">
@@ -330,6 +371,9 @@ export default function Page() {
                   src="/assets/story.webp"
                   alt="About Lebsy - Our fashion story"
                   className="w-full h-auto rounded-xl"
+                  width="600"
+                  height="400"
+                  loading="lazy"
                 />
               </div>
             </AnimatedContent>
@@ -365,23 +409,29 @@ export default function Page() {
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section id="faq" className="py-20 bg-white">
-        <FAQ
-          title="Frequently Asked Questions"
-          description="Find answers to common questions about shopping with Lebsey"
-          faqs={faqData}
-        />
-      </section>
+      {/* FAQ Section - lazy loaded */}
+      <Suspense fallback={<LoadingPlaceholder />}>
+        <section id="faq" className="py-20 bg-white">
+          <FAQ
+            title="Frequently Asked Questions"
+            description="Find answers to common questions about shopping with Lebsey"
+            faqs={faqData}
+          />
+        </section>
+      </Suspense>
 
       {/* Call To Action */}
       <section className="relative py-20 overflow-hidden">
         <div className="absolute inset-0 bg-accent-lb/90"></div>
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-10"
-          style={{ backgroundImage: "url(/assets/men-section.webp)" }}
+        <img
+          src="/assets/men-section.webp"
+          alt="Decorative background image"
+          className="absolute inset-0 w-full h-full object-cover opacity-10"
           aria-hidden="true"
-        ></div>
+          loading="lazy"
+          width="1920"
+          height="1080"
+        />
 
         <div className="relative z-[9] container mx-auto px-4 text-center">
           <AnimatedContent threshold={0.2}>
@@ -398,10 +448,7 @@ export default function Page() {
               size="lg"
               className="bg-white text-accent-lb hover:bg-gray-100 transition-colors"
             >
-              <Link href="/featured/products">
-                Shop Now
-                <ChevronRight className="ml-2 h-5 w-5" />
-              </Link>
+              <Link href="/featured/products">Shop Collections</Link>
             </Button>
           </AnimatedContent>
         </div>
