@@ -18,10 +18,10 @@ interface AnimatedContentProps {
 const AnimatedContent: React.FC<AnimatedContentProps> = ({
   className,
   children,
-  distance = 100,
+  distance = 50,
   direction = "vertical",
   reverse = false,
-  config = { tension: 50, friction: 25 },
+  config = { tension: 70, friction: 20 },
   initialOpacity = 0,
   animateOpacity = true,
   scale = 1,
@@ -35,18 +35,23 @@ const AnimatedContent: React.FC<AnimatedContentProps> = ({
     const element = ref.current;
     if (!element) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          observer.unobserve(element);
-          setTimeout(() => {
-            setInView(true);
-          }, delay);
-        }
-      },
-      { threshold }
-    );
+    const throttleTime = 100;
+    let lastTime = 0;
+    const throttledCallback = (entries: IntersectionObserverEntry[]) => {
+      const now = Date.now();
+      if (now - lastTime < throttleTime) return;
+      lastTime = now;
 
+      const [entry] = entries;
+      if (entry?.isIntersecting) {
+        observer.unobserve(element);
+        setTimeout(() => {
+          setInView(true);
+        }, delay);
+      }
+    };
+
+    const observer = new IntersectionObserver(throttledCallback, { threshold });
     observer.observe(element);
 
     return () => observer.disconnect();

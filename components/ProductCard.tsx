@@ -124,7 +124,7 @@ export const ProductCard = ({
 
   return (
     <div
-      className="group relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full border border-gray-100"
+      className="group relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col h-full border border-gray-100"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -136,8 +136,10 @@ export const ProductCard = ({
           <img
             src={displayImageUrl}
             alt={product.name}
-            className={`w-full h-full object-cover transform transition-transform duration-500 
-              ${isHovered ? "scale-110" : "scale-100"}`}
+            loading="lazy"
+            decoding="async"
+            className={`w-full h-full object-cover transform transition-transform duration-300 
+              ${isHovered ? "scale-105" : "scale-100"}`}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
@@ -167,7 +169,7 @@ export const ProductCard = ({
         {/* Quick add button that appears on hover */}
         {product.available && (
           <div
-            className={`absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent transform transition-all duration-300 ${isHovered ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}`}
+            className={`absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent transform transition-all duration-200 ${isHovered ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}`}
           >
             <Button
               onClick={handleAddToCart}

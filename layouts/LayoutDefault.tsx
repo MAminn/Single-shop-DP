@@ -1,5 +1,5 @@
 import Navbar from "#root/components/globals/Navbar.jsx";
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import "./style.css";
 import { trpc } from "#root/shared/trpc/client.js";
 import { toast, Toaster } from "sonner";
@@ -10,15 +10,8 @@ import { AuthContext } from "#root/context/AuthContext.js";
 import { CartProvider } from "#root/lib/context/CartContext";
 import { Toaster as ShadcnToaster } from "#root/components/ui/toaster";
 
-export default function LayoutDefault({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <Content>{children}</Content>;
-}
-
-function Content({ children }: { children: React.ReactNode }) {
+// Memoized Content component to prevent unnecessary re-renders
+const Content = memo(({ children }: { children: React.ReactNode }) => {
   const pageContext = usePageContext();
   const [session, setSession] = useState<ClientSession | null>(
     pageContext.clientSession ?? null
@@ -69,4 +62,15 @@ function Content({ children }: { children: React.ReactNode }) {
       </CartProvider>
     </AuthContext.Provider>
   );
+});
+
+// Display name for the memoized component
+Content.displayName = "Content";
+
+export default function LayoutDefault({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <Content>{children}</Content>;
 }

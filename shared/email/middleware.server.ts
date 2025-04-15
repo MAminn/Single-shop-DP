@@ -23,6 +23,17 @@ const smtpVariablesSchema = z.object({
   smtpPassword: z.string(),
 });
 
+// Type for timeout result to ensure proper typing
+interface TimeoutResult {
+  success: false;
+  error: string;
+}
+
+// Type for the email service result to help TypeScript understand our code
+type MakeEmailServiceResult =
+  | { success: true; result: EmailServiceInterface }
+  | { success: false; error: unknown };
+
 export const emailServiceMiddleware = fp(async (app: FastifyInstance) => {
   try {
     app.log.info("Initializing email service middleware");
@@ -37,7 +48,7 @@ export const emailServiceMiddleware = fp(async (app: FastifyInstance) => {
       app.log.warn("Missing SMTP configuration environment variables");
       app.decorateRequest("emailService", {
         getter() {
-          return createDummyEmailService(app.log) as EmailServiceInterface;
+          return createDummyEmailService(app.log);
         },
       });
       return;
@@ -59,7 +70,7 @@ export const emailServiceMiddleware = fp(async (app: FastifyInstance) => {
 
       app.decorateRequest("emailService", {
         getter() {
-          return createDummyEmailService(app.log) as EmailServiceInterface;
+          return createDummyEmailService(app.log);
         },
       });
       return;
@@ -78,21 +89,81 @@ export const emailServiceMiddleware = fp(async (app: FastifyInstance) => {
       smtpPassword: Redacted.make(validationResult.data.smtpPassword),
     };
 
-    const makeEmailServiceResult = await runBackendEffect(
-      makeEmailService(data)
-    );
+    try {
+      // Set a short timeout for email service creation to avoid hanging
+      const timeoutPromise = new Promise<TimeoutResult>((resolve) => {
+        setTimeout(() => {
+          resolve({
+            success: false,
+            error: "Email service initialization timed out after 5 seconds",
+          });
+        }, 5000);
+      });
 
-    const emailService = makeEmailServiceResult.success
-      ? makeEmailServiceResult.result
-      : createDummyEmailService(app.log);
+      // Try to create the email service with a timeout
+      // Use a try-catch to handle any potential errors from runBackendEffect
+      let makeEmailServicePromise: Promise<MakeEmailServiceResult>;
+      try {
+        // @ts-ignore - Ignoring the type error here since we know the structure
+        makeEmailServicePromise = runBackendEffect(makeEmailService(data));
+      } catch (err) {
+        app.log.error({
+          msg: "Error running makeEmailService effect",
+          error: err,
+        });
+        // If the effect throws, return dummy service
+        app.decorateRequest("emailService", {
+          getter() {
+            return createDummyEmailService(app.log);
+          },
+        });
+        return;
+      }
 
-    app.decorateRequest("emailService", {
-      getter() {
-        return emailService as EmailServiceInterface;
-      },
-    });
+      // Race between timeout and actual service creation
+      const makeEmailServiceResult = (await Promise.race([
+        makeEmailServicePromise,
+        timeoutPromise,
+      ])) as MakeEmailServiceResult | TimeoutResult;
 
-    app.log.info("Email service middleware initialization complete");
+      // Always use a failsafe approach - if anything goes wrong, use dummy service
+      let emailService: EmailServiceInterface;
+
+      if (
+        "success" in makeEmailServiceResult &&
+        makeEmailServiceResult.success
+      ) {
+        emailService = makeEmailServiceResult.result;
+        app.log.info("Email service initialized successfully");
+      } else {
+        app.log.warn({
+          msg: "Using dummy email service due to initialization failure",
+          error:
+            "error" in makeEmailServiceResult
+              ? makeEmailServiceResult.error
+              : "Unknown error",
+        });
+        emailService = createDummyEmailService(app.log);
+      }
+
+      app.decorateRequest("emailService", {
+        getter() {
+          return emailService;
+        },
+      });
+
+      app.log.info("Email service middleware initialization complete");
+    } catch (innerError) {
+      app.log.error({
+        msg: "Error in email service initialization",
+        error: innerError,
+      });
+      app.decorateRequest("emailService", {
+        getter() {
+          return createDummyEmailService(app.log);
+        },
+      });
+    }
   } catch (error) {
     app.log.error({
       msg: "Unexpected error in email service middleware",
@@ -101,7 +172,7 @@ export const emailServiceMiddleware = fp(async (app: FastifyInstance) => {
 
     app.decorateRequest("emailService", {
       getter() {
-        return createDummyEmailService(app.log) as EmailServiceInterface;
+        return createDummyEmailService(app.log);
       },
     });
   }

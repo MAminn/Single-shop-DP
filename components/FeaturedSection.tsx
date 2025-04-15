@@ -51,10 +51,10 @@ export function FeaturedSection({
     <section className={`py-16 ${bgColorClasses[backgroundColor]}`}>
       <div className="container mx-auto px-4">
         <AnimatedContent
-          distance={30}
+          distance={20}
           direction="vertical"
           reverse={false}
-          config={{ tension: 60, friction: 30 }}
+          config={{ tension: 80, friction: 25 }}
           initialOpacity={0}
           animateOpacity
           scale={1}
@@ -86,15 +86,15 @@ export function FeaturedSection({
           {displayProducts.map((product, index) => (
             <AnimatedContent
               key={product.id}
-              distance={20}
+              distance={15}
               direction="vertical"
               reverse={false}
-              config={{ tension: 60, friction: 30 }}
+              config={{ tension: 80, friction: 25 }}
               initialOpacity={0}
               animateOpacity
               scale={1}
               threshold={0.1}
-              delay={index * 100}
+              delay={index * 50}
               className="h-full"
             >
               <ProductCard product={product} />

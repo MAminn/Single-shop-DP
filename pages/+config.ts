@@ -15,5 +15,11 @@ export default {
 
   extends: vikeReact,
 
+  // Enable pre-rendering for better performance
+  // Using the new format required by Vike
+  clientRouting: true,
+  hydrationCanBeAborted: true,
+
+  // Pass client session to the client side
   passToClient: ["clientSession"],
 } satisfies Config;

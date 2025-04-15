@@ -95,11 +95,11 @@ const Hero: React.FC<HeroProps> = ({
 
     const handleScroll = () => {
       if (window.scrollY < 600) {
-        setParallaxOffset(window.scrollY * 0.15);
+        setParallaxOffset(window.scrollY * 0.075);
       }
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -120,12 +120,12 @@ const Hero: React.FC<HeroProps> = ({
       className={`relative overflow-hidden ${heightClass} w-full ${className}`}
       style={style}
     >
-      {/* Parallax Background Image */}
+      {/* Parallax Background Image with optimized loading */}
       <div
-        className="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-700 ease-out"
+        className="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-300 ease-out"
         style={{
           backgroundImage: `url(${imageUrl})`,
-          transform: `translateY(${parallaxOffset}px) scale(1.1)`,
+          transform: `translateY(${parallaxOffset}px) scale(1.05)`,
         }}
       />
 
@@ -144,10 +144,10 @@ const Hero: React.FC<HeroProps> = ({
         } ${alignClasses[align]}`}
       >
         <AnimatedContent
-          distance={50}
+          distance={30}
           direction="vertical"
           reverse={false}
-          config={{ tension: 100, friction: 20 }}
+          config={{ tension: 120, friction: 20 }}
           initialOpacity={0}
           threshold={0.1}
           animateOpacity
@@ -160,7 +160,7 @@ const Hero: React.FC<HeroProps> = ({
           >
             {caption && (
               <div
-                className="transform transition-all duration-700 delay-100"
+                className="transform transition-all duration-300 delay-100"
                 style={{
                   opacity: isVisible ? 1 : 0,
                   transform: isVisible ? "translateY(0)" : "translateY(20px)",
@@ -176,7 +176,7 @@ const Hero: React.FC<HeroProps> = ({
 
             {title && (
               <h1
-                className={`text-4xl md:text-5xl lg:text-6xl font-bold leading-tight ${textColor} transform transition-all duration-700 delay-200`}
+                className={`text-4xl md:text-5xl lg:text-6xl font-bold leading-tight ${textColor} transform transition-all duration-300 delay-150`}
                 style={{
                   opacity: isVisible ? 1 : 0,
                   transform: isVisible ? "translateY(0)" : "translateY(20px)",
@@ -188,7 +188,7 @@ const Hero: React.FC<HeroProps> = ({
 
             {description && (
               <p
-                className={`text-base md:text-lg ${textColor === "text-white" ? "text-gray-200" : "text-gray-700"} max-w-md transform transition-all duration-700 delay-300`}
+                className={`text-base md:text-lg ${textColor === "text-white" ? "text-gray-200" : "text-gray-700"} max-w-md transform transition-all duration-300 delay-200`}
                 style={{
                   opacity: isVisible ? 1 : 0,
                   transform: isVisible ? "translateY(0)" : "translateY(20px)",
@@ -199,7 +199,7 @@ const Hero: React.FC<HeroProps> = ({
             )}
 
             <div
-              className="flex flex-wrap gap-4 pt-2 transform transition-all duration-700 delay-400"
+              className="flex flex-wrap gap-4 pt-2 transform transition-all duration-300 delay-250"
               style={{
                 opacity: isVisible ? 1 : 0,
                 transform: isVisible ? "translateY(0)" : "translateY(20px)",
