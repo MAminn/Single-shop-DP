@@ -172,50 +172,42 @@ export default function Page() {
           />
         </picture>
 
-        <div className="hero-content relative z-[9] container mx-auto h-full flex flex-col justify-center px-4">
-          <AnimatedContent
-            distance={30}
-            direction="vertical"
-            reverse={false}
-            config={{ tension: 120, friction: 20 }}
-            className="max-w-xl"
-          >
-            <div className="bg-white/10 backdrop-blur-sm p-1 px-3 rounded-full inline-block mb-4">
-              <span className="text-white text-sm font-medium">
-                New Season Collection
-              </span>
-            </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-              Discover Your Perfect Style
-            </h1>
-            <p className="text-gray-200 text-lg mb-8 max-w-lg">
-              Shop the latest trends from top brands and independent designers
-              all in one place.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Button
-                asChild
-                size="lg"
-                className="bg-accent-lb hover:bg-white hover:text-accent-lb duration-200 transition-all"
-              >
-                <Link href="/featured/products">
-                  <ShoppingBag className="mr-2 h-5 w-5" />
-                  Shop Now
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="border-white text-foreground hover:bg-white hover:text-accent-lb duration-200 transition-all"
-              >
-                <Link href="/featured/brands">
-                  <Store className="mr-2 h-5 w-5" />
-                  Browse Brands
-                </Link>
-              </Button>
-            </div>
-          </AnimatedContent>
+        <div className="hero-content  relative z-[9] container mx-auto h-full flex flex-col justify-center px-4">
+          <div className="bg-white/10 max-w-fit backdrop-blur-sm p-1 px-3 rounded-full inline-block mb-4 ">
+            <span className="text-white text-sm font-medium">
+              New Season Collection
+            </span>
+          </div>
+          <h1 className="text-4xl md:text-6xl max-w-xl font-bold text-white mb-6 leading-tight">
+            Discover Your Perfect Style
+          </h1>
+          <p className="text-gray-200  text-lg mb-8 max-w-lg">
+            Shop the latest trends from top brands and independent designers all
+            in one place.
+          </p>
+          <div className="flex flex-wrap max-w-xl gap-4">
+            <Button
+              asChild
+              size="lg"
+              className="bg-accent-lb hover:bg-white hover:text-accent-lb duration-200 transition-all"
+            >
+              <Link href="/featured/products">
+                <ShoppingBag className="mr-2 h-5 w-5" />
+                Shop Now
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="border-white text-foreground hover:bg-white hover:text-accent-lb duration-200 transition-all"
+            >
+              <Link href="/featured/brands">
+                <Store className="mr-2 h-5 w-5" />
+                Browse Brands
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* Wave shape divider */}
