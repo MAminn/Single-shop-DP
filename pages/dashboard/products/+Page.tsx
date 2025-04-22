@@ -33,6 +33,8 @@ import { toast } from "sonner";
 import { usePageContext } from "vike-react/usePageContext";
 import { useDebounce } from "use-debounce";
 import { z } from "zod";
+import { Pagination } from "#root/components/Pagination";
+import { navigate } from "vike/client/router";
 
 // Define product form schema type to match server expectations
 type ProductFormSchema = {
@@ -70,7 +72,6 @@ export default function Products() {
   const session = pageContext.clientSession;
 
   const initialData = useData<Data>();
-  const [fetchData, setFetchData] = useState<Data>(initialData);
   const [lastFetchDate, setLastFetchDate] = useState(new Date());
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -84,80 +85,99 @@ export default function Products() {
     stock: 0,
     isOutOfStock: false,
   });
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(
+    pageContext.urlParsed.search.search || ""
+  );
   const [searchQueryValue] = useDebounce(search, 1000);
-  const [sortBy, setSortBy] = useState<"name" | "price" | "stock">("name");
+  const [sortBy, setSortBy] = useState<string>(
+    pageContext.urlParsed.search.sortBy || "name"
+  );
   const [selectedProductCategories, setSelectedProductCategories] = useState<
     string[]
   >([]);
 
-  if (!fetchData.success) {
-    return <ErrorSection error={fetchData.error} />;
+  if (!initialData.success) {
+    return <ErrorSection error={initialData.error} />;
   }
 
-  const productsData = fetchData.products;
+  const {
+    products: productsData,
+    categories,
+    vendors,
+    vendorId,
+    categoryId,
+    totalPages,
+    currentPage,
+    limit,
+  } = initialData;
+
   const selectedProductData = productsData.find(
     ({ product }) => product.id === selectedProduct
   );
-  const categories = fetchData.categories;
-  const vendors = fetchData.vendors;
-  const vendorId = fetchData.vendorId;
-  const categoryId = fetchData.categoryId;
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies:(lastFetchDate) <explanation>
+  const handlePageChange = (page: number) => {
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set("page", String(page));
+    if (!currentUrl.searchParams.has("limit")) {
+      currentUrl.searchParams.set("limit", String(limit));
+    }
+    navigate(currentUrl.pathname + currentUrl.search);
+  };
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(event.target.value);
+  };
+
+  const handleSortChange = (value: string) => {
+    setSortBy(value);
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set("sortBy", value);
+    currentUrl.searchParams.set("page", "1");
+    navigate(currentUrl.pathname + currentUrl.search);
+  };
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      const res = await trpc.product.view.query({
-        search: searchQueryValue,
-        sortBy,
-        vendorId,
-        categoryId,
-        limit: 100,
-      });
+    const currentSearchInUrl = pageContext.urlParsed.search.search || "";
 
-      if (!res.success) {
-        toast.error(res.error);
-        return;
+    if (searchQueryValue !== currentSearchInUrl) {
+      const currentUrl = new URL(window.location.href);
+      if (searchQueryValue) {
+        currentUrl.searchParams.set("search", searchQueryValue);
+      } else {
+        currentUrl.searchParams.delete("search");
       }
+      currentUrl.searchParams.set("page", "1");
 
-      setFetchData({
-        success: true,
-        vendorId,
-        categoryId,
-        products: res.result,
-        categories,
-        vendors,
-      });
-    };
+      const timer = setTimeout(() => {
+        navigate(currentUrl.pathname + currentUrl.search);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [searchQueryValue, pageContext.urlParsed.search.search]);
 
-    fetchProducts();
-  }, [searchQueryValue, sortBy, initialData, lastFetchDate, categoryId]);
-
-  // Fetch product images when a product is selected for editing
   useEffect(() => {
     if (selectedProduct && isEditModalOpen) {
       setIsLoadingImages(true);
 
-      // Load categories for this product
       trpc.product.getCategories
         .query({ productId: selectedProduct })
         .then((categoryResult) => {
           if (categoryResult.success) {
-            // Store category IDs in the selectedProductCategories state
             const categoryIds = categoryResult.result.map((c) => c.id);
             setSelectedProductCategories(categoryIds);
+          } else {
+            toast.error("Failed to load product categories");
           }
         })
         .catch((err) => {
           console.error("Error fetching product categories:", err);
+          toast.error("Error fetching product categories");
         });
 
-      // Fetch all product images for this product
       trpc.product.getProductImages
         .query({ productId: selectedProduct })
         .then((result) => {
           if (result.success && result.result.length > 0) {
-            // Transform the images into the format needed by the form
             const images = result.result.map((img: ProductImageResponse) => ({
               id: img.fileId,
               url: `/uploads/${img.diskname}`,
@@ -165,13 +185,11 @@ export default function Products() {
               isPrimary: img.isPrimary,
             }));
 
-            // Debug log
             console.log("Loaded product images:", images);
 
             setProductImages(images);
           } else {
             console.log("No product images found or failed to load:", result);
-            // Fallback to just the main image
             if (selectedProductData?.file) {
               setProductImages([
                 {
@@ -188,7 +206,7 @@ export default function Products() {
         })
         .catch((err) => {
           console.error("Error fetching product images:", err);
-          // Fallback to just the main image
+          toast.error("Error fetching product images");
           if (selectedProductData?.file) {
             setProductImages([
               {
@@ -211,234 +229,164 @@ export default function Products() {
     }
   }, [selectedProduct, isEditModalOpen, selectedProductData]);
 
-  const handleAddProduct = async (values: ProductFormSchema) => {
-    // Ensure imageId is set - use first product image as imageId if not explicitly provided
-
-    if (
-      !values.imageId &&
-      values.productImages &&
-      values.productImages.length > 0
-    ) {
-      const primaryImage = values.productImages.find((img) => img.isPrimary);
-      // Ensure we handle the case where productImages[0] might be undefined
-      if (primaryImage?.id) {
-        values.imageId = primaryImage.id;
-      } else if (values.productImages[0]?.id) {
-        values.imageId = values.productImages[0].id;
-      }
-    }
-
-    const res = await trpc.product.create.mutate(values);
-
-    if (!res.success) {
-      toast.error(res.error);
-      return;
-    }
-
-    setLastFetchDate(new Date());
+  const handleAddSuccess = () => {
     setIsAddModalOpen(false);
+    toast.success("Product added successfully!");
+    navigate(window.location.href);
   };
 
   const handleDeleteProduct = async (id: string) => {
-    await trpc.product.delete.mutate({ id });
-
-    setLastFetchDate(new Date());
-  };
-
-  const handleEditProduct = async (values: ProductFormSchema) => {
-    if (!selectedProductData) return;
-
-    if (!selectedProductData.product.id) {
-      alert(
-        "Selected product has no id, this is likely a bug, try refreshing the page."
-      );
-      return;
-    }
-
-    // Ensure imageId is set - use first product image as imageId if not explicitly provided
-    if (
-      !values.imageId &&
-      values.productImages &&
-      values.productImages.length > 0
-    ) {
-      const primaryImage = values.productImages.find((img) => img.isPrimary);
-      // Ensure we handle the case where productImages[0] might be undefined
-      if (primaryImage?.id) {
-        values.imageId = primaryImage.id;
-      } else if (values.productImages[0]?.id) {
-        values.imageId = values.productImages[0].id;
-      }
-    }
-
-    const res = await trpc.product.edit.mutate({
-      id: selectedProductData.product.id,
-      ...values,
-    });
-
+    const res = await trpc.product.delete.mutate({ id });
     if (!res.success) {
       toast.error(res.error);
       return;
     }
+    toast.success("Product deleted successfully!");
+    navigate(window.location.href);
+  };
 
-    setLastFetchDate(new Date());
+  const handleEditSuccess = () => {
     setIsEditModalOpen(false);
+    setSelectedProduct(null);
+    toast.success("Product updated successfully!");
+    navigate(window.location.href);
   };
 
   return (
-    <Card className="p-6 w-full h-full mx-auto flex-1">
-      <CardHeader className="flex justify-between items-center">
-        <div className="flex flex-col justify-center items-center lg:items-start lg:justify-start gap-2">
-          <CardTitle>Products</CardTitle>
-          <CardDescription className="text-center lg:text-left">
-            Manage your product inventory.
-          </CardDescription>
-        </div>
-        <div className="flex gap-4 flex-wrap justify-center lg:justify-start items-center">
-          <Input
-            placeholder="Search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-40"
-          />
-          <Tabs
-            value={sortBy}
-            onValueChange={(value) =>
-              setSortBy(value as "name" | "price" | "stock")
-            }
-          >
-            <TabsList>
-              <TabsTrigger value="name">Name</TabsTrigger>
-              <TabsTrigger value="price">Price</TabsTrigger>
-              <TabsTrigger value="stock">Stock</TabsTrigger>
-            </TabsList>
-          </Tabs>
+    <div className="p-4 md:p-6">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className="flex flex-col gap-2 w-full justify-center items-center">
+            <CardTitle>Products</CardTitle>
+            <CardDescription>Manage your products</CardDescription>
+          </div>
           <Button onClick={() => setIsAddModalOpen(true)}>Add Product</Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table className="w-full text-sm mt-4">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Image</TableHead>
-              <TableHead>Product Name</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Stock</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {productsData.map(({ product, file: image }) => (
-              <TableRow key={product.id}>
-                <TableCell>
-                  {image && (
-                    <img
-                      src={`/uploads/${image.diskname}`}
-                      alt={product.name}
-                      className="w-12 h-12 object-cover rounded"
-                    />
-                  )}
-                </TableCell>
-                <TableCell>{product.name}</TableCell>
-                <TableCell>{product.price} EGP</TableCell>
-                <TableCell>{product.stock} in stock</TableCell>
-                <TableCell>
-                  {product.stock === 0 ? (
-                    <span className="text-red-500">Out of Stock</span>
-                  ) : (
-                    <span className="text-green-500">In Stock</span>
-                  )}
-                </TableCell>
-                <TableCell className="flex justify-end gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setSelectedProduct(product.id);
-                      setIsEditModalOpen(true);
-                    }}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDeleteProduct(product.id)}
-                  >
-                    Delete
-                  </Button>
-                </TableCell>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4 flex items-center justify-center space-x-4">
+            <Input
+              placeholder="Search products..."
+              value={search}
+              onChange={handleSearchChange}
+              className="max-w-sm"
+            />
+            <Tabs value={sortBy} onValueChange={handleSortChange}>
+              <TabsList>
+                <TabsTrigger value="name">Name</TabsTrigger>
+                <TabsTrigger value="price">Price</TabsTrigger>
+                <TabsTrigger value="stock">Stock</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Image</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
+            </TableHeader>
+            <TableBody>
+              {productsData.map(({ product, file }) => (
+                <TableRow key={product.id}>
+                  <TableCell>
+                    <img
+                      src={
+                        file ? `/uploads/${file.diskname}` : "/placeholder.svg"
+                      }
+                      alt={product.name}
+                      width={64}
+                      height={64}
+                      className="rounded-md object-cover"
+                    />
+                  </TableCell>
+                  <TableCell>{product.name}</TableCell>
+                  <TableCell>{product.price} EGP</TableCell>
+                  <TableCell>{product.stock}</TableCell>
+                  <TableCell>
+                    {product.stock === 0 ? "Out of Stock" : "In Stock"}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedProduct(product.id);
+                        setIsEditModalOpen(true);
+                      }}
+                      className="mr-2"
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteProduct(product.id)}
+                    >
+                      Delete
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <div className="mt-6 flex justify-center">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        </CardContent>
+      </Card>
+      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Add New Product</DialogTitle>
+          </DialogHeader>
+          <ProductForm
+            initialValues={{
+              vendorId:
+                session?.role === "vendor" ? session.vendorId : undefined,
+            }}
+            onSuccess={handleAddSuccess}
+            categories={categories}
+            vendors={vendors}
+            isLoading={false}
+          />
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className=" overflow-y-scroll max-h-screen">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
           </DialogHeader>
-          {isLoadingImages ? (
-            <div className="flex justify-center items-center p-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-              <p className="ml-3">Loading product data...</p>
-            </div>
-          ) : (
+          {selectedProductData && (
             <ProductForm
+              key={selectedProduct}
+              initialValues={{
+                ...selectedProductData.product,
+                price: Number(selectedProductData.product.price),
+                imageId: selectedProductData.file?.id ?? "",
+                productImages: productImages,
+                categoryIds: selectedProductCategories,
+                variants: selectedProductData.variants.map((v) => ({
+                  name: v.name,
+                  values: v.values,
+                })),
+              }}
+              onSuccess={handleEditSuccess}
               categories={categories}
               vendors={vendors}
-              initialValues={
-                selectedProductData
-                  ? {
-                      id: selectedProductData.product.id,
-                      categoryId: selectedProductData.product.categoryId,
-                      categoryIds: selectedProductCategories,
-                      vendorId: selectedProductData.product.vendorId,
-                      imageId: selectedProductData.product.imageId,
-                      name: selectedProductData.product.name,
-                      description: selectedProductData.product.description,
-                      price: Number(selectedProductData.product.price),
-                      stock: selectedProductData.product.stock,
-                      // Use product images from state which includes all images
-                      productImages: productImages,
-                      // Add product variants if they exist
-                      variants: selectedProductData.variants || [],
-                    }
-                  : undefined
-              }
-              onSuccess={() => {
-                setIsEditModalOpen(false);
-                setLastFetchDate(new Date());
-              }}
+              isLoading={isLoadingImages}
             />
           )}
         </DialogContent>
       </Dialog>
-
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="overflow-y-scroll max-h-screen">
-          <DialogHeader>
-            <DialogTitle>Add Product</DialogTitle>
-          </DialogHeader>
-          <ProductForm
-            categories={categories}
-            vendors={vendors}
-            vendorId={fetchData.vendorId}
-            initialValues={
-              fetchData.vendorId
-                ? {
-                    vendorId: fetchData.vendorId,
-                  }
-                : undefined
-            }
-            onSuccess={() => {
-              setIsAddModalOpen(false);
-              setLastFetchDate(new Date());
-            }}
-          />
-        </DialogContent>
-      </Dialog>
-    </Card>
+    </div>
   );
 }

@@ -8,7 +8,7 @@ import {
   productCategory,
   vendor,
 } from "#root/shared/database/drizzle/schema";
-import { and, asc, eq, ilike, inArray, or } from "drizzle-orm";
+import { and, asc, count, eq, ilike, inArray, or } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 
@@ -26,19 +26,12 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
     return yield* $(
       query(async (db) => {
         return await db.transaction(async (tx) => {
-          const pQuery = tx
-            .select()
-            .from(product)
-            .innerJoin(vendor, eq(product.vendorId, vendor.id))
-            .innerJoin(category, eq(product.categoryId, category.id))
-            .leftJoin(file, eq(product.imageId, file.id))
-            .$dynamic();
-
-          pQuery.where(eq(vendor.status, "active"));
-          pQuery.where(eq(category.deleted, false));
+          const baseQueryConditions = [];
+          baseQueryConditions.push(eq(vendor.status, "active"));
+          baseQueryConditions.push(eq(category.deleted, false));
 
           if (input.search) {
-            pQuery.where(
+            baseQueryConditions.push(
               or(
                 ilike(product.name, `%${input.search}%`),
                 ilike(product.description, `%${input.search}%`),
@@ -49,12 +42,13 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
           }
 
           if (input.vendorId) {
-            pQuery.where(eq(product.vendorId, input.vendorId));
+            baseQueryConditions.push(eq(product.vendorId, input.vendorId));
           }
 
+          // Handle category filtering (potentially complex due to junction table)
+          let productIdsInCategory: string[] | null = null;
           if (input.categoryId) {
-            // First, get all product IDs that belong to this category (via junction table)
-            const productsInCategory = await tx
+            const productsInCategoryRes = await tx
               .select({
                 productId: productCategory.productId,
               })
@@ -62,16 +56,45 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
               .where(eq(productCategory.categoryId, input.categoryId))
               .execute();
 
-            const productIds = productsInCategory.map((p) => p.productId);
+            productIdsInCategory = productsInCategoryRes.map(
+              (p) => p.productId
+            );
 
-            if (productIds.length > 0) {
-              // Filter products to those in the category (either as primary or additional)
-              pQuery.where(inArray(product.id, productIds));
+            if (productIdsInCategory.length > 0) {
+              baseQueryConditions.push(
+                inArray(product.id, productIdsInCategory)
+              );
             } else {
-              // Fallback to the old way if no products found in junction table
-              pQuery.where(eq(product.categoryId, input.categoryId));
+              // If no products found in junction for this category, the result should be empty
+              // Effectively, we add a condition that can't be met.
+              // We check product.categoryId as a fallback, but realistically, if junction has no entries, it's 0.
+              baseQueryConditions.push(
+                eq(product.categoryId, input.categoryId)
+              );
+              // or maybe just return early? For now, let query return 0 results.
             }
           }
+
+          // --- Get Total Count ---
+          const countQuery = tx
+            .select({ count: count() })
+            .from(product)
+            .innerJoin(vendor, eq(product.vendorId, vendor.id))
+            .innerJoin(category, eq(product.categoryId, category.id))
+            .where(and(...baseQueryConditions));
+
+          const totalCountResult = await countQuery.execute();
+          const totalCount = totalCountResult[0]?.count ?? 0;
+
+          // --- Get Paginated Products ---
+          const pQuery = tx
+            .select()
+            .from(product)
+            .innerJoin(vendor, eq(product.vendorId, vendor.id))
+            .innerJoin(category, eq(product.categoryId, category.id))
+            .leftJoin(file, eq(product.imageId, file.id))
+            .where(and(...baseQueryConditions))
+            .$dynamic(); // Keep dynamic for sorting/limit/offset
 
           if (input.sortBy) {
             pQuery.orderBy(
@@ -85,30 +108,27 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
             );
           }
 
-          const products = await pQuery
+          const productsResult = await pQuery
             .limit(input.limit ?? 10)
             .offset(input.offset ?? 0)
             .execute();
 
-          const variants = await tx
-            .select()
-            .from(productVariant)
-            .where(
-              inArray(
-                productVariant.productId,
-                products.map(({ product }) => product.id)
-              )
-            )
-            .execute();
+          const productIds = productsResult.map((p) => p.product.id);
 
-          // Fetch all category associations for these products
+          // --- Fetch Related Data (Variants, Categories) ---
+          let variants: (typeof productVariant.$inferSelect)[] = [];
           const productCategoryMap = new Map<
             string,
             { id: string; name: string }[]
           >();
 
-          const productIds = products.map((p) => p.product.id);
           if (productIds.length > 0) {
+            variants = await tx
+              .select()
+              .from(productVariant)
+              .where(inArray(productVariant.productId, productIds))
+              .execute();
+
             const productCategories = await tx
               .select({
                 productId: productCategory.productId,
@@ -121,7 +141,6 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
               .where(inArray(productCategory.productId, productIds))
               .execute();
 
-            // Build a map of productId -> categories
             for (const pc of productCategories) {
               if (!productCategoryMap.has(pc.productId)) {
                 productCategoryMap.set(pc.productId, []);
@@ -133,23 +152,28 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
             }
           }
 
-          return products.map((product) => {
-            // Get all categories for this product
-            const productCategories =
-              productCategoryMap.get(product.product.id) || [];
-
+          // --- Format Results ---
+          const formattedProducts = productsResult.map((productData) => {
+            const associatedCategories =
+              productCategoryMap.get(productData.product.id) || [];
             return {
-              ...product,
+              ...productData,
               category: {
-                ...product.category,
-                name: formatCategoryName(product.category.name),
+                ...productData.category,
+                name: formatCategoryName(productData.category.name),
               },
-              categories: productCategories,
+              categories: associatedCategories,
               variants: variants.filter(
-                (variant) => variant.productId === product.product.id
+                (variant) => variant.productId === productData.product.id
               ),
             };
           });
+
+          // --- Return Paginated Result ---
+          return {
+            products: formattedProducts,
+            totalCount,
+          };
         });
       })
     );
