@@ -5,6 +5,7 @@ import {
   product,
   user,
   vendor,
+  type orderStatus,
 } from "#root/shared/database/drizzle/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { Effect } from "effect";
@@ -26,12 +27,41 @@ export const createOrderSchema = z.object({
   customerPhone: z.string().min(1),
   shippingAddress: z.string().min(1),
   shippingCity: z.string().min(1),
-  shippingState: z.string().min(1),
-  shippingPostalCode: z.string().min(1),
-  shippingCountry: z.string().min(1),
+  shippingState: z.string().optional().nullable(),
+  shippingPostalCode: z.string().optional().nullable(),
+  shippingCountry: z.string().optional().nullable(),
   items: z.array(OrderItemSchema).min(1),
   notes: z.string().optional(),
 });
+
+// Manually define the insert type matching the schema's nullability
+type OrderInsertData = {
+  userId: string | null;
+  customerName: string;
+  customerEmail: string | null;
+  customerPhone: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingState: string | null;
+  shippingPostalCode: string | null;
+  shippingCountry: string | null;
+  subtotal: string;
+  shipping: string;
+  tax: string;
+  total: string;
+  status: (typeof orderStatus.enumValues)[number]; // Use enum values type
+  notes: string | null;
+  fincartStatus: string | null;
+  fincartSubStatus: string | null;
+  fincartTrackingNumber: string | null;
+  fincartRejectionReason: string | null;
+  fincartSupportNote: string | null;
+  fincartReturnTrackingNumber: string | null;
+  fincartStatusUpdatedDate: Date | null; // Use Date | null for timestamp
+  fincartWebhookData: Record<string, unknown> | null; // More specific type for jsonb
+  // createdAt is handled by DB default
+  updatedAt: Date | null; // Use Date | null for timestamp
+};
 
 // Function to send order data to Fincart
 interface FincartOrderData {
@@ -293,25 +323,32 @@ export const createOrder = (
           const tax = subtotal * taxRate;
           const total = subtotal + shipping + tax;
 
+          // Only include fields directly provided or calculated
+          const insertData = {
+            userId: userId,
+            customerName: input.customerName,
+            customerEmail: input.customerEmail,
+            customerPhone: input.customerPhone,
+            shippingAddress: input.shippingAddress,
+            shippingCity: input.shippingCity,
+            shippingState: input.shippingState,
+            shippingPostalCode: input.shippingPostalCode,
+            shippingCountry: input.shippingCountry,
+            subtotal: subtotal.toString(),
+            shipping: shipping.toString(),
+            tax: tax.toString(),
+            total: total.toString(),
+            notes: input.notes,
+          };
+
+          const definedInsertData = Object.fromEntries(
+            Object.entries(insertData).filter(([_, v]) => v !== undefined)
+          );
+
           const newOrdersInsert = await tx
             .insert(order)
-            .values({
-              userId, // Can be null for guest orders
-              customerName: input.customerName,
-              customerEmail: input.customerEmail,
-              customerPhone: input.customerPhone,
-              shippingAddress: input.shippingAddress,
-              shippingCity: input.shippingCity,
-              shippingState: input.shippingState,
-              shippingPostalCode: input.shippingPostalCode,
-              shippingCountry: input.shippingCountry,
-              subtotal: subtotal.toString(),
-              shipping: shipping.toString(),
-              tax: tax.toString(),
-              total: total.toString(),
-              status: "pending",
-              notes: input.notes || null,
-            })
+            // @ts-ignore - Drizzle's insert type inference seems incorrect for nullable fields here
+            .values(definedInsertData)
             .returning();
 
           if (!newOrdersInsert || newOrdersInsert.length === 0) {

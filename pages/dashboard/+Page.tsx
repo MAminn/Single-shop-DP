@@ -203,15 +203,15 @@ function AdminDashboard() {
           error={analytics.productStats.error}
         />
 
-        <RevenueStatsCard
+        {/* <RevenueStatsCard
           totalRevenue={analytics.totalRevenue.data || 0}
           percentChange={8}
           timeFrame="last month"
           isLoading={analytics.totalRevenue.isLoading}
           error={analytics.totalRevenue.error}
-        />
+        /> */}
 
-        <Card>
+        {/* <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -233,7 +233,7 @@ function AdminDashboard() {
               </Badge>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -258,14 +258,14 @@ function AdminDashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      {/* <div className="grid grid-cols-1 gap-6">
         <TopSellingProductsCard
           products={analytics.topSellingProducts.data}
           isLoading={analytics.topSellingProducts.isLoading}
           error={analytics.topSellingProducts.error}
           showVendor={true}
         />
-      </div>
+      </div> */}
     </div>
   );
 }

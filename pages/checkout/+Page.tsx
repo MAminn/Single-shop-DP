@@ -66,7 +66,7 @@ export default function CheckoutPage() {
     city: "",
     state: "",
     postalCode: "",
-    country: "United States",
+    country: "",
     notes: "",
   });
 
@@ -94,14 +94,12 @@ export default function CheckoutPage() {
       !formData.fullName ||
       !formData.phoneNumber ||
       !formData.address ||
-      !formData.city ||
-      !formData.state ||
-      !formData.postalCode ||
-      !formData.country
+      !formData.city
     ) {
       toast({
         title: "Missing information",
-        description: "Please fill in all required fields.",
+        description:
+          "Please fill in all required fields (Name, Phone, Address, City).",
       });
       setIsSubmitting(false);
       return;
@@ -438,7 +436,7 @@ export default function CheckoutPage() {
                       required
                     />
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="state">State/Province *</Label>
                     <Input
                       id="state"
@@ -448,10 +446,10 @@ export default function CheckoutPage() {
                       placeholder="NY"
                       required
                     />
-                  </div>
+                  </div> */}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="postalCode">Postal Code *</Label>
                     <Input
@@ -474,7 +472,7 @@ export default function CheckoutPage() {
                       required
                     />
                   </div>
-                </div>
+                </div> */}
               </CardContent>
             </Card>
 

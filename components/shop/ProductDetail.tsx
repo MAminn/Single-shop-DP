@@ -138,6 +138,9 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
         const productsResult = await trpc.product.search.query({
           limit: 100,
           includeOutOfStock: true,
+          // Add productId to the search query if the API supports it
+          // This might require checking the `searchProductsSchema` definition
+          // If not directly supported, keep the find logic below
         });
 
         if (!productsResult.success) {
@@ -145,6 +148,7 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
           return;
         }
 
+        // Find the specific product from the search results
         const productItem = productsResult.result?.items?.find(
           (item) => item.id === productId
         );
@@ -154,55 +158,54 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
           return;
         }
 
-        // Fetch full product details to get description
+        // Use details from the initial search result as defaults
         let description = productItem.description || "";
         let allCategories = productItem.categories || [];
+        let variants: Variant[] = []; // Initialize variants array
 
         try {
-          // Use view endpoint to get specific product with description
+          // Fetch full details, including variants and potentially richer category info,
+          // using the view endpoint with categoryId.
           const detailsResult = await trpc.product.view.query({
+            // Consider adding limit: 1 and maybe productId if API evolves
+            // For now, fetching by category and finding seems necessary
             categoryId: productItem.categoryId,
           });
 
-          if (detailsResult.success) {
-            const productWithDetails = detailsResult.result.find(
+          if (detailsResult.success && detailsResult.result.products) {
+            // Find the specific product within the nested 'products' array
+            const productWithDetails = detailsResult.result.products.find(
               (item) => item.product.id === productId
             );
 
-            if (productWithDetails?.product?.description) {
-              description = productWithDetails.product.description;
-              console.log("Found description:", description);
-            }
-
-            // If view API returned categories, use those (they should be more complete)
-            if (
-              productWithDetails?.categories &&
-              productWithDetails.categories.length > 0
-            ) {
-              allCategories = productWithDetails.categories;
+            if (productWithDetails) {
+              // Update description if found in the detailed result
+              if (productWithDetails.product?.description) {
+                description = productWithDetails.product.description;
+              }
+              // Update categories if view API returned a more complete list
+              if (
+                productWithDetails.categories &&
+                productWithDetails.categories.length > 0
+              ) {
+                allCategories = productWithDetails.categories;
+              }
+              // Extract variants from the detailed result
+              if (productWithDetails.variants) {
+                variants = productWithDetails.variants.map((v) => ({
+                  // Type should be inferred correctly here
+                  name: v.name,
+                  values: v.values.map(String), // Ensure values are strings if necessary
+                }));
+              }
             }
           }
         } catch (detailsError) {
-          console.error("Error fetching product description:", detailsError);
-          // Continue with original data even if description fetch fails
-        }
-
-        // Get product variants
-        const variantsResult = await trpc.product.view.query({
-          categoryId: productItem.categoryId,
-        });
-
-        let variants: Variant[] = [];
-        if (variantsResult.success) {
-          const productWithVariants = variantsResult.result.find(
-            (p) => p.product.id === productId
+          console.error(
+            "Error fetching product details/variants:",
+            detailsError
           );
-          if (productWithVariants) {
-            variants = productWithVariants.variants.map((v) => ({
-              name: v.name,
-              values: v.values,
-            }));
-          }
+          // Fallback to using potentially incomplete data from search result if view fails
         }
 
         // Process images to ensure correct format
@@ -227,14 +230,14 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
           ];
         }
 
-        // Create a complete product with the description and categories
+        // Create a complete product using the gathered details
         const completeProduct = {
           ...(productItem as Product),
-          description,
+          description, // Use potentially updated description
           available: productItem.stock > 0,
-          variants,
+          variants, // Use variants from view query (or empty array)
           images: productImages,
-          categories: allCategories,
+          categories: allCategories, // Use potentially updated categories
         };
 
         console.log(
