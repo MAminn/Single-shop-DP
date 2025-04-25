@@ -103,53 +103,95 @@ export function ProductForm({
       .optional(),
   });
 
-  // Convert initialValues to ensure compatibility
-  const defaultValues = {
-    ...initialValues,
-    // If we have an imageId but no productImages, create a productImages array
-    productImages:
-      initialValues?.productImages ||
-      (initialValues?.imageId
-        ? [
-            {
-              id: initialValues.imageId,
-              url: `/uploads/${initialValues.imageId}`,
-              isPrimary: true,
-            },
-          ]
-        : []),
-    // Ensure variants are properly initialized
-    variants: initialValues?.variants || [],
-    // Initialize categoryIds with the initial categoryId if available
-    categoryIds:
-      initialValues?.categoryIds ||
-      (initialValues?.categoryId ? [initialValues.categoryId] : []),
-  };
+  // Debug initial values
+  console.log("ProductForm received initialValues:", initialValues);
 
+  // Initialize form with validated values
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues,
+    defaultValues: {
+      name: initialValues?.name || "",
+      description: initialValues?.description || "",
+      price: initialValues?.price || 0,
+      stock: initialValues?.stock || 0,
+      // Use the primary image ID as the main imageId
+      imageId: initialValues?.imageId || "",
+      // Ensure we have a valid array of product images
+      productImages: Array.isArray(initialValues?.productImages)
+        ? initialValues.productImages
+        : [],
+      // Ensure we have a valid array of variants
+      variants: Array.isArray(initialValues?.variants)
+        ? initialValues.variants
+        : [],
+      // Ensure we have valid category IDs
+      categoryIds: Array.isArray(initialValues?.categoryIds)
+        ? initialValues.categoryIds
+        : [],
+      // Get the primary category from categoryIds if available, or fallback to the provided categoryId
+      categoryId:
+        Array.isArray(initialValues?.categoryIds) &&
+        initialValues?.categoryIds.length > 0
+          ? initialValues.categoryIds[0]
+          : initialValues?.categoryId || "",
+      vendorId: initialValues?.vendorId || vendorId || "",
+    },
   });
+
+  // Watch form values for debugging
+  const watchedValues = form.watch();
+
+  // Log key form values to help debug
+  useEffect(() => {
+    console.log("Form values updated:", {
+      categoryIds: watchedValues.categoryIds,
+      categoryId: watchedValues.categoryId,
+      productImages: watchedValues.productImages.length,
+    });
+  }, [
+    watchedValues.categoryIds,
+    watchedValues.categoryId,
+    watchedValues.productImages,
+  ]);
 
   // Watch categoryIds to update categoryId (primary category)
   const categoryIds = form.watch("categoryIds");
 
   // Update the primary categoryId whenever categoryIds changes
   useEffect(() => {
-    if (categoryIds && categoryIds.length > 0 && categoryIds[0]) {
-      form.setValue("categoryId", categoryIds[0], { shouldValidate: true });
+    if (categoryIds && categoryIds.length > 0) {
+      // Ensure we handle potential undefined safely
+      const primaryCategoryId = categoryIds[0] ? categoryIds[0] : "";
+      console.log("Setting primary categoryId to:", primaryCategoryId);
+
+      // Only update if the value changed to avoid unnecessary rerenders
+      if (form.getValues("categoryId") !== primaryCategoryId) {
+        form.setValue("categoryId", primaryCategoryId, {
+          shouldValidate: true,
+        });
+      }
+    } else {
+      console.log("No categories selected, clearing primary categoryId");
+      form.setValue("categoryId", "", { shouldValidate: false });
     }
   }, [categoryIds, form]);
+
+  // Log form values for debugging
+  useEffect(() => {
+    console.log("Form values:", form.getValues());
+  }, [form]);
 
   const [submitting, setSubmitting] = useState(false);
 
   const handleFormSubmit = async (values: z.infer<typeof formSchema>) => {
     setSubmitting(true);
+    console.log("Submitting form with values:", values);
 
     // Ensure we have at least one image that is primary
     if (values.productImages && values.productImages.length > 0) {
       // If no primary image is set, make the first one primary
       if (!values.productImages.some((img) => img?.isPrimary)) {
+        console.log("No primary image found, setting first image as primary");
         if (values.productImages[0]) {
           values.productImages[0].isPrimary = true;
         }
@@ -158,15 +200,45 @@ export function ProductForm({
       // Set the primary image's ID as the main imageId for backward compatibility
       const primaryImage = values.productImages.find((img) => img?.isPrimary);
       if (primaryImage?.id) {
+        console.log("Using primary image ID:", primaryImage.id);
         values.imageId = primaryImage.id;
       } else if (values.productImages[0]?.id) {
+        console.log(
+          "No primary image, using first image ID:",
+          values.productImages[0].id
+        );
         values.imageId = values.productImages[0].id;
       }
     }
 
-    // Ensure imageId is a string (required by the mutations)
+    // Ensure categoryId is set from categoryIds if available
+    if (values.categoryIds && values.categoryIds.length > 0) {
+      // Safely access the first element
+      if (values.categoryIds[0]) {
+        console.log(
+          "Setting categoryId from categoryIds:",
+          values.categoryIds[0]
+        );
+        values.categoryId = values.categoryIds[0];
+      }
+    } else if (
+      values.categoryId &&
+      (!values.categoryIds || values.categoryIds.length === 0)
+    ) {
+      // If we have a categoryId but no categoryIds, set categoryIds to include the categoryId
+      console.log("Setting categoryIds from categoryId:", values.categoryId);
+      values.categoryIds = [values.categoryId];
+    }
+
+    // Validate required fields
     if (!values.imageId) {
       toast.error("At least one product image is required");
+      setSubmitting(false);
+      return;
+    }
+
+    if (!values.categoryId || values.categoryIds.length === 0) {
+      toast.error("At least one category is required");
       setSubmitting(false);
       return;
     }
@@ -223,7 +295,7 @@ export function ProductForm({
       ) : (
         <form
           onSubmit={form.handleSubmit(handleFormSubmit)}
-          className="space-y-4"
+          className="space-y-4 max-h-[70vh] overflow-y-auto p-3"
         >
           <FormField
             control={form.control}

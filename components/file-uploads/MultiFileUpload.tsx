@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "../ui/input";
 import { toast } from "sonner";
 import { Loader2Icon, Upload, X } from "lucide-react";
@@ -29,6 +29,37 @@ export const MultiFileUploadInput = ({
   maxSize?: number;
 }) => {
   const [uploading, setUploading] = useState(false);
+
+  // Debug when value changes or on component mount
+  useEffect(() => {
+    console.log("MultiFileUploadInput value:", value);
+
+    // Validate each image has required properties
+    if (value && value.length > 0) {
+      value.forEach((img, index) => {
+        if (!img.id) {
+          console.error(`Image at index ${index} is missing id:`, img);
+        }
+        if (!img.url) {
+          console.error(`Image at index ${index} is missing url:`, img);
+        }
+      });
+    }
+  }, [value]);
+
+  // Initialize component with at least one primary image
+  useEffect(() => {
+    if (value && value.length > 0 && !value.some((img) => img.isPrimary)) {
+      console.log(
+        "No primary image found in initial value, setting first image as primary"
+      );
+      const updatedImages = [...value];
+      if (updatedImages[0]) {
+        updatedImages[0].isPrimary = true;
+        onChange(updatedImages);
+      }
+    }
+  }, [value, onChange]);
 
   const handleUpload = async (file: File) => {
     if (value.length >= maxFiles) {
@@ -159,7 +190,9 @@ export const MultiFileUploadInput = ({
               </span>
             ) : (
               <span>
-                Click to upload or drag and drop
+                {value && value.length > 0
+                  ? "Click to add more images"
+                  : "Click to upload or drag and drop"}
                 <br />
                 <span className="text-xs text-gray-500">
                   {value.length} of {maxFiles} files
@@ -172,16 +205,26 @@ export const MultiFileUploadInput = ({
 
       {value.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {value.map((file) => (
+          {value.map((file, index) => (
             <div
-              key={file.id}
+              key={`${file.id || index}`}
               className={`relative rounded-lg overflow-hidden border group ${file.isPrimary ? "ring-2 ring-primary" : ""}`}
             >
-              <img
-                src={file.url}
-                alt="Preview"
-                className="w-full h-32 object-cover"
-              />
+              {file.url ? (
+                <img
+                  src={file.url}
+                  alt={`Product item ${index + 1}`}
+                  className="w-full h-32 object-cover"
+                  onError={(e) => {
+                    console.error(`Failed to load image: ${file.url}`);
+                    (e.target as HTMLImageElement).src = "/placeholder.svg";
+                  }}
+                />
+              ) : (
+                <div className="w-full h-32 bg-gray-200 flex items-center justify-center">
+                  <span className="text-gray-400">No preview available</span>
+                </div>
+              )}
               <div className="absolute p-2 inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                 {!file.isPrimary && (
                   <Button

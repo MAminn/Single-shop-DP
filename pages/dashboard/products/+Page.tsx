@@ -157,56 +157,75 @@ export default function Products() {
 
   useEffect(() => {
     if (selectedProduct && isEditModalOpen) {
+      console.log("Loading data for product:", selectedProduct);
+
+      // Clear previous data
+      setProductImages([]);
+      setSelectedProductCategories([]);
       setIsLoadingImages(true);
 
-      trpc.product.getCategories
-        .query({ productId: selectedProduct })
-        .then((categoryResult) => {
-          if (categoryResult.success) {
+      // Loading sequence - First load categories, then load images
+      const loadData = async () => {
+        try {
+          // Step 1: Load categories
+          console.log("Step 1: Loading categories");
+          const categoryResult = await trpc.product.getCategories.query({
+            productId: selectedProduct,
+          });
+
+          if (categoryResult.success && categoryResult.result.length > 0) {
             const categoryIds = categoryResult.result.map((c) => c.id);
+            console.log("Loaded category IDs:", categoryIds);
             setSelectedProductCategories(categoryIds);
           } else {
-            toast.error("Failed to load product categories");
+            console.error(
+              "No categories found or failed to load:",
+              categoryResult
+            );
+            setSelectedProductCategories([]);
           }
-        })
-        .catch((err) => {
-          console.error("Error fetching product categories:", err);
-          toast.error("Error fetching product categories");
-        });
 
-      trpc.product.getProductImages
-        .query({ productId: selectedProduct })
-        .then((result) => {
-          if (result.success && result.result.length > 0) {
-            const images = result.result.map((img: ProductImageResponse) => ({
+          // Step 2: Load images
+          console.log("Step 2: Loading images");
+          const imagesResult = await trpc.product.getProductImages.query({
+            productId: selectedProduct,
+          });
+
+          if (imagesResult.success && imagesResult.result.length > 0) {
+            const images = imagesResult.result.map((img) => ({
               id: img.fileId,
               url: `/uploads/${img.diskname}`,
               diskname: img.diskname,
               isPrimary: img.isPrimary,
             }));
 
-            console.log("Loaded product images:", images);
-
+            console.log("Successfully loaded images:", images);
             setProductImages(images);
           } else {
-            console.log("No product images found or failed to load:", result);
+            console.log("No images found, using fallback:", imagesResult);
+
+            // Fallback to main image if available
             if (selectedProductData?.file) {
-              setProductImages([
-                {
-                  id: selectedProductData.file.id,
-                  url: `/uploads/${selectedProductData.file.diskname}`,
-                  diskname: selectedProductData.file.diskname,
-                  isPrimary: true,
-                },
-              ]);
+              const fallbackImage = {
+                id: selectedProductData.file.id,
+                url: `/uploads/${selectedProductData.file.diskname}`,
+                diskname: selectedProductData.file.diskname,
+                isPrimary: true,
+              };
+              console.log("Using fallback image:", fallbackImage);
+              setProductImages([fallbackImage]);
             } else {
+              console.log("No fallback image available");
               setProductImages([]);
             }
           }
-        })
-        .catch((err) => {
-          console.error("Error fetching product images:", err);
-          toast.error("Error fetching product images");
+        } catch (error) {
+          console.error("Error loading product data:", error);
+          toast.error("Error loading product data");
+
+          // Set fallback data on error
+          setSelectedProductCategories([]);
+
           if (selectedProductData?.file) {
             setProductImages([
               {
@@ -219,10 +238,12 @@ export default function Products() {
           } else {
             setProductImages([]);
           }
-        })
-        .finally(() => {
+        } finally {
           setIsLoadingImages(false);
-        });
+        }
+      };
+
+      loadData();
     } else {
       setProductImages([]);
       setSelectedProductCategories([]);
@@ -364,16 +385,42 @@ export default function Products() {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
+            {/* Debug button - only visible during development */}
+            {process.env.NODE_ENV !== "production" && (
+              <div className="flex gap-2 mt-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    console.clear();
+                    console.log("Debug info cleared");
+                    console.log("Selected product:", selectedProduct);
+                    console.log("Product data:", selectedProductData);
+                    console.log(
+                      "Selected categories:",
+                      selectedProductCategories
+                    );
+                    console.log("Product images:", productImages);
+                  }}
+                >
+                  Debug Info
+                </Button>
+              </div>
+            )}
           </DialogHeader>
           {selectedProductData && (
             <ProductForm
-              key={selectedProduct}
+              key={`edit-product-${selectedProduct}-${Date.now()}`}
               initialValues={{
                 ...selectedProductData.product,
                 price: Number(selectedProductData.product.price),
                 imageId: selectedProductData.file?.id ?? "",
                 productImages: productImages,
                 categoryIds: selectedProductCategories,
+                categoryId:
+                  selectedProductCategories.length > 0
+                    ? selectedProductCategories[0]
+                    : selectedProductData.product.categoryId || "",
                 variants: selectedProductData.variants.map((v) => ({
                   name: v.name,
                   values: v.values,
