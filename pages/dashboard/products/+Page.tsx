@@ -384,29 +384,7 @@ export default function Products() {
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Edit Product</DialogTitle>
-            {/* Debug button - only visible during development */}
-            {process.env.NODE_ENV !== "production" && (
-              <div className="flex gap-2 mt-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    console.clear();
-                    console.log("Debug info cleared");
-                    console.log("Selected product:", selectedProduct);
-                    console.log("Product data:", selectedProductData);
-                    console.log(
-                      "Selected categories:",
-                      selectedProductCategories
-                    );
-                    console.log("Product images:", productImages);
-                  }}
-                >
-                  Debug Info
-                </Button>
-              </div>
-            )}
+            <DialogTitle>Edit Product</DialogTitle>          
           </DialogHeader>
           {selectedProductData && (
             <ProductForm
