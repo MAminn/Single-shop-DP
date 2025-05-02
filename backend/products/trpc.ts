@@ -11,6 +11,7 @@ import { viewProductsProcedure } from "./view-products/trpc";
 import { viewReviewsProcedure } from "./view-reviews/trpc";
 import { createReviewProcedure } from "./create-review/trpc";
 import { getProductImagesProcedure } from "./get-product-images/trpc";
+import { getProductByIdProcedure } from "./get-product-by-id/trpc";
 
 export const productRouter = t.router({
   view: viewProductsProcedure,
@@ -25,4 +26,5 @@ export const productRouter = t.router({
   createReview: createReviewProcedure,
   getProductImages: getProductImagesProcedure,
   getCategories: getCategoriesProcedure,
+  getById: getProductByIdProcedure,
 });

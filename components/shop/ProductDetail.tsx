@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import type { TRPCClientErrorLike } from "@trpc/client";
 import { trpc } from "#root/shared/trpc/client";
 import {
   Loader2,
@@ -48,29 +49,20 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { getVendorUrl } from "#root/lib/utils/route-helpers";
+import type { ProductByIdResult } from "#root/backend/products/get-product-by-id/service";
+import { ErrorSection } from "../error-section";
+import type { Product as CartProductType } from "#root/lib/mock-data/products";
 
 interface Variant {
   name: string;
   values: string[];
 }
 
-interface Product {
+interface Product
+  extends Omit<ProductByIdResult, "price" | "images" | "imagesCombined"> {
   id: string;
-  name: string;
   price: number | string;
-  stock: number;
-  imageUrl: string | null;
-  description?: string;
-  available: boolean;
-  categoryId: string;
-  categoryName: string | null;
-  vendorId: string;
-  vendorName: string | null;
-  variants?: Variant[];
-  images?: { url: string }[];
-  rating?: number;
-  reviewCount?: number;
-  categories?: { id: string; name: string }[];
+  images?: { url: string; isPrimary?: boolean }[];
 }
 
 interface Review {
@@ -99,7 +91,7 @@ const reviewFormSchema = z.object({
 type ReviewFormValues = z.infer<typeof reviewFormSchema>;
 
 export const ProductDetail = ({ productId }: ProductDetailProps) => {
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<ProductByIdResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -129,125 +121,54 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
 
   useEffect(() => {
     async function fetchProductDetails() {
-      if (!productId) return;
+      if (!productId) {
+        setError("Invalid Product ID");
+        setLoading(false);
+        return;
+      }
+
+      console.log(`Fetching details for productId: ${productId}`);
+      setLoading(true);
+      setError(null);
 
       try {
-        setLoading(true);
-
-        // Get product details by searching with productId
-        const productsResult = await trpc.product.search.query({
-          limit: 100,
-          includeOutOfStock: true,
-          // Add productId to the search query if the API supports it
-          // This might require checking the `searchProductsSchema` definition
-          // If not directly supported, keep the find logic below
+        const result = await trpc.product.getById.query({
+          productId: productId,
         });
 
-        if (!productsResult.success) {
-          setError("Failed to load product information");
-          return;
-        }
+        if (result.success && result.result) {
+          console.log("Successfully fetched product details:", result.result);
+          const fetchedProductData = result.result;
 
-        // Find the specific product from the search results
-        const productItem = productsResult.result?.items?.find(
-          (item) => item.id === productId
-        );
+          setProduct(fetchedProductData);
 
-        if (!productItem) {
-          setError("Product not found");
-          return;
-        }
-
-        // Use details from the initial search result as defaults
-        let description = productItem.description || "";
-        let allCategories = productItem.categories || [];
-        let variants: Variant[] = []; // Initialize variants array
-
-        try {
-          // Fetch full details, including variants and potentially richer category info,
-          // using the view endpoint with categoryId.
-          const detailsResult = await trpc.product.view.query({
-            // Consider adding limit: 1 and maybe productId if API evolves
-            // For now, fetching by category and finding seems necessary
-            categoryId: productItem.categoryId,
-          });
-
-          if (detailsResult.success && detailsResult.result.products) {
-            // Find the specific product within the nested 'products' array
-            const productWithDetails = detailsResult.result.products.find(
-              (item) => item.product.id === productId
-            );
-
-            if (productWithDetails) {
-              // Update description if found in the detailed result
-              if (productWithDetails.product?.description) {
-                description = productWithDetails.product.description;
-              }
-              // Update categories if view API returned a more complete list
-              if (
-                productWithDetails.categories &&
-                productWithDetails.categories.length > 0
-              ) {
-                allCategories = productWithDetails.categories;
-              }
-              // Extract variants from the detailed result
-              if (productWithDetails.variants) {
-                variants = productWithDetails.variants.map((v) => ({
-                  // Type should be inferred correctly here
-                  name: v.name,
-                  values: v.values.map(String), // Ensure values are strings if necessary
-                }));
+          if (
+            fetchedProductData.variants &&
+            fetchedProductData.variants.length > 0
+          ) {
+            const initialOptions: Record<string, string> = {};
+            for (const variant of fetchedProductData.variants) {
+              if (variant.values.length > 0 && variant.values[0]) {
+                initialOptions[variant.name] = variant.values[0];
               }
             }
+            setSelectedOptions(initialOptions);
           }
-        } catch (detailsError) {
+        } else {
           console.error(
-            "Error fetching product details/variants:",
-            detailsError
+            "Failed to fetch product:",
+            result.success === false ? result.error : "No result data"
           );
-          // Fallback to using potentially incomplete data from search result if view fails
+          // Final simplified error message
+          setError("Product not found or could not be loaded.");
+          setProduct(null);
         }
-
-        // Process images to ensure correct format
-        let productImages: { url: string }[] = [];
-
-        // First check if we have the new images array with multiple images
-        if (productItem.images && productItem.images.length > 0) {
-          productImages = productItem.images.map((img) => ({
-            url: img.url.startsWith("/uploads/")
-              ? img.url
-              : `/uploads/${img.url}`,
-          }));
-        }
-        // Fall back to the legacy single imageUrl if no images array
-        else if (productItem.imageUrl) {
-          productImages = [
-            {
-              url: productItem.imageUrl.startsWith("/uploads/")
-                ? productItem.imageUrl
-                : `/uploads/${productItem.imageUrl}`,
-            },
-          ];
-        }
-
-        // Create a complete product using the gathered details
-        const completeProduct = {
-          ...(productItem as Product),
-          description, // Use potentially updated description
-          available: productItem.stock > 0,
-          variants, // Use variants from view query (or empty array)
-          images: productImages,
-          categories: allCategories, // Use potentially updated categories
-        };
-
-        console.log(
-          "Setting product with description:",
-          completeProduct.description
-        );
-        setProduct(completeProduct);
       } catch (err) {
+        // Type the error
         console.error("Error fetching product:", err);
-        setError("An error occurred while loading the product");
+        // Simplify catch block error message
+        setError("An error occurred while loading the product details.");
+        setProduct(null);
       } finally {
         setLoading(false);
       }
@@ -280,25 +201,31 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
   }, [productId]);
 
   const handleAddToCart = () => {
-    if (!product || !product.available) return;
+    if (!product || !product.available) {
+      toast({ title: "Product unavailable", variant: "destructive" });
+      return;
+    }
 
-    // Check if quantity exceeds stock
     if (quantity > product.stock) {
       toast({
-        title: "Invalid quantity",
-        description: `Only ${product.stock} item(s) available in stock.`,
+        title: "Out of Stock",
+        description: `Only ${product.stock} items available. Please reduce quantity.`,
         variant: "destructive",
       });
       return;
     }
 
-    // Check if all required variants are selected
+    const variantKey =
+      product.variants && product.variants.length > 0
+        ? product.variants.map((v) => selectedOptions[v.name] || "").join("-")
+        : null;
+
     if (product.variants && product.variants.length > 0) {
       for (const variant of product.variants) {
         if (!selectedOptions[variant.name]) {
           toast({
-            title: "Missing selection",
-            description: `Please select a ${variant.name} option`,
+            title: "Missing Option",
+            description: `Please select an option for ${variant.name}.`,
             variant: "destructive",
           });
           return;
@@ -307,32 +234,43 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
     }
 
     setIsAddingToCart(true);
-    try {
-      addItem(
-        {
-          id: product.id,
-          name: product.name,
-          price:
-            typeof product.price === "number"
-              ? product.price
-              : Number(product.price),
-          imageUrl: product.imageUrl || undefined,
-          vendorId: Number(product.vendorId),
-          stock: product.stock,
-        },
-        quantity,
-        selectedOptions
-      );
 
-      toast({
-        title: "Added to cart",
-        description: `${product.name} has been added to your cart.`,
-      });
+    const productDataForCart: CartProductType = {
+      id: product.id,
+      name: product.name,
+      price: Number(product.price),
+      stock: product.stock,
+      imageUrl:
+        product.imagesCombined && product.imagesCombined.length > 0
+          ? product.imagesCombined.find((img) => img.isPrimary)?.url ||
+            product.imagesCombined[0]?.url
+          : undefined,
+      vendorId: product.vendorId
+        ? Number(product.vendorId) || undefined
+        : undefined,
+      categoryName: product.categoryName || undefined,
+    };
+
+    try {
+      const success = addItem(productDataForCart, quantity, selectedOptions);
+
+      if (success) {
+        toast({
+          title: "Added to Cart!",
+          description: `${quantity} x ${product.name} ${variantKey ? `(${variantKey})` : ""} added.`,
+        });
+      } else {
+        toast({
+          title: "Could not add to cart",
+          description: "Item might be out of stock or quantity unavailable.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
-      console.error("Error adding to cart:", error);
+      console.error("Error adding item:", error);
       toast({
         title: "Error",
-        description: "Failed to add item to cart. Please try again.",
+        description: "An unexpected error occurred.",
         variant: "destructive",
       });
     } finally {
@@ -359,7 +297,6 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
         });
         form.reset();
 
-        // Refresh reviews
         const reviewsResult = await trpc.product.getReviews.query({
           productId,
         });
@@ -420,14 +357,12 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
     setCurrentImageIndex((current) => (current <= 0 ? maxIndex : current - 1));
   }, [product]);
 
-  // Reset current image index when product changes
   useEffect(() => {
     if (product) {
       setCurrentImageIndex(0);
     }
   }, [product]);
 
-  // Add keyboard navigation for the image gallery
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (product?.images && product.images.length > 1) {
@@ -505,22 +440,25 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
     return stars;
   };
 
-  const images =
-    product.images && product.images.length > 0
-      ? product.images
-      : [{ url: product.imageUrl || "/placeholder.jpg" }];
+  const displayImages = product.imagesCombined || [];
+  const currentImageUrl =
+    displayImages[currentImageIndex]?.url || "/placeholder.svg";
 
-  const currentImage =
-    images[currentImageIndex]?.url || product.imageUrl || "/placeholder.jpg";
+  const selectedVariantKey =
+    product?.variants && product.variants.length > 0
+      ? product.variants.map((v) => selectedOptions[v.name] || "").join("-")
+      : "default";
+
+  if (!product) {
+    return <ErrorSection error={error || "Product data is unavailable."} />;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="flex flex-col md:flex-row gap-8">
-        {/* Product Images Section */}
         <div className="md:w-1/2 space-y-4">
           <div className="mb-6">
             <div className="relative rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
-              {/* Image navigation overlay buttons - ALWAYS VISIBLE */}
               {product.images && product.images.length > 1 && (
                 <>
                   <button
@@ -548,7 +486,6 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
                 </>
               )}
 
-              {/* Main product image */}
               <button
                 type="button"
                 className="w-full aspect-square flex items-center justify-center overflow-hidden cursor-zoom-in bg-transparent border-0 p-0"
@@ -557,10 +494,7 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
               >
                 {product.images && product.images.length > 0 ? (
                   <img
-                    src={
-                      product.images[currentImageIndex]?.url ||
-                      "/placeholder.jpg"
-                    }
+                    src={currentImageUrl}
                     alt={product.name}
                     className={`w-full h-full object-contain transition-transform duration-300 ${
                       isZoomed ? "scale-110" : "scale-100"
@@ -584,7 +518,6 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
               </button>
             </div>
 
-            {/* Image counter for mobile */}
             {product.images && product.images.length > 1 && (
               <div className="mt-2 flex justify-center">
                 <span className="text-sm bg-gray-100 px-3 py-1 rounded-full">
@@ -593,7 +526,6 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
               </div>
             )}
 
-            {/* Thumbnails row */}
             {product.images && product.images.length > 1 && (
               <div className="mt-4">
                 <div className="grid grid-cols-5 sm:grid-cols-6 gap-2">
@@ -628,10 +560,8 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
           </div>
         </div>
 
-        {/* Product Details Section */}
         <div className="md:w-1/2 space-y-6">
           <div>
-            {/* Show all categories as badges */}
             <div className="flex flex-wrap gap-1 mb-2">
               {product.categories && product.categories.length > 0
                 ? product.categories.map((cat) => (
@@ -689,33 +619,21 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
             )}
           </div>
 
-          {product.rating && (
-            <div className="flex items-center">
-              <div className="flex items-center mr-2">
-                {[1, 2, 3, 4, 5].map((num) => (
-                  <Star
-                    key={`star-${num}`}
-                    className={`h-5 w-5 ${
-                      num <= Math.floor(product.rating || 0)
-                        ? "text-yellow-400 fill-yellow-400"
-                        : num <= (product.rating || 0)
-                          ? "text-yellow-400 fill-yellow-400 opacity-50"
-                          : "text-gray-300"
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-sm text-gray-500">
-                {product.rating.toFixed(1)} ({product.reviewCount || 0} reviews)
+          {product.rating !== undefined && product.rating > 0 ? (
+            <div className="flex items-center gap-1">
+              {renderRatingStars(product.rating)}
+              <span className="text-sm text-gray-600">
+                ({product.reviewCount ?? 0} reviews)
               </span>
             </div>
+          ) : (
+            <span className="text-sm text-gray-500">No reviews yet</span>
           )}
 
           <div className="prose prose-sm max-w-none text-gray-600">
             <p>{product.description || "No description available."}</p>
           </div>
 
-          {/* Product Variants */}
           {product.variants && product.variants.length > 0 && (
             <div className="space-y-4">
               {product.variants.map((variant: Variant) => (
@@ -745,7 +663,6 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
             </div>
           )}
 
-          {/* Quantity and Add to Cart */}
           <div className="pt-4 flex flex-col sm:flex-row items-center gap-4">
             <div className="w-full sm:w-auto">
               <label htmlFor="quantity" className="sr-only">
@@ -793,7 +710,6 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
             </Button>
           </div>
 
-          {/* Additional Product Info */}
           <div className="border-t border-gray-200 pt-6 mt-6">
             <dl className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
               {product.stock !== undefined && (
@@ -853,7 +769,6 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
         </div>
       </div>
 
-      {/* Reviews Section */}
       <div className="mt-12">
         <Tabs defaultValue="reviews" className="w-full ">
           <TabsList className="w-full justify-start mb-6 bg-transparent border-b">
