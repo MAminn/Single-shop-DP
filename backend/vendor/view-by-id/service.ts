@@ -42,6 +42,7 @@ export const approveVendor = (
             status: vendor.status,
             ownerEmail: user.email,
             ownerName: user.name,
+            ownerPhone: user.phone,
           })
           .from(vendor)
           .leftJoin(user, eq(vendor.id, user.vendorId))
@@ -73,7 +74,6 @@ export const viewVendorById = (input: z.infer<typeof viewVendorByIdSchema>) =>
   Effect.gen(function* ($) {
     return yield* $(
       query(async (db) => {
-
         // First check if the vendor exists
         const vendorResult = await db
           .select({
@@ -86,6 +86,7 @@ export const viewVendorById = (input: z.infer<typeof viewVendorByIdSchema>) =>
             featured: vendor.featured,
             status: vendor.status,
             ownerEmail: user.email,
+            ownerPhone: user.phone,
             socialLinks: vendor.socialLinks,
           })
           .from(vendor)
@@ -105,7 +106,6 @@ export const viewVendorById = (input: z.infer<typeof viewVendorByIdSchema>) =>
         const vendorData = vendorResult[0] || null;
 
         if (vendorData) {
-
           // Ensure socialLinks is always a properly typed array
           const typedSocialLinks: Array<{ platform: string; url: string }> =
             Array.isArray(vendorData.socialLinks)

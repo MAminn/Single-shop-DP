@@ -18,6 +18,7 @@ import { Textarea } from "#root/components/ui/textarea";
 import { FileUploader } from "#root/components/file-uploads/FileUploader";
 import { PlusCircle, Trash2, ExternalLink } from "lucide-react";
 import { PasswordInput } from "#root/components/ui/password-input";
+import { PhoneInput } from "#root/components/ui/phone-input";
 import { usePageContext } from "vike-react/usePageContext";
 import {
   Tabs,
@@ -44,13 +45,20 @@ const formSchema = z.object({
     .min(8, "Password must be at least 8 characters")
     .max(255)
     .optional(),
+  ownerPhone: z
+    .string()
+    .regex(/^(\+201|01|00201)[0-2,5]{1}[0-9]{8}/, "Invalid phone number")
+    .optional(),
 });
 
 export default function VendorForm({
   onSubmit,
   defaultValues,
 }: {
-  defaultValues?: z.infer<typeof formSchema> & { ownerEmail?: string };
+  defaultValues?: z.infer<typeof formSchema> & {
+    ownerEmail?: string;
+    ownerPhone?: string;
+  };
   onSubmit: (values: z.infer<typeof formSchema>) => PromiseLike<void>;
 }) {
   const [submitting, setSubmitting] = useState(false);
@@ -68,6 +76,7 @@ export default function VendorForm({
       socialLinks: defaultValues?.socialLinks || [],
       email: defaultValues?.ownerEmail || undefined,
       password: undefined,
+      ownerPhone: defaultValues?.ownerPhone || undefined,
     },
     disabled: submitting,
   });
@@ -79,8 +88,6 @@ export default function VendorForm({
       ...values,
       logoId: values.logoId || uploadedLogoId || undefined,
     };
-
-    
 
     await onSubmit(cleanedValues);
     setSubmitting(false);
@@ -349,6 +356,29 @@ export default function VendorForm({
                       </FormControl>
                       <FormDescription>
                         Set a new password for the vendor
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="ownerPhone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Owner Phone Number</FormLabel>
+                      <FormControl>
+                        <PhoneInput
+                          placeholder="+20XXX XXX XXXX"
+                          {...field}
+                          defaultCountry="EG"
+                          countries={["EG"]}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Update the vendor owner's phone number (optional).
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

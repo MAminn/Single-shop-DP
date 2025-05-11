@@ -471,6 +471,7 @@ function EditVendorForm({
     featured?: boolean;
     socialLinks: SocialLink[];
     ownerEmail?: string;
+    ownerPhone?: string;
   };
 
   const [vendorData, setVendorData] = useState<VendorFormData | null>(null);
@@ -489,6 +490,7 @@ function EditVendorForm({
             ? res.result.socialLinks
             : [],
           ownerEmail: res.result.ownerEmail || undefined,
+          ownerPhone: res.result.ownerPhone || undefined,
         });
       } else {
         toast.error("Failed to fetch vendor data");
@@ -512,8 +514,6 @@ function EditVendorForm({
       );
       return;
     }
-
-    
 
     const res = await trpc.vendor.edit.mutate({
       id: values.id,
@@ -577,6 +577,7 @@ function ViewVendorDetails({
     featured?: boolean;
     status?: string;
     ownerEmail?: string | null;
+    ownerPhone?: string | null;
     productCount?: number;
     socialLinks: SocialLink[];
   };
@@ -598,6 +599,7 @@ function ViewVendorDetails({
             featured: res.result.featured,
             status: res.result.status,
             ownerEmail: res.result.ownerEmail || undefined,
+            ownerPhone: res.result.ownerPhone || undefined,
             productCount: res.result.productCount,
             // Ensure socialLinks is always an array of the correct type
             socialLinks: Array.isArray(res.result.socialLinks)
@@ -661,6 +663,12 @@ function ViewVendorDetails({
                 <h4 className="font-medium mb-1">Owner Email</h4>
                 <p className="text-muted-foreground break-all">
                   {vendorData.ownerEmail || "N/A"}
+                </p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-1">Owner Phone</h4>
+                <p className="text-muted-foreground break-all">
+                  {vendorData.ownerPhone || "N/A"}
                 </p>
               </div>
               <div>
