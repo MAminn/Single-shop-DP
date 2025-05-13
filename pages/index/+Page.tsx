@@ -230,6 +230,59 @@ export default function Page() {
         </div>
       </section>
 
+      {/* About Section */}
+      <section className="py-20 bg-accent-lb/5">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <AnimatedContent
+              direction="horizontal"
+              reverse={true}
+              threshold={0.2}
+            >
+              <div className="relative rounded-xl overflow-hidden">
+                <img
+                  src="/assets/story.webp"
+                  alt="About Lebsy - Our fashion story"
+                  className="w-full h-auto rounded-xl"
+                  width="500"
+                  height="333"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+            </AnimatedContent>
+
+            <AnimatedContent threshold={0.2}>
+              <div className="max-w-xl">
+                <h2 className="text-3xl font-bold mb-6">Our Story</h2>
+                <p className="text-gray-600 mb-6">
+                  We started Lebsy because shopping for clothes online was
+                  frustrating, with too many websites and too much hassle. So,
+                  we built one place where all clothing sellers come together,
+                  making fashion shopping easier for everyone.
+                </p>
+                <p className="text-gray-600 mb-8">
+                  Our platform offers a diverse selection of clothing and
+                  accessories from various brands and independent designers, all
+                  in one convenient place. We prioritize quality, style, and
+                  customer satisfaction.
+                </p>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="border-accent-lb text-accent-lb hover:bg-accent-lb hover:text-white"
+                >
+                  <Link href="/featured/brands">
+                    <Users className="mr-2 h-5 w-5" />
+                    Meet Our Brands
+                  </Link>
+                </Button>
+              </div>
+            </AnimatedContent>
+          </div>
+        </div>
+      </section>
+
       {/* Categories Section */}
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
@@ -342,59 +395,6 @@ export default function Page() {
           />
         )}
       </Suspense>
-
-      {/* About Section */}
-      <section className="py-20 bg-accent-lb/5">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <AnimatedContent
-              direction="horizontal"
-              reverse={true}
-              threshold={0.2}
-            >
-              <div className="relative rounded-xl overflow-hidden">
-                <img
-                  src="/assets/story.webp"
-                  alt="About Lebsy - Our fashion story"
-                  className="w-full h-auto rounded-xl"
-                  width="500"
-                  height="333"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-            </AnimatedContent>
-
-            <AnimatedContent threshold={0.2}>
-              <div className="max-w-xl">
-                <h2 className="text-3xl font-bold mb-6">Our Story</h2>
-                <p className="text-gray-600 mb-6">
-                  We started Lebsy because shopping for clothes online was
-                  frustrating, with too many websites and too much hassle. So,
-                  we built one place where all clothing sellers come together,
-                  making fashion shopping easier for everyone.
-                </p>
-                <p className="text-gray-600 mb-8">
-                  Our platform offers a diverse selection of clothing and
-                  accessories from various brands and independent designers, all
-                  in one convenient place. We prioritize quality, style, and
-                  customer satisfaction.
-                </p>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="border-accent-lb text-accent-lb hover:bg-accent-lb hover:text-white"
-                >
-                  <Link href="/featured/brands">
-                    <Users className="mr-2 h-5 w-5" />
-                    Meet Our Brands
-                  </Link>
-                </Button>
-              </div>
-            </AnimatedContent>
-          </div>
-        </div>
-      </section>
 
       {/* FAQ Section - lazy loaded */}
       <Suspense fallback={<LoadingPlaceholder />}>

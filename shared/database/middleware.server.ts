@@ -1,6 +1,5 @@
 import type { FastifyInstance } from "fastify";
 import { db } from "./drizzle/db.js";
-import { fixDatabaseSchema } from "./schema-fix.js";
 import fp from "fastify-plugin";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 
@@ -22,10 +21,6 @@ const drizzleFastifyPlugin = fp(async (app: FastifyInstance) => {
     }
 
     const dbInstance = db();
-
-    // Run schema fix to ensure database is ready for migrations
-    await fixDatabaseSchema();
-
 
     // Try running migrations with error handling for enum conflicts
     try {
