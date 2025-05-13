@@ -41,6 +41,7 @@ type ProductFormSchema = {
   name: string;
   description: string;
   price: number;
+  discountPrice?: number | null;
   stock: number;
   imageId: string;
   productImages?: FileMetadata[];
@@ -54,6 +55,7 @@ interface Product {
   id: number;
   name: string;
   price: number;
+  discountPrice?: number | null;
   stock: number;
   imageUrl?: string;
   isOutOfStock: boolean;
@@ -295,6 +297,7 @@ export default function Products() {
               <TabsList>
                 <TabsTrigger value="name">Name</TabsTrigger>
                 <TabsTrigger value="price">Price</TabsTrigger>
+                <TabsTrigger value="discountPrice">Discount Price</TabsTrigger>
                 <TabsTrigger value="stock">Stock</TabsTrigger>
               </TabsList>
             </Tabs>
@@ -305,6 +308,7 @@ export default function Products() {
                 <TableHead>Image</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Price</TableHead>
+                <TableHead>Discount Price</TableHead>
                 <TableHead>Stock</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
@@ -326,6 +330,11 @@ export default function Products() {
                   </TableCell>
                   <TableCell>{product.name}</TableCell>
                   <TableCell>{product.price} EGP</TableCell>
+                  <TableCell>
+                    {product.discountPrice
+                      ? `${product.discountPrice} EGP`
+                      : "-"}
+                  </TableCell>
                   <TableCell>{product.stock}</TableCell>
                   <TableCell>
                     {product.stock === 0 ? "Out of Stock" : "In Stock"}
@@ -384,7 +393,7 @@ export default function Products() {
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Edit Product</DialogTitle>          
+            <DialogTitle>Edit Product</DialogTitle>
           </DialogHeader>
           {selectedProductData && (
             <ProductForm
@@ -392,6 +401,9 @@ export default function Products() {
               initialValues={{
                 ...selectedProductData.product,
                 price: Number(selectedProductData.product.price),
+                discountPrice: selectedProductData.product.discountPrice
+                  ? Number(selectedProductData.product.discountPrice)
+                  : null,
                 imageId: selectedProductData.file?.id ?? "",
                 productImages: productImages,
                 categoryIds: selectedProductCategories,

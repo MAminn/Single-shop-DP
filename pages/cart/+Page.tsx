@@ -18,13 +18,35 @@ import {
   ShoppingBag,
   ShoppingCart,
   Trash2,
+  Tag,
+  Check,
+  X,
 } from "lucide-react";
 import { useToast } from "#root/components/ui/use-toast";
+import { Input } from "#root/components/ui/input";
+import { Label } from "#root/components/ui/label";
+import { Alert, AlertDescription } from "#root/components/ui/alert";
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, totalItems, subtotal } = useCart();
+  const {
+    items,
+    removeItem,
+    updateQuantity,
+    totalItems,
+    subtotal,
+    discount,
+    total,
+    promoCode,
+    applyPromoCode,
+    removePromoCode,
+    shipping,
+    tax,
+  } = useCart();
   const { toast } = useToast();
   const [processingCheckout, setProcessingCheckout] = useState(false);
+  const [promoCodeInput, setPromoCodeInput] = useState("");
+  const [applyingPromoCode, setApplyingPromoCode] = useState(false);
+  const [promoCodeError, setPromoCodeError] = useState<string | null>(null);
 
   const handleQuantityChange = (
     itemId: string,
@@ -55,6 +77,46 @@ export default function CartPage() {
 
   const handleCheckout = () => {
     window.location.href = "/checkout";
+  };
+
+  const handleApplyPromoCode = async () => {
+    if (!promoCodeInput.trim()) {
+      setPromoCodeError("Please enter a promo code");
+      return;
+    }
+
+    setApplyingPromoCode(true);
+    setPromoCodeError(null);
+
+    try {
+      const success = await applyPromoCode(promoCodeInput.trim());
+
+      if (success) {
+        toast({
+          title: "Promo code applied",
+          description:
+            "The promo code has been successfully applied to your cart.",
+        });
+        setPromoCodeInput("");
+      } else {
+        setPromoCodeError("Invalid promo code. Please try again.");
+      }
+    } catch (error) {
+      setPromoCodeError("Failed to apply promo code. Please try again.");
+      console.error("Error applying promo code:", error);
+    } finally {
+      setApplyingPromoCode(false);
+    }
+  };
+
+  const handleRemovePromoCode = () => {
+    removePromoCode();
+    setPromoCodeInput("");
+    setPromoCodeError(null);
+    toast({
+      title: "Promo code removed",
+      description: "The promo code has been removed from your cart.",
+    });
   };
 
   if (items.length === 0) {
@@ -200,7 +262,7 @@ export default function CartPage() {
         </div>
 
         <div>
-          <Card className=" p-5">
+          <Card className="p-5">
             <CardHeader>
               <CardTitle>Order Summary</CardTitle>
             </CardHeader>
@@ -212,22 +274,95 @@ export default function CartPage() {
                     {subtotal.toFixed(2)} EGP
                   </span>
                 </div>
+
+                {discount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span className="flex items-center gap-1">
+                      <Tag className="h-4 w-4" />
+                      Discount {promoCode && `(${promoCode.code})`}
+                    </span>
+                    <span className="font-semibold">
+                      -{discount.toFixed(2)} EGP
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex justify-between">
                   <span className="text-neutral-600">Shipping</span>
-                  <span className="font-semibold">Free</span>
+                  <span className="font-semibold">
+                    {shipping.toFixed(2)} EGP
+                  </span>
                 </div>
+
                 <div className="flex justify-between">
                   <span className="text-neutral-600">Tax</span>
-                  <span className="font-semibold">
-                    {(subtotal * 0.05).toFixed(2)} EGP
-                  </span>
+                  <span className="font-semibold">{tax.toFixed(2)} EGP</span>
                 </div>
+
                 <Separator />
+
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>
-                    {(subtotal + subtotal * 0.05).toFixed(2)} EGP
-                  </span>
+                  <span>{total.toFixed(2)} EGP</span>
+                </div>
+
+                <Separator />
+
+                <div className="pt-2">
+                  <Label
+                    htmlFor="promoCode"
+                    className="flex items-center gap-1 mb-2"
+                  >
+                    <Tag className="h-4 w-4" />
+                    Promo Code
+                  </Label>
+
+                  {promoCode ? (
+                    <div className="flex items-center gap-2 border p-2 rounded-md bg-green-50">
+                      <Check className="h-4 w-4 text-green-600" />
+                      <span className="flex-grow font-medium">
+                        {promoCode.code} -
+                        {promoCode.discountType === "percentage"
+                          ? ` ${promoCode.discountValue}% off`
+                          : ` ${promoCode.discountValue} EGP off`}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemovePromoCode}
+                        className="h-8 w-8 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex gap-2">
+                        <Input
+                          id="promoCode"
+                          value={promoCodeInput}
+                          onChange={(e) => setPromoCodeInput(e.target.value)}
+                          placeholder="Enter promo code"
+                          className="flex-grow"
+                        />
+                        <Button
+                          variant="outline"
+                          onClick={handleApplyPromoCode}
+                          disabled={applyingPromoCode || !promoCodeInput.trim()}
+                        >
+                          {applyingPromoCode ? "Applying..." : "Apply"}
+                        </Button>
+                      </div>
+
+                      {promoCodeError && (
+                        <Alert variant="destructive" className="mt-2 py-2">
+                          <AlertDescription className="text-xs">
+                            {promoCodeError}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             </CardContent>

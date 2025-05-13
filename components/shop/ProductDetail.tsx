@@ -62,6 +62,7 @@ interface Product
   extends Omit<ProductByIdResult, "price" | "images" | "imagesCombined"> {
   id: string;
   price: number | string;
+  discountPrice: number | null;
   images?: { url: string; isPrimary?: boolean }[];
 }
 
@@ -238,7 +239,9 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
     const productDataForCart: CartProductType = {
       id: product.id,
       name: product.name,
-      price: Number(product.price),
+      price: product.discountPrice
+        ? Number(product.discountPrice)
+        : Number(product.price),
       stock: product.stock,
       imageUrl:
         product.imagesCombined && product.imagesCombined.length > 0
@@ -598,12 +601,34 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="text-3xl font-bold text-gray-900">
-              {typeof product.price === "number"
-                ? product.price.toFixed(2)
-                : Number.parseFloat(product.price as string).toFixed(2)}{" "}
-              EGP
-            </span>
+            {product.discountPrice ? (
+              <div className="flex flex-col">
+                <span className="text-lg text-gray-500 line-through">
+                  {typeof product.price === "number"
+                    ? product.price.toFixed(2)
+                    : Number.parseFloat(product.price as string).toFixed(
+                        2
+                      )}{" "}
+                  EGP
+                </span>
+                <span className="text-3xl font-bold text-red-600">
+                  {typeof product.discountPrice === "number"
+                    ? product.discountPrice.toFixed(2)
+                    : Number.parseFloat(
+                        product.discountPrice as string
+                      ).toFixed(2)}{" "}
+                  EGP
+                </span>
+              </div>
+            ) : (
+              <span className="text-3xl font-bold text-gray-900">
+                {typeof product.price === "number"
+                  ? product.price.toFixed(2)
+                  : Number.parseFloat(product.price as string).toFixed(2)}{" "}
+                EGP
+              </span>
+            )}
+
             {product.stock <= 10 && product.stock > 0 && (
               <span className="text-orange-500 text-sm">
                 Only {product.stock} left

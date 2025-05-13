@@ -1,4 +1,4 @@
-import type { CartItem } from "../context/CartContext";
+import type { CartItem, PromoCodeInfo } from "../context/CartContext";
 import type { Order } from "../mock-data/orders";
 import { OrderService, type OrderDetails } from "./OrderService";
 
@@ -36,14 +36,17 @@ export interface CheckoutSummary {
   subtotal: number;
   shipping: number;
   tax: number;
+  discount: number;
   total: number;
+  promoCode: PromoCodeInfo | null;
 }
 
 export const CheckoutService = {
   async processCheckout(
     userId: number,
     cartItems: CartItem[],
-    formData: CheckoutFormData
+    formData: CheckoutFormData,
+    promoCode: PromoCodeInfo | null = null
   ): Promise<Order> {
     for (const item of cartItems) {
       if (!item.stock || item.quantity > item.stock) {
@@ -56,16 +59,32 @@ export const CheckoutService = {
       0
     );
 
+    // Calculate discount from promo code if available
+    let discount = 0;
+    if (promoCode) {
+      if (promoCode.discountType === "percentage") {
+        discount = subtotal * (promoCode.discountValue / 100);
+      } else if (promoCode.discountType === "fixed_amount") {
+        discount = promoCode.discountValue;
+        // Make sure discount doesn't exceed subtotal
+        if (discount > subtotal) {
+          discount = subtotal;
+        }
+      }
+    }
+
+    const discountedSubtotal = subtotal - discount;
+
     const shipping =
       formData.deliveryMethod === "express"
         ? 15
         : formData.deliveryMethod === "standard"
-        ? 5
-        : 0;
+          ? 5
+          : 0;
 
-    const tax = subtotal * 0.05;
+    const tax = discountedSubtotal * 0.05;
 
-    const total = subtotal + shipping + tax;
+    const total = discountedSubtotal + shipping + tax;
 
     const billingAddress = formData.billingInfo.sameAsShipping
       ? { ...formData.shippingInfo }
@@ -95,7 +114,9 @@ export const CheckoutService = {
       subtotal,
       tax,
       shipping,
+      discount,
       total,
+      promoCodeId: promoCode?.id,
       notes: formData.notes,
     };
 
@@ -110,26 +131,45 @@ export const CheckoutService = {
 
   calculateSummary(
     items: CartItem[],
-    deliveryMethod = "standard"
+    deliveryMethod = "standard",
+    promoCode: PromoCodeInfo | null = null
   ): CheckoutSummary {
     const subtotal = items.reduce(
       (total, item) => total + item.price * item.quantity,
       0
     );
 
+    // Calculate discount from promo code if available
+    let discount = 0;
+    if (promoCode) {
+      if (promoCode.discountType === "percentage") {
+        discount = subtotal * (promoCode.discountValue / 100);
+      } else if (promoCode.discountType === "fixed_amount") {
+        discount = promoCode.discountValue;
+        // Make sure discount doesn't exceed subtotal
+        if (discount > subtotal) {
+          discount = subtotal;
+        }
+      }
+    }
+
+    const discountedSubtotal = subtotal - discount;
+
     const shipping =
       deliveryMethod === "express" ? 15 : deliveryMethod === "standard" ? 5 : 0;
 
-    const tax = subtotal * 0.05;
+    const tax = discountedSubtotal * 0.05;
 
-    const total = subtotal + shipping + tax;
+    const total = discountedSubtotal + shipping + tax;
 
     return {
       items,
       subtotal,
       shipping,
       tax,
+      discount,
       total,
+      promoCode,
     };
   },
 };

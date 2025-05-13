@@ -16,7 +16,7 @@ export const viewProductsSchema = z.object({
   limit: z.number().min(1).max(100).optional(),
   offset: z.number().min(0).optional(),
   search: z.string().trim().max(255).optional(),
-  sortBy: z.enum(["name", "price", "stock"]).optional(),
+  sortBy: z.enum(["name", "price", "discountPrice", "stock"]).optional(),
   categoryId: z.string().uuid().optional(),
   vendorId: z.string().uuid().optional(),
 });
@@ -103,7 +103,9 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
                   ? product.name
                   : input.sortBy === "price"
                     ? product.price
-                    : product.stock
+                    : input.sortBy === "discountPrice"
+                      ? product.discountPrice
+                      : product.stock
               )
             );
           }

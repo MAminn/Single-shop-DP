@@ -7,6 +7,7 @@ import { fileRouter } from "#root/backend/file/trpc";
 import { orderRouter } from "#root/backend/orders/trpc";
 import { productRouter } from "#root/backend/products/trpc";
 import { vendorRouter } from "#root/backend/vendor/trpc";
+import { promoCodesRouter } from "#root/backend/promo-codes/trpc";
 import { publicProcedure, router, t } from "./server";
 
 const authRouter = t.router({
@@ -26,6 +27,7 @@ export const appRouter = router({
   product: productRouter,
   order: orderRouter,
   file: fileRouter,
+  promoCode: promoCodesRouter,
 });
 
 export type AppRouter = typeof appRouter;

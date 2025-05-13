@@ -25,6 +25,7 @@ import { z } from "zod";
 export const searchProductsSchema = z.object({
   vendorId: z.string().uuid().optional(),
   categoryIds: z.array(z.string().uuid()).optional(),
+  categoryType: z.enum(["men", "women"]).optional(),
   search: z.string().trim().max(255).optional(),
   limit: z.number().min(1).max(100).optional().default(12),
   offset: z.number().min(0).optional().default(0),
@@ -49,6 +50,32 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
                 )
               )
           );
+        } else if (input.categoryType) {
+          // If categoryType is specified but no categoryIds, fetch categories of that type
+          const categoryIds = await db
+            .select({ id: category.id })
+            .from(category)
+            .where(eq(category.type, input.categoryType))
+            .execute()
+            .then((cats) => cats.map((c) => c.id));
+
+          if (categoryIds.length > 0) {
+            categoryCondition = exists(
+              db
+                .select({ productId: productCategory.productId })
+                .from(productCategory)
+                .where(
+                  and(
+                    eq(productCategory.productId, product.id),
+                    inArray(productCategory.categoryId, categoryIds)
+                  )
+                )
+            );
+          } else {
+            // If no categories found for this type, ensure we return no products
+            // by using an impossible condition
+            categoryCondition = sql`false`;
+          }
         }
 
         // Build count query first
@@ -82,6 +109,7 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
             name: product.name,
             description: product.description,
             price: product.price,
+            discountPrice: product.discountPrice,
             stock: product.stock,
             imageUrl: file.diskname,
             categoryId: product.categoryId,

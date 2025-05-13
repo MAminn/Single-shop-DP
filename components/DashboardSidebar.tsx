@@ -7,6 +7,7 @@ import {
   Store,
   UserPlus,
   LayoutGrid,
+  TicketPercent,
 } from "lucide-react";
 
 import {
@@ -52,6 +53,11 @@ export function DashboardSidebar() {
       label: "Orders",
       href: "/dashboard/orders",
       icon: ShoppingCart,
+    },
+    {
+      label: "Promo Codes",
+      href: "/dashboard/promo-codes",
+      icon: TicketPercent,
     },
   ];
 

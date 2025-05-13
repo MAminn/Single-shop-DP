@@ -20,6 +20,7 @@ interface FeaturedProduct {
   id: string;
   name: string;
   price: number;
+  discountPrice?: number | string | null;
   stock: number;
   imageUrl?: string;
   images?: { url: string; isPrimary?: boolean }[];
@@ -96,6 +97,9 @@ export default function Page() {
               id: item.id,
               name: item.name,
               price: Number(item.price),
+              discountPrice: item.discountPrice
+                ? Number(item.discountPrice)
+                : null,
               stock: item.stock,
               imageUrl: item.imageUrl
                 ? item.imageUrl.startsWith("http")

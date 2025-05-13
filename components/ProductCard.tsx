@@ -16,6 +16,7 @@ interface Product {
   id: string;
   name: string;
   price: number | string;
+  discountPrice?: number | string | null;
   imageUrl?: string | null;
   images?: ProductImage[];
   available: boolean;
@@ -54,9 +55,15 @@ export const ProductCard = memo(
               id: product.id,
               name: product.name,
               price:
-                typeof product.price === "number"
-                  ? product.price
-                  : Number(product.price),
+                product.discountPrice !== undefined &&
+                product.discountPrice !== null &&
+                product.discountPrice !== ""
+                  ? typeof product.discountPrice === "number"
+                    ? product.discountPrice
+                    : Number(product.discountPrice)
+                  : typeof product.price === "number"
+                    ? product.price
+                    : Number(product.price),
               imageUrl: getDisplayImageUrl(),
               vendorId: Number(product.vendorId),
               stock: 100, // Assuming available products have stock
@@ -64,11 +71,6 @@ export const ProductCard = memo(
             1, // quantity
             {} // selectedOptions
           );
-
-          toast({
-            title: "Added to cart",
-            description: `${product.name} has been added to your cart.`,
-          });
         } catch (error) {
           console.error("Error adding to cart:", error);
           toast({
@@ -241,9 +243,25 @@ export const ProductCard = memo(
           </div>
 
           <div className="flex justify-between items-center mt-2">
-            <span className="text-lg font-bold text-gray-900 tracking-tight">
-              {formattedPrice} EGP
-            </span>
+            {product.discountPrice !== undefined &&
+            product.discountPrice !== null &&
+            product.discountPrice !== "" ? (
+              <div className="flex flex-col">
+                <span className="text-sm text-gray-500 line-through">
+                  {formattedPrice} EGP
+                </span>
+                <span className="text-lg font-bold text-red-600 tracking-tight">
+                  {typeof product.discountPrice === "number"
+                    ? product.discountPrice.toFixed(2)
+                    : Number(product.discountPrice).toFixed(2)}{" "}
+                  EGP
+                </span>
+              </div>
+            ) : (
+              <span className="text-lg font-bold text-gray-900 tracking-tight">
+                {formattedPrice} EGP
+              </span>
+            )}
 
             <Button
               size="sm"

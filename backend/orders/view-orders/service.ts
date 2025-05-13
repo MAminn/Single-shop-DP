@@ -93,6 +93,8 @@ export const viewOrders = (
               subtotal: order.subtotal,
               shipping: order.shipping,
               tax: order.tax,
+              discount: order.discount,
+              promoCodeId: order.promoCodeId,
               total: order.total,
               status: order.status,
               notes: order.notes,
@@ -115,6 +117,7 @@ export const viewOrders = (
                   vendorId: orderItem.vendorId,
                   quantity: orderItem.quantity,
                   price: orderItem.price,
+                  discountPrice: orderItem.discountPrice,
                   name: orderItem.name,
                 })
                 .from(orderItem)

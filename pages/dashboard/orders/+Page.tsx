@@ -65,6 +65,7 @@ interface OrderItem {
   price: string;
   name: string;
   vendorName?: string;
+  discountPrice?: string;
 }
 
 interface Order {
@@ -80,6 +81,8 @@ interface Order {
   subtotal: string;
   shipping: string;
   tax: string;
+  discount: string | null;
+  promoCodeId: string | null;
   total: string;
   status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   notes: string | null;
@@ -135,7 +138,15 @@ export default function Orders() {
         setOrders(
           result.result
             ? Array.isArray(result.result)
-              ? result.result
+              ? result.result.map((order) => {
+                  // Cast the API response to a partial Order type and add missing fields
+                  const partialOrder = order as Partial<Order>;
+                  return {
+                    ...order,
+                    discount: partialOrder.discount || null,
+                    promoCodeId: partialOrder.promoCodeId || null,
+                  } as Order;
+                })
               : []
             : []
         );
@@ -387,6 +398,16 @@ export default function Orders() {
                         <TableCell>{order.items?.length || 0}</TableCell>
                         <TableCell>
                           {Number.parseFloat(order.total).toFixed(2)} EGP
+                          {order.discount &&
+                            Number.parseFloat(order.discount) > 0 && (
+                              <div className="text-xs text-green-600">
+                                <span>
+                                  -
+                                  {Number.parseFloat(order.discount).toFixed(2)}{" "}
+                                  EGP discount
+                                </span>
+                              </div>
+                            )}
                         </TableCell>
                         <TableCell>
                           <Badge
@@ -513,11 +534,29 @@ export default function Orders() {
                           )}
                           <TableCell>{item.quantity}</TableCell>
                           <TableCell>
-                            {Number.parseFloat(item.price).toFixed(2)} EGP
+                            {item.discountPrice ? (
+                              <>
+                                <span className="line-through text-gray-500">
+                                  {Number.parseFloat(item.price).toFixed(2)} EGP
+                                </span>
+                                <span className="text-red-600 block">
+                                  {Number.parseFloat(
+                                    item.discountPrice
+                                  ).toFixed(2)}{" "}
+                                  EGP
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                {Number.parseFloat(item.price).toFixed(2)} EGP
+                              </>
+                            )}
                           </TableCell>
                           <TableCell>
                             {(
-                              Number.parseFloat(item.price) * item.quantity
+                              Number.parseFloat(
+                                item.discountPrice || item.price
+                              ) * item.quantity
                             ).toFixed(2)}{" "}
                             EGP
                           </TableCell>
@@ -572,24 +611,52 @@ export default function Orders() {
                   <div className="text-right">
                     <h3 className="font-medium text-sm mb-2">Order Summary</h3>
                     <div className="space-y-1 text-sm">
-                      <p>
-                        <span className="font-medium">Subtotal:</span>{" "}
-                        {Number.parseFloat(selectedOrder.subtotal).toFixed(2)}{" "}
-                        EGP
-                      </p>
-                      <p>
-                        <span className="font-medium">Shipping:</span>{" "}
-                        {Number.parseFloat(selectedOrder.shipping).toFixed(2)}{" "}
-                        EGP
-                      </p>
-                      <p>
-                        <span className="font-medium">Tax:</span>{" "}
-                        {Number.parseFloat(selectedOrder.tax).toFixed(2)} EGP
-                      </p>
-                      <p className="font-bold">
-                        <span>Total:</span>{" "}
-                        {Number.parseFloat(selectedOrder.total).toFixed(2)} EGP
-                      </p>
+                      <div className="flex justify-between">
+                        <span className="font-medium">Subtotal:</span>
+                        <span>
+                          {Number.parseFloat(selectedOrder.subtotal).toFixed(2)}{" "}
+                          EGP
+                        </span>
+                      </div>
+
+                      {selectedOrder.discount &&
+                        Number.parseFloat(selectedOrder.discount) > 0 && (
+                          <div className="flex justify-between">
+                            <span className="font-medium text-green-600">
+                              Discount:
+                            </span>
+                            <span className="text-green-600">
+                              -
+                              {Number.parseFloat(
+                                selectedOrder.discount
+                              ).toFixed(2)}{" "}
+                              EGP
+                            </span>
+                          </div>
+                        )}
+
+                      <div className="flex justify-between">
+                        <span className="font-medium">Shipping:</span>
+                        <span>
+                          {Number.parseFloat(selectedOrder.shipping).toFixed(2)}{" "}
+                          EGP
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between">
+                        <span className="font-medium">Tax:</span>
+                        <span>
+                          {Number.parseFloat(selectedOrder.tax).toFixed(2)} EGP
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between font-bold">
+                        <span>Total:</span>
+                        <span>
+                          {Number.parseFloat(selectedOrder.total).toFixed(2)}{" "}
+                          EGP
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>

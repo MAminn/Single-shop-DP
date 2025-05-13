@@ -15,7 +15,12 @@ import type { z } from "zod";
 
 // Define valid sort keys based on the backend schema
 type SortByType = z.infer<typeof viewProductsSchema>["sortBy"];
-const validSortByKeys: ReadonlyArray<SortByType> = ["name", "price", "stock"];
+const validSortByKeys: ReadonlyArray<SortByType> = [
+  "name",
+  "price",
+  "discountPrice",
+  "stock",
+];
 
 // Default number of products per page
 const DEFAULT_LIMIT = 10;

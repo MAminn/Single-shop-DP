@@ -16,6 +16,7 @@ interface Product {
   id: string;
   name: string;
   price: number | string;
+  discountPrice?: number | string | null;
   stock: number;
   imageUrl: string | null;
   images?: { url: string; isPrimary?: boolean }[];
@@ -79,18 +80,42 @@ const Page = () => {
       case "price-asc":
         sortedProducts.sort((a, b) => {
           const priceA =
-            typeof a.price === "number" ? a.price : Number(a.price) || 0;
+            a.discountPrice !== undefined && a.discountPrice !== null
+              ? typeof a.discountPrice === "number"
+                ? a.discountPrice
+                : Number(a.discountPrice) || 0
+              : typeof a.price === "number"
+                ? a.price
+                : Number(a.price) || 0;
           const priceB =
-            typeof b.price === "number" ? b.price : Number(b.price) || 0;
+            b.discountPrice !== undefined && b.discountPrice !== null
+              ? typeof b.discountPrice === "number"
+                ? b.discountPrice
+                : Number(b.discountPrice) || 0
+              : typeof b.price === "number"
+                ? b.price
+                : Number(b.price) || 0;
           return priceA - priceB;
         });
         break;
       case "price-desc":
         sortedProducts.sort((a, b) => {
           const priceA =
-            typeof a.price === "number" ? a.price : Number(a.price) || 0;
+            a.discountPrice !== undefined && a.discountPrice !== null
+              ? typeof a.discountPrice === "number"
+                ? a.discountPrice
+                : Number(a.discountPrice) || 0
+              : typeof a.price === "number"
+                ? a.price
+                : Number(a.price) || 0;
           const priceB =
-            typeof b.price === "number" ? b.price : Number(b.price) || 0;
+            b.discountPrice !== undefined && b.discountPrice !== null
+              ? typeof b.discountPrice === "number"
+                ? b.discountPrice
+                : Number(b.discountPrice) || 0
+              : typeof b.price === "number"
+                ? b.price
+                : Number(b.price) || 0;
           return priceB - priceA;
         });
         break;

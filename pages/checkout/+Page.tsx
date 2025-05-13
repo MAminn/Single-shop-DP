@@ -13,7 +13,11 @@ import { Separator } from "#root/components/ui/separator";
 import { Textarea } from "#root/components/ui/textarea";
 import { useToast } from "#root/components/ui/use-toast";
 import { Link } from "#root/components/Link";
-import { useCart, type CartItem } from "#root/lib/context/CartContext";
+import {
+  useCart,
+  type CartItem,
+  type PromoCodeInfo,
+} from "#root/lib/context/CartContext";
 import {
   ArrowLeft,
   Check,
@@ -24,6 +28,8 @@ import {
   ShoppingBag,
   Truck,
   User,
+  Tag,
+  X,
 } from "lucide-react";
 import { CheckoutService } from "#root/lib/services/CheckoutService";
 import { trpc } from "#root/shared/trpc/client";
@@ -45,13 +51,25 @@ interface OrderData {
   subtotal: number;
   shipping: number;
   tax: number;
+  discount?: number;
   total: number;
   status: string;
+  promoCode?: PromoCodeInfo;
   notes?: string;
 }
 
 export default function CheckoutPage() {
-  const { items, subtotal, totalItems, clearCart } = useCart();
+  const {
+    items,
+    subtotal,
+    totalItems,
+    clearCart,
+    discount,
+    total,
+    promoCode,
+    shipping,
+    tax,
+  } = useCart();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOrderConfirmation, setShowOrderConfirmation] = useState(false);
@@ -80,10 +98,6 @@ export default function CheckoutPage() {
     }));
   };
 
-  const shipping = 5;
-  const tax = subtotal * 0.05;
-  const total = subtotal + shipping + tax;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -111,7 +125,8 @@ export default function CheckoutPage() {
         quantity: item.quantity,
       }));
 
-      const result = await trpc.order.create.mutate({
+      // Include promo code ID if available
+      const orderData = {
         customerName: formData.fullName,
         customerEmail: formData.email || "not-provided@example.com",
         customerPhone: formData.phoneNumber,
@@ -121,18 +136,22 @@ export default function CheckoutPage() {
         shippingPostalCode: formData.postalCode,
         shippingCountry: formData.country,
         items: orderItems,
-      });
+        notes: formData.notes,
+        promoCodeId: promoCode?.id,
+      };
+
+      const result = await trpc.order.create.mutate(orderData);
 
       if (!result.success) {
         throw new Error(result.error || "Failed to create order");
       }
 
-      const orderData = result.result;
+      const orderResult = result.result;
       setOrderDetails({
         id:
-          typeof orderData.id === "string"
-            ? Number.parseInt(orderData.id, 10)
-            : orderData.id,
+          typeof orderResult.id === "string"
+            ? Number.parseInt(orderResult.id, 10)
+            : orderResult.id,
         date: new Date().toISOString(),
         customerInfo: {
           fullName: formData.fullName,
@@ -148,8 +167,10 @@ export default function CheckoutPage() {
         subtotal: subtotal,
         shipping: shipping,
         tax: tax,
+        discount: discount,
         total: total,
         status: "pending",
+        promoCode: promoCode || undefined,
         notes: formData.notes,
       });
 
@@ -281,6 +302,19 @@ export default function CheckoutPage() {
                     <p className="text-gray-500">Subtotal</p>
                     <p>{orderDetails.subtotal.toFixed(2)} EGP</p>
                   </div>
+
+                  {orderDetails.discount && orderDetails.discount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <p className="flex items-center gap-1">
+                        <Tag className="h-4 w-4" />
+                        Discount
+                        {orderDetails.promoCode &&
+                          ` (${orderDetails.promoCode.code})`}
+                      </p>
+                      <p>-{orderDetails.discount.toFixed(2)} EGP</p>
+                    </div>
+                  )}
+
                   <div className="flex justify-between">
                     <p className="text-gray-500">Shipping</p>
                     <p>{orderDetails.shipping.toFixed(2)} EGP</p>
@@ -501,7 +535,9 @@ export default function CheckoutPage() {
                 subtotal={subtotal}
                 shipping={shipping}
                 tax={tax}
+                discount={discount}
                 total={total}
+                promoCode={promoCode}
               />
             </div>
 
@@ -538,7 +574,9 @@ export default function CheckoutPage() {
             subtotal={subtotal}
             shipping={shipping}
             tax={tax}
+            discount={discount}
             total={total}
+            promoCode={promoCode}
           />
         </div>
       </div>
@@ -551,13 +589,17 @@ function OrderSummary({
   subtotal,
   shipping,
   tax,
+  discount = 0,
   total,
+  promoCode,
 }: {
   items: CartItem[];
   subtotal: number;
   shipping: number;
   tax: number;
+  discount?: number;
   total: number;
+  promoCode?: PromoCodeInfo | null;
 }) {
   return (
     <Card className="sticky top-4 p-5">
@@ -597,6 +639,17 @@ function OrderSummary({
               <span className="text-neutral-600">Subtotal</span>
               <span className="font-medium">{subtotal.toFixed(2)} EGP</span>
             </div>
+
+            {discount > 0 && promoCode && (
+              <div className="flex justify-between text-green-600">
+                <span className="flex items-center gap-1">
+                  <Tag className="h-4 w-4" />
+                  Discount ({promoCode.code})
+                </span>
+                <span className="font-medium">-{discount.toFixed(2)} EGP</span>
+              </div>
+            )}
+
             <div className="flex justify-between">
               <span className="text-neutral-600">Shipping</span>
               <span className="font-medium">{shipping.toFixed(2)} EGP</span>
@@ -613,6 +666,13 @@ function OrderSummary({
             <span>Total</span>
             <span>{total.toFixed(2)} EGP</span>
           </div>
+
+          {promoCode && (
+            <div className="text-sm text-green-600 flex items-center gap-1 pt-2">
+              <Check className="h-4 w-4" />
+              <span>Promo code {promoCode.code} applied</span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

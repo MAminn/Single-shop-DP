@@ -229,6 +229,10 @@ export const product = pgTable("product", {
     precision: 10,
     scale: 2,
   }).notNull(),
+  discountPrice: decimal("discount_price", {
+    precision: 10,
+    scale: 2,
+  }),
   createdAt: timestamp("created_at", {
     withTimezone: true,
     mode: "date",
@@ -298,6 +302,14 @@ export const order = pgTable("order", {
     precision: 10,
     scale: 2,
   }).notNull(),
+  discount: decimal("discount", {
+    precision: 10,
+    scale: 2,
+  }),
+  promoCodeId: uuid("promo_code_id").references(() => promoCode.id, {
+    onDelete: "set null",
+    onUpdate: "cascade",
+  }),
   total: decimal("total", {
     precision: 10,
     scale: 2,
@@ -356,6 +368,10 @@ export const orderItem = pgTable("order_item", {
     precision: 10,
     scale: 2,
   }).notNull(),
+  discountPrice: decimal("discount_price", {
+    precision: 10,
+    scale: 2,
+  }),
   name: text("name").notNull(),
   createdAt: timestamp("created_at", {
     withTimezone: true,
@@ -459,6 +475,152 @@ export const productCategory = pgTable(
     return {
       productCategoryUnique: uniqueIndex("product_category_unique").on(
         table.productId,
+        table.categoryId
+      ),
+    };
+  }
+);
+
+// Enum for discount type
+export const discountTypeEnum = pgEnum("discount_type", [
+  "percentage",
+  "fixed_amount",
+]);
+
+// Enum for promo code status
+export const promoCodeStatusEnum = pgEnum("promo_code_status", [
+  "active",
+  "inactive",
+  "expired",
+  "exhausted", // Used up all available uses
+  "scheduled", // Not yet active, start date is in the future
+]);
+
+export const promoCode = pgTable(
+  "promo_code",
+  {
+    id: uuid("id")
+      .$defaultFn(() => v7())
+      .primaryKey(),
+    code: text("code").notNull().unique(),
+    description: text("description"),
+
+    discountType: discountTypeEnum("discount_type").notNull(),
+    discountValue: decimal("discount_value", {
+      precision: 10,
+      scale: 2,
+    }).notNull(),
+
+    status: promoCodeStatusEnum("status").notNull().default("inactive"),
+
+    startDate: timestamp("start_date", { withTimezone: true, mode: "date" }),
+    endDate: timestamp("end_date", { withTimezone: true, mode: "date" }),
+
+    usageLimit: integer("usage_limit"), // Max total uses. Null means unlimited.
+    usedCount: integer("used_count").notNull().default(0),
+
+    usageLimitPerUser: integer("usage_limit_per_user"), // Max uses per user. Null means unlimited for a user (up to total usageLimit).
+
+    minPurchaseAmount: decimal("min_purchase_amount", {
+      precision: 10,
+      scale: 2,
+    }), // Null means no minimum purchase.
+
+    // Applicability:
+    // If appliesToAllProducts is true, specific product/category applicability is ignored.
+    // If false, then specific products/categories are checked via junction tables.
+    appliesToAllProducts: boolean("applies_to_all_products")
+      .notNull()
+      .default(true),
+
+    createdBy: uuid("created_by").references(() => user.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+      mode: "date",
+    })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
+  },
+  (table) => {
+    return {
+      codeIndex: uniqueIndex("promo_code_code_idx").on(table.code),
+    };
+  }
+);
+
+// Junction table for many-to-many relationship between promo codes and applicable products
+export const promoCodeProducts = pgTable(
+  "promo_code_product", // Singular 'product' for consistency with 'product_category'
+  {
+    id: uuid("id")
+      .$defaultFn(() => v7())
+      .primaryKey(),
+    promoCodeId: uuid("promo_code_id")
+      .notNull()
+      .references(() => promoCode.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => product.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+      mode: "date",
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => {
+    return {
+      promoCodeProductUnique: uniqueIndex("promo_code_product_unique_idx").on(
+        table.promoCodeId,
+        table.productId
+      ),
+    };
+  }
+);
+
+// Junction table for many-to-many relationship between promo codes and applicable categories
+export const promoCodeCategories = pgTable(
+  "promo_code_category", // Singular 'category'
+  {
+    id: uuid("id")
+      .$defaultFn(() => v7())
+      .primaryKey(),
+    promoCodeId: uuid("promo_code_id")
+      .notNull()
+      .references(() => promoCode.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => category.id, {
+        onDelete: "cascade", // Cascade delete if category is deleted
+        onUpdate: "cascade",
+      }),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+      mode: "date",
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => {
+    return {
+      promoCodeCategoryUnique: uniqueIndex("promo_code_category_unique_idx").on(
+        table.promoCodeId,
         table.categoryId
       ),
     };

@@ -6,6 +6,7 @@ import {
   user,
   vendor,
   type orderStatus,
+  promoCode,
 } from "#root/shared/database/drizzle/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { Effect } from "effect";
@@ -15,6 +16,7 @@ import { ServerError } from "#root/shared/error/server";
 import { EmailService, renderEmailTemplate } from "#root/shared/email/service";
 import { NewOrderEmailTemplate } from "./email-template";
 import axios from "axios";
+import { validatePromoCode } from "#root/backend/promo-codes/validate-promo-code/validate-promo-code";
 
 const OrderItemSchema = z.object({
   productId: z.string().uuid(),
@@ -32,6 +34,7 @@ export const createOrderSchema = z.object({
   shippingCountry: z.string().optional().nullable(),
   items: z.array(OrderItemSchema).min(1),
   notes: z.string().optional(),
+  promoCodeId: z.string().uuid().optional(),
 });
 
 // Manually define the insert type matching the schema's nullability
@@ -51,6 +54,8 @@ type OrderInsertData = {
   total: string;
   status: (typeof orderStatus.enumValues)[number]; // Use enum values type
   notes: string | null;
+  promoCodeId: string | null;
+  discount: string | null;
   fincartStatus: string | null;
   fincartSubStatus: string | null;
   fincartTrackingNumber: string | null;
@@ -269,6 +274,7 @@ export const createOrder = (
             .select({
               id: product.id,
               price: product.price,
+              discountPrice: product.discountPrice,
               vendorId: product.vendorId,
               name: product.name,
               stock: product.stock,
@@ -312,16 +318,121 @@ export const createOrder = (
           const subtotal = input.items.reduce((acc, item) => {
             const productData = products.find((p) => p.id === item.productId);
             if (!productData) return acc;
-            return (
-              acc +
-              Number.parseFloat(productData.price.toString()) * item.quantity
-            );
+
+            // Use discount price if available
+            const priceToUse = productData.discountPrice
+              ? Number.parseFloat(productData.discountPrice.toString())
+              : Number.parseFloat(productData.price.toString());
+
+            return acc + priceToUse * item.quantity;
           }, 0);
 
-          const shipping = 10;
-          const taxRate = 0.1;
-          const tax = subtotal * taxRate;
-          const total = subtotal + shipping + tax;
+          const shipping = 5;
+          const taxRate = 0.05;
+
+          // Check if a promo code is applied
+          let discount = 0;
+          let promoCodeData = null;
+
+          if (input.promoCodeId) {
+            // Get the promo code first to get its code
+            promoCodeData = await tx
+              .select()
+              .from(promoCode)
+              .where(eq(promoCode.id, input.promoCodeId))
+              .then((res) => res[0]);
+
+            if (promoCodeData) {
+              // Convert cart items to the format expected by validatePromoCode
+              const cartItems = input.items
+                .map((item) => {
+                  const productData = products.find(
+                    (p) => p.id === item.productId
+                  );
+                  if (!productData) return null;
+                  return {
+                    id: item.productId,
+                    quantity: item.quantity,
+                    price: Number.parseFloat(productData.price.toString()),
+                  };
+                })
+                .filter(
+                  (
+                    item
+                  ): item is { id: string; quantity: number; price: number } =>
+                    item !== null
+                );
+
+              try {
+                // Validate the promo code synchronously from the database directly
+                // Instead of trying to use Effect.runPromise inside a transaction
+                if (
+                  // Current date is between start and end dates (or they're null)
+                  (!promoCodeData.startDate ||
+                    promoCodeData.startDate <= new Date()) &&
+                  (!promoCodeData.endDate ||
+                    promoCodeData.endDate >= new Date()) &&
+                  // Code is active
+                  (promoCodeData.status === "active" ||
+                    promoCodeData.status === "scheduled") &&
+                  // Usage limits are not exceeded
+                  (promoCodeData.usageLimit === null ||
+                    promoCodeData.usedCount < promoCodeData.usageLimit) &&
+                  // Minimum purchase amount is met
+                  (promoCodeData.minPurchaseAmount === null ||
+                    Number(promoCodeData.minPurchaseAmount) <= subtotal)
+                ) {
+                  // Calculate discount based on validated promo code
+                  if (promoCodeData.discountType === "percentage") {
+                    discount =
+                      subtotal * (Number(promoCodeData.discountValue) / 100);
+                  } else if (promoCodeData.discountType === "fixed_amount") {
+                    discount = Number(promoCodeData.discountValue);
+                    // Make sure discount doesn't exceed subtotal
+                    if (discount > subtotal) {
+                      discount = subtotal;
+                    }
+                  }
+
+                  // Increment used count for the promo code
+                  await tx
+                    .update(promoCode)
+                    .set({
+                      usedCount: promoCodeData.usedCount + 1,
+                      // If this was the last use, set status to exhausted
+                      status:
+                        promoCodeData.usageLimit !== null &&
+                        promoCodeData.usedCount + 1 >= promoCodeData.usageLimit
+                          ? "exhausted"
+                          : promoCodeData.status,
+                    })
+                    .where(eq(promoCode.id, promoCodeData.id));
+                } else {
+                  throw new ServerError({
+                    tag: "PromoCodeValidationFailed",
+                    statusCode: 400,
+                    clientMessage:
+                      "This promo code is not valid or has expired",
+                  });
+                }
+              } catch (error) {
+                console.error("Promo code validation failed:", error);
+                throw new ServerError({
+                  tag: "PromoCodeValidationFailed",
+                  statusCode: 400,
+                  clientMessage:
+                    error instanceof ServerError
+                      ? error.clientMessage
+                      : "Invalid promo code",
+                });
+              }
+            }
+          }
+
+          const discountedSubtotal = subtotal - discount;
+          const tax = discountedSubtotal * taxRate;
+          // Ensure shipping is included in the total
+          const total = discountedSubtotal + shipping + tax;
 
           // Only include fields directly provided or calculated
           const insertData = {
@@ -335,6 +446,8 @@ export const createOrder = (
             shippingPostalCode: input.shippingPostalCode,
             shippingCountry: input.shippingCountry,
             subtotal: subtotal.toString(),
+            discount: discount > 0 ? discount.toString() : null,
+            promoCodeId: input.promoCodeId || null,
             shipping: shipping.toString(),
             tax: tax.toString(),
             total: total.toString(),
@@ -398,6 +511,7 @@ export const createOrder = (
                   vendorId: productData.vendorId,
                   quantity: item.quantity,
                   price: productData.price.toString(),
+                  discountPrice: productData.discountPrice?.toString() || null,
                   name: productData.name,
                   vendorName: productData.vendorName,
                 })
@@ -434,6 +548,9 @@ export const createOrder = (
             name: i.name ?? "-",
             quantity: i.quantity ?? 0,
             price: i.price ? Number.parseFloat(i.price) : 0,
+            discountPrice: i.discountPrice
+              ? Number.parseFloat(i.discountPrice)
+              : undefined,
             vendorName: i.vendorName ?? undefined,
           })),
           shippingFees: Number.parseFloat(result.shipping),

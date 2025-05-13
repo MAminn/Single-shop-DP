@@ -57,6 +57,7 @@ export function ProductForm({
     name: string;
     description: string;
     price: number;
+    discountPrice?: number | null;
     stock: number;
     imageId: string;
     productImages: FileMetadata[];
@@ -75,6 +76,11 @@ export function ProductForm({
     name: z.string().min(1, "Product name is required"),
     description: z.string(),
     price: z.coerce.number().min(0, "Price must be greater than 0"),
+    discountPrice: z.coerce
+      .number()
+      .min(0, "Discount price must be greater than 0")
+      .nullable()
+      .optional(),
     stock: z.coerce.number().int().min(0, "Stock must be greater than 0"),
     imageId: z.string().default(""),
     productImages: z
@@ -113,6 +119,7 @@ export function ProductForm({
       name: initialValues?.name || "",
       description: initialValues?.description || "",
       price: initialValues?.price || 0,
+      discountPrice: initialValues?.discountPrice || null,
       stock: initialValues?.stock || 0,
       // Use the primary image ID as the main imageId
       imageId: initialValues?.imageId || "",
@@ -336,6 +343,27 @@ export function ProductForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Price</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="99.99"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e.target.valueAsNumber);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="discountPrice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Discount Price</FormLabel>
                   <FormControl>
                     <Input
                       type="number"

@@ -1,10 +1,19 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import type { Product } from "../mock-data/products";
+import { trpc } from "#root/shared/trpc/client";
 
 export interface CartItem extends Product {
   quantity: number;
   selectedOptions: Record<string, string>;
+}
+
+export interface PromoCodeInfo {
+  id: string;
+  code: string;
+  discountType: "percentage" | "fixed_amount";
+  discountValue: number;
+  appliesToAllProducts: boolean;
 }
 
 interface CartContextType {
@@ -23,6 +32,13 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   subtotal: number;
+  discount: number;
+  shipping: number;
+  tax: number;
+  total: number;
+  promoCode: PromoCodeInfo | null;
+  applyPromoCode: (code: string) => Promise<boolean>;
+  removePromoCode: () => void;
   findItemInCart: (
     itemId: string,
     options: CartItem["selectedOptions"]
@@ -33,6 +49,8 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [promoCode, setPromoCode] = useState<PromoCodeInfo | null>(null);
+  const [discount, setDiscount] = useState<number>(0);
 
   useEffect(() => {
     const savedCart = localStorage.getItem("cart");
@@ -45,11 +63,56 @@ export function CartProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("cart");
       }
     }
+
+    const savedPromoCode = localStorage.getItem("promoCode");
+    if (savedPromoCode) {
+      try {
+        const parsedPromoCode = JSON.parse(savedPromoCode);
+        setPromoCode(parsedPromoCode);
+      } catch (error) {
+        console.error("Failed to parse promo code from localStorage");
+        localStorage.removeItem("promoCode");
+      }
+    }
   }, []);
+
+  // Calculate subtotal
+  const subtotal = items.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
 
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(items));
-  }, [items]);
+
+    // Recalculate discount when items change
+    if (promoCode) {
+      calculateDiscount(promoCode);
+    }
+  }, [items, promoCode]);
+
+  useEffect(() => {
+    if (promoCode) {
+      localStorage.setItem("promoCode", JSON.stringify(promoCode));
+      calculateDiscount(promoCode);
+    } else {
+      localStorage.removeItem("promoCode");
+      setDiscount(0);
+    }
+  }, [promoCode]);
+
+  const calculateDiscount = (promoCodeInfo: PromoCodeInfo) => {
+    if (promoCodeInfo.discountType === "percentage") {
+      setDiscount(subtotal * (promoCodeInfo.discountValue / 100));
+    } else if (promoCodeInfo.discountType === "fixed_amount") {
+      let calculatedDiscount = promoCodeInfo.discountValue;
+      // Make sure the discount doesn't exceed the subtotal
+      if (calculatedDiscount > subtotal) {
+        calculatedDiscount = subtotal;
+      }
+      setDiscount(calculatedDiscount);
+    }
+  };
 
   const findItemInCart = (
     itemId: string,
@@ -167,14 +230,55 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => {
     setItems([]);
+    removePromoCode();
+  };
+
+  const applyPromoCode = async (code: string): Promise<boolean> => {
+    try {
+      // Convert cart items to the format expected by the validatePromoCode endpoint
+      const cartItems = items.map((item) => ({
+        id: item.id,
+        quantity: item.quantity,
+        price: item.price,
+      }));
+
+      // Use the client directly instead of hooks since we're not in a component context
+      const result = await trpc.promoCode.validate.query({
+        code,
+        cartItems,
+        subtotal,
+      });
+
+      if (result.success && result.result) {
+        setPromoCode(result.result);
+        return true;
+      }
+
+      setPromoCode(null);
+      setDiscount(0);
+      return false;
+    } catch (error) {
+      console.error("Failed to apply promo code:", error);
+      setPromoCode(null);
+      setDiscount(0);
+      return false;
+    }
+  };
+
+  const removePromoCode = () => {
+    setPromoCode(null);
   };
 
   const totalItems = items.reduce((total, item) => total + item.quantity, 0);
 
-  const subtotal = items.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
+  // Fixed shipping cost
+  const shipping = 5;
+
+  // Calculate tax based on subtotal minus discount
+  const tax = (subtotal - discount) * 0.05;
+
+  // Calculate total including shipping and tax
+  const total = subtotal - discount + shipping + tax;
 
   return (
     <CartContext.Provider
@@ -186,6 +290,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         totalItems,
         subtotal,
+        discount,
+        shipping,
+        tax,
+        total,
+        promoCode,
+        applyPromoCode,
+        removePromoCode,
         findItemInCart,
       }}
     >

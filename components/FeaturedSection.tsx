@@ -9,6 +9,7 @@ interface Product {
   id: string;
   name: string;
   price: number | string;
+  discountPrice?: number | string | null;
   imageUrl?: string | null;
   images?: { url: string; isPrimary?: boolean }[];
   available: boolean;

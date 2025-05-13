@@ -14,6 +14,7 @@ type ProductSuccess = {
     id: string;
     name: string;
     price: string | number;
+    discountPrice?: number | string | null;
     stock: number;
     imageUrl: string | null;
     images?: Array<{

@@ -27,7 +27,9 @@ export interface OrderDetails {
   subtotal: number;
   tax: number;
   shipping: number;
+  discount?: number;
   total: number;
+  promoCodeId?: string;
   notes?: string;
 }
 
@@ -122,8 +124,6 @@ export const OrderService = {
         (total: number, item: OrderItem) => total + item.price * item.quantity,
         0
       );
-
-     
     }
   },
 

@@ -37,6 +37,7 @@ export const NewOrderEmailTemplate = ({
     price: number;
     vendorName?: string;
     id?: string;
+    discountPrice?: number;
   }[];
   shippingFees: number;
   subTotal: number;
@@ -108,7 +109,24 @@ export const NewOrderEmailTemplate = ({
                   <Column style={tableCell}>{item.name}</Column>
                   <Column style={tableCell}>{item.quantity}</Column>
                   <Column style={tableCellRight}>
-                    {formatPrice(item.price)} EGP
+                    {item.discountPrice ? (
+                      <>
+                        <span
+                          style={{
+                            textDecoration: "line-through",
+                            color: "#888",
+                          }}
+                        >
+                          {formatPrice(item.price)} EGP
+                        </span>
+                        <br />
+                        <span style={{ color: "#e53e3e" }}>
+                          {formatPrice(item.discountPrice)} EGP
+                        </span>
+                      </>
+                    ) : (
+                      <>{formatPrice(item.price)} EGP</>
+                    )}
                   </Column>
                 </Row>
                 {item.vendorName && (

@@ -23,6 +23,7 @@ export const createProductSchema = z.object({
     .array(z.string().uuid())
     .min(1, "At least one category is required"),
   price: z.number().min(0).max(10000),
+  discountPrice: z.number().min(0).max(10000).optional(),
   vendorId: z.string().uuid(),
   stock: z.number().min(0).max(10000),
   variants: z
@@ -105,6 +106,9 @@ export const createProduct = (
               categoryId: data.categoryId, // Keep the primary category for backward compatibility
               vendorId: data.vendorId,
               price: data.price.toString(),
+              discountPrice: data.discountPrice
+                ? data.discountPrice.toString()
+                : null,
               stock: data.stock,
             })
             .returning()

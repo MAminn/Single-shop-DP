@@ -100,6 +100,9 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
         const formattedProduct = {
           ...foundProduct,
           price: Number(foundProduct.price), // Ensure price is a number
+          discountPrice: foundProduct.discountPrice
+            ? Number(foundProduct.discountPrice)
+            : null, // Include discount price
           imageUrl: primaryImageFile?.diskname || null, // Fallback primary image URL
           vendorName: foundVendor.name,
           categoryName: formatCategoryName(primaryCategory.name),
@@ -168,6 +171,7 @@ export type ProductByIdResult = {
   imageId: string;
   categoryId: string;
   price: number; // Changed from string to number
+  discountPrice: number | null; // Add discount price
   createdAt: Date;
   updatedAt: Date | null;
   vendorId: string;

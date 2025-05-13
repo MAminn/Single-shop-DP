@@ -24,6 +24,7 @@ export const editProductSchema = z.object({
     .array(z.string().uuid())
     .min(1, "At least one category is required"),
   price: z.number().min(0).max(10000),
+  discountPrice: z.number().min(0).max(10000).optional(),
   vendorId: z.string().uuid(),
   stock: z.number().min(0).max(10000),
   variants: z
@@ -118,6 +119,9 @@ export const editProduct = (
               imageId: data.imageId, // Keep for backward compatibility
               categoryId: data.categoryId, // Keep the primary category for backward compatibility
               price: data.price.toString(),
+              discountPrice: data.discountPrice
+                ? data.discountPrice.toString()
+                : null,
               stock: data.stock,
               updatedAt: new Date(),
             })
