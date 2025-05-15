@@ -3,7 +3,7 @@ import type { OnPageTransitionEndAsync } from "vike/types";
 export const onPageTransitionEnd: OnPageTransitionEndAsync = async (
   pageContext
 ) => {
-  document.querySelector("body")?.classList.remove("page-is-transitioning");
+  // Removed page transition animation for performance optimization
 
   // Force refresh dashboard page when navigating to it
   if (pageContext.urlPathname === "/dashboard") {

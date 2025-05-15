@@ -1,5 +1,4 @@
 import type React from "react";
-import AnimatedContent from "#root/components/AnimatedContent";
 import {
   Accordion,
   AccordionContent,
@@ -67,32 +66,28 @@ export const FAQ: React.FC<FAQProps> = ({
   return (
     <section id="faq" className={`py-20 ${backgroundColor}`}>
       <div className="container mx-auto px-4">
-        <AnimatedContent threshold={0.2}>
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">{title}</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">{description}</p>
-          </div>
-        </AnimatedContent>
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold mb-4">{title}</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">{description}</p>
+        </div>
 
         <div className="max-w-3xl mx-auto">
-          <AnimatedContent threshold={0.1}>
-            <Accordion type="single" collapsible className="w-full space-y-6">
-              {faqs.map((faq) => (
-                <AccordionItem
-                  key={faq.id}
-                  value={faq.id}
-                  className="border border-gray-200 rounded-lg p-2 shadow-sm hover:shadow-md transition-shadow duration-300"
-                >
-                  <AccordionTrigger className="text-lg font-medium px-4 py-3 hover:no-underline">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-gray-600 px-4">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </AnimatedContent>
+          <Accordion type="single" collapsible className="w-full space-y-6">
+            {faqs.map((faq) => (
+              <AccordionItem
+                key={faq.id}
+                value={faq.id}
+                className="border border-gray-200 rounded-lg p-2 shadow-sm"
+              >
+                <AccordionTrigger className="text-lg font-medium px-4 py-3 hover:no-underline">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-600 px-4">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </div>
     </section>

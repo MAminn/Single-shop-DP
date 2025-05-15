@@ -2,7 +2,6 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import { Button } from "#root/components/ui/button";
 import { Link } from "#root/components/Link";
 import { ShoppingBag, Users, Store, ChevronRight } from "lucide-react";
-import AnimatedContent from "#root/components/AnimatedContent";
 import { trpc } from "#root/shared/trpc/client";
 import { Footer } from "#root/components/globals/Footer";
 
@@ -65,10 +64,10 @@ const preloadImages = () => {
   }
 };
 
-// Loading placeholder component for Suspense
+// Loading placeholder component for Suspense - no animation
 const LoadingPlaceholder = () => (
   <div className="w-full py-8 flex justify-center">
-    <div className="w-12 h-12 rounded-full border-4 border-accent-lb border-t-transparent animate-spin"></div>
+    <div className="w-12 h-12 rounded-full border-4 border-accent-lb"></div>
   </div>
 );
 
@@ -165,10 +164,7 @@ export default function Page() {
             alt="Fashion collection banner"
             className="absolute inset-0 w-full h-full object-cover"
             onLoad={handleHeroImageLoad}
-            style={{
-              opacity: heroImageLoaded ? 1 : 0,
-              transition: "opacity 0.3s ease-in",
-            }}
+            style={{ opacity: heroImageLoaded ? 1 : 0 }}
             width="1920"
             height="1080"
             fetchPriority="high"
@@ -176,7 +172,7 @@ export default function Page() {
           />
         </picture>
 
-        <div className="hero-content  relative z-[9] container mx-auto h-full flex flex-col justify-center px-4">
+        <div className="hero-content relative z-[9] container mx-auto h-full flex flex-col justify-center px-4">
           <div className="bg-white/10 max-w-fit backdrop-blur-sm p-1 px-3 rounded-full inline-block mb-4 ">
             <span className="text-white text-sm font-medium">
               New Season Collection
@@ -185,7 +181,7 @@ export default function Page() {
           <h1 className="text-4xl md:text-6xl max-w-xl font-bold text-white mb-6 leading-tight">
             Discover Your Perfect Style
           </h1>
-          <p className="text-gray-200  text-lg mb-8 max-w-lg">
+          <p className="text-gray-200 text-lg mb-8 max-w-lg">
             Shop the latest trends from top brands and independent designers all
             in one place.
           </p>
@@ -193,7 +189,7 @@ export default function Page() {
             <Button
               asChild
               size="lg"
-              className="bg-accent-lb hover:bg-white hover:text-accent-lb duration-200 transition-all"
+              className="bg-accent-lb hover:bg-white hover:text-accent-lb"
             >
               <Link href="/featured/products">
                 <ShoppingBag className="mr-2 h-5 w-5" />
@@ -204,7 +200,7 @@ export default function Page() {
               asChild
               variant="outline"
               size="lg"
-              className="border-white text-foreground hover:bg-white hover:text-accent-lb duration-200 transition-all"
+              className="border-white text-foreground hover:bg-white hover:text-accent-lb"
             >
               <Link href="/featured/brands">
                 <Store className="mr-2 h-5 w-5" />
@@ -238,51 +234,43 @@ export default function Page() {
       <section className="py-20 bg-accent-lb/5">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <AnimatedContent
-              direction="horizontal"
-              reverse={true}
-              threshold={0.2}
-            >
-              <div className="relative rounded-xl overflow-hidden">
-                <img
-                  src="/assets/story.webp"
-                  alt="About Lebsy - Our fashion story"
-                  className="w-full h-auto rounded-xl"
-                  width="500"
-                  height="333"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-            </AnimatedContent>
+            <div className="relative rounded-xl overflow-hidden">
+              <img
+                src="/assets/story.webp"
+                alt="About Lebsy - Our fashion story"
+                className="w-full h-auto rounded-xl"
+                width="500"
+                height="333"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
 
-            <AnimatedContent threshold={0.2}>
-              <div className="max-w-xl">
-                <h2 className="text-3xl font-bold mb-6">Our Story</h2>
-                <p className="text-gray-600 mb-6">
-                  We started Lebsy because shopping for clothes online was
-                  frustrating, with too many websites and too much hassle. So,
-                  we built one place where all clothing sellers come together,
-                  making fashion shopping easier for everyone.
-                </p>
-                <p className="text-gray-600 mb-8">
-                  Our platform offers a diverse selection of clothing and
-                  accessories from various brands and independent designers, all
-                  in one convenient place. We prioritize quality, style, and
-                  customer satisfaction.
-                </p>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="border-accent-lb text-accent-lb hover:bg-accent-lb hover:text-white"
-                >
-                  <Link href="/featured/brands">
-                    <Users className="mr-2 h-5 w-5" />
-                    Meet Our Brands
-                  </Link>
-                </Button>
-              </div>
-            </AnimatedContent>
+            <div className="max-w-xl">
+              <h2 className="text-3xl font-bold mb-6">Our Story</h2>
+              <p className="text-gray-600 mb-6">
+                We started Lebsy because shopping for clothes online was
+                frustrating, with too many websites and too much hassle. So, we
+                built one place where all clothing sellers come together, making
+                fashion shopping easier for everyone.
+              </p>
+              <p className="text-gray-600 mb-8">
+                Our platform offers a diverse selection of clothing and
+                accessories from various brands and independent designers, all
+                in one convenient place. We prioritize quality, style, and
+                customer satisfaction.
+              </p>
+              <Button
+                asChild
+                variant="outline"
+                className="border-accent-lb text-accent-lb hover:bg-accent-lb hover:text-white"
+              >
+                <Link href="/featured/brands">
+                  <Users className="mr-2 h-5 w-5" />
+                  Meet Our Brands
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -290,29 +278,22 @@ export default function Page() {
       {/* Categories Section */}
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
-          <AnimatedContent threshold={0.2}>
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">Shop by Category</h2>
-              <p className="text-gray-600 max-w-2xl mx-auto">
-                Browse our carefully curated collections across various
-                categories
-              </p>
-            </div>
-          </AnimatedContent>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Shop by Category</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Browse our carefully curated collections across various categories
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Men's Category */}
-            <AnimatedContent
-              threshold={0.2}
-              delay={50}
-              className="relative rounded-xl overflow-hidden group h-80 cursor-pointer"
-            >
+            <div className="relative rounded-xl overflow-hidden group h-80 cursor-pointer">
               <Link href="/featured/men" className="block h-full">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-[9]"></div>
                 <img
                   src="/assets/men-section.webp"
                   alt="Men's fashion category"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-400 group-hover:scale-105"
+                  className="absolute inset-0 w-full h-full object-cover"
                   width="400"
                   height="533"
                   loading="lazy"
@@ -322,24 +303,20 @@ export default function Page() {
                   <h3 className="text-2xl font-bold text-white mb-2">Men</h3>
                   <div className="flex items-center text-white">
                     <span className="text-sm">Shop Collection</span>
-                    <ChevronRight className="h-4 w-4 ml-1 transform transition-transform group-hover:translate-x-1" />
+                    <ChevronRight className="h-4 w-4 ml-1" />
                   </div>
                 </div>
               </Link>
-            </AnimatedContent>
+            </div>
 
             {/* Women's Category */}
-            <AnimatedContent
-              threshold={0.2}
-              delay={100}
-              className="relative rounded-xl overflow-hidden group h-80 cursor-pointer"
-            >
+            <div className="relative rounded-xl overflow-hidden group h-80 cursor-pointer">
               <Link href="/featured/women" className="block h-full">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-[9]"></div>
                 <img
                   src="/assets/women-section.webp"
                   alt="Women's fashion category"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-400 group-hover:scale-105"
+                  className="absolute inset-0 w-full h-full object-cover"
                   width="400"
                   height="533"
                   loading="lazy"
@@ -349,24 +326,20 @@ export default function Page() {
                   <h3 className="text-2xl font-bold text-white mb-2">Women</h3>
                   <div className="flex items-center text-white">
                     <span className="text-sm">Shop Collection</span>
-                    <ChevronRight className="h-4 w-4 ml-1 transform transition-transform group-hover:translate-x-1" />
+                    <ChevronRight className="h-4 w-4 ml-1" />
                   </div>
                 </div>
               </Link>
-            </AnimatedContent>
+            </div>
 
             {/* Brands Category */}
-            <AnimatedContent
-              threshold={0.2}
-              delay={150}
-              className="relative rounded-xl overflow-hidden group h-80 cursor-pointer"
-            >
+            <div className="relative rounded-xl overflow-hidden group h-80 cursor-pointer">
               <Link href="/featured/brands" className="block h-full">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-[9]"></div>
                 <img
                   src="/assets/brands.webp"
                   alt="Fashion brands category"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-400 group-hover:scale-105"
+                  className="absolute inset-0 w-full h-full object-cover"
                   width="400"
                   height="533"
                   loading="lazy"
@@ -376,11 +349,11 @@ export default function Page() {
                   <h3 className="text-2xl font-bold text-white mb-2">Brands</h3>
                   <div className="flex items-center text-white">
                     <span className="text-sm">Discover Brands</span>
-                    <ChevronRight className="h-4 w-4 ml-1 transform transition-transform group-hover:translate-x-1" />
+                    <ChevronRight className="h-4 w-4 ml-1" />
                   </div>
                 </div>
               </Link>
-            </AnimatedContent>
+            </div>
           </div>
         </div>
       </section>
@@ -426,7 +399,7 @@ export default function Page() {
         />
 
         <div className="relative z-[9] container mx-auto px-4 text-center">
-          <AnimatedContent threshold={0.2}>
+          <div>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
               Ready to elevate your style?
             </h2>
@@ -438,11 +411,11 @@ export default function Page() {
             <Button
               asChild
               size="lg"
-              className="bg-white text-accent-lb hover:bg-gray-100 transition-colors"
+              className="bg-white text-accent-lb hover:bg-gray-100"
             >
               <Link href="/featured/products">Shop Collections</Link>
             </Button>
-          </AnimatedContent>
+          </div>
         </div>
       </section>
 

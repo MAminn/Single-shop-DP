@@ -3,7 +3,6 @@ import { ProductCard } from "./ProductCard";
 import { Button } from "./ui/button";
 import { Link } from "./Link";
 import { ChevronRight } from "lucide-react";
-import AnimatedContent from "./AnimatedContent";
 
 interface Product {
   id: string;
@@ -51,55 +50,32 @@ export function FeaturedSection({
   return (
     <section className={`py-16 ${bgColorClasses[backgroundColor]}`}>
       <div className="container mx-auto px-4">
-        <AnimatedContent
-          distance={20}
-          direction="vertical"
-          reverse={false}
-          config={{ tension: 80, friction: 25 }}
-          initialOpacity={0}
-          animateOpacity
-          scale={1}
-          threshold={0.1}
-        >
-          <div className="mb-8 text-center md:text-left md:flex md:items-end md:justify-between">
-            <div className="max-w-2xl md:pr-8">
-              <h2 className="text-3xl font-bold mb-2">{title}</h2>
-              {description && <p className="text-gray-600">{description}</p>}
-            </div>
-
-            {viewAllLink && (
-              <Button
-                asChild
-                variant="outline"
-                className="mt-4 md:mt-0 group border-accent-lb text-accent-lb hover:bg-accent-lb hover:text-white"
-              >
-                <Link href={viewAllLink}>
-                  {viewAllText}
-                  <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-              </Button>
-            )}
+        <div className="mb-8 text-center md:text-left md:flex md:items-end md:justify-between">
+          <div className="max-w-2xl md:pr-8">
+            <h2 className="text-3xl font-bold mb-2">{title}</h2>
+            {description && <p className="text-gray-600">{description}</p>}
           </div>
-        </AnimatedContent>
 
-        {/* Products grid with staggered animation */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-          {displayProducts.map((product, index) => (
-            <AnimatedContent
-              key={product.id}
-              distance={15}
-              direction="vertical"
-              reverse={false}
-              config={{ tension: 80, friction: 25 }}
-              initialOpacity={0}
-              animateOpacity
-              scale={1}
-              threshold={0.1}
-              delay={index * 50}
-              className="h-full"
+          {viewAllLink && (
+            <Button
+              asChild
+              variant="outline"
+              className="mt-4 md:mt-0 group border-accent-lb text-accent-lb hover:bg-accent-lb hover:text-white"
             >
+              <Link href={viewAllLink}>
+                {viewAllText}
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          )}
+        </div>
+
+        {/* Products grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+          {displayProducts.map((product) => (
+            <div key={product.id} className="h-full">
               <ProductCard product={product} />
-            </AnimatedContent>
+            </div>
           ))}
         </div>
 
@@ -109,7 +85,7 @@ export function FeaturedSection({
             <Button
               asChild
               variant="default"
-              className="bg-accent-lb hover:bg-accent-db transition-colors"
+              className="bg-accent-lb hover:bg-accent-db"
             >
               <Link href={viewAllLink}>View More Products</Link>
             </Button>
