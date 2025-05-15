@@ -1,12 +1,13 @@
 import type React from "react";
 import { useContext, useEffect, useState } from "react";
 import { Button } from "#root/components/ui/button";
-import { Menu, ShoppingCart, Globe } from "lucide-react";
+import { Menu, ShoppingCart, Globe, User } from "lucide-react";
 import {
   Sheet,
   SheetTrigger,
   SheetContent,
   SheetTitle,
+  SheetFooter,
 } from "#root/components/ui/sheet";
 import {
   NavigationMenu,
@@ -213,68 +214,114 @@ const Navbar: React.FC<NavbarProps> = ({
                   <Menu size={24} />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-64 bg-white">
-                <div className="p-4 h-full">
-                  <nav className="space-y-4 flex flex-col justify-center items-center h-full">
-                    <SheetTitle className="">Navigation menu</SheetTitle>
-                    {links.map((link) => (
-                      <Link
-                        key={link.to}
-                        href={link.to}
-                        className="block text-lg text-gray-700 hover:text-gray-900"
-                        onClick={handleCloseSheet}
-                      >
-                        {link.label}
-                      </Link>
-                    ))}
-                    <div className=" md:hidden flex justify-center items-center gap-4">
-                      {!session ? (
-                        logLinks.map((link) => (
-                          <Link
-                            key={link.to}
-                            href={link.to}
-                            className=" navLink"
-                          >
-                            {link.label}
-                          </Link>
-                        ))
-                      ) : (
-                        <>
-                          <button
-                            onClick={logout}
-                            type="submit"
-                            className="navLink"
-                          >
-                            Logout
-                          </button>
+              <SheetContent side="left" className="w-64 bg-white p-0">
+                <div className="flex flex-col h-full">
+                  {/* Logo at the top */}
+                  <div className="p-4 border-b w-full flex justify-center">
+                    <Link href="/" onClick={handleCloseSheet}>
+                      <img src={logoImage} alt="Lebsey" className="w-[120px]" />
+                    </Link>
+                  </div>
 
-                          <Link href="/dashboard" className="navLink">
-                            Dashboard
-                          </Link>
-                        </>
-                      )}
+                  {/* Main navigation links */}
+                  <div className="p-6 flex-1">
+                    <div className="flex flex-col gap-6 mb-8">
+                      {links.slice(0, 3).map((link) => (
+                        <Link
+                          key={link.to}
+                          href={link.to}
+                          className="text-lg font-medium text-gray-800 hover:text-accent-lb"
+                          onClick={handleCloseSheet}
+                        >
+                          {link.label}
+                        </Link>
+                      ))}
                     </div>
-                  </nav>
+
+                    {/* Vendor link and dashboard/logout if logged in */}
+                    {session && (
+                      <div className="border-t pt-6 mb-6">
+                        <Link
+                          href="/dashboard"
+                          className="text-lg font-medium text-gray-800 hover:text-accent-lb block mb-4"
+                          onClick={handleCloseSheet}
+                        >
+                          Dashboard
+                        </Link>
+                        <button
+                          onClick={() => {
+                            logout();
+                            handleCloseSheet();
+                          }}
+                          className="text-lg font-medium text-gray-800 hover:text-accent-lb"
+                          type="button"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer section with become vendor and company name */}
+                  <div className="mt-auto border-t p-6">
+                    <Link
+                      href="/vendor"
+                      className="text-lg font-medium text-accent-lb hover:underline block mb-2"
+                      onClick={handleCloseSheet}
+                    >
+                      Become a vendor!
+                    </Link>
+                    <p className="text-sm text-gray-500">Lebsey LLC</p>
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="hover:text-gray-700 hover:bg-gray-100 order-3"
-          asChild
-        >
-          <Link href="/cart" className="relative">
-            <ShoppingCart size={20} />
-            {totalItems > 0 && (
-              <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-1 text-xs font-bold leading-none transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full">
-                {totalItems}
-              </span>
-            )}
-          </Link>
-        </Button>
+
+        <div className="flex items-center gap-2 order-3">
+          {/* Login/User icon only on mobile */}
+          {!session ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:text-gray-700 hover:bg-gray-100 lg:hidden"
+              asChild
+            >
+              <Link href="/login">
+                <User size={20} />
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:text-gray-700 hover:bg-gray-100 lg:hidden"
+              asChild
+            >
+              <Link href="/dashboard">
+                <User size={20} />
+              </Link>
+            </Button>
+          )}
+
+          {/* Cart button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hover:text-gray-700 hover:bg-gray-100"
+            asChild
+          >
+            <Link href="/cart" className="relative">
+              <ShoppingCart size={20} />
+              {totalItems > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-1 text-xs font-bold leading-none transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+          </Button>
+        </div>
       </div>
     </nav>
   );
