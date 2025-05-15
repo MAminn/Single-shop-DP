@@ -76,6 +76,7 @@ export default function Page() {
     []
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [heroImageLoaded, setHeroImageLoaded] = useState(false);
 
   useEffect(() => {
     // Preload critical images
@@ -132,12 +133,44 @@ export default function Page() {
     }
   }, []);
 
+  // Handle hero image load
+  const handleHeroImageLoad = () => {
+    setHeroImageLoaded(true);
+  };
+
   return (
     <main>
       {/* Hero Section */}
-      <section className="hero-section relative h-[90vh] overflow-hidden bg-[url('/assets/landing.webp')] bg-cover bg-center">
+      <section className="hero-section relative h-[90vh] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent z-[9]"></div>
 
+        {/* Responsive background image for better performance */}
+        <picture>
+          {/* Low quality image placeholder */}
+          {!heroImageLoaded && (
+            <div
+              className="absolute inset-0 bg-gray-100"
+              style={{
+                backgroundImage: "url(/assets/landing.webp)",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            ></div>
+          )}
+
+          {/* Single image source for all devices */}
+          <img
+            src="/assets/landing.webp"
+            alt="Fashion collection banner"
+            className="absolute inset-0 w-full h-full object-cover"
+            onLoad={handleHeroImageLoad}
+            style={{ opacity: heroImageLoaded ? 1 : 0 }}
+            width="1920"
+            height="1080"
+            fetchPriority="high"
+            decoding="async"
+          />
+        </picture>
         <div className="hero-content relative z-[9] container mx-auto h-full flex flex-col justify-center px-4">
           <div className="bg-white/10 max-w-fit backdrop-blur-sm p-1 px-3 rounded-full inline-block mb-4 ">
             <span className="text-white text-sm font-medium">
@@ -200,7 +233,17 @@ export default function Page() {
       <section className="py-20 bg-accent-lb/5">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="relative rounded-xl overflow-hidden bg-[url('/assets/story.webp')] bg-cover bg-center min-w-[250px] min-h-[300px] lg:w-full lg:h-full"></div>
+            <div className="relative rounded-xl overflow-hidden">
+              <img
+                src="/assets/story.webp"
+                alt="About Lebsy - Our fashion story"
+                className="w-full h-auto rounded-xl"
+                width="500"
+                height="333"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
 
             <div className="max-w-xl">
               <h2 className="text-3xl font-bold mb-6">Our Story</h2>
