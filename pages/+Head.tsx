@@ -1,6 +1,14 @@
 import logoUrl from "../assets/lebsy-favicon.webp";
 import { useEffect } from "react";
 
+// Define types for Google Analytics
+declare global {
+  interface Window {
+    dataLayer: unknown[];
+    gtag: (command: string, ...args: unknown[]) => void;
+  }
+}
+
 export default function HeadDefault() {
   // Font loading script to replace the onLoad attribute
   useEffect(() => {
@@ -8,6 +16,30 @@ export default function HeadDefault() {
     if (fontLink) {
       fontLink.setAttribute("rel", "stylesheet");
     }
+  }, []);
+
+  // Initialize Google Analytics
+  useEffect(() => {
+    // Load Google Analytics script
+    const script = document.createElement("script");
+    script.src = "https://www.googletagmanager.com/gtag/js?id=G-4P688CTR6M";
+    script.async = true;
+    document.head.appendChild(script);
+
+    // Initialize dataLayer and gtag function
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = (...args) => {
+      window.dataLayer.push(args);
+    };
+    window.gtag("js", new Date());
+    window.gtag("config", "G-4P688CTR6M");
+
+    // Cleanup on unmount
+    return () => {
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
   }, []);
 
   return (
