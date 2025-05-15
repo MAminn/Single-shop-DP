@@ -63,7 +63,10 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const { session, logout } = useContext(AuthContext);
 
-  const logLinks = [{ label: "Login", to: "/login" }];
+  const logLinks = [
+    { label: "Login", to: "/login" },
+    { label: "Register", to: "/register" },
+  ];
 
   const navLinks = {
     en: [
@@ -195,10 +198,12 @@ const Navbar: React.FC<NavbarProps> = ({
                 <button onClick={logout} type="submit" className="navLink">
                   Logout
                 </button>
-
-                <Link href="/dashboard" className="navLink">
-                  Dashboard
-                </Link>
+                {session.role === "vendor" ||
+                  (session.role === "admin" && (
+                    <Link href="/dashboard" className="navLink">
+                      Dashboard
+                    </Link>
+                  ))}
               </>
             )}
           </div>

@@ -1,15 +1,15 @@
 import {
   runBackendEffect,
   serializeBackendEffectResult,
-} from "#root/shared/backend/effect";
-import { provideDatabase, publicProcedure } from "#root/shared/trpc/server";
+} from "#root/shared/backend/effect.js";
+import { provideDatabase, publicProcedure } from "#root/shared/trpc/server.js";
 import {
   getFeaturedVendors,
   featuredVendorsSchema,
   updateVendorFeaturedStatus,
   updateVendorFeaturedStatusSchema,
   checkAndUpdateVendorFeaturedStatus,
-} from "./service";
+} from "./service.js";
 
 export const featuredVendorsProcedure = publicProcedure
   .input(featuredVendorsSchema)

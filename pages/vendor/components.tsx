@@ -32,17 +32,23 @@ const vendorRegistrationFormSchema = z.object({
     logoId: z.string().uuid().optional(),
     socialLinks: z.array(socialLinkSchema).default([]),
   }),
-  user: z.object({
-    email: z.string().email(),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters long")
-      .max(255),
-    name: z.string().nonempty().max(255),
-    phone: z
-      .string()
-      .regex(/^(\+201|01|00201)[0-2,5]{1}[0-9]{8}/, "Invalid phone number"),
-  }),
+  user: z
+    .object({
+      email: z.string().email(),
+      password: z
+        .string()
+        .min(8, "Password must be at least 8 characters long")
+        .max(255),
+      confirmPassword: z.string(),
+      name: z.string().nonempty().max(255),
+      phone: z
+        .string()
+        .regex(/^(\+201|01|00201)[0-2,5]{1}[0-9]{8}/, "Invalid phone number"),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: "Passwords do not match",
+      path: ["confirmPassword"],
+    }),
 });
 
 export type VendorRegistrationFormSchema = z.infer<
@@ -57,11 +63,12 @@ export default function RegisterFormSchema({
   ) => PromiseLike<void>;
 }) {
   const [submitting, setSubmitting] = useState(false);
-  const [uploadedLogoId, setUploadedLogoId] = useState<string | undefined>();
+  const [socialLinks, setSocialLinks] = useState<
+    Array<{ platform: string; url: string; id: string }>
+  >([]);
 
-  const form = useForm<z.infer<typeof vendorRegistrationFormSchema>>({
+  const form = useForm<VendorRegistrationFormSchema>({
     resolver: zodResolver(vendorRegistrationFormSchema),
-    disabled: submitting,
     defaultValues: {
       vendor: {
         name: "",
@@ -71,73 +78,42 @@ export default function RegisterFormSchema({
       user: {
         email: "",
         password: "",
+        confirmPassword: "",
         name: "",
         phone: "",
       },
     },
   });
 
-  const handleLogoUpload = async (file: File) => {
+  const handleSubmit = async (data: VendorRegistrationFormSchema) => {
+    setSubmitting(true);
     try {
-      // Create FormData object
-      const formData = new FormData();
-      formData.append("file", file);
-
-      // Use fetch directly to upload the file
-      const response = await fetch("/file", {
-        method: "POST",
-        body: formData,
-      });
-
-      const result = await response.json();
-
-      if (result.success && result.result) {
-        // Set the logo ID in state and form
-        setUploadedLogoId(result.result.id);
-        form.setValue("vendor.logoId", result.result.id);
-        toast.success("Logo uploaded successfully");
-      } else {
-        toast.error(result.error || "Failed to upload logo");
-      }
-    } catch (error) {
-      console.error("Error uploading logo:", error);
-      toast.error("Error uploading logo");
+      await onSubmit(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to submit form");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  // Handle adding a new social media link field
-  const addSocialLink = () => {
-    const currentLinks = form.getValues("vendor.socialLinks") || [];
-    form.setValue("vendor.socialLinks", [
-      ...currentLinks,
-      { platform: "", url: "", id: `${Date.now()}` },
-    ]);
-  };
+  const [logoFile, setLogoFile] = useState<File | null>(null);
 
-  // Handle removing a social media link field
-  const removeSocialLink = (index: number) => {
-    const currentLinks = form.getValues("vendor.socialLinks") || [];
-    const updatedLinks = currentLinks.filter((_, i) => i !== index);
-    form.setValue("vendor.socialLinks", updatedLinks);
+  const handleLogoUpload = async (file: File) => {
+    setLogoFile(file);
+    // In a real application, you would upload the file to your server
+    // and get back an ID to use
+    console.log("File selected:", file.name);
+    // For now we'll mock this
+    const mockLogoId = "00000000-0000-0000-0000-000000000000";
+    form.setValue("vendor.logoId", mockLogoId);
   };
-
-  // Get the social links from the form
-  const socialLinks = form.watch("vendor.socialLinks") || [];
 
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(async (values) => {
-          // Add the logoId if it was uploaded
-          if (uploadedLogoId) {
-            values.vendor.logoId = uploadedLogoId;
-          }
-
-          setSubmitting(true);
-          await onSubmit(values);
-          setSubmitting(false);
-        })}
-        className="space-y-8 mx-auto py-10"
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="space-y-6 mt-8"
       >
         <FormField
           control={form.control}
@@ -146,9 +122,9 @@ export default function RegisterFormSchema({
             <FormItem>
               <FormLabel>Vendor Name</FormLabel>
               <FormControl>
-                <Input placeholder="X Store" type="text" {...field} />
+                <Input placeholder="Your shop or business name" {...field} />
               </FormControl>
-              <FormDescription>This is your store's name.</FormDescription>
+              <FormDescription>The name of your business.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -159,95 +135,21 @@ export default function RegisterFormSchema({
           name="vendor.description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>Business Description</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Tell us about your store"
-                  className="resize-none"
+                  placeholder="Describe your business..."
                   {...field}
                   value={field.value || ""}
                 />
               </FormControl>
-              <FormDescription>Describe your store (optional).</FormDescription>
+              <FormDescription>
+                Tell us about your business and what you sell.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-
-        {/* Social Media Links Section */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <FormLabel className="text-base">Social Media Links</FormLabel>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addSocialLink}
-              className="flex items-center gap-1"
-            >
-              <PlusCircle className="h-4 w-4" />
-              Add Social Media
-            </Button>
-          </div>
-
-          <FormDescription>
-            Add links to your social media profiles
-          </FormDescription>
-
-          {socialLinks.length === 0 && (
-            <p className="text-sm text-muted-foreground italic">
-              No social media links added yet. Click the button above to add
-              one.
-            </p>
-          )}
-
-          {socialLinks.map((link, index) => (
-            <div
-              key={link.id || `social-link-${index}`}
-              className="flex gap-3 items-start"
-            >
-              <FormField
-                control={form.control}
-                name={`vendor.socialLinks.${index}.platform`}
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormControl>
-                      <Input
-                        placeholder="Platform (e.g., Instagram)"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name={`vendor.socialLinks.${index}.url`}
-                render={({ field }) => (
-                  <FormItem className="flex-[2]">
-                    <FormControl>
-                      <Input placeholder="URL (https://...)" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => removeSocialLink(index)}
-                className="mt-1"
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-                <span className="sr-only">Remove</span>
-              </Button>
-            </div>
-          ))}
-        </div>
 
         <div className="space-y-3">
           <FormLabel>Vendor Logo</FormLabel>
@@ -272,44 +174,101 @@ export default function RegisterFormSchema({
               className="hidden"
               id="logo-upload"
             />
-            <label htmlFor="logo-upload" className="cursor-pointer text-center">
-              <div className="mx-auto w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-blue-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                  role="img"
-                  aria-labelledby="uploadIconTitle"
-                >
-                  <title id="uploadIconTitle">Upload Icon</title>
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            <label
+              htmlFor="logo-upload"
+              className="cursor-pointer flex flex-col items-center"
+            >
+              {logoFile ? (
+                <div className="mb-2">
+                  <img
+                    src={URL.createObjectURL(logoFile)}
+                    alt="Logo preview"
+                    className="w-32 h-32 object-contain"
                   />
-                </svg>
-              </div>
-              <p className="text-sm text-gray-600">
-                Upload your store logo
-                <br />
-                <span className="text-xs text-gray-500">
-                  PNG, JPG up to 2MB
-                </span>
-              </p>
+                </div>
+              ) : (
+                <div className="w-16 h-16 mb-2 bg-gray-200 rounded-full flex items-center justify-center">
+                  <PlusCircle className="h-6 w-6 text-gray-500" />
+                </div>
+              )}
+              <span className="text-sm text-gray-500">
+                {logoFile ? "Change logo" : "Upload your logo"}
+              </span>
+              <span className="text-xs text-gray-400 mt-1">
+                Max 2MB, recommended size: 200x200px
+              </span>
             </label>
-            {uploadedLogoId && (
-              <p className="text-sm text-green-600 mt-2">
-                Logo uploaded successfully
-              </p>
-            )}
           </div>
-          <FormDescription>
-            Upload a logo for your store (optional).
-          </FormDescription>
+        </div>
+
+        <div className="space-y-3">
+          <FormLabel>Social Media Links</FormLabel>
+          <div className="space-y-2">
+            {socialLinks.map((link, index) => (
+              <div key={link.id} className="flex gap-2">
+                <Input
+                  placeholder="Platform (e.g. Facebook)"
+                  value={link.platform}
+                  onChange={(e) => {
+                    const newLinks = [...socialLinks];
+                    if (newLinks[index]) {
+                      newLinks[index].platform = e.target.value;
+                      setSocialLinks(newLinks);
+                      form.setValue("vendor.socialLinks", newLinks);
+                    }
+                  }}
+                  className="flex-1"
+                />
+                <Input
+                  placeholder="URL"
+                  value={link.url}
+                  onChange={(e) => {
+                    const newLinks = [...socialLinks];
+                    if (newLinks[index]) {
+                      newLinks[index].url = e.target.value;
+                      setSocialLinks(newLinks);
+                      form.setValue("vendor.socialLinks", newLinks);
+                    }
+                  }}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    const newLinks = socialLinks.filter((_, i) => i !== index);
+                    setSocialLinks(newLinks);
+                    form.setValue("vendor.socialLinks", newLinks);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const newLink = {
+                  platform: "",
+                  url: "",
+                  id: Math.random().toString(36).substring(2, 9),
+                };
+                setSocialLinks([...socialLinks, newLink]);
+                form.setValue("vendor.socialLinks", [...socialLinks, newLink]);
+              }}
+              className="w-full"
+            >
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Add Social Media Link
+            </Button>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-200 my-6 pt-6">
+          <h3 className="text-lg font-medium mb-4">Owner Information</h3>
         </div>
 
         <FormField
@@ -317,11 +276,11 @@ export default function RegisterFormSchema({
           name="user.name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Your Name</FormLabel>
+              <FormLabel>Full Name</FormLabel>
               <FormControl>
-                <Input placeholder="" type="text" {...field} />
+                <Input placeholder="Your full name" {...field} />
               </FormControl>
-
+              <FormDescription>Your legal name.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -365,6 +324,23 @@ export default function RegisterFormSchema({
 
         <FormField
           control={form.control}
+          name="user.confirmPassword"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Confirm Password</FormLabel>
+              <FormControl>
+                <PasswordInput placeholder="********" {...field} />
+              </FormControl>
+              <FormDescription>
+                Re-enter your password to confirm.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="user.phone"
           render={({ field }) => (
             <FormItem>
@@ -383,7 +359,7 @@ export default function RegisterFormSchema({
           className="bg-accent-lb text-white py-2 rounded-lg hover:bg-[#021E43] transition-all duration-300 w-full"
           disabled={submitting}
         >
-          Register
+          {submitting ? "Submitting..." : "Register"}
         </Button>
       </form>
     </Form>

@@ -10,6 +10,10 @@ import {
 import { DatabaseClientService } from "#root/shared/database/drizzle/db.js";
 import type { FastifyInstance, FastifyPluginCallback } from "fastify";
 import { register } from "./register/register";
+import {
+  EmailService,
+  createDummyEmailService,
+} from "#root/shared/email/service.js";
 
 const saveTokenSchema = z.object({
   token: z.string().nonempty(),
@@ -20,6 +24,9 @@ export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
     throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be set");
   }
 
+  // Create a dummy email service for admin registration
+  const dummyEmailService = createDummyEmailService(app.log);
+
   runBackendEffect(
     register({
       email: process.env.ADMIN_EMAIL,
@@ -27,7 +34,11 @@ export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
       password: process.env.ADMIN_PASSWORD,
       phone: "+201001112233",
       role: "admin",
-    }).pipe(Effect.provideService(DatabaseClientService, app.db))
+      confirmPassword: process.env.ADMIN_PASSWORD,
+    }).pipe(
+      Effect.provideService(DatabaseClientService, app.db),
+      Effect.provideService(EmailService, dummyEmailService)
+    )
   ).then(serializeBackendEffectResult);
 
   app.post("/token", async (req, res) => {

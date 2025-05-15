@@ -2,6 +2,7 @@ import { loginProcedure } from "#root/backend/auth/login/trpc.js";
 import { logoutProcedure } from "#root/backend/auth/logout/trpc.js";
 import { meProcedure } from "#root/backend/auth/me/trpc.js";
 import { registerProcedure } from "#root/backend/auth/register/trpc.js";
+import { verifyEmailProcedure } from "#root/backend/auth/verify-email/trpc.js";
 import { categoriesRouter } from "#root/backend/categories/trpc";
 import { fileRouter } from "#root/backend/file/trpc";
 import { orderRouter } from "#root/backend/orders/trpc";
@@ -15,6 +16,7 @@ const authRouter = t.router({
   register: registerProcedure,
   me: meProcedure,
   logout: logoutProcedure,
+  verifyEmail: verifyEmailProcedure,
 });
 
 export const appRouter = router({

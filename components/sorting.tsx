@@ -16,6 +16,7 @@ import { Loader2, FilterX, SlidersHorizontal } from "lucide-react";
 import { ProductCard } from "./ProductCard";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
+import { formatCategoryName } from "#root/lib/utils";
 
 // Define product interface to match what is expected by the ProductCard
 interface SortableProduct {
@@ -515,7 +516,7 @@ const Sorting: React.FC<SortingProps> = ({
                         htmlFor={`category-${category.id}`}
                         className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                       >
-                        {category.name}
+                        {formatCategoryName(category.name)}
                         {category.productCount !== undefined && (
                           <span className="text-gray-500 ml-1">
                             ({category.productCount})

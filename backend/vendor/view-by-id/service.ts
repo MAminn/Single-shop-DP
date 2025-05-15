@@ -1,14 +1,15 @@
-import type { ClientSession } from "#root/backend/auth/shared/entities";
-import { query } from "#root/shared/database/drizzle/db";
+import type { ClientSession } from "#root/backend/auth/shared/entities.js";
+import { query } from "#root/shared/database/drizzle/db.js";
 import {
   file,
   user,
   vendor,
   product,
-} from "#root/shared/database/drizzle/schema";
-import { ServerError } from "#root/shared/error/server";
+} from "#root/shared/database/drizzle/schema.js";
+import { ServerError } from "#root/shared/error/server.js";
 import { eq, count } from "drizzle-orm";
-import { Array, Effect, Option } from "effect";
+import { Effect } from "effect";
+import { Array as EffectArray, Option } from "effect";
 import { z } from "zod";
 
 export const approveVendorSchema = z.object({
@@ -48,7 +49,7 @@ export const approveVendor = (
           .leftJoin(user, eq(vendor.id, user.vendorId))
           .where(eq(vendor.id, input.id));
       }),
-      Effect.map(Array.head)
+      Effect.map(EffectArray.head)
     );
 
     if (Option.isNone(maybeVendor)) {

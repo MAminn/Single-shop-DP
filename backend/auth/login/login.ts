@@ -61,6 +61,59 @@ export const login = (email: string, password: string) =>
       );
     }
 
+    // If user is not verified, check if they're a vendor with active status
+    if (!user.emailVerified) {
+      if (user.role === "admin") {
+        // Admin users can bypass email verification
+        const token = generateSessionToken();
+        yield* $(createSession(token, user.id));
+        return token;
+      }
+
+      // Check if the user is a vendor and has a vendorId
+      if (user.role === "vendor" && user.vendorId) {
+        const vendorId = user.vendorId;
+
+        // Check if the vendor's status is active
+        const vendorData = yield* $(
+          query(async (db) => {
+            return await db
+              .select({
+                status: Tables.vendor.status,
+              })
+              .from(Tables.vendor)
+              .where(eq(Tables.vendor.id, vendorId));
+          }),
+          Effect.map((vendors) => vendors[0])
+        );
+
+        // If vendor status is not active, require email verification
+        if (!vendorData || vendorData.status !== "active") {
+          return yield* $(
+            Effect.fail(
+              new ServerError({
+                tag: "EmailNotVerified",
+                statusCode: 400,
+                clientMessage: "Please verify your email before logging in",
+              })
+            )
+          );
+        }
+        // Vendor status is active, allow login without email verification
+      } else {
+        // Not a vendor or no vendorId, require email verification
+        return yield* $(
+          Effect.fail(
+            new ServerError({
+              tag: "EmailNotVerified",
+              statusCode: 400,
+              clientMessage: "Please verify your email before logging in",
+            })
+          )
+        );
+      }
+    }
+
     const token = generateSessionToken();
     yield* $(createSession(token, user.id));
 

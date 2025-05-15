@@ -1,7 +1,7 @@
-import type { ClientSession } from "#root/backend/auth/shared/entities";
+import type { ClientSession } from "#root/backend/auth/shared/entities.js";
 import { query } from "#root/shared/database/drizzle/db.js";
 import { user, vendor } from "#root/shared/database/drizzle/schema.js";
-import { ServerError } from "#root/shared/error/server";
+import { ServerError } from "#root/shared/error/server.js";
 import { desc, eq, ilike, inArray, or } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";

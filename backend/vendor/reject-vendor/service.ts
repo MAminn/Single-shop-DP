@@ -1,104 +1,109 @@
-import type { ClientSession } from "#root/backend/auth/shared/entities";
-import { query } from "#root/shared/database/drizzle/db";
-import { user, vendor, vendorLog } from "#root/shared/database/drizzle/schema";
-import { ServerError } from "#root/shared/error/server";
+import type { ClientSession } from "#root/backend/auth/shared/entities.js";
+import { query } from "#root/shared/database/drizzle/db.js";
+import {
+  user,
+  vendor,
+  vendorLog,
+} from "#root/shared/database/drizzle/schema.js";
+import { ServerError } from "#root/shared/error/server.js";
 import { eq } from "drizzle-orm";
-import { Array, Effect, Option } from "effect";
+import { Effect } from "effect";
+import { Array as EffectArray, Option } from "effect";
 import { z } from "zod";
 
 export const rejectVendorSchema = z.object({
-	id: z.string().uuid(),
+  id: z.string().uuid(),
 });
 
 export const rejectVendor = (
-	input: z.infer<typeof rejectVendorSchema>,
-	session?: ClientSession,
+  input: z.infer<typeof rejectVendorSchema>,
+  session?: ClientSession
 ) =>
-	Effect.gen(function* ($) {
-		if (!session || session.role !== "admin") {
-			return yield* $(
-				Effect.fail(
-					new ServerError({
-						tag: "Unauthorized",
-						statusCode: 401,
-						clientMessage: "Unauthorized",
-					}),
-				),
-			);
-		}
+  Effect.gen(function* ($) {
+    if (!session || session.role !== "admin") {
+      return yield* $(
+        Effect.fail(
+          new ServerError({
+            tag: "Unauthorized",
+            statusCode: 401,
+            clientMessage: "Unauthorized",
+          })
+        )
+      );
+    }
 
-		const maybeVendor = yield* $(
-			query(async (db) => {
-				return await db
-					.select({
-						id: vendor.id,
-						name: vendor.name,
-						createdAt: vendor.createdAt,
-						status: vendor.status,
-						ownerEmail: user.email,
-						ownerName: user.name,
-					})
-					.from(vendor)
-					.leftJoin(user, eq(vendor.id, user.vendorId))
-					.where(eq(vendor.id, input.id));
-			}),
-			Effect.map(Array.head),
-		);
+    const maybeVendor = yield* $(
+      query(async (db) => {
+        return await db
+          .select({
+            id: vendor.id,
+            name: vendor.name,
+            createdAt: vendor.createdAt,
+            status: vendor.status,
+            ownerEmail: user.email,
+            ownerName: user.name,
+          })
+          .from(vendor)
+          .leftJoin(user, eq(vendor.id, user.vendorId))
+          .where(eq(vendor.id, input.id));
+      }),
+      Effect.map(EffectArray.head)
+    );
 
-		if (Option.isNone(maybeVendor)) {
-			return yield* $(
-				Effect.fail(
-					new ServerError({
-						tag: "VendorNotFound",
-						statusCode: 404,
-						clientMessage: "Vendor not found",
-					}),
-				),
-			);
-		}
+    if (Option.isNone(maybeVendor)) {
+      return yield* $(
+        Effect.fail(
+          new ServerError({
+            tag: "VendorNotFound",
+            statusCode: 404,
+            clientMessage: "Vendor not found",
+          })
+        )
+      );
+    }
 
-		const targetVendor = Option.getOrThrow(maybeVendor);
+    const targetVendor = Option.getOrThrow(maybeVendor);
 
-		if (targetVendor.status === "rejected") {
-			return yield* $(
-				Effect.fail(
-					new ServerError({
-						tag: "VendorAlreadyRejected",
-						statusCode: 400,
-						clientMessage: "Vendor already rejected",
-					}),
-				),
-			);
-		}
+    if (targetVendor.status === "rejected") {
+      return yield* $(
+        Effect.fail(
+          new ServerError({
+            tag: "VendorAlreadyRejected",
+            statusCode: 400,
+            clientMessage: "Vendor already rejected",
+          })
+        )
+      );
+    }
 
-		return yield* $(
-			query(async (db) => {
-				return await db.transaction(async (tx) => {
-					const actionUser = await tx
-						.select({
-							id: user.id,
-						})
-						.from(user)
-						.where(eq(user.email, session.email))
-						.then((data) => data[0]);
+    return yield* $(
+      query(async (db) => {
+        return await db.transaction(async (tx) => {
+          const actionUser = await tx
+            .select({
+              id: user.id,
+            })
+            .from(user)
+            .where(eq(user.email, session.email))
+            .then((data) => data[0]);
 
-					if (!actionUser) {
-						throw new Error("User not found");
-					}
+          if (!actionUser) {
+            throw new Error("User not found");
+          }
 
-					const reject = tx
-						.update(vendor)
-						.set({ status: "rejected", updatedAt: new Date() })
-						.where(eq(vendor.id, targetVendor.id));
+          const reject = tx
+            .update(vendor)
+            .set({ status: "rejected", updatedAt: new Date() })
+            .where(eq(vendor.id, targetVendor.id));
 
-					const logApprove = tx.insert(vendorLog).values({
-						action: "rejected",
-						userId: actionUser.id,
-						vendorId: targetVendor.id,
-					});
+          const logApprove = tx.insert(vendorLog).values({
+            action: "rejected",
+            userId: actionUser.id,
+            vendorId: targetVendor.id,
+          });
 
-					await Promise.all([reject, logApprove]);
-				});
-			}),
-		);
-	});
+          await Promise.all([reject, logApprove]);
+        });
+      })
+    );
+  });

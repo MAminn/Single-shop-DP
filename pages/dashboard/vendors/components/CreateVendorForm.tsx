@@ -27,17 +27,23 @@ const vendorRegistrationFormSchema = z.object({
     logoId: z.string().uuid().optional(),
     featured: z.boolean().optional().default(false),
   }),
-  user: z.object({
-    email: z.string().email(),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters long")
-      .max(255),
-    name: z.string().nonempty().max(255),
-    phone: z
-      .string()
-      .regex(/^(\+201|01|00201)[0-2,5]{1}[0-9]{8}/, "Invalid phone number"),
-  }),
+  user: z
+    .object({
+      email: z.string().email(),
+      password: z
+        .string()
+        .min(8, "Password must be at least 8 characters long")
+        .max(255),
+      confirmPassword: z.string(),
+      name: z.string().nonempty().max(255),
+      phone: z
+        .string()
+        .regex(/^(\+201|01|00201)[0-2,5]{1}[0-9]{8}/, "Invalid phone number"),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: "Passwords do not match",
+      path: ["confirmPassword"],
+    }),
 });
 
 export type VendorRegistrationFormSchema = z.infer<
@@ -48,9 +54,8 @@ export function CreateVendorForm({ onSuccess }: { onSuccess: () => void }) {
   const [submitting, setSubmitting] = useState(false);
   const [uploadedLogoId, setUploadedLogoId] = useState<string | undefined>();
 
-  const form = useForm<z.infer<typeof vendorRegistrationFormSchema>>({
+  const form = useForm<VendorRegistrationFormSchema>({
     resolver: zodResolver(vendorRegistrationFormSchema),
-    disabled: submitting,
     defaultValues: {
       vendor: {
         name: "",
@@ -60,6 +65,7 @@ export function CreateVendorForm({ onSuccess }: { onSuccess: () => void }) {
       user: {
         email: "",
         password: "",
+        confirmPassword: "",
         name: "",
         phone: "",
       },
@@ -103,7 +109,6 @@ export function CreateVendorForm({ onSuccess }: { onSuccess: () => void }) {
         values.vendor.logoId = uploadedLogoId;
       }
 
-
       // First register the vendor
       const result = await trpc.vendor.register.mutate(values);
 
@@ -131,6 +136,7 @@ export function CreateVendorForm({ onSuccess }: { onSuccess: () => void }) {
         toast.success("Vendor created and approved successfully");
       }
 
+      form.reset();
       onSuccess();
     } catch (error) {
       toast.error("An error occurred while creating the vendor");
@@ -336,6 +342,23 @@ export function CreateVendorForm({ onSuccess }: { onSuccess: () => void }) {
 
           <FormField
             control={form.control}
+            name="user.confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Confirm Password</FormLabel>
+                <FormControl>
+                  <PasswordInput placeholder="Confirm password" {...field} />
+                </FormControl>
+                <FormDescription>
+                  Re-enter the password to confirm.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="user.phone"
             render={({ field }) => (
               <FormItem className="flex flex-col items-start">
@@ -362,7 +385,14 @@ export function CreateVendorForm({ onSuccess }: { onSuccess: () => void }) {
             size="lg"
             disabled={submitting}
           >
-            Create Vendor
+            {submitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              "Create Vendor"
+            )}
           </Button>
         </form>
       </Form>

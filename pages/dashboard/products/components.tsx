@@ -296,7 +296,7 @@ export function ProductForm({
     <Form {...form}>
       {isLoading ? (
         <div className="flex justify-center items-center p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
           <p className="ml-3">Loading product data...</p>
         </div>
       ) : (
@@ -368,7 +368,7 @@ export function ProductForm({
                     <Input
                       type="number"
                       placeholder="99.99"
-                      {...field}
+                      value={field.value ?? ""}
                       onChange={(e) => {
                         field.onChange(e.target.valueAsNumber);
                       }}
@@ -580,9 +580,9 @@ export function ProductForm({
                     </PopoverTrigger>
                     <PopoverContent className="w-[200px] p-0">
                       <Command>
-                        <CommandInput placeholder="Search language..." />
+                        <CommandInput placeholder="Search vendors..." />
                         <CommandList>
-                          <CommandEmpty>No language found.</CommandEmpty>
+                          <CommandEmpty>No Vendors found.</CommandEmpty>
                           <CommandGroup>
                             {vendors.map((v) => (
                               <CommandItem

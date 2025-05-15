@@ -386,6 +386,7 @@ export default function Products() {
             categories={categories}
             vendors={vendors}
             isLoading={false}
+            vendorId={session?.role === "vendor" ? session.vendorId : undefined}
           />
         </DialogContent>
       </Dialog>
@@ -420,6 +421,9 @@ export default function Products() {
               categories={categories}
               vendors={vendors}
               isLoading={isLoadingImages}
+              vendorId={
+                session?.role === "vendor" ? session.vendorId : undefined
+              }
             />
           )}
         </DialogContent>

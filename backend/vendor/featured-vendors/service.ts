@@ -1,10 +1,10 @@
-import { query } from "#root/shared/database/drizzle/db";
+import { query } from "#root/shared/database/drizzle/db.js";
 import {
   user,
   vendor,
   file,
   product,
-} from "#root/shared/database/drizzle/schema";
+} from "#root/shared/database/drizzle/schema.js";
 import { eq, desc, and, inArray, count, gt, sql } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";

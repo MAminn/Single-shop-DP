@@ -1,9 +1,9 @@
 import {
   runBackendEffect,
   serializeBackendEffectResult,
-} from "#root/shared/backend/effect";
-import { provideDatabase, publicProcedure } from "#root/shared/trpc/server";
-import { viewVendorById, viewVendorByIdSchema } from "./service";
+} from "#root/shared/backend/effect.js";
+import { provideDatabase, publicProcedure } from "#root/shared/trpc/server.js";
+import { viewVendorById, viewVendorByIdSchema } from "./service.js";
 
 export const viewVendorByIdProcedure = publicProcedure
   .input(viewVendorByIdSchema)

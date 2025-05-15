@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { Input } from "#root/components/ui/input";
+import { Link } from "#root/components/Link";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -130,7 +131,12 @@ export default function Page() {
             {isSubmitting ? "Logging in..." : "Login"}
           </Button>
 
-          
+          <p className="text-center text-sm text-gray-500">
+            Don't have an account?{" "}
+            <Link href="/register" className="text-accent-lb">
+              Register
+            </Link>
+          </p>
         </form>
       </div>
     </section>

@@ -27,6 +27,13 @@ export const user = pgTable("user", {
     onUpdate: "cascade",
   }),
   role: userRole("role").notNull().default("user"),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  verificationToken: text("verification_token"),
+  verificationExpiry: timestamp("verification_expiry", {
+    withTimezone: true,
+    mode: "date",
+  }),
+  profilePicture: text("profile_picture"),
   createdAt: timestamp("created_at", {
     withTimezone: true,
     mode: "date",

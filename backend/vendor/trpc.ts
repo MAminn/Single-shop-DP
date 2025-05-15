@@ -1,17 +1,17 @@
-import { t } from "#root/shared/trpc/server";
-import { activateVendorProcedure } from "./activate-vendor/trpc";
-import { approveVendorProcedure } from "./approve-vendor/trpc";
-import { editVendorProcedure } from "./edit-vendor/trpc";
+import { t } from "#root/shared/trpc/server.js";
+import { activateVendorProcedure } from "./activate-vendor/trpc.js";
+import { approveVendorProcedure } from "./approve-vendor/trpc.js";
+import { editVendorProcedure } from "./edit-vendor/trpc.js";
 import {
   featuredVendorsProcedure,
   updateVendorFeaturedStatusProcedure,
   checkAndUpdateVendorFeaturedStatusProcedure,
-} from "./featured-vendors/trpc";
-import { registerVendorProcedure } from "./register-vendor/trpc";
-import { rejectVendorProcedure } from "./reject-vendor/trpc";
-import { suspendVendorProcedure } from "./suspend-vendor/trpc";
-import { viewVendorByIdProcedure } from "./view-by-id/trpc";
-import { viewVendorsProcedure } from "./view-vendors/trpc";
+} from "./featured-vendors/trpc.js";
+import { registerVendorProcedure } from "./register-vendor/trpc.js";
+import { rejectVendorProcedure } from "./reject-vendor/trpc.js";
+import { suspendVendorProcedure } from "./suspend-vendor/trpc.js";
+import { viewVendorByIdProcedure } from "./view-by-id/trpc.js";
+import { viewVendorsProcedure } from "./view-vendors/trpc.js";
 
 export const vendorRouter = t.router({
   register: registerVendorProcedure,

@@ -3,7 +3,7 @@ import { query } from "#root/shared/database/drizzle/db";
 import { user, vendor, vendorLog } from "#root/shared/database/drizzle/schema";
 import { ServerError } from "#root/shared/error/server";
 import { eq } from "drizzle-orm";
-import { Array, Effect, Option } from "effect";
+import { Effect, Array as EffectArray, Option } from "effect";
 import { z } from "zod";
 
 export const suspendVendorSchema = z.object({
@@ -42,7 +42,7 @@ export const suspendVendor = (
 					.leftJoin(user, eq(vendor.id, user.vendorId))
 					.where(eq(vendor.id, input.id));
 			}),
-			Effect.map(Array.head),
+			Effect.map(EffectArray.head),
 		);
 
 		if (Option.isNone(maybeVendor)) {

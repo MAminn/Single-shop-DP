@@ -1,5 +1,5 @@
 import { provideDatabase, publicProcedure } from "#root/shared/trpc/server.js";
-import { register, registerSchema } from "./register";
+import { verifyEmail, verifyEmailSchema } from "./verify-email";
 import {
   runBackendEffect,
   serializeBackendEffectResult,
@@ -7,11 +7,11 @@ import {
 import { Effect } from "effect";
 import { EmailService } from "#root/shared/email/service.js";
 
-export const registerProcedure = publicProcedure
-  .input(registerSchema)
+export const verifyEmailProcedure = publicProcedure
+  .input(verifyEmailSchema)
   .mutation(async ({ ctx, input }) => {
     return await runBackendEffect(
-      register(input).pipe(
+      verifyEmail(input).pipe(
         provideDatabase(ctx),
         Effect.provideService(EmailService, ctx.emailService)
       )
