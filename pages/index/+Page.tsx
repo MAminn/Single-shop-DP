@@ -141,36 +141,9 @@ export default function Page() {
   return (
     <main>
       {/* Hero Section */}
-      <section className="hero-section relative h-[90vh] overflow-hidden">
+      <section className="hero-section relative h-[90vh] overflow-hidden bg-[url('/assets/landing.webp')] bg-cover bg-center">
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent z-[9]"></div>
 
-        {/* Responsive background image for better performance */}
-        <picture>
-          {/* Low quality image placeholder */}
-          {!heroImageLoaded && (
-            <div
-              className="absolute inset-0 bg-gray-100"
-              style={{
-                backgroundImage: "url(/assets/landing.webp)",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            ></div>
-          )}
-
-          {/* Single image source for all devices */}
-          <img
-            src="/assets/landing.webp"
-            alt="Fashion collection banner"
-            className="absolute inset-0 w-full h-full object-cover"
-            onLoad={handleHeroImageLoad}
-            style={{ opacity: heroImageLoaded ? 1 : 0 }}
-            width="1920"
-            height="1080"
-            fetchPriority="high"
-            decoding="async"
-          />
-        </picture>
         <div className="hero-content relative z-[9] container mx-auto h-full flex flex-col justify-center px-4">
           <div className="bg-white/10 max-w-fit backdrop-blur-sm p-1 px-3 rounded-full inline-block mb-4 ">
             <span className="text-white text-sm font-medium">
