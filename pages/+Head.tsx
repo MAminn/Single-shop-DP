@@ -18,28 +18,7 @@ export default function HeadDefault() {
     }
   }, []);
 
-  // Initialize Google Analytics
-useEffect(() => {
-  const script = document.createElement("script");
-  script.src = "https://www.googletagmanager.com/gtag/js?id=G-4P688CTR6M";
-  script.async = true;
 
-  // When script loads, init GA
-  script.onload = () => {
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = (...args) => {
-      window.dataLayer.push(args);
-    };
-    window.gtag("js", new Date());
-    window.gtag("config", "G-4P688CTR6M");
-  };
-
-  document.head.appendChild(script);
-
-  return () => {
-    script.remove();
-  };
-}, []);
 
   return (
     <>
