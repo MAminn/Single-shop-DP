@@ -1,29 +1,25 @@
-import HeroImg from "#root/assets/Women_s_banner.webp";
 import { useData } from "vike-react/useData";
 import type { Data } from "./+data";
-import { ErrorSection } from "#root/components/error-section";
-import Sorting from "#root/components/sorting";
+import TemplateRenderer from "#root/frontend/components/template/TemplateRenderer";
+import useTemplate from "#root/frontend/components/template/useTemplate";
 
 const Page: React.FC = () => {
   const fetchData = useData<Data>();
+  const { activeTemplate } = useTemplate('women');
 
-  if (!fetchData.success) {
-    return <ErrorSection error={fetchData.error} />;
-  }
+  // Prepare template data
+  const templateData = {
+    subcategories: fetchData.success ? fetchData.subcategories : [],
+    isLoading: false,
+    error: fetchData.success ? null : fetchData.error
+  };
 
   return (
-    <section className="w-full h-full flex flex-col justify-center items-center">
-      <section className="w-full h-full">
-        <img src={HeroImg} alt="Women's Collection" className="w-full h-full" />
-      </section>
-
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8 text-center">
-          Women's Collection
-        </h1>
-        <Sorting categoryType="women" categories={fetchData.subcategories} />
-      </div>
-    </section>
+    <TemplateRenderer
+      category="women"
+      templateId={activeTemplate}
+      data={templateData}
+    />
   );
 };
 

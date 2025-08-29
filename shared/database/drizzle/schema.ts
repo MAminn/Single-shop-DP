@@ -488,6 +488,136 @@ export const productCategory = pgTable(
   }
 );
 
+// Template System Schema
+export const templateType = pgEnum("template_type", [
+  "page",
+  "section",
+  "component"
+]);
+
+export const templateStatus = pgEnum("template_status", [
+  "active",
+  "inactive",
+  "draft"
+]);
+
+export const template = pgTable("template", {
+  id: uuid("id")
+    .$defaultFn(() => v7())
+    .primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  type: templateType("type").notNull(),
+  category: text("category").notNull(), // e.g., "hero", "product-card", "navbar"
+  previewImageId: uuid("preview_image_id").references(() => file.id, {
+    onDelete: "set null",
+    onUpdate: "cascade",
+  }),
+  componentPath: text("component_path").notNull(), // Path to the React component
+  configSchema: jsonb("config_schema").default({}), // JSON schema for configuration options
+  defaultConfig: jsonb("default_config").default({}), // Default configuration values
+  status: templateStatus("status").notNull().default("draft"),
+  version: text("version").notNull().default("1.0.0"),
+  isDefault: boolean("is_default").notNull().default(false),
+  createdBy: uuid("created_by")
+    .notNull()
+    .references(() => user.id, {
+      onDelete: "restrict",
+      onUpdate: "cascade",
+    }),
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+    mode: "date",
+  })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", {
+    withTimezone: true,
+    mode: "date",
+  }),
+});
+
+export const assignmentScope = pgEnum("assignment_scope", [
+  "global",
+  "page",
+  "section"
+]);
+
+export const templateAssignment = pgTable("template_assignment", {
+  id: uuid("id")
+    .$defaultFn(() => v7())
+    .primaryKey(),
+  templateId: uuid("template_id")
+    .notNull()
+    .references(() => template.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  scope: assignmentScope("scope").notNull(),
+  targetIdentifier: text("target_identifier"), // page path, section ID, etc.
+  targetCategory: text("target_category"), // e.g., "hero", "product-grid"
+  config: jsonb("config").default({}), // Instance-specific configuration
+  isActive: boolean("is_active").notNull().default(true),
+  priority: integer("priority").notNull().default(0), // For ordering when multiple templates apply
+  assignedBy: uuid("assigned_by")
+    .notNull()
+    .references(() => user.id, {
+      onDelete: "restrict",
+      onUpdate: "cascade",
+    }),
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+    mode: "date",
+  })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", {
+    withTimezone: true,
+    mode: "date",
+  }),
+});
+
+export const templateAnalytics = pgTable("template_analytics", {
+  id: uuid("id")
+    .$defaultFn(() => v7())
+    .primaryKey(),
+  templateId: uuid("template_id")
+    .notNull()
+    .references(() => template.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  assignmentId: uuid("assignment_id")
+    .references(() => templateAssignment.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  pageViews: integer("page_views").notNull().default(0),
+  interactions: integer("interactions").notNull().default(0),
+  conversionRate: decimal("conversion_rate", {
+    precision: 5,
+    scale: 4,
+  }),
+  performanceScore: decimal("performance_score", {
+    precision: 5,
+    scale: 2,
+  }),
+  lastViewed: timestamp("last_viewed", {
+    withTimezone: true,
+    mode: "date",
+  }),
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+    mode: "date",
+  })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", {
+    withTimezone: true,
+    mode: "date",
+  }),
+});
+
 // Enum for discount type
 export const discountTypeEnum = pgEnum("discount_type", [
   "percentage",

@@ -8,6 +8,7 @@ import {
   UserPlus,
   LayoutGrid,
   TicketPercent,
+  Palette,
 } from "lucide-react";
 
 import {
@@ -58,6 +59,11 @@ export function DashboardSidebar() {
       label: "Promo Codes",
       href: "/dashboard/promo-codes",
       icon: TicketPercent,
+    },
+    {
+      label: "Templates",
+      href: "/dashboard/admin/templates",
+      icon: Palette,
     },
   ];
 

@@ -51,6 +51,9 @@ function Content({ children }: { children: React.ReactNode }) {
     if (pathname.includes("/dashboard/vendors")) {
       return "vendors";
     }
+    if (pathname.includes("/dashboard/admin/templates")) {
+      return "templates";
+    }
     return "overview";
   };
 
@@ -70,6 +73,10 @@ function Content({ children }: { children: React.ReactNode }) {
           {
             label: "Categories",
             href: "/dashboard/categories",
+          },
+          {
+            label: "Templates",
+            href: "/dashboard/admin/templates",
           },
         ]
       : []),

@@ -27,6 +27,7 @@ import {
   CircleAlert,
   Grid,
   Star,
+  Palette,
 } from "lucide-react";
 import {
   Table,
@@ -202,6 +203,42 @@ function AdminDashboard() {
           isLoading={analytics.productStats.isLoading}
           error={analytics.productStats.error}
         />
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Website Templates
+                </p>
+                <p className="text-3xl font-bold">Active</p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                <Palette className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <Badge
+                variant="outline"
+                className="bg-blue-100 text-blue-800 hover:bg-blue-100"
+              >
+                Customization Ready
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-auto flex items-center text-blue-600 hover:text-blue-800"
+                onClick={() => {
+                  // Template management functionality will be added here
+                  alert('Template management coming soon!');
+                }}
+              >
+                Manage
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* <RevenueStatsCard
           totalRevenue={analytics.totalRevenue.data || 0}

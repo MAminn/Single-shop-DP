@@ -141,7 +141,7 @@ const Navbar: React.FC<NavbarProps> = ({
   const links = lang === "en" || lang === "ar" ? navLinks[lang] : [];
 
   return (
-    <nav className=" shadow-md sticky w-full py-2 lg:py-6 top-0 z-10 bg-white">
+    <nav className=" shadow-md sticky w-full py-2 lg:py-6 top-0 z-[10000] bg-white">
       <div className="px-4 flex text-sm lg:text-base items-center justify-between min-h-16 max-w-7xl mx-auto">
         <div className="flex items-center gap-8 lg:order-1 order-2">
           <Link href="/" className="text-3xl font-bold ">

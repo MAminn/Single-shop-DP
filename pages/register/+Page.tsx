@@ -16,6 +16,7 @@ import {
   User,
   UserPlus,
 } from "lucide-react";
+import { Link } from "#root/components/Link";
 
 const formSchema = z
   .object({
@@ -100,12 +101,12 @@ export default function Page() {
             Please check your email to verify your account. Once verified, you
             can log in to access all features of Lebsy.
           </p>
-          <Button
-            onClick={() => navigate("/login")}
+          <Link
+            href="/login"
             className="bg-[#1B4571] hover:bg-[#1B4571]/90 py-2 px-6"
           >
             Go to Login
-          </Button>
+          </Link>
         </div>
       </AnimatedContent>
     );

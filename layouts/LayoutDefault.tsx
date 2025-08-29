@@ -8,6 +8,7 @@ import { usePageContext } from "vike-react/usePageContext";
 import { TRPCClientError } from "@trpc/client";
 import { AuthContext } from "#root/context/AuthContext.js";
 import { CartProvider } from "#root/lib/context/CartContext";
+import { TemplateProvider } from "#root/frontend/contexts/TemplateContext";
 import { Toaster as ShadcnToaster } from "#root/components/ui/toaster";
 
 // Memoized Content component to prevent unnecessary re-renders
@@ -50,15 +51,17 @@ const Content = memo(({ children }: { children: React.ReactNode }) => {
   return (
     <AuthContext.Provider value={{ session, logout }}>
       <CartProvider>
-        <main
-          id="page-content"
-          className="bg-background h-full text-foreground w-full font-poppins"
-        >
-          {!isDashboardRoute && <Navbar lang="en" />}
-          {children}
-          <Toaster />
-          <ShadcnToaster />
-        </main>
+        <TemplateProvider>
+          <main
+            id="page-content"
+            className="bg-background h-full text-foreground w-full font-poppins"
+          >
+            {!isDashboardRoute && <Navbar lang="en" />}
+            {children}
+            <Toaster />
+            <ShadcnToaster />
+          </main>
+        </TemplateProvider>
       </CartProvider>
     </AuthContext.Provider>
   );
