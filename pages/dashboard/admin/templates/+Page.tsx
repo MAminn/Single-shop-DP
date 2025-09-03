@@ -78,6 +78,7 @@ export default function AdminTemplatesPage() {
     { value: 'brands', label: 'Brands', description: 'Brand showcase page templates' },
     { value: 'products', label: 'Products', description: 'Product listing page templates' },
     { value: 'cart', label: 'Shopping Cart', description: 'Shopping cart page templates' },
+    { value: 'checkout', label: 'Checkout', description: 'Checkout process page templates' },
   ];
 
   return (

@@ -10,8 +10,10 @@ import ModernBrandsTemplate from './templates/brands/ModernBrandsTemplate';
 import ModernProductsTemplate from './templates/products/ModernProductsTemplate';
 import DefaultCartTemplate from './templates/cart/DefaultCartTemplate';
 import ModernCartTemplate from './templates/cart/ModernCartTemplate';
+import DefaultCheckoutTemplate from './templates/checkout/DefaultCheckoutTemplate';
+import ModernCheckoutTemplate from './templates/checkout/ModernCheckoutTemplate';
 
-export type TemplateCategory = 'home' | 'men' | 'women' | 'brands' | 'products' | 'cart';
+export type TemplateCategory = 'home' | 'men' | 'women' | 'brands' | 'products' | 'cart' | 'checkout';
 
 // Template data interfaces
 interface FeaturedProduct {
@@ -131,9 +133,85 @@ interface CartTemplateData {
   error?: string | null;
 }
 
-type TemplateData = HomeTemplateData | MenTemplateData | WomenTemplateData | BrandsTemplateData | ProductsTemplateData | CartTemplateData;
+interface CheckoutItem {
+  id: string;
+  name: string;
+  price: number;
+  discountPrice?: number | string | null;
+  quantity: number;
+  imageUrl?: string;
+  images?: Array<{
+    url: string;
+    isPrimary?: boolean;
+  }>;
+  selectedOptions: Record<string, string>;
+  vendorName: string;
+  categoryName: string;
+  stock: number;
+}
 
-export type { CartTemplateData, CartItem, TemplateData };
+interface CheckoutTemplateData {
+  items: CheckoutItem[];
+  totalItems: number;
+  subtotal: number;
+  discount: number;
+  shipping: number;
+  tax: number;
+  total: number;
+  promoCode?: {
+    id: string;
+    code: string;
+    discountType: "percentage" | "fixed_amount";
+    discountValue: number;
+  } | null;
+  formData: {
+    fullName: string;
+    phoneNumber: string;
+    email: string;
+    address: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+    notes: string;
+  };
+  isSubmitting: boolean;
+  showOrderConfirmation: boolean;
+  orderDetails?: {
+    id: number;
+    date: string;
+    customerInfo: {
+      fullName: string;
+      phoneNumber: string;
+      email: string;
+      address: string;
+      city: string;
+      state: string;
+      postalCode: string;
+      country: string;
+    };
+    items: CheckoutItem[];
+    subtotal: number;
+    shipping: number;
+    tax: number;
+    discount?: number;
+    total: number;
+    status: string;
+    promoCode?: {
+      id: string;
+      code: string;
+      discountType: "percentage" | "fixed_amount";
+      discountValue: number;
+    };
+    notes?: string;
+  } | null;
+  isLoading: boolean;
+  error?: string | null;
+}
+
+type TemplateData = HomeTemplateData | MenTemplateData | WomenTemplateData | BrandsTemplateData | ProductsTemplateData | CartTemplateData | CheckoutTemplateData;
+
+export type { CartTemplateData, CartItem, CheckoutTemplateData, CheckoutItem, TemplateData };
 
 export interface TemplateInfo {
   id: string;
@@ -239,6 +317,22 @@ const templates: Record<TemplateCategory, TemplateInfo[]> = {
       description: 'Contemporary shopping cart with enhanced styling',
       category: 'cart',
       component: ModernCartTemplate as React.ComponentType<{ data?: TemplateData }>,
+    },
+  ],
+  checkout: [
+    {
+      id: 'default-checkout',
+      name: 'Default Checkout',
+      description: 'Standard checkout process layout',
+      category: 'checkout',
+      component: DefaultCheckoutTemplate as React.ComponentType<{ data?: TemplateData }>,
+    },
+    {
+      id: 'modern-checkout',
+      name: 'Modern Checkout',
+      description: 'Enhanced checkout with modern styling and animations',
+      category: 'checkout',
+      component: ModernCheckoutTemplate as React.ComponentType<{ data?: TemplateData }>,
     },
   ]
 };

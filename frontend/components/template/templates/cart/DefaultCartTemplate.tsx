@@ -200,8 +200,8 @@ const DefaultCartTemplate: React.FC<DefaultCartTemplateProps> = ({ data }) => {
         <div className="lg:col-span-2">
           <div className="space-y-4">
             {items.map((item) => {
-              const displayPrice = item.discountPrice || item.price;
-              const hasDiscount = item.discountPrice && item.discountPrice < item.price;
+              const displayPrice = item.price;
+              const hasDiscount = item.price > displayPrice;
               const optionsKey = JSON.stringify(item.selectedOptions);
 
               return (
@@ -227,9 +227,6 @@ const DefaultCartTemplate: React.FC<DefaultCartTemplateProps> = ({ data }) => {
                           <h3 className="font-semibold text-lg truncate">
                             {item.name}
                           </h3>
-                          <p className="text-sm text-gray-600">
-                            by {item.vendorName}
-                          </p>
                           <p className="text-xs text-gray-500">
                             {item.categoryName}
                           </p>

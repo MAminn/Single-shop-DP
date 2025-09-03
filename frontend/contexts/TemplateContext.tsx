@@ -30,6 +30,7 @@ export function TemplateProvider({ children }: { children: ReactNode }) {
       brands: 'default',
       products: 'default',
       cart: 'default',
+      checkout: 'default',
     };
   });
 

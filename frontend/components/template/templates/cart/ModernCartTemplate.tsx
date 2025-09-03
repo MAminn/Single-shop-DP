@@ -8,6 +8,7 @@ import { Separator } from '#root/components/ui/separator';
 import { CreditCard, Minus, Plus, ShoppingBag, Tag, Trash2, Truck } from 'lucide-react';
 import type React from 'react';
 import { useState } from 'react';
+import { useCart } from '#root/lib/context/CartContext';
 import type { TemplateData, CartTemplateData } from '../../templateRegistry';
 
 interface ModernCartTemplateProps {
@@ -17,49 +18,75 @@ interface ModernCartTemplateProps {
 export const ModernCartTemplate: React.FC<ModernCartTemplateProps> = ({ data }) => {
   // Type guard to ensure we have cart data
   const cartData = data as CartTemplateData | undefined;
-  const [items, setItems] = useState(cartData?.items || []);
-  const [promoCode, setPromoCode] = useState(cartData?.promoCode?.code || '');
-  const [appliedPromo, setAppliedPromo] = useState(cartData?.promoCode?.code || '');
-  const [discount, setDiscount] = useState(cartData?.discount || 0);
+  
+  // Use cart context for actual functionality
+  const {
+    items: contextItems,
+    removeItem: contextRemoveItem,
+    updateQuantity: contextUpdateQuantity,
+    totalItems: contextTotalItems,
+    subtotal: contextSubtotal,
+    discount: contextDiscount,
+    total: contextTotal,
+    promoCode: contextPromoCode,
+    applyPromoCode: contextApplyPromoCode,
+    removePromoCode: contextRemovePromoCode,
+    shipping: contextShipping,
+    tax: contextTax,
+  } = useCart();
+  
+  // Use provided data or fallback to context data
+  const items = cartData?.items || contextItems;
+  const totalItems = cartData?.totalItems ?? contextTotalItems;
+  const subtotal = cartData?.subtotal ?? contextSubtotal;
+  const discount = cartData?.discount ?? contextDiscount;
+  const total = cartData?.total ?? contextTotal;
+  const promoCode = cartData?.promoCode ?? contextPromoCode;
+  const shipping = cartData?.shipping ?? contextShipping;
+  const tax = cartData?.tax ?? contextTax;
+  
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(promoCode?.code || '');
+  const [localDiscount, setLocalDiscount] = useState(discount);
 
   const updateQuantity = (id: string, newQuantity: number) => {
     if (newQuantity <= 0) {
       removeItem(id);
       return;
     }
-    setItems(items.map(item => 
-      item.id === id ? { ...item, quantity: newQuantity } : item
-    ));
-  };
-
-  const removeItem = (id: string) => {
-    setItems(items.filter(item => item.id !== id));
-  };
-
-  const applyPromoCode = () => {
-    // Simple promo code logic - in real app, this would call an API
-    if (promoCode === 'SAVE10') {
-      setDiscount(subtotal * 0.1);
-      setAppliedPromo(promoCode);
-    } else if (promoCode === 'SAVE20') {
-      setDiscount(subtotal * 0.2);
-      setAppliedPromo(promoCode);
-    } else {
-      setDiscount(0);
-      setAppliedPromo('');
+    // Use context function if available, otherwise do nothing (preview mode)
+    if (contextUpdateQuantity) {
+      const item = items.find(item => item.id === id);
+      if (item) {
+        contextUpdateQuantity(id, newQuantity, item.selectedOptions);
+      }
     }
   };
 
-  const removePromoCode = () => {
-    setPromoCode('');
-    setAppliedPromo('');
-    setDiscount(0);
+  const removeItem = (id: string) => {
+    // Use context function if available, otherwise do nothing (preview mode)
+    if (contextRemoveItem) {
+      contextRemoveItem(id);
+    }
   };
 
-  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const shipping = cartData?.shipping || (subtotal > 100 ? 0 : 10);
-  const tax = cartData?.tax || (subtotal * 0.08);
-  const total = subtotal + shipping + tax - discount;
+  const applyPromoCode = () => {
+    // Use context function if available, otherwise do nothing (preview mode)
+    if (contextApplyPromoCode && promoCodeInput) {
+      contextApplyPromoCode(promoCodeInput);
+      setAppliedPromo(promoCodeInput);
+      setPromoCodeInput('');
+    }
+  };
+
+  const removePromoCodeHandler = () => {
+    // Use context function if available, otherwise do nothing (preview mode)
+    if (contextRemovePromoCode) {
+      contextRemovePromoCode();
+    }
+    setAppliedPromo('');
+    setLocalDiscount(0);
+  };
 
   if (cartData?.isLoading) {
     return (
@@ -115,7 +142,7 @@ export const ModernCartTemplate: React.FC<ModernCartTemplateProps> = ({ data }) 
                         <div className="flex items-center space-x-6">
                           <div className="flex-shrink-0">
                             <img
-                              src={item.imageUrl || item.images?.[0]?.url || ''}
+                              src={item.imageUrl || ''}
                               alt={item.name}
                               className="h-24 w-24 object-cover rounded-lg shadow-md"
                             />
@@ -131,9 +158,7 @@ export const ModernCartTemplate: React.FC<ModernCartTemplateProps> = ({ data }) 
                               <Badge variant="secondary" className="text-sm">
                                 {item.categoryName}
                               </Badge>
-                              <Badge variant="outline" className="text-sm">
-                                {item.vendorName}
-                              </Badge>
+
                             </div>
                             <p className="text-2xl font-bold text-blue-600">${item.price.toFixed(2)}</p>
                           </div>
@@ -197,7 +222,7 @@ export const ModernCartTemplate: React.FC<ModernCartTemplateProps> = ({ data }) 
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={removePromoCode}
+                        onClick={removePromoCodeHandler}
                         className="text-green-700 hover:text-green-900"
                       >
                         Remove
@@ -207,8 +232,8 @@ export const ModernCartTemplate: React.FC<ModernCartTemplateProps> = ({ data }) 
                     <div className="flex space-x-3">
                       <Input
                         placeholder="Enter promo code"
-                        value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value)}
+                        value={promoCodeInput}
+                        onChange={(e) => setPromoCodeInput(e.target.value)}
                         className="flex-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                       />
                       <Button
