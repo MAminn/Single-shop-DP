@@ -77,6 +77,7 @@ export default function AdminTemplatesPage() {
     { value: 'women', label: 'Women\'s Collection', description: 'Women\'s product page templates' },
     { value: 'brands', label: 'Brands', description: 'Brand showcase page templates' },
     { value: 'products', label: 'Products', description: 'Product listing page templates' },
+    { value: 'cart', label: 'Shopping Cart', description: 'Shopping cart page templates' },
   ];
 
   return (
@@ -125,7 +126,7 @@ export default function AdminTemplatesPage() {
             <span>Currently Active Template</span>
           </CardTitle>
           <CardDescription>
-            This template is currently being used on your home page
+            This template is currently being used for the selected category
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -156,7 +157,7 @@ export default function AdminTemplatesPage() {
         <CardHeader>
           <CardTitle>Available Templates</CardTitle>
           <CardDescription>
-            Choose from the available home page templates below
+            Choose from the available templates for the selected category
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -225,10 +226,10 @@ export default function AdminTemplatesPage() {
         <CardContent>
           <div className="space-y-3 text-sm text-muted-foreground">
             <p>
-              To add a new home page template:
+              To add a new template:
             </p>
             <ol className="list-decimal list-inside space-y-2 ml-4">
-              <li>Create a new React component in <code className="bg-muted px-1 py-0.5 rounded">/frontend/components/template/templates/home/</code></li>
+              <li>Create a new React component in <code className="bg-muted px-1 py-0.5 rounded">/frontend/components/template/templates/[category]/</code></li>
               <li>Name it following the pattern <code className="bg-muted px-1 py-0.5 rounded">YourTemplateNameTemplate.tsx</code></li>
               <li>Add the import and metadata to the template registry</li>
               <li>The template will automatically appear in this dashboard</li>

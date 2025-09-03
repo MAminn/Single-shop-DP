@@ -8,8 +8,10 @@ import ModernMenTemplate from './templates/men/ModernMenTemplate';
 import ModernWomenTemplate from './templates/women/ModernWomenTemplate';
 import ModernBrandsTemplate from './templates/brands/ModernBrandsTemplate';
 import ModernProductsTemplate from './templates/products/ModernProductsTemplate';
+import DefaultCartTemplate from './templates/cart/DefaultCartTemplate';
+import ModernCartTemplate from './templates/cart/ModernCartTemplate';
 
-export type TemplateCategory = 'home' | 'men' | 'women' | 'brands' | 'products';
+export type TemplateCategory = 'home' | 'men' | 'women' | 'brands' | 'products' | 'cart';
 
 // Template data interfaces
 interface FeaturedProduct {
@@ -94,7 +96,44 @@ interface ProductsTemplateData {
   error?: string | null;
 }
 
-type TemplateData = HomeTemplateData | MenTemplateData | WomenTemplateData | BrandsTemplateData | ProductsTemplateData;
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  discountPrice?: number | string | null;
+  quantity: number;
+  imageUrl?: string;
+  images?: Array<{
+    url: string;
+    isPrimary?: boolean;
+  }>;
+  selectedOptions: Record<string, string>;
+  vendorName: string;
+  categoryName: string;
+  stock: number;
+}
+
+interface CartTemplateData {
+  items: CartItem[];
+  totalItems: number;
+  subtotal: number;
+  discount: number;
+  shipping: number;
+  tax: number;
+  total: number;
+  promoCode?: {
+    id: string;
+    code: string;
+    discountType: "percentage" | "fixed_amount";
+    discountValue: number;
+  } | null;
+  isLoading: boolean;
+  error?: string | null;
+}
+
+type TemplateData = HomeTemplateData | MenTemplateData | WomenTemplateData | BrandsTemplateData | ProductsTemplateData | CartTemplateData;
+
+export type { CartTemplateData, CartItem, TemplateData };
 
 export interface TemplateInfo {
   id: string;
@@ -186,6 +225,22 @@ const templates: Record<TemplateCategory, TemplateInfo[]> = {
       component: ModernProductsTemplate as React.ComponentType<{ data?: TemplateData }>,
     },
   ],
+  cart: [
+    {
+      id: 'default-cart',
+      name: 'Default Cart',
+      description: 'Standard shopping cart layout',
+      category: 'cart',
+      component: DefaultCartTemplate as React.ComponentType<{ data?: TemplateData }>,
+    },
+    {
+      id: 'modern-cart',
+      name: 'Modern Cart',
+      description: 'Contemporary shopping cart with enhanced styling',
+      category: 'cart',
+      component: ModernCartTemplate as React.ComponentType<{ data?: TemplateData }>,
+    },
+  ]
 };
 
 // Helper function to get template component

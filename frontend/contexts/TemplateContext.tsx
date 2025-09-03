@@ -1,5 +1,5 @@
 import React, { createContext, useContext, type ReactNode, useEffect, useState } from 'react';
-import { TemplateCategory } from '../components/template/templateRegistry';
+import type { TemplateCategory } from '../components/template/templateRegistry';
 
 // Template context type
 interface TemplateContextType {
@@ -16,12 +16,21 @@ const TEMPLATE_STORAGE_KEY = 'selected-templates';
 
 // Template provider component
 export function TemplateProvider({ children }: { children: ReactNode }) {
-  const [activeTemplates, setActiveTemplates] = useState<Record<string, string>>({
-    home: 'default',
-    men: 'default',
-    women: 'default',
-    brands: 'default',
-    products: 'default'
+  const [activeTemplates, setActiveTemplates] = useState<Record<TemplateCategory, string>>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('activeTemplates');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    }
+    return {
+      home: 'default',
+      men: 'default',
+      women: 'default',
+      brands: 'default',
+      products: 'default',
+      cart: 'default',
+    };
   });
 
   // Load templates from localStorage on mount
@@ -44,7 +53,7 @@ export function TemplateProvider({ children }: { children: ReactNode }) {
   };
 
   const getActiveTemplate = (category: string) => {
-    return activeTemplates[category] || 'default';
+    return activeTemplates[category as TemplateCategory] || 'default';
   };
 
   return (
