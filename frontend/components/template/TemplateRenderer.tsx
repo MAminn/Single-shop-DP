@@ -9,6 +9,7 @@ interface TemplateRendererProps {
   templateId: string;
   data?: TemplateData;
   fallback?: React.ComponentType;
+  onDataUpdate?: (updates: Partial<TemplateData>) => void;
 }
 
 // Simple fallback component
@@ -31,7 +32,8 @@ const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   category,
   templateId, 
   data,
-  fallback: FallbackComponent = DefaultFallback 
+  fallback: FallbackComponent = DefaultFallback,
+  onDataUpdate
 }) => {
   // Get the template component for the specified category and template ID
   const TemplateComponent = getTemplateComponent(category, templateId);
@@ -42,7 +44,7 @@ const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   
   return (
     <Suspense fallback={<TemplateLoader />}>
-      <TemplateComponent data={data} />
+      <TemplateComponent data={data} onUpdateData={onDataUpdate} />
     </Suspense>
   );
 };

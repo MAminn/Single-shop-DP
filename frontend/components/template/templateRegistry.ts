@@ -12,8 +12,10 @@ import DefaultCartTemplate from './templates/cart/DefaultCartTemplate';
 import ModernCartTemplate from './templates/cart/ModernCartTemplate';
 import DefaultCheckoutTemplate from './templates/checkout/DefaultCheckoutTemplate';
 import ModernCheckoutTemplate from './templates/checkout/ModernCheckoutTemplate';
+import DefaultProductTemplate from './templates/product/DefaultProductTemplate';
+import ModernProductTemplate from './templates/product/ModernProductTemplate';
 
-export type TemplateCategory = 'home' | 'men' | 'women' | 'brands' | 'products' | 'cart' | 'checkout';
+export type TemplateCategory = 'home' | 'men' | 'women' | 'brands' | 'products' | 'cart' | 'checkout' | 'product';
 
 // Template data interfaces
 interface FeaturedProduct {
@@ -209,16 +211,74 @@ interface CheckoutTemplateData {
   error?: string | null;
 }
 
-type TemplateData = HomeTemplateData | MenTemplateData | WomenTemplateData | BrandsTemplateData | ProductsTemplateData | CartTemplateData | CheckoutTemplateData;
+interface ProductVariant {
+  name: string;
+  values: string[];
+}
 
-export type { CartTemplateData, CartItem, CheckoutTemplateData, CheckoutItem, TemplateData };
+interface ProductReview {
+  id: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+interface ProductReviewStats {
+  averageRating: number;
+  totalReviews: number;
+}
+
+interface ProductTemplateData {
+  product: {
+    id: string;
+    name: string;
+    description: string;
+    price: number | string;
+    discountPrice?: number | null;
+    images?: { url: string; isPrimary?: boolean }[];
+    stock: number;
+    available: boolean;
+    categoryId: string;
+    categoryName: string;
+    vendorId: string;
+    vendorName: string;
+    variants?: ProductVariant[];
+    specifications?: Record<string, string>;
+    features?: string[];
+  };
+  reviews: ProductReview[];
+  reviewStats: ProductReviewStats;
+  relatedProducts?: {
+    id: string;
+    name: string;
+    price: number | string;
+    discountPrice?: number | null;
+    imageUrl?: string;
+    images?: { url: string; isPrimary?: boolean }[];
+    vendorName: string;
+    categoryName: string;
+  }[];
+  selectedOptions: Record<string, string>;
+  quantity: number;
+  currentImageIndex: number;
+  isZoomed: boolean;
+  isAddingToCart: boolean;
+  isSubmittingReview: boolean;
+  isLoading: boolean;
+  error?: string | null;
+}
+
+type TemplateData = HomeTemplateData | MenTemplateData | WomenTemplateData | BrandsTemplateData | ProductsTemplateData | CartTemplateData | CheckoutTemplateData | ProductTemplateData;
+
+export type { CartTemplateData, CartItem, CheckoutTemplateData, CheckoutItem, ProductTemplateData, ProductVariant, ProductReview, ProductReviewStats, TemplateData };
 
 export interface TemplateInfo {
   id: string;
   name: string;
   description: string;
   category: TemplateCategory;
-  component: React.ComponentType<{ data?: TemplateData }>;
+  component: React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>;
 }
 
 // Template definitions for each category
@@ -229,14 +289,14 @@ const templates: Record<TemplateCategory, TemplateInfo[]> = {
       name: 'Default Home',
       description: 'The original home page design',
       category: 'home',
-      component: DefaultHomeTemplate as React.ComponentType<{ data?: TemplateData }>,
+      component: DefaultHomeTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
     },
     {
       id: 'modern-home',
       name: 'Modern Home',
       description: 'A modern and sleek home page design',
       category: 'home',
-      component: ModernHomeTemplate as React.ComponentType<{ data?: TemplateData }>,
+      component: ModernHomeTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
     },
   ],
   men: [
@@ -245,14 +305,14 @@ const templates: Record<TemplateCategory, TemplateInfo[]> = {
       name: 'Default Men',
       description: 'The original men\'s page design',
       category: 'men',
-      component: DefaultMenTemplate as React.ComponentType<{ data?: TemplateData }>,
+      component: DefaultMenTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
     },
     {
       id: 'modern-men',
       name: 'Modern Men',
       description: 'A modern men\'s page with dark theme',
       category: 'men',
-      component: ModernMenTemplate as React.ComponentType<{ data?: TemplateData }>,
+      component: ModernMenTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
     },
   ],
   women: [
@@ -261,14 +321,14 @@ const templates: Record<TemplateCategory, TemplateInfo[]> = {
       name: 'Default Women',
       description: 'The original women\'s page design',
       category: 'women',
-      component: DefaultWomenTemplate as React.ComponentType<{ data?: TemplateData }>,
+      component: DefaultWomenTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
     },
     {
       id: 'modern-women',
       name: 'Modern Women',
       description: 'An elegant women\'s page with rose theme',
       category: 'women',
-      component: ModernWomenTemplate as React.ComponentType<{ data?: TemplateData }>, 
+      component: ModernWomenTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>, 
     },
   ],
   brands: [
@@ -277,14 +337,14 @@ const templates: Record<TemplateCategory, TemplateInfo[]> = {
       name: 'Default Brands',
       description: 'The original brands page design',
       category: 'brands',
-      component: DefaultBrandsTemplate as React.ComponentType<{ data?: TemplateData }>,
+      component: DefaultBrandsTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
     },
     {
       id: 'modern-brands',
       name: 'Modern Brands',
       description: 'A sleek brands page with gradient design',
       category: 'brands',
-      component: ModernBrandsTemplate as React.ComponentType<{ data?: TemplateData }>,
+      component: ModernBrandsTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
     },
   ],
   products: [
@@ -293,14 +353,14 @@ const templates: Record<TemplateCategory, TemplateInfo[]> = {
       name: 'Default Products',
       description: 'The original products page design',
       category: 'products',
-      component: DefaultProductsTemplate as React.ComponentType<{ data?: TemplateData }>,
+      component: DefaultProductsTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
     },
     {
       id: 'modern-products',
       name: 'Modern Products',
       description: 'An enhanced products page with advanced features',
       category: 'products',
-      component: ModernProductsTemplate as React.ComponentType<{ data?: TemplateData }>,
+      component: ModernProductsTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
     },
   ],
   cart: [
@@ -309,14 +369,14 @@ const templates: Record<TemplateCategory, TemplateInfo[]> = {
       name: 'Default Cart',
       description: 'Standard shopping cart layout',
       category: 'cart',
-      component: DefaultCartTemplate as React.ComponentType<{ data?: TemplateData }>,
+      component: DefaultCartTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
     },
     {
       id: 'modern-cart',
       name: 'Modern Cart',
       description: 'Contemporary shopping cart with enhanced styling',
       category: 'cart',
-      component: ModernCartTemplate as React.ComponentType<{ data?: TemplateData }>,
+      component: ModernCartTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
     },
   ],
   checkout: [
@@ -325,16 +385,32 @@ const templates: Record<TemplateCategory, TemplateInfo[]> = {
       name: 'Default Checkout',
       description: 'Standard checkout process layout',
       category: 'checkout',
-      component: DefaultCheckoutTemplate as React.ComponentType<{ data?: TemplateData }>,
+      component: DefaultCheckoutTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
     },
     {
       id: 'modern-checkout',
       name: 'Modern Checkout',
       description: 'Enhanced checkout with modern styling and animations',
       category: 'checkout',
-      component: ModernCheckoutTemplate as React.ComponentType<{ data?: TemplateData }>,
+      component: ModernCheckoutTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
     },
-  ]
+  ],
+  product: [
+    {
+      id: 'default-product',
+      name: 'Default Product',
+      description: 'Standard product page layout',
+      category: 'product',
+      component: DefaultProductTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
+    },
+    {
+      id: 'modern-product',
+      name: 'Modern Product',
+      description: 'Enhanced product page with modern styling and animations',
+      category: 'product',
+      component: ModernProductTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
+    },
+  ],
 };
 
 // Helper function to get template component

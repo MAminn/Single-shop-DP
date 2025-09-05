@@ -77,6 +77,7 @@ export default function AdminTemplatesPage() {
     { value: 'women', label: 'Women\'s Collection', description: 'Women\'s product page templates' },
     { value: 'brands', label: 'Brands', description: 'Brand showcase page templates' },
     { value: 'products', label: 'Products', description: 'Product listing page templates' },
+    { value: 'product', label: 'Product Detail', description: 'Individual product page templates' },
     { value: 'cart', label: 'Shopping Cart', description: 'Shopping cart page templates' },
     { value: 'checkout', label: 'Checkout', description: 'Checkout process page templates' },
   ];
