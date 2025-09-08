@@ -20,6 +20,9 @@ import { Monitor, Palette, CheckCircle, ExternalLink, Layers } from 'lucide-reac
 import { useTemplate } from '#root/frontend/contexts/TemplateContext';
 import { getAvailableTemplates, getTemplateMetadata, getTemplateComponent, type TemplateCategory } from '#root/frontend/components/template/templateRegistry';
 
+// Import ProductCardTemplatePreview component
+import { ProductCardTemplatePreview } from '#root/components/template/ProductCardTemplatePreview';
+
 // Template preview component
 const TemplatePreview: React.FC<{ templateId: string; isActive: boolean; category: TemplateCategory }> = ({ templateId, isActive, category }) => {
   const TemplateComponent = getTemplateComponent(category, templateId);
@@ -80,6 +83,8 @@ export default function AdminTemplatesPage() {
     { value: 'product', label: 'Product Detail', description: 'Individual product page templates' },
     { value: 'cart', label: 'Shopping Cart', description: 'Shopping cart page templates' },
     { value: 'checkout', label: 'Checkout', description: 'Checkout process page templates' },
+    { value: 'sorting', label: 'Sorting', description: 'Product sorting and filtering templates' },
+    { value: 'productCard', label: 'Product Card', description: 'Individual product card templates' },
   ];
 
   return (
@@ -188,8 +193,26 @@ export default function AdminTemplatesPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <TemplatePreview templateId={template.id} isActive={isActive} category={selectedCategory} />
-                    <div className="flex space-x-2">
+                    {selectedCategory === 'productCard' ? (
+                      <ProductCardTemplatePreview templateId={template.id} isActive={isActive} />
+                    ) : (
+                      <TemplatePreview templateId={template.id} isActive={isActive} category={selectedCategory} />
+                    )}
+                    {selectedCategory === 'productCard' ? (
+                      <div className="flex space-x-2">
+                      
+                      <Button
+                        variant={isActive ? "secondary" : "default"}
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleSwitchTemplate(template.id)}
+                        disabled={isActive}
+                      >
+                        {isActive ? 'Currently Active' : 'Switch to This Template'}
+                      </Button>
+                    </div>
+                    ) : (
+                      <div className="flex space-x-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -212,6 +235,8 @@ export default function AdminTemplatesPage() {
                         {isActive ? 'Currently Active' : 'Switch to This Template'}
                       </Button>
                     </div>
+                    )}
+                    
                   </CardContent>
                 </Card>
               );

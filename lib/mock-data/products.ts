@@ -2,7 +2,7 @@ export interface Product {
   id: string;
   name: string;
   vendor?: string;
-  vendorId?: number;
+  vendorId?: string;
   variants?: {
     name: string;
     values: string[];
@@ -19,6 +19,9 @@ export interface Product {
   imageUrl?: string;
   dateAdded?: Date;
   categoryName?: string;
+  available?: boolean;
+  categoryId?: string;
+  vendorName?: string;
 }
 
 export interface Variant {

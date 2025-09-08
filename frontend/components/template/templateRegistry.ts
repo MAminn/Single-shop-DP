@@ -14,8 +14,12 @@ import DefaultCheckoutTemplate from './templates/checkout/DefaultCheckoutTemplat
 import ModernCheckoutTemplate from './templates/checkout/ModernCheckoutTemplate';
 import DefaultProductTemplate from './templates/product/DefaultProductTemplate';
 import ModernProductTemplate from './templates/product/ModernProductTemplate';
+import DefaultProductCardTemplate from './templates/productCard/DefaultProductCardTemplate';
+import ModernProductCardTemplate from './templates/productCard/ModernProductCardTemplate';
+import DefaultSortingTemplate from './templates/sorting/DefaultSortingTemplate';
+import ModernSortingTemplate from './templates/sorting/ModernSortingTemplate';
 
-export type TemplateCategory = 'home' | 'men' | 'women' | 'brands' | 'products' | 'cart' | 'checkout' | 'product';
+export type TemplateCategory = 'home' | 'men' | 'women' | 'brands' | 'products' | 'cart' | 'checkout' | 'product' | 'sorting' | 'productCard';
 
 // Template data interfaces
 interface FeaturedProduct {
@@ -269,7 +273,79 @@ interface ProductTemplateData {
   error?: string | null;
 }
 
-type TemplateData = HomeTemplateData | MenTemplateData | WomenTemplateData | BrandsTemplateData | ProductsTemplateData | CartTemplateData | CheckoutTemplateData | ProductTemplateData;
+// Sorting template data interface
+export interface SortingTemplateData {
+  products: {
+    description: string | null;
+    id: string;
+    name: string;
+    price: number | string;
+    discountPrice?: number | string | null;
+    imageUrl?: string | null;
+    available: boolean;
+    categoryName?: string | null;
+    vendorId: string;
+    vendorName: string | null;
+    stock?: number;
+    sku?: string;
+    vendor?: string;
+    dateAdded?: string;
+    categories?: { id: string; name: string }[];
+    images?: { url: string; isPrimary?: boolean }[];
+  }[];
+  isLoading: boolean;
+  sortCriteria: string;
+  selectedPriceRange: string;
+  selectedCategories: string[];
+  showFilters: boolean;
+  showMobileFilters: boolean;
+  toggleCategoryFilter?: (categoryId: string) => void;
+  resetFilters?: () => void;
+  handleSortChange?: (value: string) => void;
+  handlePriceRangeChange?: (value: string) => void;
+  setShowMobileFilters?: (show: boolean) => void;
+  categories?: {
+    id: string;
+    name: string;
+    displayName?: string;
+    slug?: string;
+    imageId?: string | null;
+    filename?: string | null;
+    type?: "men" | "women";
+    productCount?: number;
+  }[];
+}
+
+// ProductCard template data interface
+export interface ProductCardTemplateData {
+  product: {
+    id: string;
+    name: string;
+    price: number | string;
+    discountPrice?: number | string | null;
+    imageUrl?: string | null;
+    images?: { url: string; isPrimary?: boolean }[];
+    available: boolean;
+    categoryName?: string | null;
+    vendorId: string;
+    vendorName: string | null;
+    categories?: { id: string; name: string }[];
+  };
+  showVendor?: boolean;
+  showAddToCart?: boolean;
+  showQuickView?: boolean;
+  showWishlist?: boolean;
+  isAddingToCart?: boolean;
+  isHovered?: boolean;
+  isInWishlist?: boolean;
+  isQuickViewOpen?: boolean;
+  setIsHovered?: (isHovered: boolean) => void;
+  setIsAddingToCart?: (isAdding: boolean) => void;
+  imageLoaded?: boolean;
+  setImageLoaded?: (loaded: boolean) => void;
+}
+
+type TemplateData = HomeTemplateData | MenTemplateData | WomenTemplateData | BrandsTemplateData | ProductsTemplateData | CartTemplateData | CheckoutTemplateData | ProductTemplateData | SortingTemplateData | ProductCardTemplateData;
 
 export type { CartTemplateData, CartItem, CheckoutTemplateData, CheckoutItem, ProductTemplateData, ProductVariant, ProductReview, ProductReviewStats, TemplateData };
 
@@ -283,6 +359,38 @@ export interface TemplateInfo {
 
 // Template definitions for each category
 const templates: Record<TemplateCategory, TemplateInfo[]> = {
+  sorting: [
+    {
+      id: 'default-sorting',
+      name: 'Default Sorting',
+      description: 'Standard product sorting and filtering layout',
+      category: 'sorting',
+      component: DefaultSortingTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
+    },
+    {
+      id: 'modern-sorting',
+      name: 'Modern Sorting',
+      description: 'Enhanced sorting with modern styling and animations',
+      category: 'sorting',
+      component: ModernSortingTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
+    },
+  ],
+  productCard: [
+    {
+      id: 'default-productCard',
+      name: 'Default Product Card',
+      description: 'Standard product card layout',
+      category: 'productCard',
+      component: DefaultProductCardTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
+    },
+    {
+      id: 'modern-productCard',
+      name: 'Modern Product Card',
+      description: 'Enhanced product card with modern styling and animations',
+      category: 'productCard',
+      component: ModernProductCardTemplate as React.ComponentType<{ data?: TemplateData; onUpdateData?: (updates: Partial<TemplateData>) => void }>,
+    },
+  ],
   home: [
     {
       id: 'default-home',

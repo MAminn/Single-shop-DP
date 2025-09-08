@@ -14,6 +14,9 @@ const Page: React.FC = () => {
     error: fetchData.success ? null : fetchData.error
   };
 
+
+  console.log(templateData.subcategories.map((subcategory) => subcategory.name))
+
   return (
     <TemplateRenderer
       category="men"

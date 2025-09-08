@@ -6,6 +6,28 @@ import { ShoppingCart, Store, Eye } from "lucide-react";
 import { useToast } from "./ui/use-toast";
 import { useCart } from "#root/lib/context/CartContext";
 import { getProductUrl, getVendorUrl } from "#root/lib/utils/route-helpers";
+import TemplateRenderer from "#root/frontend/components/template/TemplateRenderer";
+import { useTemplate } from "#root/frontend/contexts/TemplateContext";
+import type { ProductCardTemplateData } from "#root/frontend/components/template/templateRegistry";
+
+// Extend the ProductCardTemplateData interface to include all the properties we need
+declare module "#root/frontend/components/template/templateRegistry" {
+  interface ProductCardTemplateData {
+    showImage?: boolean;
+    imageSize?: string;
+    className?: string;
+    setIsAddingToCart?: (isAdding: boolean) => void;
+    setIsHovered?: (isHovered: boolean) => void;
+    imageLoaded?: boolean;
+    setImageLoaded?: (loaded: boolean) => void;
+    handleAddToCart?: (e: React.MouseEvent) => void;
+    getDisplayImageUrl?: () => string;
+    formattedPrice?: string;
+    hasImage?: boolean;
+    displayImageUrl?: string;
+    handleImageLoad?: () => void;
+  }
+}
 
 interface ProductImage {
   url: string;
@@ -19,7 +41,7 @@ interface Product {
   discountPrice?: number | string | null;
   imageUrl?: string | null;
   images?: ProductImage[];
-  available: boolean;
+  available: boolean; 
   categoryName?: string | null;
   vendorId: string;
   vendorName: string | null;
@@ -29,16 +51,21 @@ interface Product {
 interface ProductCardProps {
   product: Product;
   showVendor?: boolean;
+  showImage?: boolean;
+  imageSize?: string;
+  className?: string;
 }
 
 // Memoize the entire component for better performance
 export const ProductCard = memo(
-  ({ product, showVendor = true }: ProductCardProps) => {
+  ({ product, showVendor = true, showImage = true, imageSize = "medium", className = "" }: ProductCardProps) => {
     const [isAddingToCart, setIsAddingToCart] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
     const { toast } = useToast();
     const { addItem } = useCart();
+    const { getActiveTemplate } = useTemplate();
+    const activeTemplate = getActiveTemplate("productCard");
 
     // Memoize the add to cart handler to prevent unnecessary re-renders
     const handleAddToCart = useMemo(
@@ -65,7 +92,7 @@ export const ProductCard = memo(
                     ? product.price
                     : Number(product.price),
               imageUrl: getDisplayImageUrl(),
-              vendorId: Number(product.vendorId),
+              vendorId: product.vendorId,
               stock: 100, // Assuming available products have stock
             },
             1, // quantity
@@ -94,32 +121,33 @@ export const ProductCard = memo(
           const imageToUse = primaryImage || product.images[0];
 
           if (imageToUse?.url) {
-            if (imageToUse.url.startsWith("http")) {
+            // Handle absolute URLs and relative paths
+            if (imageToUse.url.startsWith("http") || 
+                imageToUse.url.startsWith("/uploads/") || 
+                imageToUse.url.startsWith("/assets/")) {
               return imageToUse.url;
             }
-
-            if (imageToUse.url.startsWith("/uploads/")) {
-              return imageToUse.url;
-            }
-
+            
+            // Add uploads prefix for relative paths
             return `/uploads/${imageToUse.url}`;
           }
         }
 
         // Fallback to legacy imageUrl if available
         if (product.imageUrl) {
-          if (product.imageUrl.startsWith("http")) {
+          // Handle absolute URLs and relative paths
+          if (product.imageUrl.startsWith("http") || 
+              product.imageUrl.startsWith("/uploads/") || 
+              product.imageUrl.startsWith("/assets/")) {
             return product.imageUrl;
           }
-
-          if (product.imageUrl.startsWith("/uploads/")) {
-            return product.imageUrl;
-          }
-
+          
+          // Add uploads prefix for relative paths
           return `/uploads/${product.imageUrl}`;
         }
 
-        return "";
+        // Default placeholder
+        return "/assets/placeholder-product.png";
       },
       [product.images, product.imageUrl]
     );
@@ -147,138 +175,34 @@ export const ProductCard = memo(
       setImageLoaded(true);
     };
 
+    // Prepare template data
+    const templateData: ProductCardTemplateData = {
+      product,
+      showVendor,
+      showImage,
+      imageSize,
+      className,
+      isAddingToCart,
+      setIsAddingToCart,
+      isHovered,
+      setIsHovered,
+      imageLoaded,
+      setImageLoaded,
+      handleAddToCart,
+      getDisplayImageUrl,
+      formattedPrice,
+      hasImage,
+      displayImageUrl,
+      handleImageLoad
+    };
+
+    // Use template renderer with the active template
     return (
-      <div
-        className="group relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col h-full border border-gray-100"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <Link
-          href={getProductUrl(product.id)}
-          className="overflow-hidden w-full aspect-square relative bg-gray-50 flex items-center justify-center"
-        >
-          {hasImage ? (
-            <>
-              {/* Low quality image placeholder */}
-              {!imageLoaded && (
-                <div className="absolute inset-0 bg-gray-200 animate-pulse"></div>
-              )}
-              <img
-                src={displayImageUrl}
-                alt={product.name}
-                width="400"
-                height="400"
-                loading="lazy"
-                decoding="async"
-                onLoad={handleImageLoad}
-                className={`w-full h-full object-cover transform transition-transform duration-300 
-                ${isHovered ? "scale-105" : "scale-100"}
-                ${imageLoaded ? "opacity-100" : "opacity-0"}`}
-                fetchPriority="auto"
-              />
-            </>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
-              <Eye className="h-10 w-10" />
-            </div>
-          )}
-
-          {!product.available && (
-            <Badge className="absolute top-2 right-2 bg-gray-500/90 backdrop-blur-sm">
-              Out of Stock
-            </Badge>
-          )}
-
-          {/* Display primary category from categories array if available, otherwise fall back to categoryName */}
-          {product.categories && product.categories.length > 0 ? (
-            <Badge className="absolute top-2 left-2 bg-accent-lb/90 hover:bg-accent-lb backdrop-blur-sm">
-              {product.categories[0]?.name || "Category"}
-            </Badge>
-          ) : (
-            product.categoryName && (
-              <Badge className="absolute top-2 left-2 bg-accent-lb/90 hover:bg-accent-lb backdrop-blur-sm">
-                {product.categoryName}
-              </Badge>
-            )
-          )}
-
-          {/* Quick add button that appears on hover */}
-          {product.available && (
-            <div
-              className={`absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent transform transition-all duration-200 ${isHovered ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}`}
-            >
-              <Button
-                onClick={handleAddToCart}
-                disabled={isAddingToCart}
-                className="w-full bg-white text-accent-lb hover:bg-accent-lb hover:text-white transition-colors"
-                size="sm"
-              >
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                {isAddingToCart ? "Adding..." : "Quick Add"}
-              </Button>
-            </div>
-          )}
-        </Link>
-
-        <div className="flex flex-col flex-grow p-4">
-          <div className="flex-grow">
-            <h3 className="font-medium text-gray-900 text-sm md:text-base mb-1 line-clamp-2 group-hover:text-accent-lb transition-colors">
-              <Link
-                href={getProductUrl(product.id)}
-                className="hover:text-accent-lb"
-              >
-                {product.name}
-              </Link>
-            </h3>
-
-            {showVendor && product.vendorName && (
-              <Link
-                href={getVendorUrl(product.vendorId)}
-                className="text-xs text-gray-500 mb-2 flex items-center hover:text-accent-lb transition-colors"
-              >
-                <Store className="inline-block h-3 w-3 mr-1" />
-                {product.vendorName}
-              </Link>
-            )}
-          </div>
-
-          <div className="flex justify-between items-center mt-2">
-            {product.discountPrice !== undefined &&
-            product.discountPrice !== null &&
-            product.discountPrice !== "" ? (
-              <div className="flex flex-col">
-                <span className="text-sm text-gray-500 line-through">
-                  {formattedPrice} EGP
-                </span>
-                <span className="text-lg font-bold text-red-600 tracking-tight">
-                  {typeof product.discountPrice === "number"
-                    ? product.discountPrice.toFixed(2)
-                    : Number(product.discountPrice).toFixed(2)}{" "}
-                  EGP
-                </span>
-              </div>
-            ) : (
-              <span className="text-lg font-bold text-gray-900 tracking-tight">
-                {formattedPrice} EGP
-              </span>
-            )}
-
-            <Button
-              size="sm"
-              variant={product.available ? "outline" : "ghost"}
-              disabled={!product.available || isAddingToCart}
-              onClick={handleAddToCart}
-              className={
-                product.available
-                  ? "border-accent-lb text-accent-lb hover:bg-accent-lb hover:text-white transition-colors"
-                  : "text-gray-400 border-gray-300"
-              }
-            >
-              <ShoppingCart className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      <TemplateRenderer
+        category="productCard"
+        templateId={activeTemplate}
+        data={templateData}
+      />
     );
   }
 );

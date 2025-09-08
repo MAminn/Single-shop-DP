@@ -17,11 +17,15 @@ import { ProductCard } from "./ProductCard";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { formatCategoryName } from "#root/lib/utils";
+import TemplateRenderer from "#root/frontend/components/template/TemplateRenderer";
+import { useTemplate } from "#root/frontend/contexts/TemplateContext";
+import type { SortingTemplateData } from "#root/frontend/components/template/templateRegistry";
 
 // Define product interface to match what is expected by the ProductCard
 interface SortableProduct {
   id: string;
   name: string;
+  description: string | null;
   price: number | string;
   discountPrice?: number | string | null;
   imageUrl?: string | null;
@@ -78,6 +82,8 @@ const Sorting: React.FC<SortingProps> = ({
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const { toast } = useToast();
+  const { getActiveTemplate } = useTemplate();
+  const activeTemplate = getActiveTemplate("sorting");
 
   useEffect(() => {
     setIsLoading(true);
@@ -93,12 +99,13 @@ const Sorting: React.FC<SortingProps> = ({
         })
         .then((res) => {
           if (res.success && res.result) {
-            console.log(`${categoryType} products:`, res.result);
+            console.log(`${categoryType} products with description:`, res.result);
             setProducts(
               res.result.items.map((item) => ({
                 id: item.id,
                 sku: item.id,
                 name: item.name,
+                description: item.description || "",  
                 price: Number(item.price),
                 discountPrice: item.discountPrice
                   ? Number(item.discountPrice)
@@ -159,6 +166,7 @@ const Sorting: React.FC<SortingProps> = ({
                 id: item.id,
                 sku: item.id,
                 name: item.name,
+                description: item.description || "",  
                 price: Number(item.price),
                 discountPrice: item.discountPrice
                   ? Number(item.discountPrice)
@@ -224,6 +232,7 @@ const Sorting: React.FC<SortingProps> = ({
                 id: item.id,
                 sku: item.id,
                 name: item.name,
+                description: item.description || "",  
                 price: Number(item.price),
                 discountPrice: item.discountPrice
                   ? Number(item.discountPrice)
@@ -275,6 +284,7 @@ const Sorting: React.FC<SortingProps> = ({
               id: item.id,
               sku: item.id,
               name: item.name,
+              description: item.description || "",  
               price: Number(item.price),
               discountPrice: item.discountPrice
                 ? Number(item.discountPrice)
@@ -463,162 +473,30 @@ const Sorting: React.FC<SortingProps> = ({
     setSelectedPriceRange(value);
   };
 
+  // Prepare template data
+  const templateData: SortingTemplateData = {
+    products: filteredProducts,
+    isLoading,
+    showFilters,
+    categories,
+    selectedCategories,
+    toggleCategoryFilter,
+    resetFilters,
+    sortCriteria,
+    handleSortChange,
+    selectedPriceRange,
+    handlePriceRangeChange,
+    showMobileFilters,
+    setShowMobileFilters
+  };
+
+  // Use template renderer with the active template
   return (
-    <div className="w-full">
-      {/* Mobile filter toggle button */}
-      <div className="block md:hidden mb-4">
-        <Button
-          onClick={() => setShowMobileFilters(!showMobileFilters)}
-          variant="outline"
-          className="w-full"
-        >
-          <SlidersHorizontal className="h-4 w-4 mr-2" />
-          {showMobileFilters ? "Hide Filters" : "Show Filters"}
-        </Button>
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Sidebar filters - hidden on mobile until toggled */}
-        <div
-          className={`${
-            showMobileFilters ? "block" : "hidden"
-          } md:block w-full md:w-64 shrink-0`}
-        >
-          <div className="bg-white rounded-lg border p-4 sticky top-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-medium">Filters</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={resetFilters}
-                className="h-8 px-2 text-xs"
-              >
-                <FilterX className="h-3 w-3 mr-1" />
-                Reset
-              </Button>
-            </div>
-
-            {/* Categories Filter */}
-            {categories && categories.length > 0 && (
-              <div className="mb-6">
-                <h4 className="text-sm font-medium mb-2">Categories</h4>
-                <div className="space-y-2">
-                  {categories.map((category) => (
-                    <div key={category.id} className="flex items-center">
-                      <Checkbox
-                        id={`category-${category.id}`}
-                        checked={selectedCategories.includes(category.id)}
-                        onCheckedChange={() =>
-                          toggleCategoryFilter(category.id)
-                        }
-                      />
-                      <label
-                        htmlFor={`category-${category.id}`}
-                        className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        {formatCategoryName(category.name)}
-                        {category.productCount !== undefined && (
-                          <span className="text-gray-500 ml-1">
-                            ({category.productCount})
-                          </span>
-                        )}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Price Range Filter */}
-            <div className="mb-6">
-              <h4 className="text-sm font-medium mb-2">Price Range</h4>
-              <Select
-                value={selectedPriceRange}
-                onValueChange={handlePriceRangeChange}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select price range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Prices</SelectItem>
-                  <SelectItem value="0-50">Under 50 EGP</SelectItem>
-                  <SelectItem value="50-100">50 - 100 EGP</SelectItem>
-                  <SelectItem value="100-200">100 - 200 EGP</SelectItem>
-                  <SelectItem value="200-500">200 - 500 EGP</SelectItem>
-                  <SelectItem value="500-1000">500 - 1000 EGP</SelectItem>
-                  <SelectItem value="1000-999999">Over 1000 EGP</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Close filter button on mobile */}
-            <div className="block md:hidden">
-              <Button
-                onClick={() => setShowMobileFilters(false)}
-                className="w-full"
-              >
-                Apply Filters
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div>
-              <h2 className="text-xl font-semibold">
-                {filteredProducts.length} Products
-              </h2>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Sort by:</span>
-              <Select value={sortCriteria} onValueChange={handleSortChange}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Sort products" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="featured">Featured</SelectItem>
-                  <SelectItem value="name-asc">Name: A-Z</SelectItem>
-                  <SelectItem value="name-desc">Name: Z-A</SelectItem>
-                  <SelectItem value="price-asc">Price: Low to High</SelectItem>
-                  <SelectItem value="price-desc">Price: High to Low</SelectItem>
-                  <SelectItem value="date-desc">Newest</SelectItem>
-                  <SelectItem value="date-asc">Oldest</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {isLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-lg border">
-              <h3 className="text-lg font-medium mb-2">No products found</h3>
-              <p className="text-gray-500 mb-6">
-                Try adjusting your filters to find what you're looking for
-              </p>
-              <Button onClick={resetFilters} variant="outline">
-                <FilterX className="h-4 w-4 mr-2" />
-                Reset Filters
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  showVendor={true}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    <TemplateRenderer
+      category="sorting"
+      templateId={activeTemplate}
+      data={templateData}
+    />
   );
 };
 
