@@ -13,9 +13,6 @@ import type { ProductCardTemplateData } from "#root/frontend/components/template
 // Extend the ProductCardTemplateData interface to include all the properties we need
 declare module "#root/frontend/components/template/templateRegistry" {
   interface ProductCardTemplateData {
-    showImage?: boolean;
-    imageSize?: string;
-    className?: string;
     setIsAddingToCart?: (isAdding: boolean) => void;
     setIsHovered?: (isHovered: boolean) => void;
     imageLoaded?: boolean;
@@ -51,14 +48,11 @@ interface Product {
 interface ProductCardProps {
   product: Product;
   showVendor?: boolean;
-  showImage?: boolean;
-  imageSize?: string;
-  className?: string;
 }
 
 // Memoize the entire component for better performance
 export const ProductCard = memo(
-  ({ product, showVendor = true, showImage = true, imageSize = "medium", className = "" }: ProductCardProps) => {
+  ({ product, showVendor = true }: ProductCardProps) => {
     const [isAddingToCart, setIsAddingToCart] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
@@ -121,28 +115,36 @@ export const ProductCard = memo(
           const imageToUse = primaryImage || product.images[0];
 
           if (imageToUse?.url) {
-            // Handle absolute URLs and relative paths
-            if (imageToUse.url.startsWith("http") || 
-                imageToUse.url.startsWith("/uploads/") || 
-                imageToUse.url.startsWith("/assets/")) {
+            if (imageToUse.url.startsWith("http")) {
               return imageToUse.url;
             }
-            
-            // Add uploads prefix for relative paths
+
+            if (imageToUse.url.startsWith("/uploads/")) {
+              return imageToUse.url;
+            }
+
+            if (imageToUse.url.startsWith("/assets/")) {
+              return imageToUse.url;
+            }
+
             return `/uploads/${imageToUse.url}`;
           }
         }
 
         // Fallback to legacy imageUrl if available
         if (product.imageUrl) {
-          // Handle absolute URLs and relative paths
-          if (product.imageUrl.startsWith("http") || 
-              product.imageUrl.startsWith("/uploads/") || 
-              product.imageUrl.startsWith("/assets/")) {
+          if (product.imageUrl.startsWith("http")) {
             return product.imageUrl;
           }
-          
-          // Add uploads prefix for relative paths
+
+          if (product.imageUrl.startsWith("/uploads/")) {
+            return product.imageUrl;
+          }
+
+          if (product.imageUrl.startsWith("/assets/")) {
+            return product.imageUrl;
+          }
+
           return `/uploads/${product.imageUrl}`;
         }
 
@@ -179,9 +181,6 @@ export const ProductCard = memo(
     const templateData: ProductCardTemplateData = {
       product,
       showVendor,
-      showImage,
-      imageSize,
-      className,
       isAddingToCart,
       setIsAddingToCart,
       isHovered,
