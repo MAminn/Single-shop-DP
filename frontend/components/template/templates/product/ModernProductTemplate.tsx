@@ -1,16 +1,56 @@
 import type React from 'react';
-import { Star, Heart, ShoppingCart, Minus, Plus, Truck, Shield, RotateCcw, ZoomIn, Share2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Star, Heart, ShoppingCart, Minus, Plus, Truck, Shield, RotateCcw, ZoomIn, Share2, ArrowRight } from 'lucide-react';
 import type { ProductTemplateData } from '../../templateRegistry';
 import { useCart } from "#root/lib/context/CartContext";
 import { trpc } from "#root/shared/trpc/client";
+import { Button } from "#root/components/ui/button";
+import { Input } from "#root/components/ui/input";
+import { Textarea } from "#root/components/ui/textarea";
+import { useToast } from "#root/components/ui/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "#root/components/ui/form";
 
 interface ModernProductTemplateProps {
   data: ProductTemplateData;
   onUpdateData?: (updates: Partial<ProductTemplateData>) => void;
 }
 
+const reviewFormSchema = z.object({
+  userName: z.string().min(2, "Name must be at least 2 characters").max(50),
+  rating: z.number().min(1).max(5),
+  comment: z.string().min(3, "Review must be at least 3 characters").max(500),
+});
+
+type ReviewFormValues = z.infer<typeof reviewFormSchema>;
+
 const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({ data, onUpdateData }) => {
   const { addItem } = useCart();
+  const { toast } = useToast();
+  const [isVisible, setIsVisible] = useState(false);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  
+  const form = useForm<ReviewFormValues>({
+    resolver: zodResolver(reviewFormSchema),
+    defaultValues: {
+      userName: "",
+      rating: 5,
+      comment: "",
+    },
+  });
+  
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
   
   // Use provided data or fallback to empty state
   const templateData = data || {
@@ -81,7 +121,7 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({ data, onU
           price: typeof templateData.product.price === 'string' ? Number.parseFloat(templateData.product.price) : templateData.product.price,
           stock: templateData.product.stock,
           categoryName: templateData.product.categoryName,
-          vendorId: templateData.product.vendorId ? Number(templateData.product.vendorId) : undefined,
+          vendorId: templateData.product.vendorId,
           variants: templateData.product.variants,
           imageUrl: templateData.product.images && templateData.product.images.length > 0 
             ? templateData.product.images.find(img => img.isPrimary)?.url || templateData.product.images[0]?.url
@@ -106,62 +146,113 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({ data, onU
     alert('Wishlist functionality coming soon!');
   };
 
+  const onSubmitReview = async (values: ReviewFormValues) => {
+    setIsSubmittingReview(true);
+    try {
+      const result = await trpc.product.createReview.mutate({
+        productId: templateData.product.id,
+        userName: values.userName,
+        rating: values.rating,
+        comment: values.comment,
+      });
+
+      if (result.success) {
+        toast({
+          title: "Review submitted",
+          description: "Thank you for your feedback!",
+        });
+        form.reset();
+        
+        // Fetch updated reviews from the database
+        const reviewsResult = await trpc.product.getReviews.query({
+          productId: templateData.product.id,
+        });
+        if (reviewsResult.success) {
+          const updatedReviews = reviewsResult.result.reviews.map((review) => ({
+            ...review,
+            createdAt: review.createdAt.toISOString(),
+          }));
+          updateLocalData({
+            reviews: updatedReviews,
+            reviewStats: {
+              averageRating: reviewsResult.result.averageRating,
+              totalReviews: reviewsResult.result.totalReviews,
+            },
+          });
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to submit review",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      toast({
+        title: "Error",
+        description: "Failed to submit your review. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
   const currentImage = templateData.product.images?.[templateData.currentImageIndex]?.url || '/placeholder-product.jpg';
   const price = typeof templateData.product.price === 'string' ? Number.parseFloat(templateData.product.price) : templateData.product.price;
   const discountPrice = templateData.product.discountPrice;
 
   if (templateData.isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="relative">
-          <div className="animate-spin rounded-full h-32 w-32 border-4 border-gray-200"></div>
-          <div className="animate-spin rounded-full h-32 w-32 border-4 border-blue-500 border-t-transparent absolute top-0 left-0"></div>
-        </div>
+      <div className="flex justify-center items-center min-h-screen bg-white">
+        <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-gray-900 animate-spin"></div>
       </div>
     );
   }
 
   if (templateData.error) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="text-center bg-white p-8 rounded-2xl shadow-xl">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">😞</span>
+      <div className="flex justify-center items-center min-h-screen bg-white">
+        <div className="text-center bg-white p-8 border border-gray-200 rounded-none">
+          <div className="w-16 h-16 bg-gray-100 rounded-none flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl text-gray-600">😞</span>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h2>
-          <p className="text-gray-600">{templateData.error}</p>
+          <h2 className="text-2xl font-light text-gray-900 mb-4">Product Not Found</h2>
+          <p className="text-gray-600 font-light">{templateData.error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className={`min-h-screen bg-white transition-opacity duration-1000 ${
+      isVisible ? 'opacity-100' : 'opacity-0'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Product Images */}
           <div className="space-y-6">
             <div className="relative group">
-              <div className={`aspect-square bg-white rounded-3xl overflow-hidden shadow-2xl transition-all duration-500 ${
-                templateData.isZoomed ? 'scale-110' : 'hover:shadow-3xl'
+              <div className={`aspect-square bg-white border border-gray-200 rounded-none overflow-hidden transition-all duration-500 ${
+                templateData.isZoomed ? 'scale-110' : 'hover:border-gray-300'
               }`}>
                 <img
                   src={currentImage}
                   alt={templateData.product.name}
                   className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
               <button
                 type="button"
                 onClick={toggleZoom}
-                className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-white transition-all duration-200 opacity-0 group-hover:opacity-100"
+                className="absolute top-4 right-4 bg-white border border-gray-200 p-3 rounded-none hover:bg-gray-50 transition-all duration-200 opacity-0 group-hover:opacity-100"
               >
                 <ZoomIn className="h-5 w-5 text-gray-700" />
               </button>
               <button
                 type="button"
-                className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-white transition-all duration-200 opacity-0 group-hover:opacity-100"
+                className="absolute top-4 left-4 bg-white border border-gray-200 p-3 rounded-none hover:bg-gray-50 transition-all duration-200 opacity-0 group-hover:opacity-100"
               >
                 <Share2 className="h-5 w-5 text-gray-700" />
               </button>
@@ -174,10 +265,10 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({ data, onU
                     type="button"
                     key={image.url}
                     onClick={() => handleImageChange(index)}
-                    className={`aspect-square bg-white rounded-xl overflow-hidden shadow-lg transition-all duration-300 ${
+                    className={`aspect-square bg-white border rounded-none overflow-hidden transition-all duration-300 ${
                       index === templateData.currentImageIndex 
-                        ? 'ring-4 ring-blue-500 scale-105 shadow-xl' 
-                        : 'hover:scale-105 hover:shadow-xl'
+                        ? 'border-gray-900 border-2' 
+                        : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     <img
@@ -193,33 +284,33 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({ data, onU
 
           {/* Product Details */}
           <div className="space-y-8">
-            <div className="bg-white rounded-3xl p-8 shadow-xl">
+            <div className="bg-white border border-gray-200 rounded-none p-8">
               <div className="mb-6">
                 <div className="flex items-center space-x-2 mb-3">
-                  <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
+                  <span className="bg-gray-100 text-gray-900 text-xs font-medium px-3 py-1 rounded-none border border-gray-200">
                     {templateData.product.categoryName}
                   </span>
-                  <span className="bg-gray-100 text-gray-800 text-xs font-semibold px-3 py-1 rounded-full">
+                  <span className="bg-gray-50 text-gray-700 text-xs font-light px-3 py-1 rounded-none border border-gray-200">
                     {templateData.product.vendorName}
                   </span>
                 </div>
-                <h1 className="text-4xl font-bold text-gray-900 leading-tight">{templateData.product.name}</h1>
+                <h1 className="text-4xl font-light text-gray-900 leading-tight">{templateData.product.name}</h1>
               </div>
 
               {/* Price */}
               <div className="flex items-center space-x-3 mb-6">
                 {discountPrice ? (
                   <>
-                    <span className="text-4xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+                    <span className="text-4xl font-light text-gray-900">
                       ${discountPrice}
                     </span>
-                    <span className="text-2xl text-gray-400 line-through">${price}</span>
-                    <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-sm font-bold px-3 py-1 rounded-full shadow-lg">
+                    <span className="text-2xl text-gray-400 line-through font-light">${price}</span>
+                    <span className="bg-gray-900 text-white text-sm font-medium px-3 py-1 rounded-none">
                       {Math.round(((price - discountPrice) / price) * 100)}% OFF
                     </span>
                   </>
                 ) : (
-                  <span className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  <span className="text-4xl font-light text-gray-900">
                     ${price}
                   </span>
                 )}
@@ -227,46 +318,46 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({ data, onU
 
               {/* Reviews */}
               <div className="flex items-center space-x-3 mb-6">
-                <div className="flex items-center bg-yellow-50 px-3 py-2 rounded-full">
+                <div className="flex items-center bg-gray-50 border border-gray-200 px-3 py-2 rounded-none">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={"skeleton"}
                       className={`h-5 w-5 ${
                         i < Math.floor(templateData.reviewStats.averageRating)
-                          ? 'text-yellow-400 fill-current'
+                          ? 'text-gray-900 fill-current'
                           : 'text-gray-300'
                       }`}
                     />
                   ))}
-                  <span className="ml-2 text-sm font-semibold text-gray-700">
+                  <span className="ml-2 text-sm font-medium text-gray-700">
                     {templateData.reviewStats.averageRating.toFixed(1)}
                   </span>
                 </div>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 font-light">
                   ({templateData.reviewStats.totalReviews} reviews)
                 </span>
               </div>
 
               {/* Description */}
               <div className="mb-8">
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">Description</h3>
-                <p className="text-gray-600 leading-relaxed">{templateData.product.description}</p>
+                <h3 className="text-xl font-medium text-gray-900 mb-3">Description</h3>
+                <p className="text-gray-600 leading-relaxed font-light">{templateData.product.description}</p>
               </div>
 
               {/* Variants */}
               {templateData.product.variants?.map((variant) => (
                 <div key={variant.name} className="mb-6">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-3">{variant.name}</h4>
+                  <h4 className="text-lg font-medium text-gray-900 mb-3">{variant.name}</h4>
                   <div className="flex flex-wrap gap-3">
                     {variant.values.map((value) => (
                       <button
                         type="button"
                         key={value}
                         onClick={() => handleOptionChange(variant.name, value)}
-                        className={`px-6 py-3 text-sm font-medium border-2 rounded-xl transition-all duration-200 ${
+                        className={`px-6 py-3 text-sm font-medium border rounded-none transition-all duration-200 ${
                           templateData.selectedOptions[variant.name] === value
-                            ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-lg scale-105'
-                            : 'border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-blue-50 hover:scale-105'
+                            ? 'border-gray-900 bg-gray-900 text-white'
+                            : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                       >
                         {value}
@@ -278,28 +369,28 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({ data, onU
 
               {/* Quantity */}
               <div className="mb-8">
-                <h4 className="text-lg font-semibold text-gray-900 mb-3">Quantity</h4>
+                <h4 className="text-lg font-medium text-gray-900 mb-3">Quantity</h4>
                 <div className="flex items-center space-x-4">
-                  <div className="flex items-center bg-gray-100 rounded-xl overflow-hidden">
+                  <div className="flex items-center bg-gray-50 border border-gray-200 rounded-none overflow-hidden">
                     <button
                       type="button"
                       onClick={() => handleQuantityChange(templateData.quantity - 1)}
                       disabled={templateData.quantity <= 1}
-                      className="p-3 hover:bg-gray-200 disabled:opacity-50 transition-colors duration-200"
+                      className="p-3 hover:bg-gray-100 disabled:opacity-50 transition-colors duration-200"
                     >
                       <Minus className="h-5 w-5" />
                     </button>
-                    <span className="px-6 py-3 text-lg font-semibold bg-white">{templateData.quantity}</span>
+                    <span className="px-6 py-3 text-lg font-medium bg-white border-l border-r border-gray-200">{templateData.quantity}</span>
                     <button
                       type="button"
                       onClick={() => handleQuantityChange(templateData.quantity + 1)}
                       disabled={templateData.quantity >= templateData.product.stock}
-                      className="p-3 hover:bg-gray-200 disabled:opacity-50 transition-colors duration-200"
+                      className="p-3 hover:bg-gray-100 disabled:opacity-50 transition-colors duration-200"
                     >
                       <Plus className="h-5 w-5" />
                     </button>
                   </div>
-                  <span className="text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-lg">
+                  <span className="text-sm text-gray-500 bg-gray-50 border border-gray-200 px-3 py-2 rounded-none font-light">
                     {templateData.product.stock} available
                   </span>
                 </div>
@@ -311,15 +402,16 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({ data, onU
                   type="button"
                   onClick={handleAddToCart}
                   disabled={!templateData.product.available || templateData.isAddingToCart}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 flex items-center justify-center space-x-3 font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                  className="flex-1 bg-gray-900 text-white px-8 py-4 rounded-none hover:bg-gray-800 disabled:opacity-50 flex items-center justify-center space-x-3 font-medium text-lg border border-gray-900 transition-all duration-200 group"
                 >
                   <ShoppingCart className="h-6 w-6" />
                   <span>{templateData.isAddingToCart ? 'Adding...' : 'Add to Cart'}</span>
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
                 </button>
                 <button 
                   type="button" 
                   onClick={handleWishlistToggle}
-                  className="p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-red-300 hover:bg-red-50 transition-all duration-200 group"
+                  className="p-4 bg-white border border-gray-200 rounded-none hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 group"
                 >
                   <Heart className="h-6 w-6 text-gray-400 group-hover:text-red-500" />
                 </button>
@@ -327,31 +419,31 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({ data, onU
 
               {/* Features */}
               <div className="grid grid-cols-1 gap-4">
-                <div className="flex items-center space-x-4 p-4 bg-green-50 rounded-xl">
-                  <div className="bg-green-100 p-2 rounded-lg">
-                    <Truck className="h-6 w-6 text-green-600" />
+                <div className="flex items-center space-x-4 p-4 bg-gray-50 border border-gray-200 rounded-none">
+                  <div className="bg-gray-900 p-2 rounded-none">
+                    <Truck className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-green-800">Free Shipping</p>
-                    <p className="text-sm text-green-600">On orders over $50</p>
+                    <p className="font-medium text-gray-900">Free Shipping</p>
+                    <p className="text-sm text-gray-600 font-light">On orders over $50</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-4 p-4 bg-blue-50 rounded-xl">
-                  <div className="bg-blue-100 p-2 rounded-lg">
-                    <Shield className="h-6 w-6 text-blue-600" />
+                <div className="flex items-center space-x-4 p-4 bg-gray-50 border border-gray-200 rounded-none">
+                  <div className="bg-gray-900 p-2 rounded-none">
+                    <Shield className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-blue-800">2-Year Warranty</p>
-                    <p className="text-sm text-blue-600">Full coverage included</p>
+                    <p className="font-medium text-gray-900">2-Year Warranty</p>
+                    <p className="text-sm text-gray-600 font-light">Full coverage included</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-4 p-4 bg-purple-50 rounded-xl">
-                  <div className="bg-purple-100 p-2 rounded-lg">
-                    <RotateCcw className="h-6 w-6 text-purple-600" />
+                <div className="flex items-center space-x-4 p-4 bg-gray-50 border border-gray-200 rounded-none">
+                  <div className="bg-gray-900 p-2 rounded-none">
+                    <RotateCcw className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-purple-800">30-Day Returns</p>
-                    <p className="text-sm text-purple-600">Hassle-free policy</p>
+                    <p className="font-medium text-gray-900">30-Day Returns</p>
+                    <p className="text-sm text-gray-600 font-light">Hassle-free policy</p>
                   </div>
                 </div>
               </div>
@@ -361,47 +453,132 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({ data, onU
 
         {/* Reviews Section */}
         <div className="mt-20">
-          <div className="bg-white rounded-3xl p-8 shadow-xl">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">Customer Reviews</h2>
+          <div className="bg-white border border-gray-200 rounded-none p-8">
+            <h2 className="text-2xl font-medium text-gray-900 mb-8">Customer Reviews</h2>
             
+            {/* Review Form */}
+            <div className="bg-gray-50 border border-gray-200 rounded-none p-6 mb-8">
+              <h3 className="text-xl font-medium text-gray-900 mb-6">Write a Review</h3>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmitReview)} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="userName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-900 font-medium">Your Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter your name"
+                              className="border-gray-200 rounded-none focus:border-gray-900 bg-white"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="rating"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-900 font-medium">Rating</FormLabel>
+                          <FormControl>
+                            <div className="flex items-center space-x-2">
+                              {[1, 2, 3, 4, 5].map((rating) => (
+                                <button
+                                  key={rating}
+                                  type="button"
+                                  onClick={() => field.onChange(rating)}
+                                  className="p-1 hover:scale-110 transition-transform duration-200"
+                                >
+                                  <Star
+                                    className={`h-6 w-6 ${
+                                      rating <= field.value
+                                        ? 'text-gray-900 fill-current'
+                                        : 'text-gray-300 hover:text-gray-400'
+                                    }`}
+                                  />
+                                </button>
+                              ))}
+                              <span className="ml-2 text-sm text-gray-600 font-light">
+                                ({field.value} star{field.value !== 1 ? 's' : ''})
+                              </span>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="comment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-900 font-medium">Your Review</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Share your thoughts about this product..."
+                            className="border-gray-200 rounded-none focus:border-gray-900 bg-white min-h-[120px] resize-none"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={isSubmittingReview}
+                    className="bg-gray-900 text-white hover:bg-gray-800 rounded-none border border-gray-900 px-8 py-3 font-medium transition-all duration-200"
+                  >
+                    {isSubmittingReview ? 'Submitting...' : 'Submit Review'}
+                  </Button>
+                </form>
+              </Form>
+            </div>
+
             {templateData.reviews.length === 0 ? (
               <div className="text-center py-16">
-                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-20 h-20 bg-gray-100 rounded-none flex items-center justify-center mx-auto mb-4">
                   <span className="text-3xl">💭</span>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Reviews Yet</h3>
-                <p className="text-gray-600">Be the first to review this product!</p>
+                <h3 className="text-xl font-medium text-gray-900 mb-2">No Reviews Yet</h3>
+                <p className="text-gray-600 font-light">Be the first to review this product!</p>
               </div>
             ) : (
               <div className="space-y-8">
                 {templateData.reviews.map((review) => (
-                  <div key={review.id} className="bg-gray-50 rounded-2xl p-6">
+                  <div key={review.id} className="bg-gray-50 border border-gray-200 rounded-none p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                          <span className="text-white font-semibold">
+                        <div className="w-10 h-10 bg-gray-900 rounded-none flex items-center justify-center">
+                          <span className="text-white font-medium">
                             {review.userName.charAt(0).toUpperCase()}
                           </span>
                         </div>
                         <div>
-                          <span className="font-semibold text-gray-900">{review.userName}</span>
+                          <span className="font-medium text-gray-900">{review.userName}</span>
                           <div className="flex items-center mt-1">
                             {[...Array(5)].map((_, i) => (
                               <Star
                                 key={"skeleton"}
                                 className={`h-4 w-4 ${
-                                  i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                                  i < review.rating ? 'text-gray-900 fill-current' : 'text-gray-300'
                                 }`}
                               />
                             ))}
                           </div>
                         </div>
                       </div>
-                      <span className="text-sm text-gray-500 bg-white px-3 py-1 rounded-full">
+                      <span className="text-sm text-gray-500 bg-white border border-gray-200 px-3 py-1 rounded-none font-light">
                         {new Date(review.createdAt).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="text-gray-700 leading-relaxed">{review.comment}</p>
+                    <p className="text-gray-700 leading-relaxed font-light">{review.comment}</p>
                   </div>
                 ))}
               </div>
@@ -412,30 +589,30 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({ data, onU
         {/* Related Products */}
         {templateData.relatedProducts && templateData.relatedProducts.length > 0 && (
           <div className="mt-20">
-            <div className="bg-white rounded-3xl p-8 shadow-xl">
-              <h2 className="text-3xl font-bold text-gray-900 mb-8">You Might Also Like</h2>
+            <div className="bg-white border border-gray-200 rounded-none p-8">
+              <h2 className="text-2xl font-medium text-gray-900 mb-8">You Might Also Like</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 {templateData.relatedProducts.map((product) => (
                   <div key={product.id} className="group cursor-pointer">
-                    <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden mb-4 shadow-lg group-hover:shadow-2xl transition-all duration-300">
+                    <div className="aspect-square bg-gray-100 border border-gray-200 rounded-none overflow-hidden mb-4 group-hover:border-gray-300 transition-all duration-300">
                       <img
                         src={product.imageUrl || product.images?.[0]?.url || '/placeholder-product.jpg'}
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
-                    <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-200">
+                    <h3 className="font-medium text-gray-900 mb-2 group-hover:text-gray-700 transition-colors duration-200">
                       {product.name}
                     </h3>
-                    <p className="text-sm text-gray-500 mb-3">{product.categoryName}</p>
+                    <p className="text-sm text-gray-500 mb-3 font-light">{product.categoryName}</p>
                     <div className="flex items-center space-x-2">
                       {product.discountPrice ? (
                         <>
-                          <span className="font-bold text-red-600">${product.discountPrice}</span>
-                          <span className="text-sm text-gray-400 line-through">${product.price}</span>
+                          <span className="font-medium text-gray-900">${product.discountPrice}</span>
+                          <span className="text-sm text-gray-400 line-through font-light">${product.price}</span>
                         </>
                       ) : (
-                        <span className="font-bold text-gray-900">${product.price}</span>
+                        <span className="font-medium text-gray-900">${product.price}</span>
                       )}
                     </div>
                   </div>

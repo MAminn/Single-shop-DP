@@ -110,19 +110,19 @@ const ModernProductCardTemplate: React.FC<ModernProductCardTemplateProps> = ({
 
   return (
     <div
-      className="group relative bg-white rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg"
+      className="group relative bg-white rounded-none border border-gray-200 hover:border-gray-300 transition-all duration-300 overflow-hidden"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Product Image */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
+      <div className="relative aspect-[4/5] overflow-hidden bg-gray-50">
         <Link href={`/featured/products/${product.id}`}>
           <img
             src={
               data?.displayImageUrl || product.imageUrl || '/assets/placeholder-product.png'
             }
             alt={product.name}
-            className="w-full h-full object-cover transition-all duration-700 ease-in-out hover:scale-105"
+            className="w-full h-full object-cover transition-all duration-300 ease-in-out group-hover:scale-102"
             style={{ objectPosition: 'center' }}
             loading="lazy"
             onLoad={data?.handleImageLoad}
@@ -136,7 +136,7 @@ const ModernProductCardTemplate: React.FC<ModernProductCardTemplateProps> = ({
 
         {/* Discount Badge */}
         {product.discountPrice && product.price && (
-          <Badge className="absolute top-3 left-3 bg-red-500 hover:bg-red-600 rounded-full px-3 py-1 text-xs font-medium">
+          <Badge className="absolute top-3 left-3 bg-gray-900 text-white rounded-none px-3 py-1 text-xs font-medium border border-gray-900">
             {Math.round(
               ((Number.parseFloat(product.price.toString()) - Number.parseFloat(product.discountPrice.toString())) / Number.parseFloat(product.price.toString())) * 100
             )}% OFF
@@ -167,14 +167,14 @@ const ModernProductCardTemplate: React.FC<ModernProductCardTemplateProps> = ({
 
         {/* Action Buttons */}
         <div
-          className={`absolute bottom-0 left-0 right-0 flex justify-between items-center p-3 bg-gradient-to-t from-black/70 to-transparent transition-all duration-300 ${
+          className={`absolute bottom-0 left-0 right-0 flex justify-between items-center p-3 bg-white/95 border-t border-gray-200 transition-all duration-300 ${
             isHovered ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
           }`}
         >
           {showAddToCart && (
             <Button
               size="sm"
-              className="bg-white text-black hover:bg-gray-100 rounded-full px-4"
+              className="bg-gray-900 text-white hover:bg-gray-800 rounded-none px-4 border border-gray-900"
               onClick={handleAddToCart}
             >
               <ShoppingCart className="h-4 w-4 mr-2" />
@@ -186,7 +186,7 @@ const ModernProductCardTemplate: React.FC<ModernProductCardTemplateProps> = ({
             <Button
               size="icon"
               variant="ghost"
-              className="h-8 w-8 rounded-full bg-white/80 hover:bg-white text-gray-800"
+              className="h-8 w-8 rounded-none bg-gray-50 hover:bg-gray-100 text-gray-800 border border-gray-200"
               onClick={handleQuickView}
             >
               <Eye className="h-4 w-4" />
@@ -202,7 +202,7 @@ const ModernProductCardTemplate: React.FC<ModernProductCardTemplateProps> = ({
           <div className="mb-1">
             <Link
               href={`/vendor/${product.vendorId}`}
-              className="text-xs font-medium text-gray-500 hover:text-primary uppercase tracking-wider"
+              className="text-xs font-light text-gray-600 hover:text-gray-900 uppercase tracking-wider transition-colors"
             >
               {product.vendorName}
             </Link>
@@ -211,7 +211,7 @@ const ModernProductCardTemplate: React.FC<ModernProductCardTemplateProps> = ({
 
         {/* Product Name */}
         <Link href={`/product/${product.id}`}>
-          <h3 className="font-medium text-gray-900 mb-1.5 line-clamp-2 hover:text-primary transition-colors">
+          <h3 className="font-medium text-gray-900 mb-1.5 line-clamp-2 hover:text-gray-700 transition-colors">
             {product.name}
           </h3>
         </Link>
@@ -222,26 +222,26 @@ const ModernProductCardTemplate: React.FC<ModernProductCardTemplateProps> = ({
             {[1, 2, 3, 4, 5].map((star) => (
               <Star
                 key={star}
-                className={`h-3.5 w-3.5 ${star <= Math.floor(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                className={`h-3.5 w-3.5 ${star <= Math.floor(rating) ? 'text-gray-900 fill-gray-900' : 'text-gray-300'}`}
               />
             ))}
           </div>
-          <span className="text-xs text-gray-500 ml-1">{rating.toFixed(1)}</span>
+          <span className="text-xs text-gray-600 ml-1 font-light">{rating.toFixed(1)}</span>
         </div>
 
         {/* Price */}
         <div className="flex items-center gap-2">
           {product.discountPrice ? (
             <>
-              <span className="font-semibold text-primary">
+              <span className="font-medium text-gray-900">
                 {product.discountPrice}
               </span>
-              <span className="text-sm text-gray-500 line-through">
+              <span className="text-sm text-gray-500 line-through font-light">
                 {product.price}
               </span>
             </>
           ) : (
-            <span className="font-semibold text-primary">
+            <span className="font-medium text-gray-900">
               {product.price}
             </span>
           )}
@@ -249,9 +249,9 @@ const ModernProductCardTemplate: React.FC<ModernProductCardTemplateProps> = ({
 
         {/* Color options placeholder */}
         <div className="mt-3 flex items-center gap-1">
-          <div className="w-4 h-4 rounded-full border border-gray-300 bg-blue-500" />
-          <div className="w-4 h-4 rounded-full border border-gray-300 bg-red-500" />
-          <div className="w-4 h-4 rounded-full border border-gray-300 bg-green-500" />
+          <div className="w-4 h-4 rounded-none border border-gray-300 bg-blue-500" />
+          <div className="w-4 h-4 rounded-none border border-gray-300 bg-red-500" />
+          <div className="w-4 h-4 rounded-none border border-gray-300 bg-green-500" />
         </div>
       </div>
     </div>

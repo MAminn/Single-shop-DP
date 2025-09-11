@@ -188,17 +188,17 @@ const ModernSortingTemplate: React.FC<ModernSortingTemplateProps> = ({
   };
 
   return (
-    <div className="w-full bg-gradient-to-b from-purple-50 to-white p-6 rounded-2xl">
+    <div className="w-full bg-white p-6 border border-gray-200">
       {/* Search bar */}
       <div className="mb-8">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-purple-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             type="text"
             placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-white border-purple-200 focus:border-purple-400 focus:ring-purple-400 rounded-full"
+            className="pl-10 bg-white border-gray-200 focus:border-gray-900 focus:ring-gray-900 rounded-none"
           />
         </div>
       </div>
@@ -208,9 +208,9 @@ const ModernSortingTemplate: React.FC<ModernSortingTemplateProps> = ({
         <Button
           onClick={toggleMobileFilters}
           variant="outline"
-          className="w-full bg-white border-purple-200 hover:bg-purple-50 rounded-full"
+          className="w-full bg-white border-gray-200 hover:bg-gray-50 rounded-none"
         >
-          <SlidersHorizontal className="h-4 w-4 mr-2 text-purple-500" />
+          <SlidersHorizontal className="h-4 w-4 mr-2 text-gray-600" />
           {showMobileFilters ? "Hide Filters" : "Show Filters"}
         </Button>
       </div>
@@ -222,14 +222,14 @@ const ModernSortingTemplate: React.FC<ModernSortingTemplateProps> = ({
             showMobileFilters ? "block" : "hidden"
           } md:block w-full md:w-72 shrink-0`}
         >
-          <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-4 border border-purple-100">
+          <div className="bg-white border border-gray-200 p-6 sticky top-4">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="font-semibold text-purple-800 text-lg">Filters</h3>
+              <h3 className="font-medium text-gray-900 text-lg">Filters</h3>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={resetFilters}
-                className="h-8 px-3 text-xs hover:bg-purple-50 text-purple-600"
+                className="h-8 px-3 text-xs hover:bg-gray-50 text-gray-600 rounded-none"
               >
                 <FilterX className="h-3 w-3 mr-1" />
                 Reset
@@ -239,7 +239,7 @@ const ModernSortingTemplate: React.FC<ModernSortingTemplateProps> = ({
             {/* Categories Filter */}
             {categories && categories.length > 0 && (
               <div className="mb-8">
-                <h4 className="text-sm font-medium mb-4 text-purple-700">Categories</h4>
+                <h4 className="text-sm font-medium mb-4 text-gray-900">Categories</h4>
                 <div className="space-y-3">
                   {categories.map((category) => (
                     <div key={category.id} className="flex items-center">
@@ -249,15 +249,15 @@ const ModernSortingTemplate: React.FC<ModernSortingTemplateProps> = ({
                         onCheckedChange={() =>
                           toggleCategoryFilter(category.id)
                         }
-                        className="rounded-sm border-purple-300 text-purple-600"
+                        className="rounded-none border-gray-300 text-gray-900"
                       />
                       <label
                         htmlFor={`category-${category.id}`}
-                        className="ml-3 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-700 hover:text-purple-900 cursor-pointer"
+                        className="ml-3 text-sm font-light leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-700 hover:text-gray-900 cursor-pointer"
                       >
                         {formatCategoryName(category.name)}
                         {category.productCount !== undefined && (
-                          <span className="text-purple-400 ml-1.5 text-xs">
+                          <span className="text-gray-400 ml-1.5 text-xs">
                             ({category.productCount})
                           </span>
                         )}
@@ -270,15 +270,15 @@ const ModernSortingTemplate: React.FC<ModernSortingTemplateProps> = ({
 
             {/* Price Range Filter */}
             <div className="mb-8">
-              <h4 className="text-sm font-medium mb-4 text-purple-700">Price Range</h4>
+              <h4 className="text-sm font-medium mb-4 text-gray-900">Price Range</h4>
               <Select
                 value={selectedPriceRange}
                 onValueChange={handlePriceRangeChange}
               >
-                <SelectTrigger className="w-full bg-white border-purple-200 rounded-xl">
+                <SelectTrigger className="w-full bg-white border-gray-200 rounded-none">
                   <SelectValue placeholder="Select price range" />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-purple-200">
+                <SelectContent className="rounded-none border-gray-200">
                   <SelectItem value="all">All Prices</SelectItem>
                   <SelectItem value="0-50">Under 50 EGP</SelectItem>
                   <SelectItem value="50-100">50 - 100 EGP</SelectItem>
@@ -293,17 +293,17 @@ const ModernSortingTemplate: React.FC<ModernSortingTemplateProps> = ({
             {/* Active filters */}
             {(selectedCategories.length > 0 || selectedPriceRange !== 'all' || searchTerm) && (
               <div className="mb-8">
-                <h4 className="text-sm font-medium mb-4 text-purple-700">Active Filters</h4>
+                <h4 className="text-sm font-medium mb-4 text-gray-900">Active Filters</h4>
                 <div className="flex flex-wrap gap-2">
                   {selectedCategories.map((categoryId) => {
                     const category = categories.find(c => c.id === categoryId);
                     return category ? (
-                      <Badge key={categoryId} variant="outline" className="bg-purple-50 hover:bg-purple-100 text-purple-800 gap-1 border-purple-200">
+                      <Badge key={categoryId} variant="outline" className="bg-gray-50 hover:bg-gray-100 text-gray-900 gap-1 border-gray-200">
                         {formatCategoryName(category.name)}
                         <button 
                           type="button"
                           onClick={() => toggleCategoryFilter(categoryId)}
-                          className="ml-1 text-purple-500 hover:text-purple-700"
+                          className="ml-1 text-gray-600 hover:text-gray-900"
                         >
                           ×
                         </button>
@@ -312,12 +312,12 @@ const ModernSortingTemplate: React.FC<ModernSortingTemplateProps> = ({
                   })}
                   
                   {selectedPriceRange !== 'all' && (
-                    <Badge variant="outline" className="bg-purple-50 hover:bg-purple-100 text-purple-800 gap-1 border-purple-200">
+                    <Badge variant="outline" className="bg-gray-50 hover:bg-gray-100 text-gray-900 gap-1 border-gray-200">
                       Price: {selectedPriceRange.replace('-', ' - ')} EGP
                       <button 
                         type="button"
                         onClick={() => handlePriceRangeChange('all')}
-                        className="ml-1 text-purple-500 hover:text-purple-700"
+                        className="ml-1 text-gray-600 hover:text-gray-900"
                       >
                         ×
                       </button>
@@ -325,12 +325,12 @@ const ModernSortingTemplate: React.FC<ModernSortingTemplateProps> = ({
                   )}
                   
                   {searchTerm && (
-                    <Badge variant="outline" className="bg-purple-50 hover:bg-purple-100 text-purple-800 gap-1 border-purple-200">
+                    <Badge variant="outline" className="bg-gray-50 hover:bg-gray-100 text-gray-900 gap-1 border-gray-200">
                       Search: {searchTerm}
                       <button 
                         type="button"
                         onClick={() => setSearchTerm('')}
-                        className="ml-1 text-purple-500 hover:text-purple-700"
+                        className="ml-1 text-gray-600 hover:text-gray-900"
                       >
                         ×
                       </button>
@@ -344,7 +344,7 @@ const ModernSortingTemplate: React.FC<ModernSortingTemplateProps> = ({
             <div className="block md:hidden">
               <Button
                 onClick={toggleMobileFilters}
-                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-full"
+                className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-none border border-gray-900"
               >
                 Apply Filters
               </Button>
@@ -354,19 +354,19 @@ const ModernSortingTemplate: React.FC<ModernSortingTemplateProps> = ({
 
         {/* Main Content */}
         <div className="flex-1">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 bg-white p-5 rounded-2xl shadow-md border border-purple-100">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 bg-white p-5 border border-gray-200">
             <div>
-              <h2 className="text-xl font-semibold text-purple-800">
+              <h2 className="text-xl font-light text-gray-900">
                 {filteredProducts.length} Products
               </h2>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-purple-600">Sort by:</span>
+              <span className="text-sm font-light text-gray-600">Sort by:</span>
               <Select value={sortCriteria} onValueChange={handleSortChange}>
-                <SelectTrigger className="w-[180px] bg-white border-purple-200 rounded-xl">
+                <SelectTrigger className="w-[180px] bg-white border-gray-200 rounded-none">
                   <SelectValue placeholder="Sort products" />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-purple-200">
+                <SelectContent className="rounded-none border-gray-200">
                   <SelectItem value="featured">Featured</SelectItem>
                   <SelectItem value="name-asc">Name: A-Z</SelectItem>
                   <SelectItem value="name-desc">Name: Z-A</SelectItem>
@@ -380,17 +380,17 @@ const ModernSortingTemplate: React.FC<ModernSortingTemplateProps> = ({
           </div>
 
           {isLoading ? (
-            <div className="flex justify-center items-center py-16 bg-white rounded-2xl shadow-md border border-purple-100">
-              <Loader2 className="h-10 w-10 animate-spin text-purple-600" />
+            <div className="flex justify-center items-center py-16 bg-white border border-gray-200">
+              <Loader2 className="h-10 w-10 animate-spin text-gray-600" />
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl shadow-md border border-purple-100">
-              <h3 className="text-lg font-medium mb-3 text-purple-800">No products found</h3>
-              <p className="text-gray-500 mb-6">
+            <div className="text-center py-16 bg-white border border-gray-200">
+              <h3 className="text-lg font-light mb-3 text-gray-900">No products found</h3>
+              <p className="text-gray-500 font-light mb-6">
                 Try adjusting your filters to find what you're looking for
               </p>
-              <Button onClick={resetFilters} variant="outline" className="bg-white border-purple-200 hover:bg-purple-50 rounded-full">
-                <FilterX className="h-4 w-4 mr-2 text-purple-500" />
+              <Button onClick={resetFilters} variant="outline" className="bg-white border-gray-200 hover:bg-gray-50 rounded-none">
+                <FilterX className="h-4 w-4 mr-2 text-gray-600" />
                 Reset Filters
               </Button>
             </div>
@@ -403,7 +403,7 @@ const ModernSortingTemplate: React.FC<ModernSortingTemplateProps> = ({
                   showVendor={true}
                   showImage={true}
                   imageSize="medium"
-                  className="h-full transition-all hover:shadow-lg hover:scale-[1.02] rounded-2xl overflow-hidden border border-purple-100"
+                  className="h-full border border-gray-200 overflow-hidden"
                 />
               ))}
             </div>

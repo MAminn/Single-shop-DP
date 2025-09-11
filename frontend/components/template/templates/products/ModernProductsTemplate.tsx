@@ -40,10 +40,10 @@ const ModernProductsTemplate: React.FC<ModernProductsTemplateProps> = ({ data })
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-500 mb-2">Error</h2>
-          <p className="text-gray-600">{error}</p>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center bg-white border border-gray-200 rounded-none p-12">
+          <h2 className="text-2xl font-medium text-gray-900 mb-2">Something went wrong</h2>
+          <p className="text-gray-600 font-light">{error}</p>
         </div>
       </div>
     );
@@ -93,34 +93,37 @@ const ModernProductsTemplate: React.FC<ModernProductsTemplateProps> = ({ data })
   const sortedProducts = getSortedProducts();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 py-20">
+      <div className="bg-white border-b border-gray-200 py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+          <div className="bg-gray-50 border border-gray-200 rounded-none px-4 py-2 inline-block mb-6">
+            <span className="text-xs font-medium text-gray-900 uppercase tracking-wider">Products</span>
+          </div>
+          <h1 className="text-4xl md:text-6xl font-light text-gray-900 mb-6">
             Discover Amazing Products
           </h1>
-          <p className="text-xl text-white/90 max-w-3xl mx-auto mb-8">
+          <p className="text-xl text-gray-600 font-light max-w-3xl mx-auto mb-8">
             Explore our curated collection of premium products from top brands worldwide.
           </p>
-          <div className="flex justify-center items-center gap-4 text-white/80">
-            <span className="text-lg font-medium">{sortedProducts.length} Products Available</span>
+          <div className="flex justify-center items-center gap-4 text-gray-600">
+            <span className="text-lg font-light">{sortedProducts.length} Products Available</span>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-12">
         {/* Controls Bar */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <div className="bg-white border border-gray-200 rounded-none p-6 mb-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold text-gray-800">All Products</h2>
-              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+              <h2 className="text-2xl font-medium text-gray-900">All Products</h2>
+              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-none p-1">
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('grid')}
-                  className="h-8 w-8 p-0"
+                  className="h-8 w-8 p-0 rounded-none"
                 >
                   <Grid className="h-4 w-4" />
                 </Button>
@@ -128,7 +131,7 @@ const ModernProductsTemplate: React.FC<ModernProductsTemplateProps> = ({ data })
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('list')}
-                  className="h-8 w-8 p-0"
+                  className="h-8 w-8 p-0 rounded-none"
                 >
                   <List className="h-4 w-4" />
                 </Button>
@@ -136,20 +139,20 @@ const ModernProductsTemplate: React.FC<ModernProductsTemplateProps> = ({ data })
             </div>
             
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600 font-medium">Sort by:</span>
+              <span className="text-sm text-gray-600 font-light">Sort by:</span>
               <Select
                 value={sortCriteria}
                 onValueChange={(value) => setSortCriteria(value)}
               >
-                <SelectTrigger className="w-[200px] border-gray-300">
+                <SelectTrigger className="w-[200px] border-gray-200 rounded-none">
                   <SelectValue placeholder="Sort products" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="featured">✨ Featured</SelectItem>
-                  <SelectItem value="name-asc">🔤 Name: A-Z</SelectItem>
-                  <SelectItem value="name-desc">🔤 Name: Z-A</SelectItem>
-                  <SelectItem value="price-asc">💰 Price: Low to High</SelectItem>
-                  <SelectItem value="price-desc">💰 Price: High to Low</SelectItem>
+                <SelectContent className="rounded-none border-gray-200">
+                  <SelectItem value="featured">Featured</SelectItem>
+                  <SelectItem value="name-asc">Name: A-Z</SelectItem>
+                  <SelectItem value="name-desc">Name: Z-A</SelectItem>
+                  <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                  <SelectItem value="price-desc">Price: High to Low</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -158,12 +161,12 @@ const ModernProductsTemplate: React.FC<ModernProductsTemplateProps> = ({ data })
 
         {/* Products Grid/List */}
         {sortedProducts.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl shadow-lg">
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <ShoppingBag className="h-12 w-12 text-gray-400" />
+          <div className="text-center py-20 bg-white border border-gray-200 rounded-none">
+            <div className="w-24 h-24 bg-gray-50 border border-gray-200 rounded-none flex items-center justify-center mx-auto mb-6">
+              <ShoppingBag className="h-12 w-12 text-gray-600" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">No products found</h2>
-            <p className="text-gray-500 text-lg max-w-md mx-auto">
+            <h2 className="text-3xl font-medium text-gray-900 mb-4">No products found</h2>
+            <p className="text-gray-600 font-light text-lg max-w-md mx-auto">
               We couldn't find any products matching your criteria. Try adjusting your filters.
             </p>
           </div>
@@ -179,8 +182,8 @@ const ModernProductsTemplate: React.FC<ModernProductsTemplateProps> = ({ data })
                 key={product.id} 
                 className={`
                   ${viewMode === 'grid' 
-                    ? 'transform hover:scale-105 transition-all duration-300' 
-                    : 'bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300'
+                    ? 'transition-all duration-300' 
+                    : 'bg-white border border-gray-200 rounded-none hover:border-gray-300 transition-all duration-300'
                   }
                 `}
                 style={{
@@ -199,14 +202,14 @@ const ModernProductsTemplate: React.FC<ModernProductsTemplateProps> = ({ data })
         {/* Load More Section */}
         {sortedProducts.length > 0 && (
           <div className="text-center mt-12">
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">
+            <div className="bg-white border border-gray-200 rounded-none p-8">
+              <h3 className="text-xl font-medium text-gray-900 mb-4">
                 Showing {sortedProducts.length} products
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 font-light mb-6">
                 Discover more amazing products in our collection
               </p>
-              <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-medium">
+              <Button className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 rounded-none font-medium border border-gray-900">
                 Load More Products
               </Button>
             </div>

@@ -1,4 +1,5 @@
 import type React from 'react';
+import { useState, useEffect } from 'react';
 import HeroImg from "#root/assets/Women_s_banner.webp";
 import { ErrorSection } from "#root/components/error-section";
 import Sorting from "#root/components/sorting";
@@ -30,43 +31,75 @@ const ModernWomenTemplate: React.FC<ModernWomenTemplateProps> = ({ data }) => {
   const subcategories = data?.subcategories || [];
   const isLoading = data?.isLoading || false;
   const error = data?.error || null;
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-gray-900 animate-spin"></div>
+      </div>
+    );
+  }
 
   if (error) {
-    return <ErrorSection error={error} />;
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center py-8">
+        <h2 className="text-2xl font-light text-gray-900 mb-2">Something went wrong</h2>
+        <p className="text-gray-600 font-light">{error}</p>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100">
-      <div className="relative h-96 overflow-hidden">
+    <main className={`min-h-screen bg-white transition-opacity duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+      {/* Hero Section */}
+      <section className="relative h-96 overflow-hidden">
         <img 
           src={HeroImg} 
           alt="Women's Collection" 
           className="w-full h-full object-cover" 
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end justify-center pb-12">
+        <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
           <div className="text-center text-white">
-            <h1 className="text-5xl font-light mb-4 tracking-wider">
+            <div className="inline-flex items-center bg-white/10 px-4 py-2 rounded-full border border-white/20 mb-6">
+              <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
+              <span className="text-white/90 text-sm font-medium tracking-wide">WOMEN'S FASHION</span>
+            </div>
+            <h1 className="text-5xl font-light mb-4 tracking-wide">
               WOMEN'S COLLECTION
             </h1>
-            <p className="text-lg opacity-90 font-light">
+            <p className="text-xl opacity-90 font-light">
               Elegance redefined for the contemporary woman
             </p>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="container mx-auto px-4 py-16">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-10">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-light text-gray-800 mb-4">
-              Explore Our Collections
-            </h2>
-            <div className="w-24 h-0.5 bg-rose-400 mx-auto rounded"></div>
+      {/* Categories Section */}
+      <section className="py-24 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="bg-white border border-gray-200 rounded-none p-12">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center bg-gray-50 px-4 py-2 rounded-full border border-gray-100 mb-6">
+                <div className="w-2 h-2 bg-gray-900 rounded-full mr-3"></div>
+                <span className="text-gray-700 text-sm font-medium tracking-wide">COLLECTIONS</span>
+              </div>
+              <h2 className="text-4xl font-light text-gray-900 mb-4">
+                Explore Our Collections
+              </h2>
+              <p className="text-gray-600 max-w-2xl mx-auto text-lg leading-relaxed font-light">
+                Discover our carefully curated women's fashion collections
+              </p>
+            </div>
+            <Sorting categoryType="women" categories={subcategories} />
           </div>
-          <Sorting categoryType="women" categories={subcategories} />
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };
 

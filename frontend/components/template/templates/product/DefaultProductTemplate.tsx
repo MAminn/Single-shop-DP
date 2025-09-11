@@ -1,16 +1,58 @@
 import type React from 'react';
+import { useState } from 'react';
 import { Star, Heart, ShoppingCart, Minus, Plus, Truck, Shield, RotateCcw } from 'lucide-react';
 import type { ProductTemplateData } from '../../templateRegistry';
 import { useCart } from "#root/lib/context/CartContext";
 import { trpc } from "#root/shared/trpc/client";
+import { Button } from "#root/components/ui/button";
+import { Input } from "#root/components/ui/input";
+import { Textarea } from "#root/components/ui/textarea";
+import { useToast } from "#root/components/ui/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "#root/components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "#root/components/ui/card";
 
 interface DefaultProductTemplateProps {
   data: ProductTemplateData;
   onUpdateData?: (updates: Partial<ProductTemplateData>) => void;
 }
 
+const reviewFormSchema = z.object({
+  userName: z.string().min(2, "Name must be at least 2 characters").max(50),
+  rating: z.number().min(1).max(5),
+  comment: z.string().min(3, "Review must be at least 3 characters").max(500),
+});
+
+type ReviewFormValues = z.infer<typeof reviewFormSchema>;
+
 const DefaultProductTemplate: React.FC<DefaultProductTemplateProps> = ({ data, onUpdateData }) => {
   const { addItem } = useCart();
+  const { toast } = useToast();
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  
+  const form = useForm<ReviewFormValues>({
+    resolver: zodResolver(reviewFormSchema),
+    defaultValues: {
+      userName: "",
+      rating: 5,
+      comment: "",
+    },
+  });
   
   // Use provided data or fallback to empty state
   const templateData = data || {
@@ -77,7 +119,7 @@ const DefaultProductTemplate: React.FC<DefaultProductTemplateProps> = ({ data, o
           price: typeof templateData.product.price === 'string' ? Number.parseFloat(templateData.product.price) : templateData.product.price,
           stock: templateData.product.stock,
           categoryName: templateData.product.categoryName,
-          vendorId: templateData.product.vendorId ? Number(templateData.product.vendorId) : undefined,
+          vendorId: templateData.product.vendorId,
           variants: templateData.product.variants,
           imageUrl: templateData.product.images && templateData.product.images.length > 0 
             ? templateData.product.images.find(img => img.isPrimary)?.url || templateData.product.images[0]?.url
@@ -332,6 +374,158 @@ const DefaultProductTemplate: React.FC<DefaultProductTemplateProps> = ({ data, o
             ))}
           </div>
         )}
+        
+        {/* Review Form */}
+        <div className="mt-12 pt-8 border-t border-gray-200">
+          <Card className="border-gray-200">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold text-gray-900">Write a Review</CardTitle>
+              <CardDescription className="text-gray-600">
+                Share your thoughts about this product
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(async (values) => {
+                    setIsSubmittingReview(true);
+                    try {
+                      const result = await trpc.product.createReview.mutate({
+                        productId: templateData.product.id,
+                        userName: values.userName,
+                        rating: values.rating,
+                        comment: values.comment,
+                      });
+
+                      if (result.success) {
+                        toast({
+                          title: "Review submitted",
+                          description: "Thank you for your feedback!",
+                        });
+                        form.reset();
+                        
+                        // Fetch updated reviews from the database
+                        const reviewsResult = await trpc.product.getReviews.query({
+                          productId: templateData.product.id,
+                        });
+                        if (reviewsResult.success && onUpdateData) {
+                          const updatedReviews = reviewsResult.result.reviews.map((review) => ({
+                            ...review,
+                            createdAt: review.createdAt.toISOString(),
+                          }));
+                          onUpdateData({
+                            reviews: updatedReviews,
+                            reviewStats: {
+                              averageRating: reviewsResult.result.averageRating,
+                              totalReviews: reviewsResult.result.totalReviews,
+                            },
+                          });
+                        }
+                      } else {
+                        toast({
+                          title: "Error",
+                          description: result.error || "Failed to submit review",
+                          variant: "destructive",
+                        });
+                      }
+                    } catch (error) {
+                      console.error("Error submitting review:", error);
+                      toast({
+                        title: "Error",
+                        description: "Failed to submit your review. Please try again.",
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setIsSubmittingReview(false);
+                    }
+                  })}
+                  className="space-y-6"
+                >
+                  <FormField
+                    control={form.control}
+                    name="userName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">Your Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter your name"
+                            className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="rating"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">Rating</FormLabel>
+                        <FormControl>
+                          <div className="flex gap-2">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Button
+                                key={star}
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => field.onChange(star)}
+                                className={`p-2 ${
+                                  field.value >= star
+                                    ? "bg-yellow-400 border-yellow-400 hover:bg-yellow-500 hover:border-yellow-500"
+                                    : "border-gray-300 hover:border-gray-400"
+                                }`}
+                              >
+                                <Star
+                                  className={`h-4 w-4 ${
+                                    field.value >= star
+                                      ? "fill-white text-white"
+                                      : "text-gray-300"
+                                  }`}
+                                />
+                              </Button>
+                            ))}
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="comment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">Your Review</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Share your experience with this product"
+                            className="min-h-[100px] border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    disabled={isSubmittingReview}
+                  >
+                    {isSubmittingReview ? "Submitting..." : "Submit Review"}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Related Products */}

@@ -43,16 +43,20 @@ interface Product {
   vendorId: string;
   vendorName: string | null;
   categories?: { id: string; name: string }[];
+  
 }
 
 interface ProductCardProps {
   product: Product;
   showVendor?: boolean;
+  showImage?: boolean;
+  imageSize?: 'small' | 'medium' | 'large';
+  className?: string;
 }
 
 // Memoize the entire component for better performance
 export const ProductCard = memo(
-  ({ product, showVendor = true }: ProductCardProps) => {
+  ({ product, showVendor = true, showImage = true, imageSize = 'medium', className = '' }: ProductCardProps) => {
     const [isAddingToCart, setIsAddingToCart] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
