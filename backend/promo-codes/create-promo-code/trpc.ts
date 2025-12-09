@@ -2,10 +2,10 @@ import {
   runBackendEffect,
   serializeBackendEffectResult,
 } from "#root/shared/backend/effect";
-import { provideDatabase, publicProcedure } from "#root/shared/trpc/server";
+import { provideDatabase, adminProcedure } from "#root/shared/trpc/server";
 import { createPromoCode, createPromoCodeSchema } from "./create-promo-code";
 
-export const createPromoCodeProcedure = publicProcedure
+export const createPromoCodeProcedure = adminProcedure
   .input(createPromoCodeSchema)
   .mutation(async ({ ctx, input }) => {
     return await runBackendEffect(

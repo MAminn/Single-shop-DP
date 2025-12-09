@@ -262,6 +262,8 @@ export function ProductForm({
           ...values,
           // Make sure variants is included as at least an empty array
           variants: values.variants || [],
+          // Convert null to undefined for type compatibility
+          discountPrice: values.discountPrice ?? undefined,
         };
         result = await trpc.product.edit.mutate(payload);
       } else {
@@ -269,6 +271,8 @@ export function ProductForm({
         result = await trpc.product.create.mutate({
           ...values,
           imageId: values.imageId,
+          // Convert null to undefined for type compatibility
+          discountPrice: values.discountPrice ?? undefined,
         });
       }
 

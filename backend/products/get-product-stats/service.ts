@@ -5,6 +5,7 @@ import { ServerError } from "#root/shared/error/server";
 import { and, count, eq, gt, lte } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
+import { checkVendorStatus } from "#root/backend/vendor/utils/check-vendor-status";
 
 export const getProductStatsSchema = z.object({
   vendorId: z.string().optional(),
@@ -61,6 +62,12 @@ export const getProductStats = (
     const targetVendorId =
       input.vendorId ||
       (session.role === "vendor" ? session.vendorId : undefined);
+
+    // Check vendor status if user is a vendor
+    if (session.role === "vendor" && targetVendorId) {
+      yield* $(checkVendorStatus(targetVendorId, session, "view product statistics"));
+    }
+
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 

@@ -2,12 +2,12 @@ import {
   runBackendEffect,
   serializeBackendEffectResult,
 } from "#root/shared/backend/effect.js";
-import { provideDatabase, publicProcedure } from "#root/shared/trpc/server.js";
+import { provideDatabase, adminProcedure } from "#root/shared/trpc/server.js";
 import { approveVendor, approveVendorSchema } from "./service.js";
 import { Effect } from "effect";
 import { EmailService } from "#root/shared/email/service.js";
 
-export const approveVendorProcedure = publicProcedure
+export const approveVendorProcedure = adminProcedure
   .input(approveVendorSchema)
   .mutation(async ({ ctx, input }) => {
     return await runBackendEffect(

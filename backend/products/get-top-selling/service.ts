@@ -9,6 +9,7 @@ import { ServerError } from "#root/shared/error/server";
 import { and, count, desc, eq, sql, sum } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
+import { checkVendorStatus } from "#root/backend/vendor/utils/check-vendor-status";
 
 export const getTopSellingSchema = z.object({
   vendorId: z.string().optional(),
@@ -63,6 +64,11 @@ export const getTopSelling = (
     const targetVendorId =
       input.vendorId ||
       (session.role === "vendor" ? session.vendorId : undefined);
+
+    // Check vendor status if user is a vendor
+    if (session.role === "vendor" && targetVendorId) {
+      yield* $(checkVendorStatus(targetVendorId, session, "view top selling products"));
+    }
 
     return yield* $(
       query(async (db) => {

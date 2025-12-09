@@ -1,10 +1,11 @@
 import { query } from "#root/shared/database/drizzle/db";
-import { order, orderItem } from "#root/shared/database/drizzle/schema";
+import { order, orderItem, orderLog, user } from "#root/shared/database/drizzle/schema";
 import { Effect } from "effect";
 import { z } from "zod";
 import type { ClientSession } from "#root/backend/auth/shared/entities";
 import { ServerError } from "#root/shared/error/server";
 import { and, eq, inArray } from "drizzle-orm";
+import { checkVendorStatus } from "#root/backend/vendor/utils/check-vendor-status";
 
 export const updateOrderStatusSchema = z.object({
   orderId: z.string().uuid(),
@@ -52,25 +53,31 @@ export const updateOrderStatus = (
       );
     }
 
+    // Check vendor status if user is a vendor
+    if (isVendor && session.vendorId) {
+      yield* $(checkVendorStatus(session.vendorId, session, "update order status"));
+    }
+
     return yield* $(
       query(async (db) => {
         return await db.transaction(async (tx) => {
-          const orderData = await tx
-            .select({ id: order.id })
+          // Get current order data including old status
+          const currentOrder = await tx
+            .select({ id: order.id, status: order.status })
             .from(order)
             .where(eq(order.id, orderId))
             .execute();
 
-          if (!orderData || orderData.length === 0) {
+          if (!currentOrder || currentOrder.length === 0) {
             throw new ServerError({
               tag: "OrderNotFound",
               message: `Order with ID ${orderId} not found`,
               statusCode: 404,
-              clientMessage: "Order not found",
-            });
-          }
+            clientMessage: "Order not found",
+          });
+        }
 
-          if (isVendor && session.vendorId) {
+        const oldStatus = currentOrder[0]?.status || "pending";          if (isVendor && session.vendorId) {
             const vendorItems = await tx
               .select({ id: orderItem.id })
               .from(orderItem)
@@ -106,6 +113,23 @@ export const updateOrderStatus = (
               clientMessage: "Failed to update order status. Please try again.",
             });
           }
+
+          // Get user ID for logging
+          const userData = await tx
+            .select({ id: user.id })
+            .from(user)
+            .where(eq(user.email, session.email))
+            .execute();
+
+          // Log the order status change
+          await tx.insert(orderLog).values({
+            orderId,
+            userId: userData[0]?.id,
+            action: "status_changed",
+            oldStatus,
+            newStatus: status,
+            note: `Status changed from ${oldStatus} to ${status} by ${session.role}`,
+          });
 
           return updateResult[0];
         });

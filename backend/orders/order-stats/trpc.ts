@@ -6,9 +6,9 @@ import { DatabaseClientService } from "#root/shared/database/drizzle/db";
 import { Effect } from "effect";
 import { z } from "zod";
 import { getOrderStats, getOrderStatsSchema } from "./service";
-import { publicProcedure } from "#root/shared/trpc/server";
+import { vendorProcedure } from "#root/shared/trpc/server";
 
-export const orderStatsProcedure = publicProcedure
+export const orderStatsProcedure = vendorProcedure
   .input(getOrderStatsSchema)
   .query(async ({ input, ctx }) => {
     const result = await runBackendEffect(

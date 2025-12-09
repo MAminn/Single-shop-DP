@@ -11,7 +11,7 @@ declare module "hono" {
   }
 }
 
-export const dbHonoMiddleware = createMiddleware<HonoContext.Env>(
+export const dbHonoMiddleware = createMiddleware(
   async (c, next) => {
     c.set("db", getDb());
     await next();
