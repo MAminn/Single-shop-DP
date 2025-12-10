@@ -8,7 +8,7 @@ import {
 import { createMiddleware } from "hono/factory";
 
 export const trpcHonoMiddleware = (options: { endpoint: string }) =>
-  createMiddleware<HonoContext.Env>(async (c) => {
+  createMiddleware(async (c) => {
     return fetchRequestHandler({
       endpoint: options.endpoint,
       req: c.req.raw,
@@ -16,6 +16,8 @@ export const trpcHonoMiddleware = (options: { endpoint: string }) =>
       createContext({ req, resHeaders }) {
         return {
           db: c.var.db,
+          clientSession: c.var.clientSession,
+          emailService: c.var.emailService,
           req,
           resHeaders,
         };

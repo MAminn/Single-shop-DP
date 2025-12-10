@@ -109,11 +109,11 @@ export const OrderService = {
     for (const item of order.items) {
       if (!item.vendorId) continue;
 
-      if (!vendorItems[item.vendorId]) {
-        vendorItems[item.vendorId] = [];
+      const vendorId = Number(item.vendorId);
+      if (!vendorItems[vendorId]) {
+        vendorItems[vendorId] = [];
       }
 
-      const vendorId = item.vendorId;
       if (vendorItems[vendorId]) {
         vendorItems[vendorId].push(item);
       }
@@ -159,7 +159,7 @@ export const OrderService = {
 
       for (const order of extendedOrders) {
         const vendorItems = order.items.filter(
-          (item: OrderItem) => item.vendorId === vendorId
+          (item: OrderItem) => Number(item.vendorId) === vendorId
         );
 
         if (vendorItems.length > 0) {

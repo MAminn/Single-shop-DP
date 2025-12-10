@@ -5,6 +5,7 @@ import { ServerError } from "#root/shared/error/server";
 import { eq, sql, sum, inArray } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
+import { checkVendorStatus } from "#root/backend/vendor/utils/check-vendor-status";
 
 export const getTotalRevenueSchema = z.object({
   vendorId: z.string().optional(),
@@ -61,6 +62,11 @@ export const getTotalRevenue = (
     const targetVendorId =
       input.vendorId ||
       (session.role === "vendor" ? session.vendorId : undefined);
+
+    // Check vendor status if user is a vendor
+    if (session.role === "vendor" && targetVendorId) {
+      yield* $(checkVendorStatus(targetVendorId, session, "view revenue data"));
+    }
 
     return yield* $(
       query(async (db) => {

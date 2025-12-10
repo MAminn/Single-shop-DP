@@ -249,7 +249,7 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
             product.imagesCombined[0]?.url
           : undefined,
       vendorId: product.vendorId
-        ? Number(product.vendorId) || undefined
+        ? String(product.vendorId)
         : undefined,
       categoryName: product.categoryName || undefined,
     };

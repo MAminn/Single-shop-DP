@@ -763,3 +763,101 @@ export const promoCodeCategories = pgTable(
     };
   }
 );
+
+// Authentication log table for tracking login/registration events
+export const authLogAction = pgEnum("auth_log_action", [
+  "login_success",
+  "login_failed",
+  "register_success",
+  "register_failed",
+  "email_verified",
+  "password_reset_requested",
+  "password_reset_success",
+]);
+
+export const authLog = pgTable("auth_log", {
+  id: uuid("id")
+    .$defaultFn(() => v7())
+    .primaryKey(),
+  userId: uuid("user_id").references(() => user.id, {
+    onDelete: "set null",
+    onUpdate: "cascade",
+  }),
+  email: text("email").notNull(),
+  action: authLogAction("action").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+    mode: "date",
+  })
+    .defaultNow()
+    .notNull(),
+});
+
+// Order log table for tracking order status changes
+export const orderLogAction = pgEnum("order_log_action", [
+  "created",
+  "status_changed",
+  "cancelled",
+  "refunded",
+]);
+
+export const orderLog = pgTable("order_log", {
+  id: uuid("id")
+    .$defaultFn(() => v7())
+    .primaryKey(),
+  orderId: uuid("order_id")
+    .notNull()
+    .references(() => order.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  userId: uuid("user_id").references(() => user.id, {
+    onDelete: "set null",
+    onUpdate: "cascade",
+  }),
+  action: orderLogAction("action").notNull(),
+  oldStatus: text("old_status"),
+  newStatus: text("new_status"),
+  note: text("note"),
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+    mode: "date",
+  })
+    .defaultNow()
+    .notNull(),
+});
+
+// Webhook log table for tracking payment webhooks
+export const webhookLogStatus = pgEnum("webhook_log_status", [
+  "received",
+  "processed",
+  "failed",
+]);
+
+export const webhookLog = pgTable("webhook_log", {
+  id: uuid("id")
+    .$defaultFn(() => v7())
+    .primaryKey(),
+  webhookType: text("webhook_type").notNull(), // e.g., "payment", "refund"
+  provider: text("provider").notNull(), // e.g., "stripe", "fincart"
+  payload: jsonb("payload").notNull(),
+  status: webhookLogStatus("status").notNull().default("received"),
+  errorMessage: text("error_message"),
+  orderId: uuid("order_id").references(() => order.id, {
+    onDelete: "set null",
+    onUpdate: "cascade",
+  }),
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+    mode: "date",
+  })
+    .defaultNow()
+    .notNull(),
+  processedAt: timestamp("processed_at", {
+    withTimezone: true,
+    mode: "date",
+  }),
+});

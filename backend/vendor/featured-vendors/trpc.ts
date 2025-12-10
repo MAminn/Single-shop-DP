@@ -2,7 +2,7 @@ import {
   runBackendEffect,
   serializeBackendEffectResult,
 } from "#root/shared/backend/effect.js";
-import { provideDatabase, publicProcedure } from "#root/shared/trpc/server.js";
+import { provideDatabase, publicProcedure, adminProcedure } from "#root/shared/trpc/server.js";
 import {
   getFeaturedVendors,
   featuredVendorsSchema,
@@ -19,7 +19,7 @@ export const featuredVendorsProcedure = publicProcedure
     ).then(serializeBackendEffectResult);
   });
 
-export const updateVendorFeaturedStatusProcedure = publicProcedure
+export const updateVendorFeaturedStatusProcedure = adminProcedure
   .input(updateVendorFeaturedStatusSchema)
   .mutation(async ({ ctx, input }) => {
     return await runBackendEffect(
@@ -27,7 +27,7 @@ export const updateVendorFeaturedStatusProcedure = publicProcedure
     ).then(serializeBackendEffectResult);
   });
 
-export const checkAndUpdateVendorFeaturedStatusProcedure = publicProcedure
+export const checkAndUpdateVendorFeaturedStatusProcedure = adminProcedure
   .input(updateVendorFeaturedStatusSchema)
   .mutation(async ({ ctx, input }) => {
     return await runBackendEffect(

@@ -101,6 +101,20 @@ export function validateSessionToken(token: string) {
 
 		const { user, session } = result[0];
 
+		// Check email verification (except for admins)
+		if (!user.emailVerified && user.role !== "admin") {
+			return yield* $(
+				Effect.fail(
+					new ServerError({
+						tag: "EmailNotVerified",
+						statusCode: 403,
+						clientMessage: "Please verify your email address to continue",
+						message: `User ${user.id} attempted to access protected resource without verified email`,
+					}),
+				),
+			);
+		}
+
 		if (Date.now() >= session.expiresAt.getTime()) {
 			yield* $(
 				query(async (db) => {

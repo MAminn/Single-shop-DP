@@ -54,6 +54,17 @@ export const register = ({
     );
 
     if (existingUser) {
+      // Log failed registration attempt
+      yield* $(
+        query(async (db) => {
+          await db.insert(Tables.authLog).values({
+            email,
+            action: "register_failed",
+            errorMessage: "User already exists",
+          });
+        })
+      );
+      
       return yield* $(
         Effect.fail(
           new ServerError({
@@ -171,6 +182,17 @@ export const register = ({
         console.error("Failed to send verification email:", error);
       }
     }
+
+    // Log successful registration
+    yield* $(
+      query(async (db) => {
+        await db.insert(Tables.authLog).values({
+          userId: newUser.id,
+          email: newUser.email,
+          action: "register_success",
+        });
+      })
+    );
 
     return {
       id: newUser.id,

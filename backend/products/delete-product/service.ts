@@ -1,4 +1,5 @@
 import type { ClientSession } from "#root/backend/auth/shared/entities";
+import { checkVendorStatus } from "#root/backend/vendor/utils/check-vendor-status";
 import { query } from "#root/shared/database/drizzle/db.js";
 import { product, vendor } from "#root/shared/database/drizzle/schema.js";
 import { ServerError } from "#root/shared/error/server";
@@ -27,18 +28,36 @@ export const deleteProduct = (
       );
     }
 
-    return yield* $(
+    // First, fetch the product to get vendor info
+    const existingProduct = yield* $(
       query(async (db) => {
-        const existingProduct = await db
+        return await db
           .select()
           .from(product)
           .where(eq(product.id, data.id))
           .then((data) => data[0]);
+      })
+    );
 
-        if (!existingProduct) {
-          throw new Error("Product not found");
-        }
+    if (!existingProduct) {
+      return yield* $(
+        Effect.fail(
+          new ServerError({
+            tag: "ProductNotFound",
+            statusCode: 404,
+            clientMessage: "Product not found",
+          })
+        )
+      );
+    }
 
+    // Check vendor status before deletion
+    if (session.role === "vendor") {
+      yield* $(checkVendorStatus(existingProduct.vendorId, session, "delete products"));
+    }
+
+    return yield* $(
+      query(async (db) => {
         const existingVendor = await db
           .select()
           .from(vendor)

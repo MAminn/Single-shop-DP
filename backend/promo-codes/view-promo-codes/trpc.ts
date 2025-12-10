@@ -2,7 +2,7 @@ import {
   runBackendEffect,
   serializeBackendEffectResult,
 } from "#root/shared/backend/effect";
-import { provideDatabase, publicProcedure } from "#root/shared/trpc/server";
+import { provideDatabase, adminProcedure } from "#root/shared/trpc/server";
 import {
   viewPromoCodes,
   viewPromoCodesSchema,
@@ -10,7 +10,7 @@ import {
   getPromoCodeByIdSchema,
 } from "./view-promo-codes";
 
-export const viewPromoCodesProcedure = publicProcedure
+export const viewPromoCodesProcedure = adminProcedure
   .input(viewPromoCodesSchema)
   .query(async ({ ctx, input }) => {
     return await runBackendEffect(
@@ -18,7 +18,7 @@ export const viewPromoCodesProcedure = publicProcedure
     ).then(serializeBackendEffectResult);
   });
 
-export const getPromoCodeByIdProcedure = publicProcedure
+export const getPromoCodeByIdProcedure = adminProcedure
   .input(getPromoCodeByIdSchema)
   .query(async ({ ctx, input }) => {
     return await runBackendEffect(

@@ -7,6 +7,7 @@ import { verify } from "@node-rs/argon2";
 import { createSession, generateSessionToken } from "../session";
 import { ServerError } from "#root/shared/error/server.js";
 import { hashPassword } from "../shared/utils";
+
 const verifyPassword = (hash: string, password: string) =>
   Effect.tryPromise({
     try: async () => await verify(hash, password),
@@ -34,6 +35,18 @@ export const login = (email: string, password: string) =>
 
     if (!user) {
       yield* $(verifyPassword(passwordPlaceholder, password));
+      
+      // Log failed login attempt
+      yield* $(
+        query(async (db) => {
+          await db.insert(Tables.authLog).values({
+            email,
+            action: "login_failed",
+            errorMessage: "User not found",
+          });
+        })
+      );
+      
       return yield* $(
         Effect.fail(
           new ServerError({
@@ -50,6 +63,18 @@ export const login = (email: string, password: string) =>
     );
 
     if (!passwordMatch) {
+      // Log failed login attempt
+      yield* $(
+        query(async (db) => {
+          await db.insert(Tables.authLog).values({
+            userId: user.id,
+            email: user.email,
+            action: "login_failed",
+            errorMessage: "Invalid password",
+          });
+        })
+      );
+      
       return yield* $(
         Effect.fail(
           new ServerError({
@@ -116,6 +141,17 @@ export const login = (email: string, password: string) =>
 
     const token = generateSessionToken();
     yield* $(createSession(token, user.id));
+
+    // Log successful login
+    yield* $(
+      query(async (db) => {
+        await db.insert(Tables.authLog).values({
+          userId: user.id,
+          email: user.email,
+          action: "login_success",
+        });
+      })
+    );
 
     return token;
   });

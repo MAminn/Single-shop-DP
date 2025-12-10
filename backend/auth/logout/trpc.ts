@@ -1,4 +1,4 @@
-import { provideDatabase, publicProcedure } from "#root/shared/trpc/server.js";
+import { provideDatabase, protectedProcedure } from "#root/shared/trpc/server.js";
 import { z } from "zod";
 import {
   runBackendEffect,
@@ -6,7 +6,7 @@ import {
 } from "#root/shared/backend/effect.js";
 import { logout } from "./logout";
 
-export const logoutProcedure = publicProcedure
+export const logoutProcedure = protectedProcedure
   .input(z.object({ token: z.string() }))
   .mutation(async ({ ctx, input }) => {
     return await runBackendEffect(

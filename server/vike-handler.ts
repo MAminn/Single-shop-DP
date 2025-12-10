@@ -2,7 +2,7 @@
 import { renderPage } from "vike/server";
 import { createMiddleware } from "hono/factory";
 
-export const vikeHonoMiddleware = createMiddleware<HonoContext.Env>(
+export const vikeHonoMiddleware = createMiddleware(
   async (c) => {
     const pageContextInit = {
       db: c.var.db,

@@ -2,10 +2,10 @@ import {
 	runBackendEffect,
 	serializeBackendEffectResult,
 } from "#root/shared/backend/effect";
-import { provideDatabase, publicProcedure } from "#root/shared/trpc/server";
+import { provideDatabase, adminProcedure } from "#root/shared/trpc/server";
 import { editCategory, editCategorySchema } from "./service";
 
-export const editCategoryProcedure = publicProcedure
+export const editCategoryProcedure = adminProcedure
 	.input(editCategorySchema)
 	.mutation(async ({ ctx, input }) => {
 		return await runBackendEffect(

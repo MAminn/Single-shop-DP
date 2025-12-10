@@ -10,6 +10,7 @@ import { Effect } from "effect";
 import { z } from "zod";
 import type { ClientSession } from "#root/backend/auth/shared/entities";
 import { ServerError } from "#root/shared/error/server";
+import { checkVendorStatus } from "#root/backend/vendor/utils/check-vendor-status";
 
 export const viewOrdersSchema = z.object({
   limit: z.number().min(1).max(100).optional().default(10),
@@ -35,6 +36,11 @@ export const viewOrders = (
           })
         )
       );
+    }
+
+    // Check vendor status if user is a vendor
+    if (session.role === "vendor" && session.vendorId) {
+      yield* $(checkVendorStatus(session.vendorId, session, "view orders"));
     }
 
     const { limit, offset, status } = input;

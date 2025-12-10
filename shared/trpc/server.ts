@@ -1,4 +1,4 @@
-import { initTRPC } from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
 import {
 	DatabaseClientService,
 	type DatabaseClient,
@@ -6,6 +6,7 @@ import {
 import { Effect } from "effect";
 import superjson from "superjson";
 import type { Context } from "./context.server";
+import { ServerError } from "#root/shared/error/server.js";
 
 /**
  * Initialization of tRPC backend
@@ -21,6 +22,61 @@ export const t = initTRPC.context<Context>().create({
  */
 export const router = t.router;
 export const publicProcedure = t.procedure;
+
+/**
+ * Protected procedure - requires logged-in user
+ * Blocks guest users
+ */
+export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
+	if (!ctx.clientSession) {
+		throw new TRPCError({
+			code: "UNAUTHORIZED",
+			message: "You must be logged in to access this resource",
+		});
+	}
+	return next({
+		ctx: {
+			...ctx,
+			clientSession: ctx.clientSession,
+		},
+	});
+});
+
+/**
+ * Admin procedure - requires admin role
+ */
+export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+	if (ctx.clientSession.role !== "admin") {
+		throw new TRPCError({
+			code: "FORBIDDEN",
+			message: "Admin access required",
+		});
+	}
+	return next({
+		ctx: {
+			...ctx,
+			clientSession: ctx.clientSession,
+		},
+	});
+});
+
+/**
+ * Vendor procedure - requires vendor or admin role
+ */
+export const vendorProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+	if (ctx.clientSession.role !== "vendor" && ctx.clientSession.role !== "admin") {
+		throw new TRPCError({
+			code: "FORBIDDEN",
+			message: "Vendor access required",
+		});
+	}
+	return next({
+		ctx: {
+			...ctx,
+			clientSession: ctx.clientSession,
+		},
+	});
+});
 
 export const provideDatabase = (ctx: { db: DatabaseClient }) =>
 	Effect.provideService(DatabaseClientService, ctx.db);
