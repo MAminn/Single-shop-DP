@@ -25,7 +25,7 @@ import { Input } from "#root/components/ui/input.jsx";
 import { Tabs, TabsList, TabsTrigger } from "#root/components/ui/tabs";
 import type { Data } from "./+data";
 import { useData } from "vike-react/useData";
-import { ErrorSection } from "#root/components/error-section";
+import { ErrorSection } from "#root/components/dashboard/ErrorSection";
 import { ProductForm } from "./components";
 import type { FileMetadata } from "./components";
 import { trpc } from "#root/shared/trpc/client";
@@ -33,7 +33,7 @@ import { toast } from "sonner";
 import { usePageContext } from "vike-react/usePageContext";
 import { useDebounce } from "use-debounce";
 import { z } from "zod";
-import { Pagination } from "#root/components/Pagination";
+import { Pagination } from "#root/components/utils/Pagination";
 import { navigate } from "vike/client/router";
 
 // Define product form schema type to match server expectations
@@ -276,29 +276,29 @@ export default function Products() {
   };
 
   return (
-    <div className="p-4 md:p-6">
+    <div className='p-4 md:p-6'>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div className="flex flex-col gap-2 w-full justify-center items-center">
+        <CardHeader className='flex flex-row items-center justify-between'>
+          <div className='flex flex-col gap-2 w-full justify-center items-center'>
             <CardTitle>Products</CardTitle>
             <CardDescription>Manage your products</CardDescription>
           </div>
           <Button onClick={() => setIsAddModalOpen(true)}>Add Product</Button>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 flex items-center justify-center space-x-4">
+          <div className='mb-4 flex items-center justify-center space-x-4'>
             <Input
-              placeholder="Search products..."
+              placeholder='Search products...'
               value={search}
               onChange={handleSearchChange}
-              className="max-w-sm"
+              className='max-w-sm'
             />
             <Tabs value={sortBy} onValueChange={handleSortChange}>
               <TabsList>
-                <TabsTrigger value="name">Name</TabsTrigger>
-                <TabsTrigger value="price">Price</TabsTrigger>
-                <TabsTrigger value="discountPrice">Discount Price</TabsTrigger>
-                <TabsTrigger value="stock">Stock</TabsTrigger>
+                <TabsTrigger value='name'>Name</TabsTrigger>
+                <TabsTrigger value='price'>Price</TabsTrigger>
+                <TabsTrigger value='discountPrice'>Discount Price</TabsTrigger>
+                <TabsTrigger value='stock'>Stock</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -325,7 +325,7 @@ export default function Products() {
                       alt={product.name}
                       width={64}
                       height={64}
-                      className="rounded-md object-cover"
+                      className='rounded-md object-cover'
                     />
                   </TableCell>
                   <TableCell>{product.name}</TableCell>
@@ -341,21 +341,19 @@ export default function Products() {
                   </TableCell>
                   <TableCell>
                     <Button
-                      variant="outline"
-                      size="sm"
+                      variant='outline'
+                      size='sm'
                       onClick={() => {
                         setSelectedProduct(product.id);
                         setIsEditModalOpen(true);
                       }}
-                      className="mr-2"
-                    >
+                      className='mr-2'>
                       Edit
                     </Button>
                     <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteProduct(product.id)}
-                    >
+                      variant='destructive'
+                      size='sm'
+                      onClick={() => handleDeleteProduct(product.id)}>
                       Delete
                     </Button>
                   </TableCell>
@@ -363,7 +361,7 @@ export default function Products() {
               ))}
             </TableBody>
           </Table>
-          <div className="mt-6 flex justify-center">
+          <div className='mt-6 flex justify-center'>
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -373,7 +371,7 @@ export default function Products() {
         </CardContent>
       </Card>
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className='sm:max-w-[600px]'>
           <DialogHeader>
             <DialogTitle>Add New Product</DialogTitle>
           </DialogHeader>
@@ -392,7 +390,7 @@ export default function Products() {
       </Dialog>
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className='sm:max-w-[600px]'>
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
           </DialogHeader>

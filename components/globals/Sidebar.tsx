@@ -9,10 +9,11 @@ import {
 import { Button } from "#root/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "./Link";
+import { Link } from "#root/components/utils/Link";
 import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
 import { formatCategoryName } from "#root/lib/utils";
+
 export function AppSidebar() {
   const [isMenOpen, setIsMenOpen] = useState(false);
   const [isWomenOpen, setIsWomenOpen] = useState(false);
@@ -49,24 +50,23 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <h2 className="text-xl font-semibold p-4">Categories</h2>
+        <h2 className='text-xl font-semibold p-4'>Categories</h2>
       </SidebarHeader>
       <SidebarContent>
         {/* Men Section */}
         <SidebarGroup>
           <Button
-            variant="ghost"
-            className="w-full justify-between"
-            onClick={() => setIsMenOpen(!isMenOpen)}
-          >
+            variant='ghost'
+            className='w-full justify-between'
+            onClick={() => setIsMenOpen(!isMenOpen)}>
             Men
             {isMenOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </Button>
           {isMenOpen && (
-            <div className="pl-4">
+            <div className='pl-4'>
               {menCategories.map((category) => (
                 <Link key={category.label} href={category.to}>
-                  <Button variant="ghost" className="w-full justify-start">
+                  <Button variant='ghost' className='w-full justify-start'>
                     {formatCategoryName(category.label)}
                   </Button>
                 </Link>
@@ -78,18 +78,17 @@ export function AppSidebar() {
         {/* Women Section */}
         <SidebarGroup>
           <Button
-            variant="ghost"
-            className="w-full justify-between"
-            onClick={() => setIsWomenOpen(!isWomenOpen)}
-          >
+            variant='ghost'
+            className='w-full justify-between'
+            onClick={() => setIsWomenOpen(!isWomenOpen)}>
             Women
             {isWomenOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </Button>
           {isWomenOpen && (
-            <div className="pl-4">
+            <div className='pl-4'>
               {womenCategories.map((category) => (
                 <Link key={category.label} href={category.to}>
-                  <Button variant="ghost" className="w-full justify-start">
+                  <Button variant='ghost' className='w-full justify-start'>
                     {formatCategoryName(category.label)}
                   </Button>
                 </Link>
@@ -98,8 +97,8 @@ export function AppSidebar() {
           )}
         </SidebarGroup>
       </SidebarContent>
-      <SidebarTrigger className=" w-[95%] flex justify-end">
-        <Button variant="ghost" className="w-full justify-end">
+      <SidebarTrigger className=' w-[95%] flex justify-end'>
+        <Button variant='ghost' className='w-full justify-end'>
           Close
         </Button>
       </SidebarTrigger>

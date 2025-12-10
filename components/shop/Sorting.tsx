@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#root/components/ui/select";
-import { Link } from "#root/components/Link";
+import { Link } from "#root/components/utils/Link";
 import { Badge } from "#root/components/ui/badge";
 import { useToast } from "#root/components/ui/use-toast";
 import { useCart } from "#root/lib/context/CartContext";
@@ -14,8 +14,8 @@ import { trpc } from "#root/shared/trpc/client";
 import { getProductUrl } from "#root/lib/utils/route-helpers";
 import { Loader2, FilterX, SlidersHorizontal } from "lucide-react";
 import { ProductCard } from "./ProductCard";
-import { Button } from "./ui/button";
-import { Checkbox } from "./ui/checkbox";
+import { Button } from "#root/components/ui/button";
+import { Checkbox } from "#root/components/ui/checkbox";
 import { formatCategoryName } from "#root/lib/utils";
 import TemplateRenderer from "#root/frontend/components/template/TemplateRenderer";
 import { useTemplate } from "#root/frontend/contexts/TemplateContext";
@@ -99,13 +99,16 @@ const Sorting: React.FC<SortingProps> = ({
         })
         .then((res) => {
           if (res.success && res.result) {
-            console.log(`${categoryType} products with description:`, res.result);
+            console.log(
+              `${categoryType} products with description:`,
+              res.result
+            );
             setProducts(
               res.result.items.map((item) => ({
                 id: item.id,
                 sku: item.id,
                 name: item.name,
-                description: item.description || "",  
+                description: item.description || "",
                 price: Number(item.price),
                 discountPrice: item.discountPrice
                   ? Number(item.discountPrice)
@@ -115,8 +118,8 @@ const Sorting: React.FC<SortingProps> = ({
                   ? item.imageUrl.startsWith("http")
                     ? item.imageUrl
                     : item.imageUrl.startsWith("/uploads/")
-                      ? item.imageUrl
-                      : `/uploads/${item.imageUrl}`
+                    ? item.imageUrl
+                    : `/uploads/${item.imageUrl}`
                   : undefined,
                 images: item.images,
                 vendor: item.vendorName || "",
@@ -166,7 +169,7 @@ const Sorting: React.FC<SortingProps> = ({
                 id: item.id,
                 sku: item.id,
                 name: item.name,
-                description: item.description || "",  
+                description: item.description || "",
                 price: Number(item.price),
                 discountPrice: item.discountPrice
                   ? Number(item.discountPrice)
@@ -176,8 +179,8 @@ const Sorting: React.FC<SortingProps> = ({
                   ? item.imageUrl.startsWith("http")
                     ? item.imageUrl
                     : item.imageUrl.startsWith("/uploads/")
-                      ? item.imageUrl
-                      : `/uploads/${item.imageUrl}`
+                    ? item.imageUrl
+                    : `/uploads/${item.imageUrl}`
                   : undefined,
                 images: item.images,
                 vendor: item.vendorName || "",
@@ -232,7 +235,7 @@ const Sorting: React.FC<SortingProps> = ({
                 id: item.id,
                 sku: item.id,
                 name: item.name,
-                description: item.description || "",  
+                description: item.description || "",
                 price: Number(item.price),
                 discountPrice: item.discountPrice
                   ? Number(item.discountPrice)
@@ -242,8 +245,8 @@ const Sorting: React.FC<SortingProps> = ({
                   ? item.imageUrl.startsWith("http")
                     ? item.imageUrl
                     : item.imageUrl.startsWith("/uploads/")
-                      ? item.imageUrl
-                      : `/uploads/${item.imageUrl}`
+                    ? item.imageUrl
+                    : `/uploads/${item.imageUrl}`
                   : undefined,
                 images: item.images,
                 vendor: item.vendorName || "",
@@ -284,7 +287,7 @@ const Sorting: React.FC<SortingProps> = ({
               id: item.id,
               sku: item.id,
               name: item.name,
-              description: item.description || "",  
+              description: item.description || "",
               price: Number(item.price),
               discountPrice: item.discountPrice
                 ? Number(item.discountPrice)
@@ -294,8 +297,8 @@ const Sorting: React.FC<SortingProps> = ({
                 ? item.imageUrl.startsWith("http")
                   ? item.imageUrl
                   : item.imageUrl.startsWith("/uploads/")
-                    ? item.imageUrl
-                    : `/uploads/${item.imageUrl}`
+                  ? item.imageUrl
+                  : `/uploads/${item.imageUrl}`
                 : undefined,
               images: item.images,
               vendor: item.vendorName || "",
@@ -367,8 +370,8 @@ const Sorting: React.FC<SortingProps> = ({
                 ? product.discountPrice
                 : Number(product.discountPrice)
               : typeof product.price === "number"
-                ? product.price
-                : Number(product.price);
+              ? product.price
+              : Number(product.price);
           return price >= min && price <= max;
         });
       }
@@ -392,16 +395,16 @@ const Sorting: React.FC<SortingProps> = ({
                 ? a.discountPrice
                 : Number(a.discountPrice) || 0
               : typeof a.price === "number"
-                ? a.price
-                : Number(a.price) || 0;
+              ? a.price
+              : Number(a.price) || 0;
           const priceB =
             b.discountPrice !== undefined && b.discountPrice !== null
               ? typeof b.discountPrice === "number"
                 ? b.discountPrice
                 : Number(b.discountPrice) || 0
               : typeof b.price === "number"
-                ? b.price
-                : Number(b.price) || 0;
+              ? b.price
+              : Number(b.price) || 0;
           return priceA - priceB;
         });
         break;
@@ -413,16 +416,16 @@ const Sorting: React.FC<SortingProps> = ({
                 ? a.discountPrice
                 : Number(a.discountPrice) || 0
               : typeof a.price === "number"
-                ? a.price
-                : Number(a.price) || 0;
+              ? a.price
+              : Number(a.price) || 0;
           const priceB =
             b.discountPrice !== undefined && b.discountPrice !== null
               ? typeof b.discountPrice === "number"
                 ? b.discountPrice
                 : Number(b.discountPrice) || 0
               : typeof b.price === "number"
-                ? b.price
-                : Number(b.price) || 0;
+              ? b.price
+              : Number(b.price) || 0;
           return priceB - priceA;
         });
         break;
@@ -487,13 +490,13 @@ const Sorting: React.FC<SortingProps> = ({
     selectedPriceRange,
     handlePriceRangeChange,
     showMobileFilters,
-    setShowMobileFilters
+    setShowMobileFilters,
   };
 
   // Use template renderer with the active template
   return (
     <TemplateRenderer
-      category="sorting"
+      category='sorting'
       templateId={activeTemplate}
       data={templateData}
     />

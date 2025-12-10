@@ -1,4 +1,4 @@
-import type React from 'react';
+import type React from "react";
 import { useState } from "react";
 import { Button } from "#root/components/ui/button";
 import {
@@ -13,7 +13,7 @@ import { Label } from "#root/components/ui/label";
 import { Separator } from "#root/components/ui/separator";
 import { Textarea } from "#root/components/ui/textarea";
 import { useToast } from "#root/components/ui/use-toast";
-import { Link } from "#root/components/Link";
+import { Link } from "#root/components/utils/Link";
 import {
   ArrowLeft,
   Check,
@@ -29,13 +29,19 @@ import {
 } from "lucide-react";
 import { useCart } from "#root/lib/context/CartContext";
 import { trpc } from "#root/shared/trpc/client";
-import type { TemplateData, CheckoutTemplateData, CheckoutItem } from '../../templateRegistry';
+import type {
+  TemplateData,
+  CheckoutTemplateData,
+  CheckoutItem,
+} from "../../templateRegistry";
 
 interface DefaultCheckoutTemplateProps {
   data?: TemplateData;
 }
 
-const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({ data }) => {
+const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({
+  data,
+}) => {
   // Type guard to ensure we have checkout data
   const checkoutData = data as CheckoutTemplateData | undefined;
   const {
@@ -50,7 +56,7 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({ data 
     tax: contextTax,
   } = useCart();
   const { toast } = useToast();
-  
+
   // Use provided data or fallback to context data
   const items = checkoutData?.items || contextItems;
   const totalItems = checkoutData?.totalItems ?? contextTotalItems;
@@ -61,29 +67,29 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({ data 
   const total = checkoutData?.total ?? contextTotal;
   const promoCode = checkoutData?.promoCode ?? contextPromoCode;
   const formData = checkoutData?.formData || {
-    fullName: '',
-    phoneNumber: '',
-    postalCode: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: '',
-    notes: '',
-    paymentMethod: 'credit_card',
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-    nameOnCard: '',
-    billingAddress: '',
-    billingCity: '',
-    billingState: '',
-    billingPostalCode: '',
-    billingCountry: '',
+    fullName: "",
+    phoneNumber: "",
+    postalCode: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: "",
+    notes: "",
+    paymentMethod: "credit_card",
+    cardNumber: "",
+    expiryDate: "",
+    cvv: "",
+    nameOnCard: "",
+    billingAddress: "",
+    billingCity: "",
+    billingState: "",
+    billingPostalCode: "",
+    billingCountry: "",
     sameAsShipping: true,
-    specialInstructions: ''
+    specialInstructions: "",
   };
   const isSubmitting = checkoutData?.isSubmitting || false;
   const showOrderConfirmation = checkoutData?.showOrderConfirmation || false;
@@ -93,7 +99,9 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({ data 
 
   const [localFormData, setLocalFormData] = useState(formData);
   const [localIsSubmitting, setLocalIsSubmitting] = useState(isSubmitting);
-  const [localShowOrderConfirmation, setLocalShowOrderConfirmation] = useState(showOrderConfirmation);
+  const [localShowOrderConfirmation, setLocalShowOrderConfirmation] = useState(
+    showOrderConfirmation
+  );
   const [localOrderDetails, setLocalOrderDetails] = useState(orderDetails);
 
   const handleInputChange = (
@@ -200,40 +208,42 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({ data 
 
   if (localShowOrderConfirmation && localOrderDetails) {
     return (
-      <div className="container mx-auto p-4 max-w-4xl">
-        <Card className="mb-8">
-          <CardHeader className="bg-green-50 border-b">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center">
-                <Check className="text-white h-6 w-6" />
+      <div className='container mx-auto p-4 max-w-4xl'>
+        <Card className='mb-8'>
+          <CardHeader className='bg-green-50 border-b'>
+            <div className='flex items-center gap-3'>
+              <div className='h-10 w-10 rounded-full bg-green-500 flex items-center justify-center'>
+                <Check className='text-white h-6 w-6' />
               </div>
               <div>
-                <CardTitle className="text-xl">Order Confirmed!</CardTitle>
-                <p className="text-sm text-gray-500">
+                <CardTitle className='text-xl'>Order Confirmed!</CardTitle>
+                <p className='text-sm text-gray-500'>
                   Order #{localOrderDetails.id}
                 </p>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-6 px-6">
-            <div className="space-y-6">
+          <CardContent className='pt-6 px-6'>
+            <div className='space-y-6'>
               <div>
-                <h3 className="font-semibold flex items-center gap-2 mb-3">
-                  <User className="h-4 w-4" />
+                <h3 className='font-semibold flex items-center gap-2 mb-3'>
+                  <User className='h-4 w-4' />
                   Customer Information
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4 pl-6'>
                   <div>
-                    <p className="text-sm text-gray-500">Name</p>
+                    <p className='text-sm text-gray-500'>Name</p>
                     <p>{localOrderDetails.customerInfo.fullName}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Phone</p>
+                    <p className='text-sm text-gray-500'>Phone</p>
                     <p>{localOrderDetails.customerInfo.phoneNumber}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Email</p>
-                    <p>{localOrderDetails.customerInfo.email || "Not provided"}</p>
+                    <p className='text-sm text-gray-500'>Email</p>
+                    <p>
+                      {localOrderDetails.customerInfo.email || "Not provided"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -241,11 +251,11 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({ data 
               <Separator />
 
               <div>
-                <h3 className="font-semibold flex items-center gap-2 mb-3">
-                  <Home className="h-4 w-4" />
+                <h3 className='font-semibold flex items-center gap-2 mb-3'>
+                  <Home className='h-4 w-4' />
                   Shipping Address
                 </h3>
-                <div className="pl-6">
+                <div className='pl-6'>
                   <p>{localOrderDetails.customerInfo.address}</p>
                   <p>
                     {localOrderDetails.customerInfo.city},{" "}
@@ -259,42 +269,52 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({ data 
               <Separator />
 
               <div>
-                <h3 className="font-semibold flex items-center gap-2 mb-3">
-                  <ShoppingBag className="h-4 w-4" />
+                <h3 className='font-semibold flex items-center gap-2 mb-3'>
+                  <ShoppingBag className='h-4 w-4' />
                   Order Items
                 </h3>
-                <div className="space-y-3 pl-6">
+                <div className='space-y-3 pl-6'>
                   {localOrderDetails.items.map((item) => (
-                    <div key={`${item.id}-${JSON.stringify(item.selectedOptions)}`} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                    <div
+                      key={`${item.id}-${JSON.stringify(item.selectedOptions)}`}
+                      className='flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0'>
+                      <div className='flex items-center gap-3'>
+                        <div className='w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0'>
                           {item.imageUrl ? (
                             <img
                               src={item.imageUrl}
                               alt={item.name}
-                              className="w-full h-full object-cover"
+                              className='w-full h-full object-cover'
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400">
-                              <ShoppingBag className="h-6 w-6" />
+                            <div className='w-full h-full flex items-center justify-center text-gray-400'>
+                              <ShoppingBag className='h-6 w-6' />
                             </div>
                           )}
                         </div>
                         <div>
-                          <p className="font-medium">{item.name}</p>
-                          <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                          <p className='font-medium'>{item.name}</p>
+                          <p className='text-sm text-gray-500'>
+                            Qty: {item.quantity}
+                          </p>
                           {Object.keys(item.selectedOptions).length > 0 && (
-                            <div className="flex gap-2 mt-1">
-                              {Object.entries(item.selectedOptions).map(([key, value]) => (
-                                <span key={key} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                  {key}: {value}
-                                </span>
-                              ))}
+                            <div className='flex gap-2 mt-1'>
+                              {Object.entries(item.selectedOptions).map(
+                                ([key, value]) => (
+                                  <span
+                                    key={key}
+                                    className='text-xs bg-gray-100 px-2 py-1 rounded'>
+                                    {key}: {value}
+                                  </span>
+                                )
+                              )}
                             </div>
                           )}
                         </div>
                       </div>
-                      <p className="font-medium">${(item.price * item.quantity).toFixed(2)}</p>
+                      <p className='font-medium'>
+                        ${(item.price * item.quantity).toFixed(2)}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -303,28 +323,29 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({ data 
               <Separator />
 
               <div>
-                <h3 className="font-semibold mb-3">Order Summary</h3>
-                <div className="space-y-2 pl-6">
-                  <div className="flex justify-between">
+                <h3 className='font-semibold mb-3'>Order Summary</h3>
+                <div className='space-y-2 pl-6'>
+                  <div className='flex justify-between'>
                     <span>Subtotal:</span>
                     <span>${localOrderDetails.subtotal.toFixed(2)}</span>
                   </div>
-                  {localOrderDetails.discount && localOrderDetails.discount > 0 && (
-                    <div className="flex justify-between text-green-600">
-                      <span>Discount:</span>
-                      <span>-${localOrderDetails.discount.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
+                  {localOrderDetails.discount &&
+                    localOrderDetails.discount > 0 && (
+                      <div className='flex justify-between text-green-600'>
+                        <span>Discount:</span>
+                        <span>-${localOrderDetails.discount.toFixed(2)}</span>
+                      </div>
+                    )}
+                  <div className='flex justify-between'>
                     <span>Shipping:</span>
                     <span>${localOrderDetails.shipping.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className='flex justify-between'>
                     <span>Tax:</span>
                     <span>${localOrderDetails.tax.toFixed(2)}</span>
                   </div>
                   <Separator />
-                  <div className="flex justify-between font-semibold text-lg">
+                  <div className='flex justify-between font-semibold text-lg'>
                     <span>Total:</span>
                     <span>${localOrderDetails.total.toFixed(2)}</span>
                   </div>
@@ -332,16 +353,16 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({ data 
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex gap-4">
-            <Link href="/">
-              <Button variant="outline" className="flex items-center gap-2">
-                <Home className="h-4 w-4" />
+          <CardFooter className='flex gap-4'>
+            <Link href='/'>
+              <Button variant='outline' className='flex items-center gap-2'>
+                <Home className='h-4 w-4' />
                 Continue Shopping
               </Button>
             </Link>
-            <Link href="/dashboard/orders">
-              <Button className="flex items-center gap-2">
-                <Truck className="h-4 w-4" />
+            <Link href='/dashboard/orders'>
+              <Button className='flex items-center gap-2'>
+                <Truck className='h-4 w-4' />
                 Track Order
               </Button>
             </Link>
@@ -353,17 +374,17 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({ data 
 
   if (items.length === 0) {
     return (
-      <div className="container mx-auto p-4 max-w-4xl">
-        <Card className="text-center py-12">
+      <div className='container mx-auto p-4 max-w-4xl'>
+        <Card className='text-center py-12'>
           <CardContent>
-            <ShoppingBag className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-            <h2 className="text-2xl font-semibold mb-2">Your cart is empty</h2>
-            <p className="text-gray-600 mb-6">
+            <ShoppingBag className='mx-auto h-16 w-16 text-gray-400 mb-4' />
+            <h2 className='text-2xl font-semibold mb-2'>Your cart is empty</h2>
+            <p className='text-gray-600 mb-6'>
               Add some items to your cart before proceeding to checkout.
             </p>
-            <Link href="/">
-              <Button className="flex items-center gap-2 mx-auto">
-                <ArrowLeft className="h-4 w-4" />
+            <Link href='/'>
+              <Button className='flex items-center gap-2 mx-auto'>
+                <ArrowLeft className='h-4 w-4' />
                 Continue Shopping
               </Button>
             </Link>
@@ -374,64 +395,66 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({ data 
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-6xl">
-      <div className="mb-6">
-        <Link href="/cart" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800">
-          <ArrowLeft className="h-4 w-4" />
+    <div className='container mx-auto p-4 max-w-6xl'>
+      <div className='mb-6'>
+        <Link
+          href='/cart'
+          className='inline-flex items-center gap-2 text-blue-600 hover:text-blue-800'>
+          <ArrowLeft className='h-4 w-4' />
           Back to Cart
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
         {/* Checkout Form */}
-        <div className="lg:col-span-2">
+        <div className='lg:col-span-2'>
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
+              <CardTitle className='flex items-center gap-2'>
+                <CreditCard className='h-5 w-5' />
                 Checkout Information
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className='space-y-6'>
                 {/* Customer Information */}
                 <div>
-                  <h3 className="font-semibold flex items-center gap-2 mb-4">
-                    <User className="h-4 w-4" />
+                  <h3 className='font-semibold flex items-center gap-2 mb-4'>
+                    <User className='h-4 w-4' />
                     Customer Information
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                     <div>
-                      <Label htmlFor="fullName">Full Name *</Label>
+                      <Label htmlFor='fullName'>Full Name *</Label>
                       <Input
-                        id="fullName"
-                        name="fullName"
+                        id='fullName'
+                        name='fullName'
                         value={localFormData.fullName}
                         onChange={handleInputChange}
                         required
-                        placeholder="Enter your full name"
+                        placeholder='Enter your full name'
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phoneNumber">Phone Number *</Label>
+                      <Label htmlFor='phoneNumber'>Phone Number *</Label>
                       <Input
-                        id="phoneNumber"
-                        name="phoneNumber"
+                        id='phoneNumber'
+                        name='phoneNumber'
                         value={localFormData.phoneNumber}
                         onChange={handleInputChange}
                         required
-                        placeholder="Enter your phone number"
+                        placeholder='Enter your phone number'
                       />
                     </div>
-                    <div className="md:col-span-2">
-                      <Label htmlFor="email">Email Address</Label>
+                    <div className='md:col-span-2'>
+                      <Label htmlFor='email'>Email Address</Label>
                       <Input
-                        id="email"
-                        name="email"
-                        type="email"
+                        id='email'
+                        name='email'
+                        type='email'
                         value={localFormData.email}
                         onChange={handleInputChange}
-                        placeholder="Enter your email address"
+                        placeholder='Enter your email address'
                       />
                     </div>
                   </div>
@@ -441,64 +464,64 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({ data 
 
                 {/* Shipping Information */}
                 <div>
-                  <h3 className="font-semibold flex items-center gap-2 mb-4">
-                    <Home className="h-4 w-4" />
+                  <h3 className='font-semibold flex items-center gap-2 mb-4'>
+                    <Home className='h-4 w-4' />
                     Shipping Address
                   </h3>
-                  <div className="space-y-4">
+                  <div className='space-y-4'>
                     <div>
-                      <Label htmlFor="address">Street Address *</Label>
+                      <Label htmlFor='address'>Street Address *</Label>
                       <Input
-                        id="address"
-                        name="address"
+                        id='address'
+                        name='address'
                         value={localFormData.address}
                         onChange={handleInputChange}
                         required
-                        placeholder="Enter your street address"
+                        placeholder='Enter your street address'
                       />
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                       <div>
-                        <Label htmlFor="city">City *</Label>
+                        <Label htmlFor='city'>City *</Label>
                         <Input
-                          id="city"
-                          name="city"
+                          id='city'
+                          name='city'
                           value={localFormData.city}
                           onChange={handleInputChange}
                           required
-                          placeholder="Enter your city"
+                          placeholder='Enter your city'
                         />
                       </div>
                       <div>
-                        <Label htmlFor="state">State/Province</Label>
+                        <Label htmlFor='state'>State/Province</Label>
                         <Input
-                          id="state"
-                          name="state"
+                          id='state'
+                          name='state'
                           value={localFormData.state}
                           onChange={handleInputChange}
-                          placeholder="Enter your state/province"
+                          placeholder='Enter your state/province'
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                       <div>
-                        <Label htmlFor="postalCode">Postal Code</Label>
+                        <Label htmlFor='postalCode'>Postal Code</Label>
                         <Input
-                          id="postalCode"
-                          name="postalCode"
+                          id='postalCode'
+                          name='postalCode'
                           value={localFormData.postalCode}
                           onChange={handleInputChange}
-                          placeholder="Enter your postal code"
+                          placeholder='Enter your postal code'
                         />
                       </div>
                       <div>
-                        <Label htmlFor="country">Country</Label>
+                        <Label htmlFor='country'>Country</Label>
                         <Input
-                          id="country"
-                          name="country"
+                          id='country'
+                          name='country'
                           value={localFormData.country}
                           onChange={handleInputChange}
-                          placeholder="Enter your country"
+                          placeholder='Enter your country'
                         />
                       </div>
                     </div>
@@ -509,30 +532,29 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({ data 
 
                 {/* Order Notes */}
                 <div>
-                  <Label htmlFor="notes">Order Notes (Optional)</Label>
+                  <Label htmlFor='notes'>Order Notes (Optional)</Label>
                   <Textarea
-                    id="notes"
-                    name="notes"
+                    id='notes'
+                    name='notes'
                     value={localFormData.notes}
                     onChange={handleInputChange}
-                    placeholder="Any special instructions for your order..."
+                    placeholder='Any special instructions for your order...'
                     rows={3}
                   />
                 </div>
 
                 <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={localIsSubmitting}
-                >
+                  type='submit'
+                  className='w-full'
+                  disabled={localIsSubmitting}>
                   {localIsSubmitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                       Processing Order...
                     </>
                   ) : (
                     <>
-                      <CreditCard className="mr-2 h-4 w-4" />
+                      <CreditCard className='mr-2 h-4 w-4' />
                       Place Order
                     </>
                   )}
@@ -543,7 +565,7 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({ data 
         </div>
 
         {/* Order Summary */}
-        <div className="lg:col-span-1">
+        <div className='lg:col-span-1'>
           <OrderSummary
             items={items as CheckoutItem[]}
             subtotal={subtotal}
@@ -582,55 +604,61 @@ function OrderSummary({
   } | null;
 }) {
   return (
-    <Card className="sticky top-4">
+    <Card className='sticky top-4'>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ShoppingBag className="h-5 w-5" />
+        <CardTitle className='flex items-center gap-2'>
+          <ShoppingBag className='h-5 w-5' />
           Order Summary
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className='space-y-4'>
         {/* Items */}
-        <div className="space-y-3">
+        <div className='space-y-3'>
           {items.map((item) => {
             const displayPrice = item.discountPrice || item.price;
-            const hasDiscount = item.discountPrice && Number(item.discountPrice) < Number(item.price);
+            const hasDiscount =
+              item.discountPrice &&
+              Number(item.discountPrice) < Number(item.price);
             const optionsKey = JSON.stringify(item.selectedOptions);
 
             return (
-              <div key={`${item.id}-${optionsKey}`} className="flex gap-3">
-                <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+              <div key={`${item.id}-${optionsKey}`} className='flex gap-3'>
+                <div className='w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0'>
                   {item.imageUrl ? (
                     <img
                       src={item.imageUrl}
                       alt={item.name}
-                      className="w-full h-full object-cover"
+                      className='w-full h-full object-cover'
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <ShoppingBag className="h-6 w-6" />
+                    <div className='w-full h-full flex items-center justify-center text-gray-400'>
+                      <ShoppingBag className='h-6 w-6' />
                     </div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-sm truncate">{item.name}</h4>
-                  <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                <div className='flex-1 min-w-0'>
+                  <h4 className='font-medium text-sm truncate'>{item.name}</h4>
+                  <p className='text-xs text-gray-500'>Qty: {item.quantity}</p>
                   {Object.keys(item.selectedOptions).length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {Object.entries(item.selectedOptions).map(([key, value]) => (
-                        <span key={key} className="text-xs bg-gray-100 px-1 py-0.5 rounded">
-                          {key}: {value}
-                        </span>
-                      ))}
+                    <div className='flex flex-wrap gap-1 mt-1'>
+                      {Object.entries(item.selectedOptions).map(
+                        ([key, value]) => (
+                          <span
+                            key={key}
+                            className='text-xs bg-gray-100 px-1 py-0.5 rounded'>
+                            {key}: {value}
+                          </span>
+                        )
+                      )}
                     </div>
                   )}
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className='flex items-center gap-2 mt-1'>
                     {hasDiscount && (
-                      <span className="text-xs text-gray-400 line-through">
+                      <span className='text-xs text-gray-400 line-through'>
                         ${item.price.toFixed(2)}
                       </span>
                     )}
-                    <span className="text-sm font-medium">
+                    <span className='text-sm font-medium'>
                       ${(Number(displayPrice) * item.quantity).toFixed(2)}
                     </span>
                   </div>
@@ -644,41 +672,44 @@ function OrderSummary({
 
         {/* Promo Code */}
         {promoCode && (
-          <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <Tag className="h-4 w-4 text-green-600" />
-              <span className="text-sm font-medium text-green-800">
+          <div className='flex items-center justify-between p-3 bg-green-50 rounded-lg'>
+            <div className='flex items-center gap-2'>
+              <Tag className='h-4 w-4 text-green-600' />
+              <span className='text-sm font-medium text-green-800'>
                 {promoCode.code}
               </span>
             </div>
-            <span className="text-sm text-green-600">
-              -{promoCode.discountType === "percentage" ? `${promoCode.discountValue}%` : `$${promoCode.discountValue}`}
+            <span className='text-sm text-green-600'>
+              -
+              {promoCode.discountType === "percentage"
+                ? `${promoCode.discountValue}%`
+                : `$${promoCode.discountValue}`}
             </span>
           </div>
         )}
 
         {/* Totals */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
+        <div className='space-y-2'>
+          <div className='flex justify-between text-sm'>
             <span>Subtotal:</span>
             <span>${subtotal.toFixed(2)}</span>
           </div>
           {discount > 0 && (
-            <div className="flex justify-between text-sm text-green-600">
+            <div className='flex justify-between text-sm text-green-600'>
               <span>Discount:</span>
               <span>-${discount.toFixed(2)}</span>
             </div>
           )}
-          <div className="flex justify-between text-sm">
+          <div className='flex justify-between text-sm'>
             <span>Shipping:</span>
             <span>${shipping.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between text-sm">
+          <div className='flex justify-between text-sm'>
             <span>Tax:</span>
             <span>${tax.toFixed(2)}</span>
           </div>
           <Separator />
-          <div className="flex justify-between font-semibold">
+          <div className='flex justify-between font-semibold'>
             <span>Total:</span>
             <span>${total.toFixed(2)}</span>
           </div>

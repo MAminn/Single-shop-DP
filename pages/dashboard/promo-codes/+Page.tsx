@@ -32,9 +32,9 @@ import {
 } from "#root/components/ui/select";
 import { useDebounce } from "use-debounce";
 import { usePageContext } from "vike-react/usePageContext";
-import { ErrorSection } from "#root/components/error-section";
+import { ErrorSection } from "#root/components/dashboard/ErrorSection";
 import { navigate } from "vike/client/router";
-import { Pagination } from "#root/components/Pagination";
+import { Pagination } from "#root/components/utils/Pagination";
 
 // Define PromoCode type
 type PromoCodeStatus =
@@ -81,9 +81,9 @@ const PromoCodeForm = lazy(() =>
 // Placeholder for form loader
 function PromoCodeFormLoader() {
   return (
-    <div className="p-6 flex justify-center items-center">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      <p className="ml-2">Loading form...</p>
+    <div className='p-6 flex justify-center items-center'>
+      <Loader2 className='h-8 w-8 animate-spin text-primary' />
+      <p className='ml-2'>Loading form...</p>
     </div>
   );
 }
@@ -276,13 +276,13 @@ export default function PromoCodesPage() {
   ];
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className='p-4 md:p-6 space-y-6'>
       <Card>
         <CardHeader>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4'>
             <div>
-              <CardTitle className="flex items-center">
-                <TicketPercent className="h-6 w-6 mr-2" />
+              <CardTitle className='flex items-center'>
+                <TicketPercent className='h-6 w-6 mr-2' />
                 Manage Promo Codes
               </CardTitle>
               <CardDescription>
@@ -290,31 +290,31 @@ export default function PromoCodesPage() {
                 store.
               </CardDescription>
             </div>
-            <Button onClick={handleCreateNew} className="w-full md:w-auto">
-              <PlusCircle className="mr-2 h-4 w-4" /> Create New Promo Code
+            <Button onClick={handleCreateNew} className='w-full md:w-auto'>
+              <PlusCircle className='mr-2 h-4 w-4' /> Create New Promo Code
             </Button>
           </div>
         </CardHeader>
-        <CardContent className=" px-4">
+        <CardContent className=' px-4'>
           {/* Filters and Search */}
-          <div className="mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-            <div className="space-y-1">
-              <label htmlFor="searchCode" className="text-sm font-medium">
+          <div className='mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end'>
+            <div className='space-y-1'>
+              <label htmlFor='searchCode' className='text-sm font-medium'>
                 Search Code
               </label>
               <Input
-                id="searchCode"
-                placeholder="Enter code..."
+                id='searchCode'
+                placeholder='Enter code...'
                 value={searchCode}
                 onChange={(e) => {
                   setSearchCode(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full"
+                className='w-full'
               />
             </div>
-            <div className="space-y-1">
-              <label htmlFor="statusFilter" className="text-sm font-medium">
+            <div className='space-y-1'>
+              <label htmlFor='statusFilter' className='text-sm font-medium'>
                 Status
               </label>
               <Select
@@ -322,13 +322,12 @@ export default function PromoCodesPage() {
                 onValueChange={(value) => {
                   setStatusFilter(value as PromoCodeStatus | "all");
                   setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger id="statusFilter" className="w-full">
-                  <SelectValue placeholder="Filter by status" />
+                }}>
+                <SelectTrigger id='statusFilter' className='w-full'>
+                  <SelectValue placeholder='Filter by status' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value='all'>All Statuses</SelectItem>
                   {promoCodeStatuses.map((status) => (
                     <SelectItem key={status} value={status}>
                       {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -337,8 +336,8 @@ export default function PromoCodesPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1">
-              <label htmlFor="sortBy" className="text-sm font-medium">
+            <div className='space-y-1'>
+              <label htmlFor='sortBy' className='text-sm font-medium'>
                 Sort By
               </label>
               <Select
@@ -346,10 +345,9 @@ export default function PromoCodesPage() {
                 onValueChange={(value) => {
                   setSortBy(value as PromoCodeSortBy);
                   setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger id="sortBy" className="w-full">
-                  <SelectValue placeholder="Sort by field" />
+                }}>
+                <SelectTrigger id='sortBy' className='w-full'>
+                  <SelectValue placeholder='Sort by field' />
                 </SelectTrigger>
                 <SelectContent>
                   {sortableFields.map((field) => (
@@ -361,8 +359,8 @@ export default function PromoCodesPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1">
-              <label htmlFor="sortOrder" className="text-sm font-medium">
+            <div className='space-y-1'>
+              <label htmlFor='sortOrder' className='text-sm font-medium'>
                 Order
               </label>
               <Select
@@ -370,41 +368,40 @@ export default function PromoCodesPage() {
                 onValueChange={(value) => {
                   setSortOrder(value as PromoCodeSortOrder);
                   setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger id="sortOrder" className="w-full">
-                  <SelectValue placeholder="Sort order" />
+                }}>
+                <SelectTrigger id='sortOrder' className='w-full'>
+                  <SelectValue placeholder='Sort order' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="asc">Ascending</SelectItem>
-                  <SelectItem value="desc">Descending</SelectItem>
+                  <SelectItem value='asc'>Ascending</SelectItem>
+                  <SelectItem value='desc'>Descending</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           {isLoading && promoCodes.length === 0 && (
-            <div className="flex justify-center items-center py-10">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="ml-2">Loading promo codes...</p>
+            <div className='flex justify-center items-center py-10'>
+              <Loader2 className='h-8 w-8 animate-spin text-primary' />
+              <p className='ml-2'>Loading promo codes...</p>
             </div>
           )}
           {error && promoCodes.length === 0 && <ErrorSection error={error} />}
           {!isLoading && !error && promoCodes.length === 0 && (
-            <div className="text-center py-10">
-              <TicketPercent className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold">No Promo Codes Found</h3>
-              <p className="text-muted-foreground mb-4">
+            <div className='text-center py-10'>
+              <TicketPercent className='h-16 w-16 mx-auto text-muted-foreground mb-4' />
+              <h3 className='text-xl font-semibold'>No Promo Codes Found</h3>
+              <p className='text-muted-foreground mb-4'>
                 Try adjusting your filters or create a new promo code.
               </p>
               <Button onClick={handleCreateNew}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Create New Promo Code
+                <PlusCircle className='mr-2 h-4 w-4' /> Create New Promo Code
               </Button>
             </div>
           )}
           {promoCodes.length > 0 && (
             <>
-              <div className="overflow-x-auto">
+              <div className='overflow-x-auto'>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -413,13 +410,13 @@ export default function PromoCodesPage() {
                       <TableHead>Discount</TableHead>
                       <TableHead>Usage</TableHead>
                       <TableHead>Dates (Start - End)</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className='text-right'>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {promoCodes.map((promo) => (
                       <TableRow key={promo.id}>
-                        <TableCell className="font-medium">
+                        <TableCell className='font-medium'>
                           {promo.code}
                         </TableCell>
                         <TableCell>
@@ -428,10 +425,9 @@ export default function PromoCodesPage() {
                               promo.status === "active"
                                 ? "default"
                                 : promo.status === "scheduled"
-                                  ? "outline"
-                                  : "destructive"
-                            }
-                          >
+                                ? "outline"
+                                : "destructive"
+                            }>
                             {promo.status}
                           </Badge>
                         </TableCell>
@@ -453,20 +449,18 @@ export default function PromoCodesPage() {
                             ? new Date(promo.endDate).toLocaleDateString()
                             : "N/A"}
                         </TableCell>
-                        <TableCell className="text-right space-x-2">
+                        <TableCell className='text-right space-x-2'>
                           <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(promo.id)}
-                          >
-                            <Edit className="h-4 w-4 mr-1" /> Edit
+                            variant='outline'
+                            size='sm'
+                            onClick={() => handleEdit(promo.id)}>
+                            <Edit className='h-4 w-4 mr-1' /> Edit
                           </Button>
                           <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(promo.id)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-1" /> Delete
+                            variant='destructive'
+                            size='sm'
+                            onClick={() => handleDelete(promo.id)}>
+                            <Trash2 className='h-4 w-4 mr-1' /> Delete
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -476,7 +470,7 @@ export default function PromoCodesPage() {
               </div>
               {/* Pagination Controls */}
               {totalPages > 1 && (
-                <div className="mt-4">
+                <div className='mt-4'>
                   <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}

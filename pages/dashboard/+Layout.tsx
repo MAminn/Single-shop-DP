@@ -1,5 +1,5 @@
-import { DashboardSidebar } from "#root/components/DashboardSidebar.jsx";
-import { Link } from "#root/components/Link.jsx";
+import { DashboardSidebar } from "#root/components/dashboard/DashboardSidebar";
+import { Link } from "#root/components/utils/Link";
 import { Button } from "#root/components/ui/button.jsx";
 import {
   Card,
@@ -91,49 +91,48 @@ function Content({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <main className="flex-1 w-full h-full">
+    <main className='flex-1 w-full h-full'>
       <SidebarProvider>
-        <div className="flex w-full h-full">
+        <div className='flex w-full h-full'>
           <DashboardSidebar />
-          <section className="h-full w-full flex-1">
-            <header className="z-50 flex flex-col bg-neutral-100 dark:bg-neutral-900 w-full p-1 sticky top-0">
-              <div className="flex items-center justify-between w-full px-4">
-                <div className="flex items-center">
+          <section className='h-full w-full flex-1'>
+            <header className='z-50 flex flex-col bg-neutral-100 dark:bg-neutral-900 w-full p-1 sticky top-0'>
+              <div className='flex items-center justify-between w-full px-4'>
+                <div className='flex items-center'>
                   <SidebarTrigger />
-                  <Tabs className="ml-4 hidden lg:flex " value={activeTab}>
+                  <Tabs className='ml-4 hidden lg:flex ' value={activeTab}>
                     <TabsList>
                       {tabs.map((tab) => (
                         <TabsTrigger
                           key={tab.href}
                           value={tab.href.split("/").pop() || ""}
-                          asChild
-                        >
+                          asChild>
                           <Link href={tab.href}>{tab.label}</Link>
                         </TabsTrigger>
                       ))}
                     </TabsList>
                   </Tabs>
                 </div>
-                <Link href="/" className="text-3xl font-bold ">
+                <Link href='/' className='text-3xl font-bold '>
                   <img
                     src={logoImage}
-                    alt=""
-                    className=" w-[100px] py-2 lg:hidden"
+                    alt=''
+                    className=' w-[100px] py-2 lg:hidden'
                   />
                 </Link>
-                <div className="flex items-center gap-2">
-                  <Link href="/">
-                    <Button variant="outline" className="hidden lg:block">
+                <div className='flex items-center gap-2'>
+                  <Link href='/'>
+                    <Button variant='outline' className='hidden lg:block'>
                       Return to Home
                     </Button>
-                    <Button variant="outline" className="block lg:hidden">
+                    <Button variant='outline' className='block lg:hidden'>
                       <HomeIcon />
                     </Button>
                   </Link>
                 </div>
               </div>
               {userRole === "admin" && (
-                <div className="bg-blue-50 dark:bg-blue-900 p-2 text-sm">
+                <div className='bg-blue-50 dark:bg-blue-900 p-2 text-sm'>
                   <strong>Admin Mode:</strong> You have full access to all
                   vendors, products, categories, and orders.
                 </div>

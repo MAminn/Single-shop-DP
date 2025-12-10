@@ -1,12 +1,12 @@
-import type React from 'react';
-import { useState } from 'react';
-import { Link } from '#root/components/Link';
-import { Button } from '#root/components/ui/button';
-import { Badge } from '#root/components/ui/badge';
-import { Heart, ShoppingCart, Eye } from 'lucide-react';
-import { useToast } from '#root/components/ui/use-toast';
-import type { ProductCardTemplateData } from '../../templateRegistry';
-import { useCart } from '#root/lib/context/CartContext';
+import type React from "react";
+import { useState } from "react";
+import { Link } from "#root/components/utils/Link";
+import { Button } from "#root/components/ui/button";
+import { Badge } from "#root/components/ui/badge";
+import { Heart, ShoppingCart, Eye } from "lucide-react";
+import { useToast } from "#root/components/ui/use-toast";
+import type { ProductCardTemplateData } from "../../templateRegistry";
+import { useCart } from "#root/lib/context/CartContext";
 
 interface DefaultProductCardTemplateProps {
   data?: ProductCardTemplateData;
@@ -23,15 +23,15 @@ const DefaultProductCardTemplate: React.FC<DefaultProductCardTemplateProps> = ({
 
   // Use provided data or default values
   const product = data?.product || {
-    id: '',
-    name: 'Product Name',
+    id: "",
+    name: "Product Name",
     price: 0,
     images: [],
-    imageUrl: '',
+    imageUrl: "",
     available: true,
-    vendorId: '',
-    vendorName: '',
-    categoryName: '',
+    vendorId: "",
+    vendorName: "",
+    categoryName: "",
   };
   const showVendor = data?.showVendor ?? true;
   const showAddToCart = data?.showAddToCart ?? true;
@@ -45,22 +45,24 @@ const DefaultProductCardTemplate: React.FC<DefaultProductCardTemplateProps> = ({
       {
         id: product.id,
         name: product.name,
-        price: typeof product.price === 'string' ? Number.parseFloat(product.price) : product.price,
-        imageUrl: product.imageUrl || (product.images?.[0]?.url || ''),
+        price:
+          typeof product.price === "string"
+            ? Number.parseFloat(product.price)
+            : product.price,
+        imageUrl: product.imageUrl || product.images?.[0]?.url || "",
         stock: 10, // Default stock if not provided
         available: product.available,
-        categoryId: '',
-        categoryName: product.categoryName || '',
-        vendorId: product.vendorId || "" as string,
-        vendorName: product.vendorName || '',
-        
+        categoryId: "",
+        categoryName: product.categoryName || "",
+        vendorId: product.vendorId || ("" as string),
+        vendorName: product.vendorName || "",
       },
       1,
       {}
     );
 
     toast({
-      title: 'Added to cart',
+      title: "Added to cart",
       description: `${product.name} has been added to your cart.`,
     });
   };
@@ -81,22 +83,26 @@ const DefaultProductCardTemplate: React.FC<DefaultProductCardTemplateProps> = ({
 
   return (
     <div
-      className="group relative bg-white rounded-lg border overflow-hidden transition-all duration-300 hover:shadow-md"
+      className='group relative bg-white rounded-lg border overflow-hidden transition-all duration-300 hover:shadow-md'
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+      onMouseLeave={() => setIsHovered(false)}>
       {/* Product Image */}
-      <div className="relative aspect-square overflow-hidden">
+      <div className='relative aspect-square overflow-hidden'>
         <Link href={productLink}>
           <img
-            src={data?.displayImageUrl || product.images?.[0]?.url || product.imageUrl || '/assets/placeholder-product.png'}
+            src={
+              data?.displayImageUrl ||
+              product.images?.[0]?.url ||
+              product.imageUrl ||
+              "/assets/placeholder-product.png"
+            }
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
+            className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-105'
+            loading='lazy'
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.onerror = null;
-              target.src = '/assets/placeholder-product.png';
+              target.src = "/assets/placeholder-product.png";
             }}
             onLoad={data?.handleImageLoad}
           />
@@ -104,63 +110,68 @@ const DefaultProductCardTemplate: React.FC<DefaultProductCardTemplateProps> = ({
 
         {/* Discount Badge */}
         {product.discountPrice && product.price && (
-          <Badge className="absolute top-2 left-2 bg-red-500 hover:bg-red-600">
+          <Badge className='absolute top-2 left-2 bg-red-500 hover:bg-red-600'>
             {Math.round(
-              ((Number.parseFloat(product.price.toString()) - Number.parseFloat(product.discountPrice.toString())) / Number.parseFloat(product.price.toString())) * 100
-            )}% OFF
+              ((Number.parseFloat(product.price.toString()) -
+                Number.parseFloat(product.discountPrice.toString())) /
+                Number.parseFloat(product.price.toString())) *
+                100
+            )}
+            % OFF
           </Badge>
         )}
 
         {/* Action Buttons */}
         <div
           className={`absolute bottom-0 left-0 right-0 flex justify-center gap-2 p-2 bg-white/90 transition-all duration-300 ${
-            isHovered ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-          }`}
-        >
+            isHovered
+              ? "translate-y-0 opacity-100"
+              : "translate-y-full opacity-0"
+          }`}>
           {showAddToCart && (
             <Button
-              size="sm"
-              variant="outline"
-              className="flex-1 h-9"
-              onClick={handleAddToCart}
-            >
-              <ShoppingCart className="h-4 w-4 mr-2" />
+              size='sm'
+              variant='outline'
+              className='flex-1 h-9'
+              onClick={handleAddToCart}>
+              <ShoppingCart className='h-4 w-4 mr-2' />
               Add
             </Button>
           )}
 
           {showQuickView && (
             <Button
-              size="icon"
-              variant="outline"
-              className="h-9 w-9"
-              onClick={handleQuickView}
-            >
-              <Eye className="h-4 w-4" />
+              size='icon'
+              variant='outline'
+              className='h-9 w-9'
+              onClick={handleQuickView}>
+              <Eye className='h-4 w-4' />
             </Button>
           )}
 
           {showWishlist && (
             <Button
-              size="icon"
-              variant="outline"
-              className={`h-9 w-9 ${data?.isInWishlist ? 'text-red-500 border-red-500' : ''}`}
-              onClick={handleToggleWishlist}
-            >
-              <Heart className="h-4 w-4" fill={data?.isInWishlist ? 'currentColor' : 'none'} />
+              size='icon'
+              variant='outline'
+              className={`h-9 w-9 ${
+                data?.isInWishlist ? "text-red-500 border-red-500" : ""
+              }`}
+              onClick={handleToggleWishlist}>
+              <Heart
+                className='h-4 w-4'
+                fill={data?.isInWishlist ? "currentColor" : "none"}
+              />
             </Button>
           )}
         </div>
       </div>
 
       {/* Product Info */}
-      <div className="p-4">
+      <div className='p-4'>
         {/* Vendor Name */}
         {showVendor && product.vendorName && (
-          <div className="mb-1">
-            <div
-              className="text-xs text-gray-500 hover:text-primary"
-            >
+          <div className='mb-1'>
+            <div className='text-xs text-gray-500 hover:text-primary'>
               {product.vendorName}
             </div>
           </div>
@@ -168,26 +179,24 @@ const DefaultProductCardTemplate: React.FC<DefaultProductCardTemplateProps> = ({
 
         {/* Product Name */}
         <Link href={productLink}>
-          <h3 className="font-medium text-gray-900 mb-1 line-clamp-2 hover:text-primary transition-colors">
+          <h3 className='font-medium text-gray-900 mb-1 line-clamp-2 hover:text-primary transition-colors'>
             {product.name}
           </h3>
         </Link>
 
         {/* Price */}
-        <div className="flex items-center gap-2">
+        <div className='flex items-center gap-2'>
           {product.discountPrice ? (
             <>
-              <span className="font-semibold text-primary">
+              <span className='font-semibold text-primary'>
                 {product.discountPrice}
               </span>
-              <span className="text-sm text-gray-500 line-through">
+              <span className='text-sm text-gray-500 line-through'>
                 {product.price}
               </span>
             </>
           ) : (
-            <span className="font-semibold text-primary">
-              {product.price}
-            </span>
+            <span className='font-semibold text-primary'>{product.price}</span>
           )}
         </div>
       </div>

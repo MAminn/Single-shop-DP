@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "#root/components/Link.jsx";
+import { Link } from "#root/components/utils/Link";
 import { ArrowLeft, PlusCircle, Trash2 } from "lucide-react";
 import {
   Card,
@@ -139,27 +139,27 @@ export default function SubcategoryProducts() {
   );
 
   if (isLoading) {
-    return <div className="p-6">Loading...</div>;
+    return <div className='p-6'>Loading...</div>;
   }
 
   if (!category || !subcategory) {
     return (
-      <div className="p-6">
-        <div className="flex items-center mb-6">
-          <Button variant="ghost" asChild className="mr-2">
-            <Link href="/dashboard/categories">
-              <ArrowLeft className="h-4 w-4 mr-2" />
+      <div className='p-6'>
+        <div className='flex items-center mb-6'>
+          <Button variant='ghost' asChild className='mr-2'>
+            <Link href='/dashboard/categories'>
+              <ArrowLeft className='h-4 w-4 mr-2' />
               Back to Categories
             </Link>
           </Button>
         </div>
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-bold mb-2">Not Found</h2>
-          <p className="text-slate-500 mb-6">
+        <div className='text-center py-12'>
+          <h2 className='text-2xl font-bold mb-2'>Not Found</h2>
+          <p className='text-slate-500 mb-6'>
             The category or subcategory you're looking for doesn't exist.
           </p>
           <Button asChild>
-            <Link href="/dashboard/categories">Return to Categories</Link>
+            <Link href='/dashboard/categories'>Return to Categories</Link>
           </Button>
         </div>
       </div>
@@ -167,52 +167,50 @@ export default function SubcategoryProducts() {
   }
 
   return (
-    <div className="p-6 w-full h-full flex-wrap mx-auto">
-      <div className="flex flex-col  mb-6 gap-2 flex-wrap">
-        <div className="flex  gap-2">
-          <Button variant="ghost" asChild className="mr-4">
+    <div className='p-6 w-full h-full flex-wrap mx-auto'>
+      <div className='flex flex-col  mb-6 gap-2 flex-wrap'>
+        <div className='flex  gap-2'>
+          <Button variant='ghost' asChild className='mr-4'>
             <Link href={`/dashboard/categories/${category.id}`}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className='h-4 w-4 mr-2' />
               Back to {category.name}
             </Link>
           </Button>
-          <h1 className="text-2xl font-bold text-center ">
+          <h1 className='text-2xl font-bold text-center '>
             {subcategory.name}
           </h1>
         </div>
         <div>
-          <p className="text-slate-500">
+          <p className='text-slate-500'>
             Manage products in {category.name} &gt; {subcategory.name}
           </p>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row justify-center lg:justify-between items-center mb-4 flex-wrap gap-2">
-        <h2 className="text-xl font-semibold">Products</h2>
+      <div className='flex flex-col lg:flex-row justify-center lg:justify-between items-center mb-4 flex-wrap gap-2'>
+        <h2 className='text-xl font-semibold'>Products</h2>
         <Button
           onClick={() => setIsAddDialogOpen(true)}
-          disabled={availableProducts.length === 0}
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
+          disabled={availableProducts.length === 0}>
+          <PlusCircle className='mr-2 h-4 w-4' />
           Add Product
         </Button>
       </div>
 
       {products.length === 0 ? (
-        <Card className="text-center py-12">
+        <Card className='text-center py-12'>
           <CardContent>
-            <p className="text-slate-500 mb-4">
+            <p className='text-slate-500 mb-4'>
               No products in this subcategory
             </p>
             <Button
               onClick={() => setIsAddDialogOpen(true)}
-              disabled={availableProducts.length === 0}
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
+              disabled={availableProducts.length === 0}>
+              <PlusCircle className='mr-2 h-4 w-4' />
               Add Product
             </Button>
             {availableProducts.length === 0 && (
-              <p className="text-sm text-slate-500 mt-4">
+              <p className='text-sm text-slate-500 mt-4'>
                 No available products to add. Create products first.
               </p>
             )}
@@ -220,39 +218,38 @@ export default function SubcategoryProducts() {
         </Card>
       ) : (
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className='pt-6'>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Product</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Stock</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className='text-right'>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {products.map((product) => (
                   <TableRow key={product.id}>
-                    <TableCell className="font-medium">
+                    <TableCell className='font-medium'>
                       {product.name}
                     </TableCell>
                     <TableCell>{product.price.toFixed(2)} EGP</TableCell>
                     <TableCell>{product.stock} in stock</TableCell>
-                    <TableCell className="flex justify-end space-x-2">
-                      <Button size="sm" variant="outline" asChild>
+                    <TableCell className='flex justify-end space-x-2'>
+                      <Button size='sm' variant='outline' asChild>
                         <Link href={`/dashboard/products?edit=${product.id}`}>
                           Edit
                         </Link>
                       </Button>
                       <Button
-                        size="sm"
-                        variant="destructive"
+                        size='sm'
+                        variant='destructive'
                         onClick={() => {
                           setProductToRemove(product);
                           setIsRemoveDialogOpen(true);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
+                        }}>
+                        <Trash2 className='h-4 w-4' />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -268,26 +265,26 @@ export default function SubcategoryProducts() {
           <DialogHeader>
             <DialogTitle>Add Product to {subcategory.name}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className='space-y-4 py-4'>
             {availableProducts.length === 0 ? (
-              <p className="text-center text-slate-500">
+              <p className='text-center text-slate-500'>
                 No available products to add. Create products first.
               </p>
             ) : (
-              <div className="space-y-2">
-                <Label htmlFor="product">Select Product</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='product'>Select Product</Label>
                 <Select
-                  onValueChange={(value) => setSelectedProductId(Number(value))}
-                >
+                  onValueChange={(value) =>
+                    setSelectedProductId(Number(value))
+                  }>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a product" />
+                    <SelectValue placeholder='Select a product' />
                   </SelectTrigger>
                   <SelectContent>
                     {availableProducts.map((product) => (
                       <SelectItem
                         key={product.id}
-                        value={product.id.toString()}
-                      >
+                        value={product.id.toString()}>
                         {product.name} ({product.price.toFixed(2)} EGP)
                       </SelectItem>
                     ))}
@@ -297,13 +294,12 @@ export default function SubcategoryProducts() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+            <Button variant='outline' onClick={() => setIsAddDialogOpen(false)}>
               Cancel
             </Button>
             <Button
               onClick={handleAddProduct}
-              disabled={!selectedProductId || availableProducts.length === 0}
-            >
+              disabled={!selectedProductId || availableProducts.length === 0}>
               Add Product
             </Button>
           </DialogFooter>
@@ -315,24 +311,23 @@ export default function SubcategoryProducts() {
           <DialogHeader>
             <DialogTitle>Remove Product</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
+          <div className='py-4'>
             <p>
               Are you sure you want to remove "{productToRemove?.name}" from
               this subcategory?
             </p>
-            <p className="text-sm text-slate-500 mt-2">
+            <p className='text-sm text-slate-500 mt-2'>
               The product will still exist but won't be associated with this
               subcategory.
             </p>
           </div>
           <DialogFooter>
             <Button
-              variant="outline"
-              onClick={() => setIsRemoveDialogOpen(false)}
-            >
+              variant='outline'
+              onClick={() => setIsRemoveDialogOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleRemoveProduct}>
+            <Button variant='destructive' onClick={handleRemoveProduct}>
               Remove
             </Button>
           </DialogFooter>

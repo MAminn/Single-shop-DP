@@ -1,9 +1,9 @@
 import { useState, useMemo, memo } from "react";
-import { Link } from "./Link";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
+import { Link } from "#root/components/utils/Link";
+import { Button } from "#root/components/ui/button";
+import { Badge } from "#root/components/ui/badge";
 import { ShoppingCart, Store, Eye } from "lucide-react";
-import { useToast } from "./ui/use-toast";
+import { useToast } from "#root/components/ui/use-toast";
 import { useCart } from "#root/lib/context/CartContext";
 import { getProductUrl, getVendorUrl } from "#root/lib/utils/route-helpers";
 import TemplateRenderer from "#root/frontend/components/template/TemplateRenderer";
@@ -38,25 +38,30 @@ interface Product {
   discountPrice?: number | string | null;
   imageUrl?: string | null;
   images?: ProductImage[];
-  available: boolean; 
+  available: boolean;
   categoryName?: string | null;
   vendorId: string;
   vendorName: string | null;
   categories?: { id: string; name: string }[];
-  
 }
 
 interface ProductCardProps {
   product: Product;
   showVendor?: boolean;
   showImage?: boolean;
-  imageSize?: 'small' | 'medium' | 'large';
+  imageSize?: "small" | "medium" | "large";
   className?: string;
 }
 
 // Memoize the entire component for better performance
 export const ProductCard = memo(
-  ({ product, showVendor = true, showImage = true, imageSize = 'medium', className = '' }: ProductCardProps) => {
+  ({
+    product,
+    showVendor = true,
+    showImage = true,
+    imageSize = "medium",
+    className = "",
+  }: ProductCardProps) => {
     const [isAddingToCart, setIsAddingToCart] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
@@ -87,8 +92,8 @@ export const ProductCard = memo(
                     ? product.discountPrice
                     : Number(product.discountPrice)
                   : typeof product.price === "number"
-                    ? product.price
-                    : Number(product.price),
+                  ? product.price
+                  : Number(product.price),
               imageUrl: getDisplayImageUrl(),
               vendorId: product.vendorId,
               stock: 100, // Assuming available products have stock
@@ -196,16 +201,20 @@ export const ProductCard = memo(
       formattedPrice,
       hasImage,
       displayImageUrl,
-      handleImageLoad
+      handleImageLoad,
     };
 
     // Use template renderer with the active template
     return (
       <TemplateRenderer
-        category="productCard"
+        category='productCard'
         templateId={activeTemplate}
         data={templateData}
       />
     );
   }
 );
+
+ProductCard.displayName = "ProductCard";
+
+ProductCard.displayName = "ProductCard";

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { SidebarProvider, SidebarTrigger } from "#root/components/ui/sidebar";
-import { AppSidebar } from "#root/components/sidebar.jsx";
+import { AppSidebar } from "#root/components/globals/Sidebar";
 
 export { Layout };
 

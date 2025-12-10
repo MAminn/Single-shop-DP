@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "#root/components/Link.jsx";
+import { Link } from "#root/components/utils/Link";
 import {
   Card,
   CardHeader,
@@ -79,22 +79,22 @@ export default function CategoryDetail() {
 
   if (!fetchData.success) {
     return (
-      <div className="p-6 w-full h-full flex-wrap mx-auto">
-        <div className="flex items-center mb-6">
-          <Button variant="ghost" asChild className="mr-2">
-            <Link href="/dashboard/categories">
-              <ArrowLeft className="h-4 w-4 mr-2" />
+      <div className='p-6 w-full h-full flex-wrap mx-auto'>
+        <div className='flex items-center mb-6'>
+          <Button variant='ghost' asChild className='mr-2'>
+            <Link href='/dashboard/categories'>
+              <ArrowLeft className='h-4 w-4 mr-2' />
               Back to Categories
             </Link>
           </Button>
         </div>
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-bold mb-2">Category Not Found</h2>
-          <p className="text-slate-500 mb-6">
+        <div className='text-center py-12'>
+          <h2 className='text-2xl font-bold mb-2'>Category Not Found</h2>
+          <p className='text-slate-500 mb-6'>
             The category you're looking for doesn't exist.
           </p>
           <Button asChild>
-            <Link href="/dashboard/categories">Return to Categories</Link>
+            <Link href='/dashboard/categories'>Return to Categories</Link>
           </Button>
         </div>
       </div>
@@ -200,77 +200,74 @@ export default function CategoryDetail() {
   };
 
   return (
-    <div className="p-6 w-full h-full flex-wrap mx-auto">
-      <div className="flex flex-col lg:flex-row items-center mb-6 gap-2">
-        <Button variant="ghost" asChild className="mr-4">
-          <Link href="/dashboard/categories">
-            <ArrowLeft className="h-4 w-4 mr-2" />
+    <div className='p-6 w-full h-full flex-wrap mx-auto'>
+      <div className='flex flex-col lg:flex-row items-center mb-6 gap-2'>
+        <Button variant='ghost' asChild className='mr-4'>
+          <Link href='/dashboard/categories'>
+            <ArrowLeft className='h-4 w-4 mr-2' />
             Back to Categories
           </Link>
         </Button>
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold capitalize">{categoryType}</h1>
+        <div className='flex items-center gap-2'>
+          <h1 className='text-2xl font-bold capitalize'>{categoryType}</h1>
         </div>
       </div>
 
-      <div className="flex justify-center lg:justify-between items-center mb-4 flex-wrap gap-2">
-        <h2 className="text-xl font-semibold">Subcategories</h2>
+      <div className='flex justify-center lg:justify-between items-center mb-4 flex-wrap gap-2'>
+        <h2 className='text-xl font-semibold'>Subcategories</h2>
         <Button onClick={() => setIsAddDialogOpen(true)}>
-          <PlusCircle className="mr-2 h-4 w-4" />
+          <PlusCircle className='mr-2 h-4 w-4' />
           Add Subcategory
         </Button>
       </div>
 
       {subcategories.length === 0 ? (
-        <Card className="text-center py-12">
+        <Card className='text-center py-12'>
           <CardContent>
-            <p className="text-slate-500 mb-4">No subcategories found</p>
+            <p className='text-slate-500 mb-4'>No subcategories found</p>
             <Button onClick={() => setIsAddDialogOpen(true)}>
-              <PlusCircle className="mr-2 h-4 w-4" />
+              <PlusCircle className='mr-2 h-4 w-4' />
               Add Your First Subcategory
             </Button>
           </CardContent>
         </Card>
       ) : (
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className='pt-6'>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Products</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className='text-right'>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {subcategories.map((subcategory) => (
                   <TableRow key={subcategory.id}>
-                    <TableCell className="font-medium">
+                    <TableCell className='font-medium'>
                       {subcategory.name}
                     </TableCell>
                     <TableCell>{subcategory.productCount} product</TableCell>
-                    <TableCell className="flex justify-end space-x-2">
-                      <Button size="sm" variant="outline" asChild>
+                    <TableCell className='flex justify-end space-x-2'>
+                      <Button size='sm' variant='outline' asChild>
                         <Link
-                          href={`/dashboard/products?categoryId=${subcategory.id}`}
-                        >
-                          <Package className="h-4 w-4 mr-1" />
+                          href={`/dashboard/products?categoryId=${subcategory.id}`}>
+                          <Package className='h-4 w-4 mr-1' />
                           Products
                         </Link>
                       </Button>
                       <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openEditDialog(subcategory.id)}
-                      >
-                        <Pencil className="h-4 w-4" />
+                        size='sm'
+                        variant='outline'
+                        onClick={() => openEditDialog(subcategory.id)}>
+                        <Pencil className='h-4 w-4' />
                       </Button>
                       <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => openDeleteDialog(subcategory.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
+                        size='sm'
+                        variant='destructive'
+                        onClick={() => openDeleteDialog(subcategory.id)}>
+                        <Trash2 className='h-4 w-4' />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -291,7 +288,7 @@ export default function CategoryDetail() {
             type={categoryType}
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+            <Button variant='outline' onClick={() => setIsAddDialogOpen(false)}>
               Cancel
             </Button>
           </DialogFooter>
@@ -310,9 +307,8 @@ export default function CategoryDetail() {
           />
           <DialogFooter>
             <Button
-              variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
-            >
+              variant='outline'
+              onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
           </DialogFooter>
@@ -324,13 +320,13 @@ export default function CategoryDetail() {
           <DialogHeader>
             <DialogTitle>Delete Subcategory</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
+          <div className='py-4'>
             <p>
               Are you sure you want to delete "{selectedSubcategory?.name}"?
               This will also remove all product associations.
             </p>
             {selectedSubcategory && selectedSubcategory.productCount > 0 && (
-              <p className="mt-2 text-orange-600">
+              <p className='mt-2 text-orange-600'>
                 Warning: This subcategory has {selectedSubcategory.productCount}{" "}
                 products associated with it.
               </p>
@@ -338,12 +334,11 @@ export default function CategoryDetail() {
           </div>
           <DialogFooter>
             <Button
-              variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
+              variant='outline'
+              onClick={() => setIsDeleteDialogOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteSubcategory}>
+            <Button variant='destructive' onClick={handleDeleteSubcategory}>
               Delete
             </Button>
           </DialogFooter>

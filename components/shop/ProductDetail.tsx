@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "#root/components/ui/button";
 import { Badge } from "#root/components/ui/badge";
-import { Link } from "#root/components/Link";
+import { Link } from "#root/components/utils/Link";
 import { useToast } from "#root/components/ui/use-toast";
 import { useCart } from "#root/lib/context/CartContext";
 import {
@@ -260,7 +260,9 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
       if (success) {
         toast({
           title: "Added to Cart!",
-          description: `${quantity} x ${product.name} ${variantKey ? `(${variantKey})` : ""} added.`,
+          description: `${quantity} x ${product.name} ${
+            variantKey ? `(${variantKey})` : ""
+          } added.`,
         });
       } else {
         toast({
@@ -389,24 +391,23 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
 
   if (loading) {
     return (
-      <div className="container flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-10 w-10 animate-spin text-accent-lb" />
-        <span className="ml-3">Loading product...</span>
+      <div className='container flex items-center justify-center min-h-[60vh]'>
+        <Loader2 className='h-10 w-10 animate-spin text-accent-lb' />
+        <span className='ml-3'>Loading product...</span>
       </div>
     );
   }
 
   if (error || !product) {
     return (
-      <div className="container flex flex-col items-center justify-center min-h-[60vh] py-8">
-        <h2 className="text-2xl font-bold text-red-500 mb-2">Error</h2>
-        <p className="text-gray-600">{error || "Product not found"}</p>
+      <div className='container flex flex-col items-center justify-center min-h-[60vh] py-8'>
+        <h2 className='text-2xl font-bold text-red-500 mb-2'>Error</h2>
+        <p className='text-gray-600'>{error || "Product not found"}</p>
         <Button
           onClick={() => window.history.back()}
-          className="mt-4"
-          variant="outline"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
+          className='mt-4'
+          variant='outline'>
+          <ArrowLeft className='mr-2 h-4 w-4' /> Go Back
         </Button>
       </div>
     );
@@ -421,7 +422,7 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
       stars.push(
         <Star
           key={`full-${i}`}
-          className="fill-yellow-400 text-yellow-400 h-4 w-4"
+          className='fill-yellow-400 text-yellow-400 h-4 w-4'
         />
       );
     }
@@ -429,15 +430,15 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
     if (hasHalfStar) {
       stars.push(
         <StarHalf
-          key="half"
-          className="fill-yellow-400 text-yellow-400 h-4 w-4"
+          key='half'
+          className='fill-yellow-400 text-yellow-400 h-4 w-4'
         />
       );
     }
 
     const emptyStars = 5 - stars.length;
     for (let i = 0; i < emptyStars; i++) {
-      stars.push(<Star key={`empty-${i}`} className="text-gray-300 h-4 w-4" />);
+      stars.push(<Star key={`empty-${i}`} className='text-gray-300 h-4 w-4' />);
     }
 
     return stars;
@@ -457,44 +458,41 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="flex flex-col md:flex-row gap-8">
-        <div className="md:w-1/2 space-y-4">
-          <div className="mb-6">
-            <div className="relative rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+    <div className='container mx-auto px-4 py-8 max-w-6xl'>
+      <div className='flex flex-col md:flex-row gap-8'>
+        <div className='md:w-1/2 space-y-4'>
+          <div className='mb-6'>
+            <div className='relative rounded-lg overflow-hidden bg-gray-100 border border-gray-200'>
               {product.images && product.images.length > 1 && (
                 <>
                   <button
-                    type="button"
+                    type='button'
                     onClick={prevImage}
-                    className="absolute left-2 top-1/2 transform -translate-y-1/2 p-2 bg-white/80 hover:bg-white rounded-full shadow-md z-20 transition-all"
-                    aria-label="Previous image"
-                  >
+                    className='absolute left-2 top-1/2 transform -translate-y-1/2 p-2 bg-white/80 hover:bg-white rounded-full shadow-md z-20 transition-all'
+                    aria-label='Previous image'>
                     <ChevronLeft
-                      className="h-6 w-6 text-gray-700"
-                      aria-hidden="true"
+                      className='h-6 w-6 text-gray-700'
+                      aria-hidden='true'
                     />
                   </button>
                   <button
-                    type="button"
+                    type='button'
                     onClick={nextImage}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-white/80 hover:bg-white rounded-full shadow-md z-20 transition-all"
-                    aria-label="Next image"
-                  >
+                    className='absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-white/80 hover:bg-white rounded-full shadow-md z-20 transition-all'
+                    aria-label='Next image'>
                     <ChevronRight
-                      className="h-6 w-6 text-gray-700"
-                      aria-hidden="true"
+                      className='h-6 w-6 text-gray-700'
+                      aria-hidden='true'
                     />
                   </button>
                 </>
               )}
 
               <button
-                type="button"
-                className="w-full aspect-square flex items-center justify-center overflow-hidden cursor-zoom-in bg-transparent border-0 p-0"
+                type='button'
+                className='w-full aspect-square flex items-center justify-center overflow-hidden cursor-zoom-in bg-transparent border-0 p-0'
                 onClick={toggleZoom}
-                aria-label="Zoom product image"
-              >
+                aria-label='Zoom product image'>
                 {product.images && product.images.length > 0 ? (
                   <img
                     src={currentImageUrl}
@@ -508,52 +506,51 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
                     }}
                   />
                 ) : (
-                  <div className="w-full h-64 flex items-center justify-center bg-gray-100">
-                    <ZoomIn className="h-10 w-10 text-gray-400" />
+                  <div className='w-full h-64 flex items-center justify-center bg-gray-100'>
+                    <ZoomIn className='h-10 w-10 text-gray-400' />
                   </div>
                 )}
 
                 {isZoomed && (
-                  <div className="absolute inset-0 bg-white/10 backdrop-blur-sm flex items-center justify-center z-10">
-                    <ZoomIn className="text-white h-8 w-8" />
+                  <div className='absolute inset-0 bg-white/10 backdrop-blur-sm flex items-center justify-center z-10'>
+                    <ZoomIn className='text-white h-8 w-8' />
                   </div>
                 )}
               </button>
             </div>
 
             {product.images && product.images.length > 1 && (
-              <div className="mt-2 flex justify-center">
-                <span className="text-sm bg-gray-100 px-3 py-1 rounded-full">
+              <div className='mt-2 flex justify-center'>
+                <span className='text-sm bg-gray-100 px-3 py-1 rounded-full'>
                   {currentImageIndex + 1} / {product.images.length}
                 </span>
               </div>
             )}
 
             {product.images && product.images.length > 1 && (
-              <div className="mt-4">
-                <div className="grid grid-cols-5 sm:grid-cols-6 gap-2">
+              <div className='mt-4'>
+                <div className='grid grid-cols-5 sm:grid-cols-6 gap-2'>
                   {product.images.map((img, i) => (
                     <button
                       key={`gallery-${img.url}-${i}`}
-                      type="button"
+                      type='button'
                       onClick={() => setCurrentImageIndex(i)}
                       className={`relative rounded border overflow-hidden aspect-square ${
                         i === currentImageIndex
                           ? "border-accent-lb ring-2 ring-accent-lb/30"
                           : "border-gray-200 hover:border-accent-lb/50"
-                      }`}
-                    >
+                      }`}>
                       <img
                         src={img.url}
                         alt={`${product.name} - view ${i + 1}`}
-                        className="w-full h-full object-cover"
+                        className='w-full h-full object-cover'
                         onError={(e) => {
                           e.currentTarget.src = "/placeholder.jpg";
                           e.currentTarget.onerror = null;
                         }}
                       />
                       {i === currentImageIndex && (
-                        <div className="absolute inset-0 bg-accent-lb/10 border-2 border-accent-lb"></div>
+                        <div className='absolute inset-0 bg-accent-lb/10 border-2 border-accent-lb'></div>
                       )}
                     </button>
                   ))}
@@ -563,9 +560,9 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
           </div>
         </div>
 
-        <div className="md:w-1/2 space-y-6">
+        <div className='md:w-1/2 space-y-6'>
           <div>
-            <div className="flex flex-wrap gap-1 mb-2">
+            <div className='flex flex-wrap gap-1 mb-2'>
               {product.categories && product.categories.length > 0
                 ? product.categories.map((cat) => (
                     <Badge
@@ -574,36 +571,34 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
                         cat.id === product.categoryId
                           ? "bg-accent-lb/20 text-accent-lb hover:bg-accent-lb/30"
                           : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }
-                    >
+                      }>
                       {cat.name}
                     </Badge>
                   ))
                 : product.categoryName && (
-                    <Badge className="bg-accent-lb/20 text-accent-lb hover:bg-accent-lb/30">
+                    <Badge className='bg-accent-lb/20 text-accent-lb hover:bg-accent-lb/30'>
                       {product.categoryName}
                     </Badge>
                   )}
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className='text-3xl font-bold text-gray-900 mb-2'>
               {product.name}
             </h1>
 
             {product.vendorName && (
               <Link
                 href={getVendorUrl(product.vendorId)}
-                className="text-sm text-gray-500 flex items-center hover:text-accent-lb transition-colors"
-              >
-                <Store className="inline-block h-4 w-4 mr-1" />
+                className='text-sm text-gray-500 flex items-center hover:text-accent-lb transition-colors'>
+                <Store className='inline-block h-4 w-4 mr-1' />
                 {product.vendorName}
               </Link>
             )}
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className='flex items-center gap-4'>
             {product.discountPrice ? (
-              <div className="flex flex-col">
-                <span className="text-lg text-gray-500 line-through">
+              <div className='flex flex-col'>
+                <span className='text-lg text-gray-500 line-through'>
                   {typeof product.price === "number"
                     ? product.price.toFixed(2)
                     : Number.parseFloat(product.price as string).toFixed(
@@ -611,7 +606,7 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
                       )}{" "}
                   EGP
                 </span>
-                <span className="text-3xl font-bold text-red-600">
+                <span className='text-3xl font-bold text-red-600'>
                   {typeof product.discountPrice === "number"
                     ? product.discountPrice.toFixed(2)
                     : Number.parseFloat(
@@ -621,7 +616,7 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
                 </span>
               </div>
             ) : (
-              <span className="text-3xl font-bold text-gray-900">
+              <span className='text-3xl font-bold text-gray-900'>
                 {typeof product.price === "number"
                   ? product.price.toFixed(2)
                   : Number.parseFloat(product.price as string).toFixed(2)}{" "}
@@ -630,55 +625,53 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
             )}
 
             {product.stock <= 10 && product.stock > 0 && (
-              <span className="text-orange-500 text-sm">
+              <span className='text-orange-500 text-sm'>
                 Only {product.stock} left
               </span>
             )}
             {product.stock <= 0 && (
               <Badge
-                variant="outline"
-                className="text-gray-500 border-gray-300"
-              >
+                variant='outline'
+                className='text-gray-500 border-gray-300'>
                 Out of Stock
               </Badge>
             )}
           </div>
 
           {product.rating !== undefined && product.rating > 0 ? (
-            <div className="flex items-center gap-1">
+            <div className='flex items-center gap-1'>
               {renderRatingStars(product.rating)}
-              <span className="text-sm text-gray-600">
+              <span className='text-sm text-gray-600'>
                 ({product.reviewCount ?? 0} reviews)
               </span>
             </div>
           ) : (
-            <span className="text-sm text-gray-500">No reviews yet</span>
+            <span className='text-sm text-gray-500'>No reviews yet</span>
           )}
 
-          <div className="prose prose-sm max-w-none text-gray-600">
+          <div className='prose prose-sm max-w-none text-gray-600'>
             <p>{product.description || "No description available."}</p>
           </div>
 
           {product.variants && product.variants.length > 0 && (
-            <div className="space-y-4">
+            <div className='space-y-4'>
               {product.variants.map((variant: Variant) => (
                 <div key={variant.name}>
-                  <h3 className="text-sm font-medium text-gray-900 mb-2">
+                  <h3 className='text-sm font-medium text-gray-900 mb-2'>
                     {variant.name}
                   </h3>
-                  <div className="flex flex-wrap gap-2">
+                  <div className='flex flex-wrap gap-2'>
                     {variant.values.map((value: string) => (
                       <button
                         key={value}
-                        type="button"
+                        type='button'
                         onClick={() => handleOptionChange(variant.name, value)}
                         className={`px-3 py-1 border rounded-md text-sm font-medium transition-all
                           ${
                             selectedOptions[variant.name] === value
                               ? "bg-accent-lb text-white border-accent-lb"
                               : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                          }`}
-                      >
+                          }`}>
                         {value}
                       </button>
                     ))}
@@ -688,37 +681,35 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
             </div>
           )}
 
-          <div className="pt-4 flex flex-col sm:flex-row items-center gap-4">
-            <div className="w-full sm:w-auto">
-              <label htmlFor="quantity" className="sr-only">
+          <div className='pt-4 flex flex-col sm:flex-row items-center gap-4'>
+            <div className='w-full sm:w-auto'>
+              <label htmlFor='quantity' className='sr-only'>
                 Quantity
               </label>
-              <div className="flex border border-gray-300 rounded-md w-full">
+              <div className='flex border border-gray-300 rounded-md w-full'>
                 <button
-                  type="button"
-                  className="px-3 py-2 text-gray-600 hover:bg-gray-100 focus:outline-none"
-                  onClick={() => quantity > 1 && setQuantity(quantity - 1)}
-                >
+                  type='button'
+                  className='px-3 py-2 text-gray-600 hover:bg-gray-100 focus:outline-none'
+                  onClick={() => quantity > 1 && setQuantity(quantity - 1)}>
                   -
                 </button>
                 <input
-                  type="number"
-                  id="quantity"
-                  name="quantity"
-                  min="1"
+                  type='number'
+                  id='quantity'
+                  name='quantity'
+                  min='1'
                   max={product.stock || 1}
-                  className="flex-1 text-center border-x border-gray-300 focus:outline-none"
+                  className='flex-1 text-center border-x border-gray-300 focus:outline-none'
                   value={quantity}
                   onChange={handleQuantityChange}
                 />
                 <button
-                  type="button"
-                  className="px-3 py-2 text-gray-600 hover:bg-gray-100 focus:outline-none"
+                  type='button'
+                  className='px-3 py-2 text-gray-600 hover:bg-gray-100 focus:outline-none'
                   onClick={() =>
                     quantity < (product?.stock || 1) &&
                     setQuantity(quantity + 1)
-                  }
-                >
+                  }>
                   +
                 </button>
               </div>
@@ -727,22 +718,21 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
             <Button
               onClick={handleAddToCart}
               disabled={isAddingToCart || product.stock <= 0}
-              className="w-full sm:w-auto bg-accent-lb hover:bg-[#021E43] transition-colors min-w-[180px]"
-              size="lg"
-            >
-              <ShoppingCart className="h-5 w-5 mr-2" />
+              className='w-full sm:w-auto bg-accent-lb hover:bg-[#021E43] transition-colors min-w-[180px]'
+              size='lg'>
+              <ShoppingCart className='h-5 w-5 mr-2' />
               {isAddingToCart ? "Adding..." : "Add to Cart"}
             </Button>
           </div>
 
-          <div className="border-t border-gray-200 pt-6 mt-6">
-            <dl className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+          <div className='border-t border-gray-200 pt-6 mt-6'>
+            <dl className='grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2'>
               {product.stock !== undefined && (
-                <div className="border-b border-gray-200 pb-3">
-                  <dt className="text-sm font-medium text-gray-500">
+                <div className='border-b border-gray-200 pb-3'>
+                  <dt className='text-sm font-medium text-gray-500'>
                     Availability
                   </dt>
-                  <dd className="mt-1 text-sm text-gray-900">
+                  <dd className='mt-1 text-sm text-gray-900'>
                     {product.stock > 0
                       ? `In stock (${product.stock})`
                       : "Out of stock"}
@@ -750,12 +740,12 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
                 </div>
               )}
               {product.categoryName && (
-                <div className="border-b border-gray-200 pb-3">
-                  <dt className="text-sm font-medium text-gray-500">
+                <div className='border-b border-gray-200 pb-3'>
+                  <dt className='text-sm font-medium text-gray-500'>
                     Categories
                   </dt>
-                  <dd className="mt-1 text-sm text-gray-900">
-                    <div className="flex flex-col gap-1">
+                  <dd className='mt-1 text-sm text-gray-900'>
+                    <div className='flex flex-col gap-1'>
                       {product.categories && product.categories.length > 0 ? (
                         product.categories.map((cat) => (
                           <span
@@ -764,8 +754,7 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
                               cat.id === product.categoryId
                                 ? "font-medium"
                                 : "text-gray-600"
-                            }
-                          >
+                            }>
                             {cat.name}
                           </span>
                         ))
@@ -777,13 +766,12 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
                 </div>
               )}
               {product.vendorName && (
-                <div className="border-b border-gray-200 pb-3">
-                  <dt className="text-sm font-medium text-gray-500">Brand</dt>
-                  <dd className="mt-1 text-sm text-gray-900">
+                <div className='border-b border-gray-200 pb-3'>
+                  <dt className='text-sm font-medium text-gray-500'>Brand</dt>
+                  <dd className='mt-1 text-sm text-gray-900'>
                     <Link
                       href={getVendorUrl(product.vendorId)}
-                      className="hover:text-accent-lb"
-                    >
+                      className='hover:text-accent-lb'>
                       {product.vendorName}
                     </Link>
                   </dd>
@@ -794,17 +782,17 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
         </div>
       </div>
 
-      <div className="mt-12">
-        <Tabs defaultValue="reviews" className="w-full ">
-          <TabsList className="w-full justify-start mb-6 bg-transparent border-b">
-            <TabsTrigger value="reviews" className="text-lg">
+      <div className='mt-12'>
+        <Tabs defaultValue='reviews' className='w-full '>
+          <TabsList className='w-full justify-start mb-6 bg-transparent border-b'>
+            <TabsTrigger value='reviews' className='text-lg'>
               Reviews ({reviewStats.totalReviews})
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="reviews" className="pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-1">
-                <Card className="border-accent-lb/20 px-4">
+          <TabsContent value='reviews' className='pt-4'>
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+              <div className='md:col-span-1'>
+                <Card className='border-accent-lb/20 px-4'>
                   <CardHeader>
                     <CardTitle>Write a Review</CardTitle>
                     <CardDescription>
@@ -815,17 +803,16 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
                     <Form {...form}>
                       <form
                         onSubmit={form.handleSubmit(onSubmitReview)}
-                        className="space-y-4"
-                      >
+                        className='space-y-4'>
                         <FormField
                           control={form.control}
-                          name="userName"
+                          name='userName'
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Your Name</FormLabel>
                               <FormControl>
                                 <Input
-                                  placeholder="Enter your name"
+                                  placeholder='Enter your name'
                                   {...field}
                                 />
                               </FormControl>
@@ -836,25 +823,24 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
 
                         <FormField
                           control={form.control}
-                          name="rating"
+                          name='rating'
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Rating</FormLabel>
                               <FormControl>
-                                <div className="flex gap-2">
+                                <div className='flex gap-2'>
                                   {[1, 2, 3, 4, 5].map((star) => (
                                     <Button
                                       key={star}
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
+                                      type='button'
+                                      variant='outline'
+                                      size='sm'
                                       onClick={() => field.onChange(star)}
                                       className={
                                         field.value >= star
                                           ? "bg-yellow-400 border-yellow-400 hover:bg-yellow-500 hover:border-yellow-500"
                                           : ""
-                                      }
-                                    >
+                                      }>
                                       <Star
                                         className={
                                           field.value >= star
@@ -873,14 +859,14 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
 
                         <FormField
                           control={form.control}
-                          name="comment"
+                          name='comment'
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Your Review</FormLabel>
                               <FormControl>
                                 <Textarea
-                                  placeholder="Share your experience with this product"
-                                  className="min-h-[100px]"
+                                  placeholder='Share your experience with this product'
+                                  className='min-h-[100px]'
                                   {...field}
                                 />
                               </FormControl>
@@ -890,10 +876,9 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
                         />
 
                         <Button
-                          type="submit"
-                          className="w-full bg-accent-lb hover:bg-accent-db"
-                          disabled={isSubmittingReview}
-                        >
+                          type='submit'
+                          className='w-full bg-accent-lb hover:bg-accent-db'
+                          disabled={isSubmittingReview}>
                           {isSubmittingReview
                             ? "Submitting..."
                             : "Submit Review"}
@@ -904,35 +889,35 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
                 </Card>
               </div>
 
-              <div className="md:col-span-2">
+              <div className='md:col-span-2'>
                 {reviews.length === 0 ? (
-                  <div className="text-center py-12 bg-gray-50 rounded-lg">
-                    <h3 className="text-xl font-semibold mb-2">
+                  <div className='text-center py-12 bg-gray-50 rounded-lg'>
+                    <h3 className='text-xl font-semibold mb-2'>
                       No Reviews Yet
                     </h3>
-                    <p className="text-gray-500 mb-4">
+                    <p className='text-gray-500 mb-4'>
                       Be the first to review this product
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-6">
+                  <div className='space-y-6'>
                     {reviews.map((review) => (
-                      <Card key={review.id} className="border-gray-200 px-4">
-                        <CardHeader className="pb-2">
-                          <div className="flex justify-between items-center">
-                            <CardTitle className="text-lg font-semibold">
+                      <Card key={review.id} className='border-gray-200 px-4'>
+                        <CardHeader className='pb-2'>
+                          <div className='flex justify-between items-center'>
+                            <CardTitle className='text-lg font-semibold'>
                               {review.userName}
                             </CardTitle>
-                            <div className="flex">
+                            <div className='flex'>
                               {renderRatingStars(review.rating)}
                             </div>
                           </div>
-                          <CardDescription className="text-xs">
+                          <CardDescription className='text-xs'>
                             {new Date(review.createdAt).toLocaleDateString()}
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-gray-700">{review.comment}</p>
+                          <p className='text-gray-700'>{review.comment}</p>
                         </CardContent>
                       </Card>
                     ))}

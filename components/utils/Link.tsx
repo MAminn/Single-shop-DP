@@ -21,8 +21,7 @@ export function Link({
     <a
       href={href}
       className={cn(isActive ? "is-active" : undefined, `${className}`)}
-      onClick={onClick}
-    >
+      onClick={onClick}>
       {children}
     </a>
   );

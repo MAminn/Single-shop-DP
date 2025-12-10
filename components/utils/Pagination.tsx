@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "#root/components/ui/button";
 
 interface PaginationProps {
   currentPage: number;
@@ -79,40 +79,37 @@ export function Pagination({
   }
 
   return (
-    <div className="flex items-center justify-center space-x-2">
+    <div className='flex items-center justify-center space-x-2'>
       <Button
-        variant="outline"
-        size="icon"
+        variant='outline'
+        size='icon'
         onClick={handlePrev}
         disabled={isPrevDisabled}
-        aria-label="Previous page"
-      >
-        <ChevronLeft className="h-4 w-4" />
+        aria-label='Previous page'>
+        <ChevronLeft className='h-4 w-4' />
       </Button>
 
       {getPageNumbers().map((page) => (
         <Button
           key={page}
           variant={page === currentPage ? "default" : "outline"}
-          size="sm"
+          size='sm'
           onClick={() => onPageChange(page)}
           disabled={page === currentPage}
           className={
             page === currentPage ? "bg-accent-lb hover:bg-accent-lb/90" : ""
-          }
-        >
+          }>
           {page}
         </Button>
       ))}
 
       <Button
-        variant="outline"
-        size="icon"
+        variant='outline'
+        size='icon'
         onClick={handleNext}
         disabled={isNextDisabled}
-        aria-label="Next page"
-      >
-        <ChevronRight className="h-4 w-4" />
+        aria-label='Next page'>
+        <ChevronRight className='h-4 w-4' />
       </Button>
     </div>
   );
