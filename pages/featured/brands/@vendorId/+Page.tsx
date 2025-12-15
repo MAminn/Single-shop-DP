@@ -13,8 +13,10 @@ import AnimatedContent from "#root/components/utils/AnimatedContent";
 import { Button } from "#root/components/ui/button";
 import { usePageContext } from "vike-react/usePageContext";
 import { ErrorSection } from "#root/components/dashboard/ErrorSection";
-import Sorting from "#root/components/shop/Sorting";
 import { Badge } from "#root/components/ui/badge";
+import { getTemplateComponent } from "#root/components/template-system/templateConfig";
+import { useTemplate } from "#root/frontend/contexts/TemplateContext";
+import type { SortingPageProduct } from "#root/components/template-system";
 
 interface VendorData {
   id: string;
@@ -31,10 +33,19 @@ interface VendorData {
 export default function BrandDetailPage() {
   const ctx = usePageContext();
   const vendorId = ctx.urlPathname.split("/").pop()?.replace(/^@/, "");
+  const { getTemplateId } = useTemplate();
 
   const [vendor, setVendor] = useState<VendorData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Product listing state
+  const [products, setProducts] = useState<SortingPageProduct[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const fetchVendor = useCallback(async () => {
     if (!vendorId) {
@@ -63,6 +74,56 @@ export default function BrandDetailPage() {
   useEffect(() => {
     fetchVendor();
   }, [fetchVendor]);
+
+  // Fetch products for this vendor
+  const fetchProducts = useCallback(async () => {
+    if (!vendorId) return;
+
+    setProductsLoading(true);
+    try {
+      const result = await trpc.product.view.query({
+        vendorId,
+        limit: 12,
+        offset: (currentPage - 1) * 12,
+        search: searchTerm || undefined,
+        sortBy:
+          sortBy === "newest"
+            ? undefined
+            : (sortBy as "name" | "price" | "discountPrice" | "stock"),
+      });
+
+      if (result.success && result.result) {
+        const transformedProducts: SortingPageProduct[] =
+          result.result.products.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            discountPrice: p.discountPrice ?? undefined,
+            stock: p.stock || 0,
+            imageUrl: p.primaryImageUrl ?? undefined,
+            vendorId: p.vendorId || vendorId || "",
+            vendorName: vendor?.name || null,
+            categoryName: p.categoryName || "Uncategorized",
+            available: (p.stock || 0) > 0,
+            rating: 4.5,
+            reviewCount: 0,
+            inStock: (p.stock || 0) > 0,
+            category: p.categoryName || "Uncategorized",
+          }));
+
+        setProducts(transformedProducts);
+        setTotalPages(Math.ceil(result.result.totalCount / 12));
+      }
+    } catch (err) {
+      console.error("Failed to fetch products:", err);
+    } finally {
+      setProductsLoading(false);
+    }
+  }, [vendorId, currentPage, searchTerm, sortBy]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   if (isLoading) {
     return (
@@ -244,7 +305,31 @@ export default function BrandDetailPage() {
               <h2 className='text-xl font-semibold mb-6 pb-2 border-b'>
                 Products by {vendor.name}
               </h2>
-              <Sorting vendorId={vendorId} />
+              {(() => {
+                const activeTemplateId = getTemplateId("sorting");
+                const TemplateEntry = getTemplateComponent(
+                  "sorting",
+                  activeTemplateId || "sorting-toolbar"
+                );
+
+                if (!TemplateEntry) {
+                  return <div>Template not found</div>;
+                }
+
+                return (
+                  <TemplateEntry.component
+                    products={products}
+                    isLoading={productsLoading}
+                    searchTerm={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    sortBy={sortBy}
+                    onSortChange={setSortBy}
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                );
+              })()}
             </div>
           </div>
         </div>

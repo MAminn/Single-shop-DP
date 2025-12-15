@@ -9,6 +9,7 @@ import { orderRouter } from "#root/backend/orders/trpc";
 import { productRouter } from "#root/backend/products/trpc";
 import { vendorRouter } from "#root/backend/vendor/trpc";
 import { promoCodesRouter } from "#root/backend/promo-codes/trpc";
+import { homepageRouter } from "#root/backend/homepage/trpc";
 import { publicProcedure, router, t } from "./server";
 
 const authRouter = t.router({
@@ -30,6 +31,7 @@ export const appRouter = router({
   order: orderRouter,
   file: fileRouter,
   promoCode: promoCodesRouter,
+  homepage: homepageRouter,
 });
 
 export type AppRouter = typeof appRouter;

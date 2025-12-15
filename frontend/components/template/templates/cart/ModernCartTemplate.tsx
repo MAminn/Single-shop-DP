@@ -1,3 +1,11 @@
+/**
+ * @legacy
+ * Legacy Template System (v1)
+ * - Fully preserved for admin preview
+ * - Not used in frontend rendering
+ * - Used as a design asset library
+ */
+
 import { Footer } from "#root/components/globals/Footer";
 import { Link } from "#root/components/utils/Link";
 import { Badge } from "#root/components/ui/badge";

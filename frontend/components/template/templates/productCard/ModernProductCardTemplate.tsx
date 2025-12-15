@@ -1,3 +1,11 @@
+/**
+ * @legacy
+ * Legacy Template System (v1)
+ * - Fully preserved for admin preview
+ * - Not used in frontend rendering
+ * - Used as a design asset library
+ */
+
 import React, { useState } from "react";
 import { Link } from "#root/components/utils/Link";
 import { Button } from "#root/components/ui/button";

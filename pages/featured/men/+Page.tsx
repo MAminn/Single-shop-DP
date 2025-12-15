@@ -1,27 +1,72 @@
-import { useData } from "vike-react/useData";
-import type { Data } from "./+data";
-import TemplateRenderer from "#root/frontend/components/template/TemplateRenderer";
-import useTemplate from "#root/frontend/components/template/useTemplate";
+import { useState, useEffect } from "react";
+import { trpc } from "#root/shared/trpc/client";
+import { getTemplateComponent } from "#root/components/template-system/templateConfig";
+import { useTemplate } from "#root/frontend/contexts/TemplateContext";
+import type { SortingPageProduct } from "#root/components/template-system/sorting/SortingToolbarTemplate";
 
 const Page: React.FC = () => {
-  const fetchData = useData<Data>();
-  const { activeTemplate } = useTemplate('men');
+  const [products, setProducts] = useState<SortingPageProduct[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOption, setSortOption] = useState("featured");
+  const { getTemplateId } = useTemplate();
 
-  // Prepare template data
-  const templateData = {
-    subcategories: fetchData.success ? fetchData.subcategories : [],
-    isLoading: false,
-    error: fetchData.success ? null : fetchData.error
-  };
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      try {
+        const result = await trpc.product.search.query({
+          categoryType: "men",
+          limit: 100,
+          includeOutOfStock: true,
+        });
 
+        if (result.success && result.result) {
+          const mappedProducts: SortingPageProduct[] = result.result.items.map(
+            (p) => ({
+              id: p.id,
+              name: p.name,
+              price: Number(p.price),
+              discountPrice: p.discountPrice ? Number(p.discountPrice) : null,
+              stock: p.stock,
+              imageUrl: p.imageUrl ?? undefined,
+              images: p.images,
+              vendorId: p.vendorId || "",
+              vendorName: p.vendorName || null,
+              categoryName: p.categoryName || null,
+              available: p.stock > 0,
+              vendor: p.vendorName || "",
+            })
+          );
+          setProducts(mappedProducts);
+        }
+      } catch (err) {
+        console.error("Error fetching products:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  console.log(templateData.subcategories.map((subcategory) => subcategory.name))
+    fetchProducts();
+  }, []);
+
+  const activeTemplateId = getTemplateId("sorting") ?? "sorting-toolbar";
+  const TemplateEntry = getTemplateComponent("sorting", activeTemplateId);
+
+  if (!TemplateEntry) {
+    return <div>Sorting template not found.</div>;
+  }
+
+  const Template = TemplateEntry.component;
 
   return (
-    <TemplateRenderer
-      category="men"
-      templateId={activeTemplate}
-      data={templateData}
+    <Template
+      products={products}
+      isLoading={isLoading}
+      onSearchChange={setSearchQuery}
+      onSortChange={setSortOption}
+      onOpenFilters={() => console.log("Filters clicked")}
+      defaultSort={sortOption}
     />
   );
 };

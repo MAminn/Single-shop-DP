@@ -1,55 +1,83 @@
-import type React from 'react';
-import { useState, Suspense } from 'react';
-import { Button } from '#root/components/ui/button';
+import type React from "react";
+import { useState, Suspense } from "react";
+import { Button } from "#root/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '#root/components/ui/card';
+} from "#root/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '#root/components/ui/select';
-import { Badge } from '#root/components/ui/badge';
-import { Monitor, Palette, CheckCircle, ExternalLink, Layers } from 'lucide-react';
-import { useTemplate } from '#root/frontend/contexts/TemplateContext';
-import { getAvailableTemplates, getTemplateMetadata, getTemplateComponent, type TemplateCategory } from '#root/frontend/components/template/templateRegistry';
+} from "#root/components/ui/select";
+import { Badge } from "#root/components/ui/badge";
+import {
+  Monitor,
+  Palette,
+  CheckCircle,
+  ExternalLink,
+  Layers,
+  Sparkles,
+} from "lucide-react";
+import { useTemplate } from "#root/frontend/contexts/TemplateContext";
+import {
+  getAvailableTemplates,
+  getTemplateMetadata,
+  getTemplateComponent,
+  type TemplateCategory,
+} from "#root/frontend/components/template/templateRegistry";
 
 // Import ProductCardTemplatePreview component
-import { ProductCardTemplatePreview } from '#root/components/template/ProductCardTemplatePreview';
+import { ProductCardTemplatePreview } from "#root/components/template/ProductCardTemplatePreview";
+
+// Import new template system
+import {
+  templateConfig,
+  type TemplateCategory as NewTemplateCategory,
+  getTemplateIds,
+  getTemplateComponent as getNewTemplateComponent,
+} from "#root/components/template-system/templateConfig";
+
+import { TemplateSelector } from "#root/components/template/TemplateSelector";
+import { TemplateCardGrid } from "#root/components/template/TemplateCardGrid";
 
 // Template preview component
-const TemplatePreview: React.FC<{ templateId: string; isActive: boolean; category: TemplateCategory }> = ({ templateId, isActive, category }) => {
+const TemplatePreview: React.FC<{
+  templateId: string;
+  isActive: boolean;
+  category: TemplateCategory;
+}> = ({ templateId, isActive, category }) => {
   const TemplateComponent = getTemplateComponent(category, templateId);
-  
+
   if (!TemplateComponent) {
     return (
-      <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">
+      <div className='w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500'>
         Preview not available
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-48 bg-white rounded-lg border overflow-hidden">
-      <div className="transform scale-[0.2] origin-top-left w-[500%] h-[500%]">
-        <Suspense fallback={
-          <div className="w-full h-full bg-gray-100 animate-pulse flex items-center justify-center">
-            Loading preview...
-          </div>
-        }>
+    <div className='relative w-full h-48 bg-white rounded-lg border overflow-hidden'>
+      <div className='transform scale-[0.2] origin-top-left w-[500%] h-[500%]'>
+        <Suspense
+          fallback={
+            <div className='w-full h-full bg-gray-100 animate-pulse flex items-center justify-center'>
+              Loading preview...
+            </div>
+          }>
           <TemplateComponent />
         </Suspense>
       </div>
       {isActive && (
-        <div className="absolute top-2 right-2">
-          <Badge variant="default" className="bg-green-500">
-            <CheckCircle className="w-3 h-3 mr-1" />
+        <div className='absolute top-2 right-2'>
+          <Badge variant='default' className='bg-green-500'>
+            <CheckCircle className='w-3 h-3 mr-1' />
             Active
           </Badge>
         </div>
@@ -61,8 +89,9 @@ const TemplatePreview: React.FC<{ templateId: string; isActive: boolean; categor
 export default function AdminTemplatesPage() {
   const { getActiveTemplate, switchTemplate } = useTemplate();
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<TemplateCategory>('home');
-  
+  const [selectedCategory, setSelectedCategory] =
+    useState<TemplateCategory>("home");
+
   // Get available templates for selected category
   const availableTemplates = getAvailableTemplates(selectedCategory);
 
@@ -74,174 +103,373 @@ export default function AdminTemplatesPage() {
   // Get current active template for the selected category
   const currentActiveTemplate = getActiveTemplate(selectedCategory);
 
-  const categories: { value: TemplateCategory; label: string; description: string }[] = [
-    { value: 'home', label: 'Home Page', description: 'Main landing page templates' },
-    { value: 'men', label: 'Men\'s Collection', description: 'Men\'s product page templates' },
-    { value: 'women', label: 'Women\'s Collection', description: 'Women\'s product page templates' },
-    { value: 'brands', label: 'Brands', description: 'Brand showcase page templates' },
-    { value: 'products', label: 'Products', description: 'Product listing page templates' },
-    { value: 'product', label: 'Product Detail', description: 'Individual product page templates' },
-    { value: 'cart', label: 'Shopping Cart', description: 'Shopping cart page templates' },
-    { value: 'checkout', label: 'Checkout', description: 'Checkout process page templates' },
-    { value: 'sorting', label: 'Sorting', description: 'Product sorting and filtering templates' },
-    { value: 'productCard', label: 'Product Card', description: 'Individual product card templates' },
+  const categories: {
+    value: TemplateCategory;
+    label: string;
+    description: string;
+  }[] = [
+    {
+      value: "home",
+      label: "Home Page",
+      description: "Main landing page templates",
+    },
+    {
+      value: "men",
+      label: "Men's Collection",
+      description: "Men's product page templates",
+    },
+    {
+      value: "women",
+      label: "Women's Collection",
+      description: "Women's product page templates",
+    },
+    {
+      value: "brands",
+      label: "Brands",
+      description: "Brand showcase page templates",
+    },
+    {
+      value: "products",
+      label: "Products",
+      description: "Product listing page templates",
+    },
+    {
+      value: "product",
+      label: "Product Detail",
+      description: "Individual product page templates",
+    },
+    {
+      value: "cart",
+      label: "Shopping Cart",
+      description: "Shopping cart page templates",
+    },
+    {
+      value: "checkout",
+      label: "Checkout",
+      description: "Checkout process page templates",
+    },
+    {
+      value: "sorting",
+      label: "Sorting",
+      description: "Product sorting and filtering templates",
+    },
+    {
+      value: "productCard",
+      label: "Product Card",
+      description: "Individual product card templates",
+    },
   ];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className='container mx-auto p-6 space-y-8'>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Template Management</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className='text-3xl font-bold tracking-tight'>
+            Template Management
+          </h1>
+          <p className='text-muted-foreground mt-2'>
             Manage and customize your website templates
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Layers className="h-4 w-4" />
-            <Select value={selectedCategory} onValueChange={(value: TemplateCategory) => setSelectedCategory(value)}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.value} value={category.value}>
-                    <div className="flex flex-col">
-                      <span>{category.label}</span>
-                      <span className="text-xs text-muted-foreground">{category.description}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Monitor className="w-5 h-5 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-               Active: {getTemplateMetadata(selectedCategory, currentActiveTemplate)?.name || 'Unknown'}
-             </span>
-          </div>
-        </div>
       </div>
 
-      {/* Current Active Template */}
-      <Card>
+      {/* NEW TEMPLATE SYSTEM (V2) */}
+      <Card className='border-2 border-primary/20'>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Palette className="w-5 h-5" />
-            <span>Currently Active Template</span>
+          <CardTitle className='flex items-center space-x-2'>
+            <Sparkles className='w-5 h-5 text-primary' />
+            <span>New Template System (v2)</span>
+            <Badge variant='default' className='ml-2'>
+              Recommended
+            </Badge>
           </CardTitle>
           <CardDescription>
-            This template is currently being used for the selected category
+            The new modular template engine with reusable components. These
+            templates are production-ready and follow modern design patterns.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-4">
+        <CardContent className='space-y-6'>
+          <div className='space-y-8'>
+            {/* Landing Page Templates */}
+            <div className='space-y-3'>
               <div>
-                <h3 className="text-lg font-semibold">
-                   {getTemplateMetadata(selectedCategory, currentActiveTemplate)?.name || 'Unknown Template'}
-                 </h3>
-                 <p className="text-muted-foreground">
-                   {getTemplateMetadata(selectedCategory, currentActiveTemplate)?.description || 'No description available'}
-                 </p>
+                <h3 className='text-lg font-semibold'>
+                  Landing Page Templates
+                </h3>
+                <p className='text-sm text-muted-foreground'>
+                  Controls the main marketing/landing page layout.
+                </p>
               </div>
-              <Badge variant="default" className="bg-green-500">
-                <CheckCircle className="w-3 h-3 mr-1" />
-                Active
-              </Badge>
+              <TemplateCardGrid category='landing' />
             </div>
-            <div>
-              <TemplatePreview templateId={currentActiveTemplate} isActive={true} category={selectedCategory} />
+
+            {/* Home Page Templates */}
+            <div className='space-y-3'>
+              <div>
+                <h3 className='text-lg font-semibold'>Home Page Templates</h3>
+                <p className='text-sm text-muted-foreground'>
+                  Main homepage with featured products and sections.
+                </p>
+              </div>
+              <TemplateCardGrid category='home' />
+            </div>
+
+            {/* Product Detail Page Templates */}
+            <div className='space-y-3'>
+              <div>
+                <h3 className='text-lg font-semibold'>
+                  Product Detail Page Templates
+                </h3>
+                <p className='text-sm text-muted-foreground'>
+                  Individual product page with images, details, and reviews.
+                </p>
+              </div>
+              <TemplateCardGrid category='productPage' />
+            </div>
+
+            {/* Category Page Templates */}
+            <div className='space-y-3'>
+              <div>
+                <h3 className='text-lg font-semibold'>
+                  Category Page Templates
+                </h3>
+                <p className='text-sm text-muted-foreground'>
+                  Product category pages with filters and grid layouts.
+                </p>
+              </div>
+              <TemplateCardGrid category='categoryPage' />
+            </div>
+
+            {/* Sorting & Product Listing Templates */}
+            <div className='space-y-3'>
+              <div>
+                <h3 className='text-lg font-semibold'>
+                  Sorting & Product Listing Templates
+                </h3>
+                <p className='text-sm text-muted-foreground'>
+                  Product listing pages with sorting, filtering, and search.
+                </p>
+              </div>
+              <TemplateCardGrid category='sorting' />
+            </div>
+
+            {/* Cart Page Templates */}
+            <div className='space-y-3'>
+              <div>
+                <h3 className='text-lg font-semibold'>Cart Page Templates</h3>
+                <p className='text-sm text-muted-foreground'>
+                  Shopping cart pages with item management and order summary.
+                </p>
+              </div>
+              <TemplateCardGrid category='cartPage' />
+            </div>
+
+            {/* Checkout Page Templates */}
+            <div className='space-y-3'>
+              <div>
+                <h3 className='text-lg font-semibold'>
+                  Checkout Page Templates
+                </h3>
+                <p className='text-sm text-muted-foreground'>
+                  Checkout pages with customer info, addresses, and order
+                  review.
+                </p>
+              </div>
+              <TemplateCardGrid category='checkoutPage' />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Available Templates */}
-      <Card>
+      {/* LEGACY TEMPLATE SYSTEM (V1) */}
+      <Card className='border-muted'>
         <CardHeader>
-          <CardTitle>Available Templates</CardTitle>
+          <CardTitle className='flex items-center space-x-2'>
+            <Layers className='w-5 h-5 text-muted-foreground' />
+            <span>Legacy Template System (v1)</span>
+            <Badge variant='outline' className='ml-2'>
+              Deprecated
+            </Badge>
+          </CardTitle>
           <CardDescription>
-            Choose from the available templates for the selected category
+            Original template system maintained for backward compatibility. Will
+            be phased out in future versions.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {availableTemplates.map((template) => {
-              const isActive = template.id === currentActiveTemplate;
-              
-              return (
-                <Card key={template.id} className={`cursor-pointer transition-all hover:shadow-md ${
-                  isActive ? 'ring-2 ring-primary' : ''
-                }`}>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">
-                        {template.name}
-                      </CardTitle>
-                      {isActive && (
-                        <Badge variant="default" className="bg-green-500">
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Active
-                        </Badge>
-                      )}
-                    </div>
-                    <CardDescription>
-                      {template.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {selectedCategory === 'productCard' ? (
-                      <ProductCardTemplatePreview templateId={template.id} isActive={isActive} />
-                    ) : (
-                      <TemplatePreview templateId={template.id} isActive={isActive} category={selectedCategory} />
-                    )}
-                    {selectedCategory === 'productCard' ? (
-                      <div className="flex space-x-2">
-                      
-                      <Button
-                        variant={isActive ? "secondary" : "default"}
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleSwitchTemplate(template.id)}
-                        disabled={isActive}
-                      >
-                        {isActive ? 'Currently Active' : 'Switch to This Template'}
-                      </Button>
-                    </div>
-                    ) : (
-                      <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => {
-                          const previewUrl = `/template-preview?category=${selectedCategory}&templateId=${template.id}`;
-                          window.open(previewUrl, '_blank');
-                        }}
-                      >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Preview
-                      </Button>
-                      <Button
-                        variant={isActive ? "secondary" : "default"}
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleSwitchTemplate(template.id)}
-                        disabled={isActive}
-                      >
-                        {isActive ? 'Currently Active' : 'Switch to This Template'}
-                      </Button>
-                    </div>
-                    )}
-                    
-                  </CardContent>
-                </Card>
-              );
-            })}
+        <CardContent className='space-y-6'>
+          <div className='flex items-center gap-4'>
+            <div className='flex items-center gap-2'>
+              <Layers className='h-4 w-4' />
+              <Select
+                value={selectedCategory}
+                onValueChange={(value: TemplateCategory) =>
+                  setSelectedCategory(value)
+                }>
+                <SelectTrigger className='w-[200px]'>
+                  <SelectValue placeholder='Select category' />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.value} value={category.value}>
+                      <div className='flex flex-col'>
+                        <span>{category.label}</span>
+                        <span className='text-xs text-muted-foreground'>
+                          {category.description}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className='flex items-center space-x-2'>
+              <Monitor className='w-5 h-5 text-muted-foreground' />
+              <span className='text-sm text-muted-foreground'>
+                Active:{" "}
+                {getTemplateMetadata(selectedCategory, currentActiveTemplate)
+                  ?.name || "Unknown"}
+              </span>
+            </div>
           </div>
+
+          {/* Current Active Template */}
+          <Card>
+            <CardHeader>
+              <CardTitle className='flex items-center space-x-2'>
+                <Palette className='w-5 h-5' />
+                <span>Currently Active Template</span>
+              </CardTitle>
+              <CardDescription>
+                This template is currently being used for the selected category
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+                <div className='space-y-4'>
+                  <div>
+                    <h3 className='text-lg font-semibold'>
+                      {getTemplateMetadata(
+                        selectedCategory,
+                        currentActiveTemplate
+                      )?.name || "Unknown Template"}
+                    </h3>
+                    <p className='text-muted-foreground'>
+                      {getTemplateMetadata(
+                        selectedCategory,
+                        currentActiveTemplate
+                      )?.description || "No description available"}
+                    </p>
+                  </div>
+                  <Badge variant='default' className='bg-green-500'>
+                    <CheckCircle className='w-3 h-3 mr-1' />
+                    Active
+                  </Badge>
+                </div>
+                <div>
+                  <TemplatePreview
+                    templateId={currentActiveTemplate}
+                    isActive={true}
+                    category={selectedCategory}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Available Templates */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Available Templates</CardTitle>
+              <CardDescription>
+                Choose from the available templates for the selected category
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                {availableTemplates.map((template) => {
+                  const isActive = template.id === currentActiveTemplate;
+
+                  return (
+                    <Card
+                      key={template.id}
+                      className={`cursor-pointer transition-all hover:shadow-md ${
+                        isActive ? "ring-2 ring-primary" : ""
+                      }`}>
+                      <CardHeader className='pb-3'>
+                        <div className='flex items-center justify-between'>
+                          <CardTitle className='text-lg'>
+                            {template.name}
+                          </CardTitle>
+                          {isActive && (
+                            <Badge variant='default' className='bg-green-500'>
+                              <CheckCircle className='w-3 h-3 mr-1' />
+                              Active
+                            </Badge>
+                          )}
+                        </div>
+                        <CardDescription>
+                          {template.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className='space-y-4'>
+                        {selectedCategory === "productCard" ? (
+                          <ProductCardTemplatePreview
+                            templateId={template.id}
+                            isActive={isActive}
+                          />
+                        ) : (
+                          <TemplatePreview
+                            templateId={template.id}
+                            isActive={isActive}
+                            category={selectedCategory}
+                          />
+                        )}
+                        {selectedCategory === "productCard" ? (
+                          <div className='flex space-x-2'>
+                            <Button
+                              variant={isActive ? "secondary" : "default"}
+                              size='sm'
+                              className='flex-1'
+                              onClick={() => handleSwitchTemplate(template.id)}
+                              disabled={isActive}>
+                              {isActive
+                                ? "Currently Active"
+                                : "Switch to This Template"}
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className='flex space-x-2'>
+                            <Button
+                              variant='outline'
+                              size='sm'
+                              className='flex-1'
+                              onClick={() => {
+                                const previewUrl = `/template-preview?category=${selectedCategory}&templateId=${template.id}`;
+                                window.open(previewUrl, "_blank");
+                              }}>
+                              <ExternalLink className='w-4 h-4 mr-2' />
+                              Preview
+                            </Button>
+                            <Button
+                              variant={isActive ? "secondary" : "default"}
+                              size='sm'
+                              className='flex-1'
+                              onClick={() => handleSwitchTemplate(template.id)}
+                              disabled={isActive}>
+                              {isActive
+                                ? "Currently Active"
+                                : "Switch to This Template"}
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
         </CardContent>
       </Card>
 
@@ -251,13 +479,21 @@ export default function AdminTemplatesPage() {
           <CardTitle>How to Add New Templates</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3 text-sm text-muted-foreground">
-            <p>
-              To add a new template:
-            </p>
-            <ol className="list-decimal list-inside space-y-2 ml-4">
-              <li>Create a new React component in <code className="bg-muted px-1 py-0.5 rounded">/frontend/components/template/templates/[category]/</code></li>
-              <li>Name it following the pattern <code className="bg-muted px-1 py-0.5 rounded">YourTemplateNameTemplate.tsx</code></li>
+          <div className='space-y-3 text-sm text-muted-foreground'>
+            <p>To add a new template:</p>
+            <ol className='list-decimal list-inside space-y-2 ml-4'>
+              <li>
+                Create a new React component in{" "}
+                <code className='bg-muted px-1 py-0.5 rounded'>
+                  /frontend/components/template/templates/[category]/
+                </code>
+              </li>
+              <li>
+                Name it following the pattern{" "}
+                <code className='bg-muted px-1 py-0.5 rounded'>
+                  YourTemplateNameTemplate.tsx
+                </code>
+              </li>
               <li>Add the import and metadata to the template registry</li>
               <li>The template will automatically appear in this dashboard</li>
             </ol>

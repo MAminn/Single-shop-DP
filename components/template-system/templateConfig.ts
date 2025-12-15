@@ -1,0 +1,302 @@
+import type React from "react";
+import { HomeFeaturedProducts } from "./home/HomeFeaturedProducts";
+import type { HomeFeaturedProductsProps } from "./home/HomeFeaturedProducts";
+import { ModernHomeTemplateV2 } from "./home/ModernHomeTemplateV2";
+import type { ModernHomeTemplateV2Props } from "./home/ModernHomeTemplateV2";
+import { LandingTemplateModern } from "./landing/LandingTemplateModern";
+import type { LandingTemplateModernProps } from "./landing/LandingTemplateModern";
+import { LandingTemplateClassic } from "./landing/LandingTemplateClassic";
+import type { LandingTemplateClassicProps } from "./landing/LandingTemplateClassic";
+import { LandingTemplateEditorial } from "./landing/LandingTemplateEditorial";
+import type { LandingTemplateEditorialProps } from "./landing/LandingTemplateEditorial";
+import { LandingTemplateMinimal } from "./landing/LandingTemplateMinimal";
+import type { LandingTemplateMinimalProps } from "./landing/LandingTemplateMinimal";
+import { ProductPageModernSplit } from "./productPage/ProductPageModernSplit";
+import type { ProductPageModernSplitProps } from "./productPage/ProductPageModernSplit";
+import { ProductPageClassic } from "./productPage/ProductPageClassic";
+import type { ProductPageClassicProps } from "./productPage/ProductPageClassic";
+import { ProductPageEditorial } from "./productPage/ProductPageEditorial";
+import type { ProductPageEditorialProps } from "./productPage/ProductPageEditorial";
+import { ProductPageTechnical } from "./productPage/ProductPageTechnical";
+import type { ProductPageTechnicalProps } from "./productPage/ProductPageTechnical";
+import { ProductPageMinimal } from "./productPage/ProductPageMinimal";
+import type { ProductPageMinimalProps } from "./productPage/ProductPageMinimal";
+import { CategoryPageGridWithFilters } from "./categoryPage/CategoryPageGridWithFilters";
+import type { CategoryPageGridWithFiltersProps } from "./categoryPage/CategoryPageGridWithFilters";
+import { CategoryGridClassic } from "./categoryPage/CategoryGridClassic";
+import type { CategoryGridClassicProps } from "./categoryPage/CategoryGridClassic";
+import { CategoryHeroSplit } from "./categoryPage/CategoryHeroSplit";
+import type { CategoryHeroSplitProps } from "./categoryPage/CategoryHeroSplit";
+import { CategoryMinimal } from "./categoryPage/CategoryMinimal";
+import type { CategoryMinimalProps } from "./categoryPage/CategoryMinimal";
+import { CategoryShowcase } from "./categoryPage/CategoryShowcase";
+import type { CategoryShowcaseProps } from "./categoryPage/CategoryShowcase";
+import { SortingToolbarTemplate } from "./sorting/SortingToolbarTemplate";
+import type { SortingToolbarTemplateProps } from "./sorting/SortingToolbarTemplate";
+import { CartPageModernTemplate } from "./cartPage/CartPageModernTemplate";
+import type { CartPageModernTemplateProps } from "./cartPage/CartPageModernTemplate";
+import { CheckoutPageModernTemplate } from "./checkoutPage/CheckoutPageModernTemplate";
+import type { CheckoutPageModernTemplateProps } from "./checkoutPage/CheckoutPageModernTemplate";
+import { VendorShopGrid } from "./vendorShop/VendorShopGrid";
+import type { VendorShopGridProps } from "./vendorShop/VendorShopGrid";
+import { VendorShopList } from "./vendorShop/VendorShopList";
+import type { VendorShopListProps } from "./vendorShop/VendorShopList";
+import { VendorShopMinimal } from "./vendorShop/VendorShopMinimal";
+import type { VendorShopMinimalProps } from "./vendorShop/VendorShopMinimal";
+import { SearchResultsGrid } from "./searchResults/SearchResultsGrid";
+import type { SearchResultsGridProps } from "./searchResults/SearchResultsGrid";
+import { SearchResultsMinimal } from "./searchResults/SearchResultsMinimal";
+import type { SearchResultsMinimalProps } from "./searchResults/SearchResultsMinimal";
+
+/**
+ * Template System Configuration
+ *
+ * Central registry for all template components in the system.
+ * Provides type-safe access to template components by category and ID.
+ */
+
+// Define valid template categories
+export type TemplateCategory =
+  | "landing"
+  | "home"
+  | "sorting"
+  | "productPage"
+  | "categoryPage"
+  | "cartPage"
+  | "checkoutPage"
+  | "vendorShop"
+  | "searchResults";
+
+// Define the structure for a template entry
+export interface TemplateEntry<TProps = any> {
+  id: string;
+  label: string;
+  component: React.FC<TProps>;
+}
+
+// Define the structure for the entire template config
+export interface TemplateConfig {
+  landing: TemplateEntry[];
+  home: TemplateEntry[];
+  sorting: TemplateEntry[];
+  productPage: TemplateEntry[];
+  categoryPage: TemplateEntry[];
+  cartPage: TemplateEntry[];
+  checkoutPage: TemplateEntry[];
+  vendorShop: TemplateEntry[];
+  searchResults: TemplateEntry[];
+}
+
+/**
+ * Template Registry
+ *
+ * Centralized configuration for all available templates.
+ * Add new templates here to make them available throughout the application.
+ */
+export const templateConfig: TemplateConfig = {
+  landing: [
+    {
+      id: "landing-modern",
+      label: "Demo 1: Modern (Blue Gradient)",
+      component: LandingTemplateModern as React.FC<LandingTemplateModernProps>,
+    },
+    {
+      id: "landing-classic",
+      label: "Demo 2: Classic (Commerce-First)",
+      component:
+        LandingTemplateClassic as React.FC<LandingTemplateClassicProps>,
+    },
+    {
+      id: "landing-editorial",
+      label: "Demo 3: Editorial (Premium Luxury)",
+      component:
+        LandingTemplateEditorial as React.FC<LandingTemplateEditorialProps>,
+    },
+    {
+      id: "landing-minimal",
+      label: "Demo 4: Minimal (Typography-First)",
+      component:
+        LandingTemplateMinimal as React.FC<LandingTemplateMinimalProps>,
+    },
+  ],
+
+  home: [
+    {
+      id: "featured-products-modern",
+      label: "Featured Products (Modern)",
+      component: HomeFeaturedProducts as React.FC<HomeFeaturedProductsProps>,
+    },
+    {
+      id: "home-modern-v2",
+      label: "Modern Home Template V2",
+      component: ModernHomeTemplateV2 as React.FC<ModernHomeTemplateV2Props>,
+    },
+  ],
+
+  sorting: [
+    {
+      id: "sorting-toolbar",
+      label: "Sorting Toolbar Layout",
+      component:
+        SortingToolbarTemplate as React.FC<SortingToolbarTemplateProps>,
+    },
+  ],
+
+  productPage: [
+    {
+      id: "product-classic",
+      label: "Demo 1: Classic (Conversion-Focused)",
+      component: ProductPageClassic as React.FC<ProductPageClassicProps>,
+    },
+    {
+      id: "product-editorial",
+      label: "Demo 2: Editorial (Luxury Storytelling)",
+      component: ProductPageEditorial as React.FC<ProductPageEditorialProps>,
+    },
+    {
+      id: "product-technical",
+      label: "Demo 3: Technical (Specs-First)",
+      component: ProductPageTechnical as React.FC<ProductPageTechnicalProps>,
+    },
+    {
+      id: "product-minimal",
+      label: "Demo 4: Minimal (Premium Clean)",
+      component: ProductPageMinimal as React.FC<ProductPageMinimalProps>,
+    },
+    {
+      id: "product-modern-split",
+      label: "Modern Split Layout (Legacy)",
+      component:
+        ProductPageModernSplit as React.FC<ProductPageModernSplitProps>,
+    },
+  ],
+
+  categoryPage: [
+    {
+      id: "category-grid-classic",
+      label: "Classic Grid Layout",
+      component: CategoryGridClassic as React.FC<CategoryGridClassicProps>,
+    },
+    {
+      id: "category-hero-split",
+      label: "Hero Split Layout",
+      component: CategoryHeroSplit as React.FC<CategoryHeroSplitProps>,
+    },
+    {
+      id: "category-minimal",
+      label: "Minimal Layout",
+      component: CategoryMinimal as React.FC<CategoryMinimalProps>,
+    },
+    {
+      id: "category-showcase",
+      label: "Showcase Layout",
+      component: CategoryShowcase as React.FC<CategoryShowcaseProps>,
+    },
+    {
+      id: "category-grid-with-filters",
+      label: "Category Grid with Filters (Legacy)",
+      component:
+        CategoryPageGridWithFilters as React.FC<CategoryPageGridWithFiltersProps>,
+    },
+  ],
+
+  cartPage: [
+    {
+      id: "cart-modern",
+      label: "Modern Cart Page",
+      component:
+        CartPageModernTemplate as React.FC<CartPageModernTemplateProps>,
+    },
+  ],
+
+  checkoutPage: [
+    {
+      id: "checkout-modern",
+      label: "Modern Checkout Page",
+      component:
+        CheckoutPageModernTemplate as React.FC<CheckoutPageModernTemplateProps>,
+    },
+  ],
+
+  vendorShop: [
+    {
+      id: "vendor-shop-grid",
+      label: "Grid Layout (Standard)",
+      component: VendorShopGrid as React.FC<VendorShopGridProps>,
+    },
+    {
+      id: "vendor-shop-list",
+      label: "List Layout (Catalog)",
+      component: VendorShopList as React.FC<VendorShopListProps>,
+    },
+    {
+      id: "vendor-shop-minimal",
+      label: "Minimal Layout (Premium)",
+      component: VendorShopMinimal as React.FC<VendorShopMinimalProps>,
+    },
+  ],
+
+  searchResults: [
+    {
+      id: "search-results-grid",
+      label: "Grid Layout (Standard)",
+      component: SearchResultsGrid as React.FC<SearchResultsGridProps>,
+    },
+    {
+      id: "search-results-minimal",
+      label: "Minimal Layout (Clean)",
+      component: SearchResultsMinimal as React.FC<SearchResultsMinimalProps>,
+    },
+  ],
+};
+
+/**
+ * Get a template component by category and ID
+ *
+ * @param category - The template category
+ * @param id - The unique template ID
+ * @returns The template entry or undefined if not found
+ */
+export function getTemplateComponent(
+  category: TemplateCategory,
+  id: string
+): TemplateEntry | undefined {
+  const categoryTemplates = templateConfig[category];
+  return categoryTemplates.find((template) => template.id === id);
+}
+
+/**
+ * Get all templates for a specific category
+ *
+ * @param category - The template category
+ * @returns Array of template entries for the category
+ */
+export function getTemplatesByCategory(
+  category: TemplateCategory
+): TemplateEntry[] {
+  return templateConfig[category] || [];
+}
+
+/**
+ * Check if a template exists
+ *
+ * @param category - The template category
+ * @param id - The unique template ID
+ * @returns True if the template exists
+ */
+export function templateExists(
+  category: TemplateCategory,
+  id: string
+): boolean {
+  return getTemplateComponent(category, id) !== undefined;
+}
+
+/**
+ * Get all available template IDs for a category
+ *
+ * @param category - The template category
+ * @returns Array of template IDs
+ */
+export function getTemplateIds(category: TemplateCategory): string[] {
+  return templateConfig[category].map((template) => template.id);
+}

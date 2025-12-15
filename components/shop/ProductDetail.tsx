@@ -1,3 +1,11 @@
+/**
+ * @legacy
+ * Legacy Template System (v1)
+ * - Fully preserved for admin preview
+ * - Not used in frontend rendering
+ * - Used as a design asset library
+ */
+
 import { useState, useEffect, useCallback } from "react";
 import type { TRPCClientErrorLike } from "@trpc/client";
 import { trpc } from "#root/shared/trpc/client";
@@ -50,7 +58,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { getVendorUrl } from "#root/lib/utils/route-helpers";
 import type { ProductByIdResult } from "#root/backend/products/get-product-by-id/service";
-import { ErrorSection } from "../error-section";
+import { ErrorSection } from "#root/components/dashboard/ErrorSection";
 import type { Product as CartProductType } from "#root/lib/mock-data/products";
 
 interface Variant {
@@ -248,9 +256,7 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
           ? product.imagesCombined.find((img) => img.isPrimary)?.url ||
             product.imagesCombined[0]?.url
           : undefined,
-      vendorId: product.vendorId
-        ? String(product.vendorId)
-        : undefined,
+      vendorId: product.vendorId ? String(product.vendorId) : undefined,
       categoryName: product.categoryName || undefined,
     };
 

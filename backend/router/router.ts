@@ -5,6 +5,7 @@ import { fileRouter } from "../file/trpc";
 import { orderRouter } from "../orders/trpc";
 import { categoriesRouter } from "../categories/trpc";
 import { promoCodesRouter } from "../promo-codes/trpc";
+import { homepageRouter } from "../homepage/trpc";
 
 export const appRouter = t.router({
   product: productRouter,
@@ -13,4 +14,5 @@ export const appRouter = t.router({
   order: orderRouter,
   category: categoriesRouter,
   promoCodes: promoCodesRouter,
+  homepage: homepageRouter,
 });

@@ -1,3 +1,11 @@
+/**
+ * @legacy
+ * Legacy Template System (v1)
+ * - Fully preserved for admin preview
+ * - Not used in frontend rendering
+ * - Used as a design asset library
+ */
+
 import { lazy, Suspense } from "react";
 import { Button } from "#root/components/ui/button";
 import { Link } from "#root/components/utils/Link";
@@ -9,7 +17,7 @@ const FAQ = lazy(() =>
   import("#root/components/globals/FAQ").then((mod) => ({ default: mod.FAQ }))
 );
 const FeaturedSection = lazy(() =>
-  import("#root/components/FeaturedSection").then((mod) => ({
+  import("#root/components/home/FeaturedSection").then((mod) => ({
     default: mod.FeaturedSection,
   }))
 );

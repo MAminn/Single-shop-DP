@@ -111,6 +111,7 @@ async function buildServer() {
     root: `${root}/uploads`,
     decorateReply: false,
     wildcard: false,
+    prefix: "/uploads",
   });
 
   await instance.register(drizzleFastifyPlugin);

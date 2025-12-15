@@ -1,3 +1,11 @@
+/**
+ * @legacy
+ * Legacy Template System (v1)
+ * - Fully preserved for admin preview
+ * - Not used in frontend rendering
+ * - Used as a design asset library
+ */
+
 import { useState, useEffect } from "react";
 import { trpc } from "#root/shared/trpc/client";
 import { Checkbox } from "#root/components/ui/checkbox";
@@ -48,20 +56,20 @@ export default function CategoryFilter({
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-4">
-        <Loader2 className="h-5 w-5 animate-spin text-accent-lb" />
+      <div className='flex justify-center py-4'>
+        <Loader2 className='h-5 w-5 animate-spin text-accent-lb' />
       </div>
     );
   }
 
   if (categories.length === 0) {
-    return <p className="text-sm text-gray-500">No categories available</p>;
+    return <p className='text-sm text-gray-500'>No categories available</p>;
   }
 
   return (
-    <div className="space-y-2">
+    <div className='space-y-2'>
       {categories.map((category) => (
-        <div key={category.id} className="flex items-center space-x-2">
+        <div key={category.id} className='flex items-center space-x-2'>
           <Checkbox
             id={`category-${category.id}`}
             checked={selectedCategoryIds.includes(category.id)}
@@ -69,8 +77,7 @@ export default function CategoryFilter({
           />
           <Label
             htmlFor={`category-${category.id}`}
-            className="text-sm cursor-pointer"
-          >
+            className='text-sm cursor-pointer'>
             {category.name}
           </Label>
         </div>

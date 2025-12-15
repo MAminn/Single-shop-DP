@@ -1,0 +1,84 @@
+import { Effect } from "effect";
+import { writeFile, mkdir } from "node:fs/promises";
+import { v7 } from "uuid";
+import sharp from "sharp";
+import { existsSync } from "node:fs";
+
+export interface UploadHeroImageInput {
+  buffer: Uint8Array;
+  mimeType: string;
+}
+
+export interface UploadHeroImageResult {
+  url: string;
+  filename: string;
+}
+
+/**
+ * Upload homepage hero background image
+ * - Validates image type (jpg, png, webp)
+ * - Validates size (max 5MB)
+ * - Saves to uploads/homepage/ (served at /uploads/homepage/)
+ * - Returns public URL
+ */
+export const uploadHeroImage = ({
+  buffer,
+  mimeType,
+}: UploadHeroImageInput): Effect.Effect<UploadHeroImageResult, Error> => {
+  return Effect.gen(function* () {
+    // Validate file type
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(mimeType.toLowerCase())) {
+      yield* Effect.fail(
+        new Error("Invalid file type. Only JPG, PNG, and WebP are allowed.")
+      );
+    }
+
+    // Validate file size (5MB = 5 * 1024 * 1024 bytes)
+    const maxSize = 5 * 1024 * 1024;
+    if (buffer.length > maxSize) {
+      yield* Effect.fail(new Error("File too large. Maximum size is 5MB."));
+    }
+
+    // Ensure uploads/homepage directory exists
+    const uploadsDir = "./uploads/homepage";
+    if (!existsSync(uploadsDir)) {
+      yield* Effect.tryPromise({
+        try: () => mkdir(uploadsDir, { recursive: true }),
+        catch: (err) => new Error(`Failed to create uploads directory: ${err}`),
+      });
+    }
+
+    // Generate unique filename
+    const fileId = v7();
+    const filename = `hero-${fileId}.webp`;
+    const filePath = `${uploadsDir}/${filename}`;
+
+    // Process and save image using sharp
+    yield* Effect.tryPromise({
+      try: async () => {
+        await sharp(Buffer.from(buffer))
+          .resize({
+            width: 1920,
+            height: 1080,
+            fit: "cover",
+            position: "center",
+          })
+          .webp({
+            quality: 90,
+            effort: 6,
+          })
+          .toFile(filePath);
+      },
+      catch: (err) => new Error(`Failed to process image: ${err}`),
+    });
+
+    // Return public URL
+    const publicUrl = `/uploads/homepage/${filename}`;
+
+    return {
+      url: publicUrl,
+      filename,
+    };
+  });
+};

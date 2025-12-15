@@ -492,13 +492,13 @@ export const productCategory = pgTable(
 export const templateType = pgEnum("template_type", [
   "page",
   "section",
-  "component"
+  "component",
 ]);
 
 export const templateStatus = pgEnum("template_status", [
   "active",
   "inactive",
-  "draft"
+  "draft",
 ]);
 
 export const template = pgTable("template", {
@@ -540,7 +540,7 @@ export const template = pgTable("template", {
 export const assignmentScope = pgEnum("assignment_scope", [
   "global",
   "page",
-  "section"
+  "section",
 ]);
 
 export const templateAssignment = pgTable("template_assignment", {
@@ -587,11 +587,10 @@ export const templateAnalytics = pgTable("template_analytics", {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-  assignmentId: uuid("assignment_id")
-    .references(() => templateAssignment.id, {
-      onDelete: "cascade",
-      onUpdate: "cascade",
-    }),
+  assignmentId: uuid("assignment_id").references(() => templateAssignment.id, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }),
   pageViews: integer("page_views").notNull().default(0),
   interactions: integer("interactions").notNull().default(0),
   conversionRate: decimal("conversion_rate", {
@@ -861,3 +860,63 @@ export const webhookLog = pgTable("webhook_log", {
     mode: "date",
   }),
 });
+
+/**
+ * Homepage Content table
+ * Stores customizable content for merchant homepages
+ */
+export const homepageContent = pgTable("homepage_content", {
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => v7()),
+  merchantId: uuid("merchant_id").notNull().unique(),
+  content: jsonb("content").notNull(),
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+    mode: "date",
+  })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", {
+    withTimezone: true,
+    mode: "date",
+  })
+    .defaultNow()
+    .notNull(),
+});
+
+/**
+ * Category Content table
+ * Stores customizable content for category pages
+ * Content is stored per category per merchant
+ */
+export const categoryContent = pgTable(
+  "category_content",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .$defaultFn(() => v7()),
+    merchantId: uuid("merchant_id").notNull(),
+    categoryId: text("category_id").notNull(),
+    content: jsonb("content").notNull(),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+      mode: "date",
+    })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", {
+      withTimezone: true,
+      mode: "date",
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    // Ensure one content record per merchant per category
+    uniqueMerchantCategory: uniqueIndex("unique_merchant_category").on(
+      table.merchantId,
+      table.categoryId
+    ),
+  })
+);

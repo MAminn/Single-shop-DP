@@ -1,57 +1,71 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "#root/shared/trpc/client";
-import useTemplate from "#root/frontend/components/template/useTemplate";
-import TemplateRenderer from "#root/frontend/components/template/TemplateRenderer";
-
-interface Vendor {
-  id: string;
-  name: string;
-  description: string | null;
-  logoImagePath: string | null;
-}
+import { getTemplateComponent } from "#root/components/template-system/templateConfig";
+import { useTemplate } from "#root/frontend/contexts/TemplateContext";
+import type { SortingPageProduct } from "#root/components/template-system/sorting/SortingToolbarTemplate";
 
 export default function BrandsPage() {
-  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [products, setProducts] = useState<SortingPageProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { activeTemplate } = useTemplate('brands');
-
-  const fetchVendors = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      // Fetch all active vendors with products, not just those marked as featured
-      const result = await trpc.vendor.featured.query({ featured: false });
-      if (result.success) {
-        setVendors(result.result || []);
-      } else {
-        setError("Failed to fetch vendors");
-        console.error("Failed to fetch vendors:", result.error);
-      }
-    } catch (err) {
-      setError("Error fetching vendors");
-      console.error("Error fetching vendors:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOption, setSortOption] = useState("featured");
+  const { getTemplateId } = useTemplate();
 
   useEffect(() => {
-    fetchVendors();
-  }, [fetchVendors]);
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      try {
+        const result = await trpc.product.search.query({
+          limit: 100,
+          includeOutOfStock: true,
+        });
 
-  // Prepare data for template
-  const templateData = {
-    vendors,
-    isLoading,
-    error
-  };
+        if (result.success && result.result) {
+          const mappedProducts: SortingPageProduct[] = result.result.items.map(
+            (p) => ({
+              id: p.id,
+              name: p.name,
+              price: Number(p.price),
+              discountPrice: p.discountPrice ? Number(p.discountPrice) : null,
+              stock: p.stock,
+              imageUrl: p.imageUrl ?? undefined,
+              images: p.images,
+              vendorId: p.vendorId || "",
+              vendorName: p.vendorName || null,
+              categoryName: p.categoryName || null,
+              available: p.stock > 0,
+              vendor: p.vendorName || "",
+            })
+          );
+          setProducts(mappedProducts);
+        }
+      } catch (err) {
+        console.error("Error fetching products:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  const activeTemplateId = getTemplateId("sorting") ?? "sorting-toolbar";
+  const TemplateEntry = getTemplateComponent("sorting", activeTemplateId);
+
+  if (!TemplateEntry) {
+    return <div>Sorting template not found.</div>;
+  }
+
+  const Template = TemplateEntry.component;
 
   return (
-    <TemplateRenderer
-      category="brands"
-      templateId={activeTemplate}
-      data={templateData}
+    <Template
+      products={products}
+      isLoading={isLoading}
+      onSearchChange={setSearchQuery}
+      onSortChange={setSortOption}
+      onOpenFilters={() => console.log("Filters clicked")}
+      defaultSort={sortOption}
     />
   );
 }

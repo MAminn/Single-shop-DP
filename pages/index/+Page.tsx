@@ -1,8 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import { trpc } from "#root/shared/trpc/client";
-import useTemplate from "#root/frontend/components/template/useTemplate";
-import TemplateRenderer from "#root/frontend/components/template/TemplateRenderer";
+import { getTemplateComponent } from "#root/components/template-system";
+import { useTemplate } from "#root/frontend/contexts/TemplateContext";
+import type { LandingTemplateModernProps } from "#root/components/template-system";
+import { DEFAULT_HOMEPAGE_CONTENT } from "#root/shared/types/homepage-content";
+import type { HomepageContent } from "#root/shared/types/homepage-content";
 
 export { Page };
 
@@ -23,24 +25,30 @@ interface FeaturedProduct {
 }
 
 function Page() {
-  const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>(
+    []
+  );
+  const [homepageContent, setHomepageContent] = useState<HomepageContent>(
+    DEFAULT_HOMEPAGE_CONTENT
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { activeTemplate } = useTemplate('home');
+  const { getTemplateId } = useTemplate();
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const result = await trpc.product.search.query({
+        // Fetch featured products
+        const productsResult = await trpc.product.search.query({
           limit: 8,
           includeOutOfStock: false,
         });
 
-        if (result.success && result.result) {
+        if (productsResult.success && productsResult.result) {
           setFeaturedProducts(
-            result.result.items.map((item) => ({
+            productsResult.result.items.map((item) => ({
               id: item.id,
               name: item.name,
               price: Number(item.price),
@@ -62,32 +70,52 @@ function Page() {
               available: item.stock > 0,
             }))
           );
-        } else {
-          setError("Failed to fetch featured products");
+        }
+
+        // Fetch homepage content
+        // TODO: Replace with actual merchantId from context/auth
+        const merchantId = "00000000-0000-0000-0000-000000000000";
+        try {
+          const contentResult = await trpc.homepage.getContent.query({
+            merchantId,
+          });
+
+          if (contentResult.success && contentResult.result) {
+            setHomepageContent(contentResult.result);
+          }
+        } catch (err) {
+          console.warn("Using default homepage content:", err);
+          // Continue with default content
         }
       } catch (err) {
-        setError("Error fetching featured products");
-        console.error("Error fetching featured products:", err);
+        setError("Error loading homepage data");
+        console.error("Error loading homepage data:", err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchData();
   }, []);
 
-  // Prepare data for template
-  const templateData = {
+  // Get the selected landing template (default to landing-modern)
+  const selectedId = getTemplateId("landing") ?? "landing-modern";
+  const templateEntry = getTemplateComponent("landing", selectedId);
+
+  if (!templateEntry) {
+    return <div>Error: Landing page template not found.</div>;
+  }
+
+  const Template = templateEntry.component;
+
+  // Prepare props for LandingTemplateModern
+  const templateProps: LandingTemplateModernProps = {
+    content: homepageContent,
     featuredProducts,
-    isLoading,
-    error
+    onCtaClick: (link: string) => {
+      window.location.href = link;
+    },
   };
 
-  return (
-    <TemplateRenderer
-      category="home"
-      templateId={activeTemplate}
-      data={templateData}
-    />
-  );
+  return <Template {...templateProps} />;
 }

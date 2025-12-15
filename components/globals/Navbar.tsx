@@ -17,7 +17,7 @@ import {
   NavigationMenuTrigger,
   NavigationMenuContent,
 } from "#root/components/ui/navigation-menu";
-import { Link } from "../Link";
+import { Link } from "#root/components/utils/Link";
 import logoImage from "#root/assets/Lebsy-Logo-Light.webp";
 import { AuthContext } from "#root/context/AuthContext.js";
 import { useCart } from "#root/lib/context/CartContext";
@@ -141,21 +141,21 @@ const Navbar: React.FC<NavbarProps> = ({
   const links = lang === "en" || lang === "ar" ? navLinks[lang] : [];
 
   return (
-    <nav className=" shadow-md sticky w-full py-2 lg:py-6 top-0 z-[10000] bg-white">
-      <div className="px-4 flex text-sm lg:text-base items-center justify-between min-h-16 max-w-7xl mx-auto">
-        <div className="flex items-center gap-8 lg:order-1 order-2">
-          <Link href="/" className="text-3xl font-bold ">
-            <img src={logoImage} alt="" className="md:w-[150px] w-[100px]" />
+    <nav className=' shadow-md sticky w-full py-2 lg:py-6 top-0 z-[10000] bg-white'>
+      <div className='px-4 flex text-sm lg:text-base items-center justify-between min-h-16 max-w-7xl mx-auto'>
+        <div className='flex items-center gap-8 lg:order-1 order-2'>
+          <Link href='/' className='text-3xl font-bold '>
+            <img src={logoImage} alt='' className='md:w-[150px] w-[100px]' />
           </Link>
 
-          <div className="hidden lg:flex gap-6 ">
+          <div className='hidden lg:flex gap-6 '>
             <NavigationMenu>
               <NavigationMenuList>
                 {links.map((link) => (
-                  <NavigationMenuItem key={link.to} className="relative  ">
+                  <NavigationMenuItem key={link.to} className='relative  '>
                     {link.subLinks ? (
                       <>
-                        <NavigationMenuItem asChild className=" navLink ">
+                        <NavigationMenuItem asChild className=' navLink '>
                           <Link href={link.to}>{link.label}</Link>
                         </NavigationMenuItem>
                         {/* <NavigationMenuContent className="absolute mt-10 bg-gray-100 text-black rounded-2xl">
@@ -174,7 +174,7 @@ const Navbar: React.FC<NavbarProps> = ({
                       </>
                     ) : (
                       <NavigationMenuLink asChild>
-                        <Link href={link.to} className="navLink">
+                        <Link href={link.to} className='navLink'>
                           {link.label}
                         </Link>
                       </NavigationMenuLink>
@@ -185,22 +185,22 @@ const Navbar: React.FC<NavbarProps> = ({
             </NavigationMenu>
           </div>
         </div>
-        <div className="flex items-center gap-4 lg:order-2 order-1">
-          <div className=" hidden lg:flex justify-center items-center gap-2">
+        <div className='flex items-center gap-4 lg:order-2 order-1'>
+          <div className=' hidden lg:flex justify-center items-center gap-2'>
             {!session ? (
               logLinks.map((link) => (
-                <Link key={link.to} href={link.to} className="navLink">
+                <Link key={link.to} href={link.to} className='navLink'>
                   {link.label}
                 </Link>
               ))
             ) : (
               <>
-                <button onClick={logout} type="submit" className="navLink">
+                <button onClick={logout} type='submit' className='navLink'>
                   Logout
                 </button>
                 {session.role === "vendor" ||
                   (session.role === "admin" && (
-                    <Link href="/dashboard" className="navLink">
+                    <Link href='/dashboard' className='navLink'>
                       Dashboard
                     </Link>
                   ))}
@@ -208,36 +208,34 @@ const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
-          <div className="flex lg:hidden">
+          <div className='flex lg:hidden'>
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-gray-700 hover:bg-gray-100"
-                >
+                  variant='ghost'
+                  size='icon'
+                  className='text-gray-700 hover:bg-gray-100'>
                   <Menu size={24} />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-64 bg-white p-0">
-                <div className="flex flex-col h-full">
+              <SheetContent side='left' className='w-64 bg-white p-0'>
+                <div className='flex flex-col h-full'>
                   {/* Logo at the top */}
-                  <div className="p-4 border-b w-full flex justify-center">
-                    <Link href="/" onClick={handleCloseSheet}>
-                      <img src={logoImage} alt="Lebsey" className="w-[120px]" />
+                  <div className='p-4 border-b w-full flex justify-center'>
+                    <Link href='/' onClick={handleCloseSheet}>
+                      <img src={logoImage} alt='Lebsey' className='w-[120px]' />
                     </Link>
                   </div>
 
                   {/* Main navigation links */}
-                  <div className="p-6 flex-1">
-                    <div className="flex flex-col gap-6 mb-8">
+                  <div className='p-6 flex-1'>
+                    <div className='flex flex-col gap-6 mb-8'>
                       {links.slice(0, 3).map((link) => (
                         <Link
                           key={link.to}
                           href={link.to}
-                          className="text-lg font-medium text-gray-800 hover:text-accent-lb"
-                          onClick={handleCloseSheet}
-                        >
+                          className='text-lg font-medium text-gray-800 hover:text-accent-lb'
+                          onClick={handleCloseSheet}>
                           {link.label}
                         </Link>
                       ))}
@@ -245,12 +243,11 @@ const Navbar: React.FC<NavbarProps> = ({
 
                     {/* Vendor link and dashboard/logout if logged in */}
                     {session && (
-                      <div className="border-t pt-6 mb-6">
+                      <div className='border-t pt-6 mb-6'>
                         <Link
-                          href="/dashboard"
-                          className="text-lg font-medium text-gray-800 hover:text-accent-lb block mb-4"
-                          onClick={handleCloseSheet}
-                        >
+                          href='/dashboard'
+                          className='text-lg font-medium text-gray-800 hover:text-accent-lb block mb-4'
+                          onClick={handleCloseSheet}>
                           Dashboard
                         </Link>
                         <button
@@ -258,9 +255,8 @@ const Navbar: React.FC<NavbarProps> = ({
                             logout();
                             handleCloseSheet();
                           }}
-                          className="text-lg font-medium text-gray-800 hover:text-accent-lb"
-                          type="button"
-                        >
+                          className='text-lg font-medium text-gray-800 hover:text-accent-lb'
+                          type='button'>
                           Logout
                         </button>
                       </div>
@@ -268,15 +264,14 @@ const Navbar: React.FC<NavbarProps> = ({
                   </div>
 
                   {/* Footer section with become vendor and company name */}
-                  <div className="mt-auto border-t p-6">
+                  <div className='mt-auto border-t p-6'>
                     <Link
-                      href="/vendor"
-                      className="text-lg font-medium text-accent-lb hover:underline block mb-2"
-                      onClick={handleCloseSheet}
-                    >
+                      href='/vendor'
+                      className='text-lg font-medium text-accent-lb hover:underline block mb-2'
+                      onClick={handleCloseSheet}>
                       Become a vendor!
                     </Link>
-                    <p className="text-sm text-gray-500">Lebsey LLC</p>
+                    <p className='text-sm text-gray-500'>Lebsey LLC</p>
                   </div>
                 </div>
               </SheetContent>
@@ -284,27 +279,25 @@ const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 order-3">
+        <div className='flex items-center gap-2 order-3'>
           {/* Login/User icon only on mobile */}
           {!session ? (
             <Button
-              variant="ghost"
-              size="icon"
-              className="hover:text-gray-700 hover:bg-gray-100 lg:hidden"
-              asChild
-            >
-              <Link href="/login">
+              variant='ghost'
+              size='icon'
+              className='hover:text-gray-700 hover:bg-gray-100 lg:hidden'
+              asChild>
+              <Link href='/login'>
                 <User size={20} />
               </Link>
             </Button>
           ) : (
             <Button
-              variant="ghost"
-              size="icon"
-              className="hover:text-gray-700 hover:bg-gray-100 lg:hidden"
-              asChild
-            >
-              <Link href="/dashboard">
+              variant='ghost'
+              size='icon'
+              className='hover:text-gray-700 hover:bg-gray-100 lg:hidden'
+              asChild>
+              <Link href='/dashboard'>
                 <User size={20} />
               </Link>
             </Button>
@@ -312,15 +305,14 @@ const Navbar: React.FC<NavbarProps> = ({
 
           {/* Cart button */}
           <Button
-            variant="ghost"
-            size="icon"
-            className="hover:text-gray-700 hover:bg-gray-100"
-            asChild
-          >
-            <Link href="/cart" className="relative">
+            variant='ghost'
+            size='icon'
+            className='hover:text-gray-700 hover:bg-gray-100'
+            asChild>
+            <Link href='/cart' className='relative'>
               <ShoppingCart size={20} />
               {totalItems > 0 && (
-                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-1 text-xs font-bold leading-none transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full">
+                <span className='absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-1 text-xs font-bold leading-none transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full'>
                   {totalItems}
                 </span>
               )}
