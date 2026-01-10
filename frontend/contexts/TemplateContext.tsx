@@ -120,6 +120,20 @@ export function TemplateProvider({ children }: { children: ReactNode }) {
   };
 
   const getTemplateId = (category: TemplateCategory): string | null => {
+    // Check for preview override via query param
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const previewTemplate = urlParams.get("templatePreview");
+
+      if (previewTemplate) {
+        // Verify the preview template exists in the config for this category
+        const templates = templateConfig[category];
+        if (templates && templates.some((t) => t.id === previewTemplate)) {
+          return previewTemplate;
+        }
+      }
+    }
+
     return selection[category] || null;
   };
 

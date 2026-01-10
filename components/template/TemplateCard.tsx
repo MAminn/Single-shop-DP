@@ -1,4 +1,5 @@
 import type React from "react";
+import { Suspense } from "react";
 import {
   Card,
   CardContent,
@@ -10,6 +11,7 @@ import { Button } from "#root/components/ui/button";
 import { Badge } from "#root/components/ui/badge";
 import { CheckCircle, Eye } from "lucide-react";
 import type { TemplateCategory } from "#root/components/template-system";
+import { getTemplateComponent } from "#root/components/template-system/templateConfig";
 
 export interface TemplateCardProps {
   id: string;
@@ -39,57 +41,77 @@ export function TemplateCard({
 }: TemplateCardProps) {
   return (
     <Card
-      className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+      className={`transition-all duration-200 ${
         isActive
-          ? "ring-2 ring-primary border-primary"
-          : "hover:border-primary/50"
+          ? "ring-2 ring-primary border-primary shadow-md bg-primary/5"
+          : "hover:shadow-lg hover:border-primary/50"
       }`}>
       <CardHeader className='pb-3'>
-        <div className='flex items-start justify-between'>
-          <div className='flex-1'>
-            <CardTitle className='text-lg flex items-center gap-2'>
-              {label}
-              {isActive && (
-                <Badge
-                  variant='default'
-                  className='bg-green-500 hover:bg-green-600'>
-                  <CheckCircle className='w-3 h-3 mr-1' />
-                  Active
-                </Badge>
-              )}
-            </CardTitle>
+        <div className='flex items-start justify-between gap-3'>
+          <div className='flex-1 min-w-0'>
+            <CardTitle className='text-base font-semibold'>{label}</CardTitle>
             {description && (
-              <CardDescription className='mt-2'>{description}</CardDescription>
+              <CardDescription className='mt-1 text-xs line-clamp-1'>
+                {description}
+              </CardDescription>
             )}
           </div>
+          {isActive && (
+            <Badge
+              variant='default'
+              className='bg-green-500 hover:bg-green-600 shrink-0 text-xs'>
+              <CheckCircle className='w-3 h-3 mr-1' />
+              Active
+            </Badge>
+          )}
         </div>
       </CardHeader>
 
-      <CardContent className='space-y-4'>
-        {/* Thumbnail Preview */}
-        <div className='relative w-full aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden border border-gray-200'>
-          {thumbnail ? (
-            <img
-              src={thumbnail}
-              alt={`${label} preview`}
-              className='w-full h-full object-cover'
-            />
-          ) : (
-            <div className='w-full h-full flex items-center justify-center text-gray-400'>
-              <div className='text-center'>
-                <Eye className='w-8 h-8 mx-auto mb-2 opacity-50' />
-                <p className='text-sm'>Preview not available</p>
+      <CardContent className='space-y-3'>
+        {/* Live Template Preview - Using Preview Component */}
+        <div className='relative w-full h-36 bg-white rounded-lg overflow-hidden border border-gray-200'>
+          {(() => {
+            const templateEntry = getTemplateComponent(category, id);
+            const PreviewComponent = templateEntry?.previewComponent;
+
+            if (!PreviewComponent) {
+              return (
+                <div className='w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100'>
+                  <Eye className='w-8 h-8 text-gray-300' />
+                </div>
+              );
+            }
+
+            return (
+              <div className='transform scale-[0.2] origin-top-left w-[500%] h-[500%] pointer-events-none'>
+                <Suspense
+                  fallback={
+                    <div className='w-full h-full bg-gray-100 animate-pulse flex items-center justify-center'>
+                      Loading preview...
+                    </div>
+                  }>
+                  <PreviewComponent />
+                </Suspense>
               </div>
-            </div>
-          )}
+            );
+          })()}
           {isActive && (
-            <div className='absolute inset-0 bg-green-500/10 border-2 border-green-500 rounded-lg' />
+            <div className='absolute top-2 right-2'>
+              <Badge variant='default' className='bg-green-500'>
+                <CheckCircle className='w-3 h-3 mr-1' />
+                Active
+              </Badge>
+            </div>
           )}
         </div>
 
         {/* Action Buttons */}
-        <div className='flex gap-2'>
-          {onPreview && (
+        {isActive ? (
+          <Button variant='secondary' size='sm' className='w-full' disabled>
+            Currently Active
+          </Button>
+        ) : onPreview ? (
+          <div className='flex gap-2'>
             <Button
               variant='outline'
               size='sm'
@@ -98,31 +120,32 @@ export function TemplateCard({
                 e.stopPropagation();
                 onPreview(id);
               }}>
-              <Eye className='w-4 h-4 mr-2' />
+              <Eye className='w-3 h-3 mr-1.5' />
               Preview
             </Button>
-          )}
+            <Button
+              variant='default'
+              size='sm'
+              className='flex-1'
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(id);
+              }}>
+              Activate
+            </Button>
+          </div>
+        ) : (
           <Button
-            variant={isActive ? "secondary" : "default"}
+            variant='default'
             size='sm'
-            className='flex-1'
+            className='w-full'
             onClick={(e) => {
               e.stopPropagation();
-              if (!isActive) {
-                onSelect(id);
-              }
-            }}
-            disabled={isActive}>
-            {isActive ? (
-              <>
-                <CheckCircle className='w-4 h-4 mr-2' />
-                Active
-              </>
-            ) : (
-              "Activate"
-            )}
+              onSelect(id);
+            }}>
+            Activate
           </Button>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

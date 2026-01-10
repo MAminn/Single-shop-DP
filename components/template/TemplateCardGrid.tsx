@@ -11,6 +11,65 @@ export interface TemplateCardGridProps {
   category: TemplateCategory;
 }
 
+// Template descriptions for better UX
+const getTemplateDescription = (
+  category: TemplateCategory,
+  templateId: string
+): string => {
+  const descriptionMap: Record<string, Record<string, string>> = {
+    landing: {
+      "landing-modern": "Blue gradient hero with modern cards and premium feel",
+      "landing-classic":
+        "Traditional eCommerce layout optimized for conversions",
+      "landing-editorial": "Luxury storytelling design with large imagery",
+      "landing-minimal": "Clean typography-first approach for premium brands",
+    },
+    home: {
+      "featured-products-modern":
+        "Modern grid layout with featured product sections",
+      "home-modern-v2": "Enhanced modern homepage with categories and features",
+    },
+    productPage: {
+      "product-classic": "Traditional product page optimized for conversions",
+      "product-editorial": "Luxury storytelling layout for premium products",
+      "product-technical": "Specs-first design for technical products",
+      "product-minimal": "Clean, distraction-free product presentation",
+      "product-modern-split": "Modern split-screen layout (legacy)",
+    },
+    categoryPage: {
+      "category-grid-classic": "Standard grid with sidebar filters and sorting",
+      "category-hero-split": "Hero image with split content sections",
+      "category-minimal": "Clean layout with focus on product imagery",
+      "category-showcase": "Featured products with highlighted bestsellers",
+      "category-grid-with-filters":
+        "Classic grid with advanced filtering (legacy)",
+    },
+    sorting: {
+      "sorting-toolbar": "Product listing with toolbar and view options",
+    },
+    cartPage: {
+      "cart-modern": "Clean shopping cart with item management",
+    },
+    checkoutPage: {
+      "checkout-modern": "Multi-step checkout with order summary",
+    },
+    vendorShop: {
+      "vendor-shop-grid": "Standard marketplace layout with sidebar",
+      "vendor-shop-list": "Catalog-heavy list view for many products",
+      "vendor-shop-minimal": "Premium brand-focused minimal design",
+    },
+    searchResults: {
+      "search-results-grid": "Standard search layout with sidebar filters",
+      "search-results-minimal": "Clean, typography-first search results",
+    },
+  };
+
+  return (
+    descriptionMap[category]?.[templateId] ||
+    "Professional template for your store"
+  );
+};
+
 /**
  * TemplateCardGrid Component
  *
@@ -30,11 +89,10 @@ export function TemplateCardGrid({ category }: TemplateCardGridProps) {
     setTemplate(category, templateId);
   };
 
-  // Handle template preview (optional - can be implemented later)
+  // Handle template preview (not implemented yet)
   const handlePreviewTemplate = (templateId: string) => {
-    // TODO: Implement preview functionality
-    // Could open in a new window or modal
-    console.log(`Preview template: ${category}/${templateId}`);
+    // Preview functionality to be added in future update
+    console.log(`Preview requested: ${category}/${templateId}`);
   };
 
   // If no templates available for this category
@@ -53,11 +111,11 @@ export function TemplateCardGrid({ category }: TemplateCardGridProps) {
           key={template.id}
           id={template.id}
           label={template.label}
-          description={`Template ID: ${template.id}`}
+          description={getTemplateDescription(category, template.id)}
           category={category}
           isActive={template.id === activeTemplateId}
           onSelect={handleSelectTemplate}
-          onPreview={handlePreviewTemplate}
+          onPreview={undefined} // Preview not available yet
         />
       ))}
     </div>

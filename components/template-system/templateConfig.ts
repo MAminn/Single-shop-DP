@@ -48,6 +48,40 @@ import type { SearchResultsGridProps } from "./searchResults/SearchResultsGrid";
 import { SearchResultsMinimal } from "./searchResults/SearchResultsMinimal";
 import type { SearchResultsMinimalProps } from "./searchResults/SearchResultsMinimal";
 
+// Import preview components
+import {
+  LandingModernPreview,
+  LandingClassicPreview,
+  LandingEditorialPreview,
+  LandingMinimalPreview,
+} from "./previews/LandingPreviews";
+import {
+  ProductPageClassicPreview,
+  ProductPageEditorialPreview,
+  ProductPageTechnicalPreview,
+  ProductPageMinimalPreview,
+  ProductPageModernSplitPreview,
+} from "./previews/ProductPagePreviews";
+import {
+  CategoryGridClassicPreview,
+  CategoryHeroSplitPreview,
+  CategoryMinimalPreview,
+  CategoryShowcasePreview,
+  CategoryGridWithFiltersPreview,
+} from "./previews/CategoryPagePreviews";
+import {
+  HomeFeaturedProductsPreview,
+  ModernHomeTemplateV2Preview,
+  VendorShopGridPreview,
+  VendorShopListPreview,
+  VendorShopMinimalPreview,
+  SearchResultsGridPreview,
+  SearchResultsMinimalPreview,
+  SortingToolbarPreview,
+  CartPageModernPreview,
+  CheckoutPageModernPreview,
+} from "./previews/OtherPreviews";
+
 /**
  * Template System Configuration
  *
@@ -72,6 +106,7 @@ export interface TemplateEntry<TProps = any> {
   id: string;
   label: string;
   component: React.FC<TProps>;
+  previewComponent: React.FC; // Preview-safe component for admin
 }
 
 // Define the structure for the entire template config
@@ -99,24 +134,28 @@ export const templateConfig: TemplateConfig = {
       id: "landing-modern",
       label: "Demo 1: Modern (Blue Gradient)",
       component: LandingTemplateModern as React.FC<LandingTemplateModernProps>,
+      previewComponent: LandingModernPreview,
     },
     {
       id: "landing-classic",
       label: "Demo 2: Classic (Commerce-First)",
       component:
         LandingTemplateClassic as React.FC<LandingTemplateClassicProps>,
+      previewComponent: LandingClassicPreview,
     },
     {
       id: "landing-editorial",
       label: "Demo 3: Editorial (Premium Luxury)",
       component:
         LandingTemplateEditorial as React.FC<LandingTemplateEditorialProps>,
+      previewComponent: LandingEditorialPreview,
     },
     {
       id: "landing-minimal",
       label: "Demo 4: Minimal (Typography-First)",
       component:
         LandingTemplateMinimal as React.FC<LandingTemplateMinimalProps>,
+      previewComponent: LandingMinimalPreview,
     },
   ],
 
@@ -125,11 +164,13 @@ export const templateConfig: TemplateConfig = {
       id: "featured-products-modern",
       label: "Featured Products (Modern)",
       component: HomeFeaturedProducts as React.FC<HomeFeaturedProductsProps>,
+      previewComponent: HomeFeaturedProductsPreview,
     },
     {
       id: "home-modern-v2",
       label: "Modern Home Template V2",
       component: ModernHomeTemplateV2 as React.FC<ModernHomeTemplateV2Props>,
+      previewComponent: ModernHomeTemplateV2Preview,
     },
   ],
 
@@ -139,6 +180,7 @@ export const templateConfig: TemplateConfig = {
       label: "Sorting Toolbar Layout",
       component:
         SortingToolbarTemplate as React.FC<SortingToolbarTemplateProps>,
+      previewComponent: SortingToolbarPreview,
     },
   ],
 
@@ -147,27 +189,32 @@ export const templateConfig: TemplateConfig = {
       id: "product-classic",
       label: "Demo 1: Classic (Conversion-Focused)",
       component: ProductPageClassic as React.FC<ProductPageClassicProps>,
+      previewComponent: ProductPageClassicPreview,
     },
     {
       id: "product-editorial",
       label: "Demo 2: Editorial (Luxury Storytelling)",
       component: ProductPageEditorial as React.FC<ProductPageEditorialProps>,
+      previewComponent: ProductPageEditorialPreview,
     },
     {
       id: "product-technical",
       label: "Demo 3: Technical (Specs-First)",
       component: ProductPageTechnical as React.FC<ProductPageTechnicalProps>,
+      previewComponent: ProductPageTechnicalPreview,
     },
     {
       id: "product-minimal",
       label: "Demo 4: Minimal (Premium Clean)",
       component: ProductPageMinimal as React.FC<ProductPageMinimalProps>,
+      previewComponent: ProductPageMinimalPreview,
     },
     {
       id: "product-modern-split",
       label: "Modern Split Layout (Legacy)",
       component:
         ProductPageModernSplit as React.FC<ProductPageModernSplitProps>,
+      previewComponent: ProductPageModernSplitPreview,
     },
   ],
 
@@ -176,27 +223,32 @@ export const templateConfig: TemplateConfig = {
       id: "category-grid-classic",
       label: "Classic Grid Layout",
       component: CategoryGridClassic as React.FC<CategoryGridClassicProps>,
+      previewComponent: CategoryGridClassicPreview,
     },
     {
       id: "category-hero-split",
       label: "Hero Split Layout",
       component: CategoryHeroSplit as React.FC<CategoryHeroSplitProps>,
+      previewComponent: CategoryHeroSplitPreview,
     },
     {
       id: "category-minimal",
       label: "Minimal Layout",
       component: CategoryMinimal as React.FC<CategoryMinimalProps>,
+      previewComponent: CategoryMinimalPreview,
     },
     {
       id: "category-showcase",
       label: "Showcase Layout",
       component: CategoryShowcase as React.FC<CategoryShowcaseProps>,
+      previewComponent: CategoryShowcasePreview,
     },
     {
       id: "category-grid-with-filters",
       label: "Category Grid with Filters (Legacy)",
       component:
         CategoryPageGridWithFilters as React.FC<CategoryPageGridWithFiltersProps>,
+      previewComponent: CategoryGridWithFiltersPreview,
     },
   ],
 
@@ -206,6 +258,7 @@ export const templateConfig: TemplateConfig = {
       label: "Modern Cart Page",
       component:
         CartPageModernTemplate as React.FC<CartPageModernTemplateProps>,
+      previewComponent: CartPageModernPreview,
     },
   ],
 
@@ -215,6 +268,7 @@ export const templateConfig: TemplateConfig = {
       label: "Modern Checkout Page",
       component:
         CheckoutPageModernTemplate as React.FC<CheckoutPageModernTemplateProps>,
+      previewComponent: CheckoutPageModernPreview,
     },
   ],
 
@@ -223,16 +277,19 @@ export const templateConfig: TemplateConfig = {
       id: "vendor-shop-grid",
       label: "Grid Layout (Standard)",
       component: VendorShopGrid as React.FC<VendorShopGridProps>,
+      previewComponent: VendorShopGridPreview,
     },
     {
       id: "vendor-shop-list",
       label: "List Layout (Catalog)",
       component: VendorShopList as React.FC<VendorShopListProps>,
+      previewComponent: VendorShopListPreview,
     },
     {
       id: "vendor-shop-minimal",
       label: "Minimal Layout (Premium)",
       component: VendorShopMinimal as React.FC<VendorShopMinimalProps>,
+      previewComponent: VendorShopMinimalPreview,
     },
   ],
 
@@ -241,11 +298,13 @@ export const templateConfig: TemplateConfig = {
       id: "search-results-grid",
       label: "Grid Layout (Standard)",
       component: SearchResultsGrid as React.FC<SearchResultsGridProps>,
+      previewComponent: SearchResultsGridPreview,
     },
     {
       id: "search-results-minimal",
       label: "Minimal Layout (Clean)",
       component: SearchResultsMinimal as React.FC<SearchResultsMinimalProps>,
+      previewComponent: SearchResultsMinimalPreview,
     },
   ],
 };
