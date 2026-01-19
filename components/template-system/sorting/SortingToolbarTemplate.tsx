@@ -443,13 +443,6 @@ function ProductListItem({ product }: ProductListItemProps) {
               {product.name}
             </h3>
 
-            {product.vendorName && (
-              <p className='text-sm text-muted-foreground mb-3 flex items-center gap-1'>
-                <span>by</span>
-                <span className='text-primary'>{product.vendorName}</span>
-              </p>
-            )}
-
             {/* Description */}
             {product.description && (
               <p className='text-sm text-muted-foreground mb-4 line-clamp-2 flex-1'>

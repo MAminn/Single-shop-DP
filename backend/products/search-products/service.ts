@@ -4,7 +4,6 @@ import {
   category,
   file,
   product,
-  vendor,
   productImage,
   productCategory,
 } from "#root/shared/database/drizzle/schema";
@@ -23,7 +22,6 @@ import { Effect } from "effect";
 import { z } from "zod";
 
 export const searchProductsSchema = z.object({
-  vendorId: z.string().uuid().optional(),
   categoryIds: z.array(z.string().uuid()).optional(),
   categoryType: z.enum(["men", "women"]).optional(),
   search: z.string().trim().max(255).optional(),
@@ -46,9 +44,9 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
               .where(
                 and(
                   eq(productCategory.productId, product.id),
-                  inArray(productCategory.categoryId, input.categoryIds)
-                )
-              )
+                  inArray(productCategory.categoryId, input.categoryIds),
+                ),
+              ),
           );
         } else if (input.categoryType) {
           // If categoryType is specified but no categoryIds, fetch categories of that type
@@ -67,9 +65,9 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
                 .where(
                   and(
                     eq(productCategory.productId, product.id),
-                    inArray(productCategory.categoryId, categoryIds)
-                  )
-                )
+                    inArray(productCategory.categoryId, categoryIds),
+                  ),
+                ),
             );
           } else {
             // If no categories found for this type, ensure we return no products
@@ -86,20 +84,18 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
           .from(product)
           .where(
             and(
-              // Filter by vendor if specified
-              input.vendorId ? eq(product.vendorId, input.vendorId) : undefined,
               // Filter by categories (using junction table)
               categoryCondition,
               // Filter by search term if specified
               input.search
                 ? or(
                     ilike(product.name, `%${input.search}%`),
-                    ilike(product.description, `%${input.search}%`)
+                    ilike(product.description, `%${input.search}%`),
                   )
                 : undefined,
               // Include out of stock items if specified
-              !input.includeOutOfStock ? gt(product.stock, 0) : undefined
-            )
+              !input.includeOutOfStock ? gt(product.stock, 0) : undefined,
+            ),
           );
 
         // Build main query
@@ -114,29 +110,24 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
             imageUrl: file.diskname,
             categoryId: product.categoryId,
             categoryName: category.name,
-            vendorId: product.vendorId,
-            vendorName: vendor.name,
           })
           .from(product)
           .leftJoin(file, eq(product.imageId, file.id))
           .leftJoin(category, eq(product.categoryId, category.id))
-          .leftJoin(vendor, eq(product.vendorId, vendor.id))
           .where(
             and(
-              // Filter by vendor if specified
-              input.vendorId ? eq(product.vendorId, input.vendorId) : undefined,
               // Filter by categories (using junction table)
               categoryCondition,
               // Filter by search term if specified
               input.search
                 ? or(
                     ilike(product.name, `%${input.search}%`),
-                    ilike(product.description, `%${input.search}%`)
+                    ilike(product.description, `%${input.search}%`),
                   )
                 : undefined,
               // Include out of stock items if specified
-              !input.includeOutOfStock ? gt(product.stock, 0) : undefined
-            )
+              !input.includeOutOfStock ? gt(product.stock, 0) : undefined,
+            ),
           )
           .limit(input.limit)
           .offset(input.offset);
@@ -224,6 +215,6 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
           items: processedItems,
           total: totalCount[0]?.count || 0,
         };
-      })
+      }),
     );
   });

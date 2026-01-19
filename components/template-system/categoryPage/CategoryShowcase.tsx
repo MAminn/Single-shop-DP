@@ -204,8 +204,6 @@ export function CategoryShowcase({
                       imageUrl: product.imageUrl,
                       images: product.images,
                       available: product.available,
-                      vendorId: product.vendorId,
-                      vendorName: product.vendorName,
                     }}
                   />
                 </div>
@@ -283,8 +281,6 @@ export function CategoryShowcase({
                     imageUrl: product.imageUrl,
                     images: product.images,
                     available: product.available,
-                    vendorId: product.vendorId,
-                    vendorName: product.vendorName,
                   }}
                 />
               ))}

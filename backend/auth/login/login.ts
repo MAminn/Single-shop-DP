@@ -26,16 +26,16 @@ export const login = (email: string, password: string) =>
           await db
             .select()
             .from(Tables.user)
-            .where(eq(Tables.user.email, email))
+            .where(eq(Tables.user.email, email)),
       ),
-      Effect.map((users) => users[0])
+      Effect.map((users) => users[0]),
     );
 
     const passwordPlaceholder = yield* $(hashPassword(randomUUID()));
 
     if (!user) {
       yield* $(verifyPassword(passwordPlaceholder, password));
-      
+
       // Log failed login attempt
       yield* $(
         query(async (db) => {
@@ -44,22 +44,22 @@ export const login = (email: string, password: string) =>
             action: "login_failed",
             errorMessage: "User not found",
           });
-        })
+        }),
       );
-      
+
       return yield* $(
         Effect.fail(
           new ServerError({
             tag: "UserNotFound",
             statusCode: 400,
             clientMessage: "Invalid credenetials",
-          })
-        )
+          }),
+        ),
       );
     }
 
     const passwordMatch = yield* $(
-      verifyPassword(user.passwordDigest, password)
+      verifyPassword(user.passwordDigest, password),
     );
 
     if (!passwordMatch) {
@@ -72,21 +72,21 @@ export const login = (email: string, password: string) =>
             action: "login_failed",
             errorMessage: "Invalid password",
           });
-        })
+        }),
       );
-      
+
       return yield* $(
         Effect.fail(
           new ServerError({
             tag: "InvalidPassword",
             statusCode: 400,
             clientMessage: "Invalid credenetials",
-          })
-        )
+          }),
+        ),
       );
     }
 
-    // If user is not verified, check if they're a vendor with active status
+    // If user is not verified, check if they're admin
     if (!user.emailVerified) {
       if (user.role === "admin") {
         // Admin users can bypass email verification
@@ -95,48 +95,16 @@ export const login = (email: string, password: string) =>
         return token;
       }
 
-      // Check if the user is a vendor and has a vendorId
-      if (user.role === "vendor" && user.vendorId) {
-        const vendorId = user.vendorId;
-
-        // Check if the vendor's status is active
-        const vendorData = yield* $(
-          query(async (db) => {
-            return await db
-              .select({
-                status: Tables.vendor.status,
-              })
-              .from(Tables.vendor)
-              .where(eq(Tables.vendor.id, vendorId));
+      // All non-admin users (including vendor role) must verify email
+      return yield* $(
+        Effect.fail(
+          new ServerError({
+            tag: "EmailNotVerified",
+            statusCode: 400,
+            clientMessage: "Please verify your email before logging in",
           }),
-          Effect.map((vendors) => vendors[0])
-        );
-
-        // If vendor status is not active, require email verification
-        if (!vendorData || vendorData.status !== "active") {
-          return yield* $(
-            Effect.fail(
-              new ServerError({
-                tag: "EmailNotVerified",
-                statusCode: 400,
-                clientMessage: "Please verify your email before logging in",
-              })
-            )
-          );
-        }
-        // Vendor status is active, allow login without email verification
-      } else {
-        // Not a vendor or no vendorId, require email verification
-        return yield* $(
-          Effect.fail(
-            new ServerError({
-              tag: "EmailNotVerified",
-              statusCode: 400,
-              clientMessage: "Please verify your email before logging in",
-            })
-          )
-        );
-      }
+        ),
+      );
     }
 
     const token = generateSessionToken();
@@ -150,7 +118,7 @@ export const login = (email: string, password: string) =>
           email: user.email,
           action: "login_success",
         });
-      })
+      }),
     );
 
     return token;

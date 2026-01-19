@@ -31,8 +31,6 @@ const DEFAULT_PRODUCT: ProductPageProduct = {
   price: 199.99,
   discountPrice: 149.99,
   stock: 45,
-  vendorId: "vendor-1",
-  vendorName: "TechGear Pro",
   available: true,
   imageUrl:
     "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800",
@@ -301,25 +299,6 @@ export function ProductPageEditorial({
                   </div>
                 ))}
               </div>
-            </div>
-          </>
-        )}
-
-        {/* Vendor Info - Editorial Style */}
-        {product.vendorName && (
-          <>
-            <div className='border-t border-gray-200 my-16' />
-
-            <div className='text-center'>
-              <p className='text-sm uppercase tracking-widest text-gray-500 mb-2'>
-                Curated by
-              </p>
-              <a
-                href={`/vendor/${product.vendorId}`}
-                className='text-2xl font-light text-gray-900 hover:text-gray-600 transition-colors inline-flex items-center gap-2 group'>
-                {product.vendorName}
-                <ArrowRight className='w-5 h-5 group-hover:translate-x-1 transition-transform' />
-              </a>
             </div>
           </>
         )}

@@ -75,9 +75,9 @@
 ### Core Requirements ✅
 
 - [x] Separate template layout from editable content
-- [x] Merchants can edit text, images, links
-- [x] Merchants can enable/disable sections
-- [x] Merchants CANNOT modify layout or styling
+- [x] Admins can edit text, images, links
+- [x] Admins can enable/disable sections
+- [x] Admins CANNOT modify layout or styling
 - [x] TypeScript content schema created
 - [x] Database model for persistence
 - [x] Loader function with fallbacks
@@ -200,7 +200,7 @@ When building the admin UI:
 **Documentation**: Comprehensive  
 **Testing**: All core files error-free
 
-The Homepage Content Management v1 is fully implemented and ready for use. Merchants can now customize their homepage through the content schema, with all 8 sections available for editing. The system provides comprehensive defaults, strong type safety, and graceful error handling.
+The Homepage Content Management v1 is fully implemented and ready for use. Admins can now customize their homepage through the content schema, with all 8 sections available for editing. The system provides comprehensive defaults, strong type safety, and graceful error handling.
 
 ---
 

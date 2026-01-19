@@ -7,7 +7,6 @@ import { categoriesRouter } from "#root/backend/categories/trpc";
 import { fileRouter } from "#root/backend/file/trpc";
 import { orderRouter } from "#root/backend/orders/trpc";
 import { productRouter } from "#root/backend/products/trpc";
-import { vendorRouter } from "#root/backend/vendor/trpc";
 import { promoCodesRouter } from "#root/backend/promo-codes/trpc";
 import { homepageRouter } from "#root/backend/homepage/trpc";
 import { publicProcedure, router, t } from "./server";
@@ -25,7 +24,6 @@ export const appRouter = router({
     return { demo: true };
   }),
   auth: authRouter,
-  vendor: vendorRouter,
   category: categoriesRouter,
   product: productRouter,
   order: orderRouter,

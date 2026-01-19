@@ -1,11 +1,10 @@
 import { query } from "#root/shared/database/drizzle/db";
-import { order, orderItem, orderLog, user } from "#root/shared/database/drizzle/schema";
+import { order, orderLog, user } from "#root/shared/database/drizzle/schema";
 import { Effect } from "effect";
 import { z } from "zod";
 import type { ClientSession } from "#root/backend/auth/shared/entities";
 import { ServerError } from "#root/shared/error/server";
-import { and, eq, inArray } from "drizzle-orm";
-import { checkVendorStatus } from "#root/backend/vendor/utils/check-vendor-status";
+import { eq } from "drizzle-orm";
 
 export const updateOrderStatusSchema = z.object({
   orderId: z.string().uuid(),
@@ -20,7 +19,7 @@ export const updateOrderStatusSchema = z.object({
 
 export const updateOrderStatus = (
   input: z.infer<typeof updateOrderStatusSchema>,
-  session?: ClientSession
+  session?: ClientSession,
 ) =>
   Effect.gen(function* ($) {
     if (!session) {
@@ -31,31 +30,28 @@ export const updateOrderStatus = (
             message: "You must be logged in to update order status",
             statusCode: 401,
             clientMessage: "You must be logged in to update order status",
-          })
-        )
+          }),
+        ),
       );
     }
 
     const { orderId, status } = input;
     const isAdmin = session.role === "admin";
-    const isVendor = session.role === "vendor";
+    // Vendor role no longer supported
+    const isVendor = false;
 
-    if (!isAdmin && !isVendor) {
+    // Only admins can update orders
+    if (!isAdmin) {
       return yield* $(
         Effect.fail(
           new ServerError({
             tag: "Forbidden",
-            message: "Only admins and vendors can update order status",
+            message: "Admin access required",
             statusCode: 403,
-            clientMessage: "You don't have permission to update order status",
-          })
-        )
+            clientMessage: "Admin access required",
+          }),
+        ),
       );
-    }
-
-    // Check vendor status if user is a vendor
-    if (isVendor && session.vendorId) {
-      yield* $(checkVendorStatus(session.vendorId, session, "update order status"));
     }
 
     return yield* $(
@@ -73,31 +69,11 @@ export const updateOrderStatus = (
               tag: "OrderNotFound",
               message: `Order with ID ${orderId} not found`,
               statusCode: 404,
-            clientMessage: "Order not found",
-          });
-        }
-
-        const oldStatus = currentOrder[0]?.status || "pending";          if (isVendor && session.vendorId) {
-            const vendorItems = await tx
-              .select({ id: orderItem.id })
-              .from(orderItem)
-              .where(
-                and(
-                  eq(orderItem.orderId, orderId),
-                  eq(orderItem.vendorId, session.vendorId)
-                )
-              )
-              .execute();
-
-            if (!vendorItems || vendorItems.length === 0) {
-              throw new ServerError({
-                tag: "Forbidden",
-                message: "You don't have items in this order",
-                statusCode: 403,
-                clientMessage: "You don't have permission to update this order",
-              });
-            }
+              clientMessage: "Order not found",
+            });
           }
+
+          const oldStatus = currentOrder[0]?.status || "pending";
 
           const updateResult = await tx
             .update(order)
@@ -133,6 +109,6 @@ export const updateOrderStatus = (
 
           return updateResult[0];
         });
-      })
+      }),
     );
   });

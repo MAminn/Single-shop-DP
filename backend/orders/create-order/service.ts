@@ -4,7 +4,6 @@ import {
   orderItem,
   product,
   user,
-  vendor,
   type orderStatus,
   promoCode,
 } from "#root/shared/database/drizzle/schema";
@@ -17,6 +16,7 @@ import { EmailService, renderEmailTemplate } from "#root/shared/email/service";
 import { NewOrderEmailTemplate } from "./email-template";
 import axios from "axios";
 import { validatePromoCode } from "#root/backend/promo-codes/validate-promo-code/validate-promo-code";
+import { getStoreOwnerId } from "#root/shared/config/store";
 
 const OrderItemSchema = z.object({
   productId: z.string().uuid(),
@@ -98,7 +98,7 @@ interface FincartResponse {
 }
 
 const sendOrderToFincart = async (
-  orderData: FincartOrderData
+  orderData: FincartOrderData,
 ): Promise<FincartResponse> => {
   try {
     const FINCART_API_URL = process.env.FINCART_API_URL;
@@ -107,7 +107,7 @@ const sendOrderToFincart = async (
     const FINCART_PICKUP_ID = process.env.FINCART_PICKUP_ID;
 
     console.log(
-      `Sending order to Fincart at: ${FINCART_API_URL}/merchant/app/s2s`
+      `Sending order to Fincart at: ${FINCART_API_URL}/merchant/app/s2s`,
     );
     console.log(`Using merchant location ID: "${FINCART_MERCHANT_LOCATION}"`);
     console.log(`Using pickup ID: "${FINCART_PICKUP_ID}"`);
@@ -144,7 +144,7 @@ const sendOrderToFincart = async (
       desc: `Order #${orderData.id.substring(0, 8)} from ${orderData.customerName}`,
       no_items: orderData.items.reduce(
         (total, item) => total + item.quantity,
-        0
+        0,
       ),
       weight: orderData.items.length > 0 ? orderData.items.length * 0.5 : 1,
       note:
@@ -166,7 +166,7 @@ const sendOrderToFincart = async (
     // For debugging, log the exact payload that will be sent
     console.log(
       "Payload being sent to Fincart:",
-      JSON.stringify(payload, null, 2)
+      JSON.stringify(payload, null, 2),
     );
 
     // Send the data to Fincart
@@ -190,7 +190,7 @@ const sendOrderToFincart = async (
       contentType.includes("text/html")
     ) {
       console.error(
-        "Received HTML response from Fincart API. This indicates the URL is incorrect and points to a webpage, not an API endpoint."
+        "Received HTML response from Fincart API. This indicates the URL is incorrect and points to a webpage, not an API endpoint.",
       );
       return {
         success: false,
@@ -247,7 +247,7 @@ const sendOrderToFincart = async (
 
 export const createOrder = (
   input: z.infer<typeof createOrderSchema>,
-  session?: ClientSession
+  session?: ClientSession,
 ) =>
   Effect.gen(function* ($) {
     // We no longer require a session for ordering
@@ -270,18 +270,16 @@ export const createOrder = (
 
           const productIds = input.items.map((item) => item.productId);
 
+          // Fetch products (single-shop mode: no vendor data needed)
           const products = await tx
             .select({
               id: product.id,
               price: product.price,
               discountPrice: product.discountPrice,
-              vendorId: product.vendorId,
               name: product.name,
               stock: product.stock,
-              vendorName: vendor.name,
             })
             .from(product)
-            .leftJoin(vendor, eq(product.vendorId, vendor.id))
             .where(inArray(product.id, productIds))
             .execute();
 
@@ -347,7 +345,7 @@ export const createOrder = (
               const cartItems = input.items
                 .map((item) => {
                   const productData = products.find(
-                    (p) => p.id === item.productId
+                    (p) => p.id === item.productId,
                   );
                   if (!productData) return null;
                   return {
@@ -358,9 +356,9 @@ export const createOrder = (
                 })
                 .filter(
                   (
-                    item
+                    item,
                   ): item is { id: string; quantity: number; price: number } =>
-                    item !== null
+                    item !== null,
                 );
 
               try {
@@ -455,7 +453,7 @@ export const createOrder = (
           };
 
           const definedInsertData = Object.fromEntries(
-            Object.entries(insertData).filter(([_, v]) => v !== undefined)
+            Object.entries(insertData).filter(([_, v]) => v !== undefined),
           );
 
           const newOrdersInsert = await tx
@@ -508,12 +506,12 @@ export const createOrder = (
                 .values({
                   orderId: newOrder.id,
                   productId: item.productId,
-                  vendorId: productData.vendorId,
+                  vendorId: getStoreOwnerId(), // Single-shop: use default store owner ID
                   quantity: item.quantity,
                   price: productData.price.toString(),
                   discountPrice: productData.discountPrice?.toString() || null,
                   name: productData.name,
-                  vendorName: productData.vendorName,
+                  vendorName: null, // Single-shop: no vendor names
                 })
                 .returning();
 
@@ -528,7 +526,7 @@ export const createOrder = (
               }
 
               return orderItemInsert[0];
-            })
+            }),
           );
 
           return {
@@ -536,7 +534,7 @@ export const createOrder = (
             items: orderItems,
           };
         });
-      })
+      }),
     );
 
     const emailService = yield* $(EmailService);
@@ -565,47 +563,31 @@ export const createOrder = (
           customerName: result.customerName,
           customerEmail: result.customerEmail,
           customerPhone: result.customerPhone,
-        })
-      )
+        }),
+      ),
     );
 
     const admins = yield* $(
       query(
-        async (db) => await db.select().from(user).where(eq(user.role, "admin"))
-      )
-    );
-
-    const vendors = yield* $(
-      query(
         async (db) =>
-          await db
-            .select()
-            .from(user)
-            .where(
-              and(
-                eq(user.role, "vendor"),
-                inArray(
-                  user.vendorId,
-                  result.items.map((i) => i.vendorId)
-                )
-              )
-            )
-      )
+          await db.select().from(user).where(eq(user.role, "admin")),
+      ),
     );
 
     // Send emails, but don't let failures block the order creation
+    // Single-shop mode: Only send customer notification, no vendor emails
     try {
       yield* $(
         emailService.sendEmail(
           input.customerEmail,
           "Lebsy Order Confirmation",
-          emailTemplate
-        )
+          emailTemplate,
+        ),
       );
     } catch (error) {
       console.error(
         `Failed to send confirmation email to customer ${input.customerEmail}:`,
-        error
+        error,
       );
       // Continue with order creation even if email fails
     }
@@ -617,36 +599,19 @@ export const createOrder = (
           emailService.sendEmail(
             admin.email,
             "New Order Received",
-            emailTemplate
-          )
+            emailTemplate,
+          ),
         );
       } catch (error) {
         console.error(
           `Failed to send notification email to admin ${admin.email}:`,
-          error
+          error,
         );
         // Continue with order creation even if email fails
       }
     }
 
-    // Send vendor notifications
-    for (const vendor of vendors) {
-      try {
-        yield* $(
-          emailService.sendEmail(
-            vendor.email,
-            "New Order Received",
-            emailTemplate
-          )
-        );
-      } catch (error) {
-        console.error(
-          `Failed to send notification email to vendor ${vendor.email}:`,
-          error
-        );
-        // Continue with order creation even if email fails
-      }
-    }
+    // Single-shop mode: No vendor notifications needed
 
     // Send order to Fincart
     try {
@@ -656,14 +621,14 @@ export const createOrder = (
           if (!fincartResult.success) {
             console.error(
               "Failed to send order to Fincart:",
-              fincartResult.error
+              fincartResult.error,
             );
           }
         }),
         Effect.catchAll((error) => {
           console.error("Exception when sending order to Fincart:", error);
           return Effect.succeed(undefined);
-        })
+        }),
       );
     } catch (error) {
       console.error("Exception when sending order to Fincart:", error);

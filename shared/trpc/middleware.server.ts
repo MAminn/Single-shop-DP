@@ -14,8 +14,15 @@ export const fastifyTRPCMiddleware = fp((app) => {
       router: appRouter,
       createContext,
       onError({ path, error }) {
-        // report to error monitoring
-        console.error(`Error in tRPC handler on path '${path}':`, error);
+        // Safe error logging - avoid circular references and undefined properties
+        const errorInfo = {
+          path,
+          message: error.message,
+          code: error.code,
+          cause: error.cause ? String(error.cause) : undefined,
+          stack: error.stack?.split("\n").slice(0, 5).join("\n"), // First 5 lines of stack
+        };
+        console.error("[tRPC Error]", JSON.stringify(errorInfo, null, 2));
       },
     } satisfies FastifyTRPCPluginOptions<AppRouter>["trpcOptions"],
   });

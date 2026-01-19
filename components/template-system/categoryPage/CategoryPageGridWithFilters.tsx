@@ -179,8 +179,6 @@ const MOCK_PRODUCTS: CategoryPageProduct[] = Array.from(
     price: 99.99 + i * 10,
     discountPrice: i % 3 === 0 ? 79.99 + i * 10 : null,
     stock: 10 + i,
-    vendorId: "vendor-1",
-    vendorName: "Top Vendor",
     available: true,
     imageUrl: `https://images.unsplash.com/photo-${1500000000000 + i}?w=400`,
     brand: MOCK_BRANDS[i % MOCK_BRANDS.length]?.name,

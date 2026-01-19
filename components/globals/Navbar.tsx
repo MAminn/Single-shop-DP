@@ -23,6 +23,7 @@ import { AuthContext } from "#root/context/AuthContext.js";
 import { useCart } from "#root/lib/context/CartContext";
 import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
+import { isSingleShopMode } from "#root/shared/config/app";
 
 interface NavbarProps {
   lang: string;
@@ -68,34 +69,43 @@ const Navbar: React.FC<NavbarProps> = ({
     { label: "Register", to: "/register" },
   ];
 
+  // Build navigation links based on shop mode
+  const baseNavLinks = [
+    {
+      label: "Collection",
+      to: "/featured/products",
+    },
+    {
+      label: "Men",
+      to: "/featured/men",
+      subLinks: subcategories
+        .filter((s) => s.type === "men")
+        .map((s) => ({
+          label: s.name,
+          to: `/featured/men/categories/${s.id}`,
+        })),
+    },
+    {
+      label: "Women",
+      to: "/featured/women",
+      subLinks: subcategories
+        .filter((s) => s.type === "women")
+        .map((s) => ({
+          label: s.name,
+          to: `/featured/women/categories/${s.id}`,
+        })),
+    },
+    {
+      label: "Editions",
+      to: "/featured/brands",
+    },
+  ];
+
+  // Single-shop template: No vendor registration
+  const enNavLinks = baseNavLinks;
+
   const navLinks = {
-    en: [
-      {
-        label: "Men",
-        to: "/featured/men",
-        subLinks: subcategories
-          .filter((s) => s.type === "men")
-          .map((s) => ({
-            label: s.name,
-            to: `/featured/men/categories/${s.id}`,
-          })),
-      },
-      {
-        label: "Women",
-        to: "/featured/women",
-        subLinks: subcategories
-          .filter((s) => s.type === "women")
-          .map((s) => ({
-            label: s.name,
-            to: `/featured/women/categories/${s.id}`,
-          })),
-      },
-      {
-        label: "Brands",
-        to: "/featured/brands",
-      },
-      { label: "Become a vendor!", to: "/vendor" },
-    ],
+    en: enNavLinks,
     ar: [
       {
         label: "رجال",
@@ -141,11 +151,13 @@ const Navbar: React.FC<NavbarProps> = ({
   const links = lang === "en" || lang === "ar" ? navLinks[lang] : [];
 
   return (
-    <nav className=' shadow-md sticky w-full py-2 lg:py-6 top-0 z-[10000] bg-white'>
-      <div className='px-4 flex text-sm lg:text-base items-center justify-between min-h-16 max-w-7xl mx-auto'>
+    <nav className='sticky w-full py-4 lg:py-6 top-0 z-[10000] bg-stone-50 border-b border-stone-200'>
+      <div className='px-6 lg:px-8 flex text-sm lg:text-base items-center justify-between min-h-16 max-w-7xl mx-auto'>
         <div className='flex items-center gap-8 lg:order-1 order-2'>
-          <Link href='/' className='text-3xl font-bold '>
-            <img src={logoImage} alt='' className='md:w-[150px] w-[100px]' />
+          <Link
+            href='/'
+            className='text-2xl font-light tracking-wide text-stone-900 hover:text-stone-700 transition-colors'>
+            Percé
           </Link>
 
           <div className='hidden lg:flex gap-6 '>
@@ -186,24 +198,31 @@ const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
         <div className='flex items-center gap-4 lg:order-2 order-1'>
-          <div className=' hidden lg:flex justify-center items-center gap-2'>
+          <div className=' hidden lg:flex justify-center items-center gap-6'>
             {!session ? (
               logLinks.map((link) => (
-                <Link key={link.to} href={link.to} className='navLink'>
+                <Link
+                  key={link.to}
+                  href={link.to}
+                  className='text-sm text-stone-600 hover:text-stone-900 transition-colors'>
                   {link.label}
                 </Link>
               ))
             ) : (
               <>
-                <button onClick={logout} type='submit' className='navLink'>
+                <button
+                  onClick={logout}
+                  type='submit'
+                  className='text-sm text-stone-600 hover:text-stone-900 transition-colors'>
                   Logout
                 </button>
-                {session.role === "vendor" ||
-                  (session.role === "admin" && (
-                    <Link href='/dashboard' className='navLink'>
-                      Dashboard
-                    </Link>
-                  ))}
+                {session.role === "admin" && (
+                  <Link
+                    href='/dashboard'
+                    className='text-xs text-stone-500 hover:text-stone-700 transition-colors uppercase tracking-wider'>
+                    Dashboard
+                  </Link>
+                )}
               </>
             )}
           </div>
@@ -214,39 +233,42 @@ const Navbar: React.FC<NavbarProps> = ({
                 <Button
                   variant='ghost'
                   size='icon'
-                  className='text-gray-700 hover:bg-gray-100'>
-                  <Menu size={24} />
+                  className='text-stone-700 hover:bg-stone-100'>
+                  <Menu size={22} />
                 </Button>
               </SheetTrigger>
-              <SheetContent side='left' className='w-64 bg-white p-0'>
+              <SheetContent side='left' className='w-64 bg-stone-50 p-0'>
                 <div className='flex flex-col h-full'>
                   {/* Logo at the top */}
-                  <div className='p-4 border-b w-full flex justify-center'>
-                    <Link href='/' onClick={handleCloseSheet}>
-                      <img src={logoImage} alt='Lebsey' className='w-[120px]' />
+                  <div className='p-6 border-b border-stone-200 w-full flex justify-center'>
+                    <Link
+                      href='/'
+                      onClick={handleCloseSheet}
+                      className='text-2xl font-light tracking-wide text-stone-900'>
+                      Percé
                     </Link>
                   </div>
 
                   {/* Main navigation links */}
                   <div className='p-6 flex-1'>
-                    <div className='flex flex-col gap-6 mb-8'>
-                      {links.slice(0, 3).map((link) => (
+                    <div className='flex flex-col gap-5 mb-8'>
+                      {links.map((link) => (
                         <Link
                           key={link.to}
                           href={link.to}
-                          className='text-lg font-medium text-gray-800 hover:text-accent-lb'
+                          className='text-base font-light text-stone-800 hover:text-stone-600 transition-colors'
                           onClick={handleCloseSheet}>
                           {link.label}
                         </Link>
                       ))}
                     </div>
 
-                    {/* Vendor link and dashboard/logout if logged in */}
+                    {/* Dashboard/logout if logged in */}
                     {session && (
-                      <div className='border-t pt-6 mb-6'>
+                      <div className='border-t border-stone-200 pt-5 mb-6'>
                         <Link
                           href='/dashboard'
-                          className='text-lg font-medium text-gray-800 hover:text-accent-lb block mb-4'
+                          className='text-sm font-light text-stone-600 hover:text-stone-800 block mb-4 uppercase tracking-wider'
                           onClick={handleCloseSheet}>
                           Dashboard
                         </Link>
@@ -255,7 +277,7 @@ const Navbar: React.FC<NavbarProps> = ({
                             logout();
                             handleCloseSheet();
                           }}
-                          className='text-lg font-medium text-gray-800 hover:text-accent-lb'
+                          className='text-base font-light text-stone-800 hover:text-stone-600'
                           type='button'>
                           Logout
                         </button>
@@ -263,15 +285,11 @@ const Navbar: React.FC<NavbarProps> = ({
                     )}
                   </div>
 
-                  {/* Footer section with become vendor and company name */}
-                  <div className='mt-auto border-t p-6'>
-                    <Link
-                      href='/vendor'
-                      className='text-lg font-medium text-accent-lb hover:underline block mb-2'
-                      onClick={handleCloseSheet}>
-                      Become a vendor!
-                    </Link>
-                    <p className='text-sm text-gray-500'>Lebsey LLC</p>
+                  {/* Footer section with company name */}
+                  <div className='mt-auto border-t border-stone-200 p-6'>
+                    <p className='text-xs text-stone-400 tracking-wide'>
+                      Percé
+                    </p>
                   </div>
                 </div>
               </SheetContent>
@@ -279,26 +297,26 @@ const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        <div className='flex items-center gap-2 order-3'>
+        <div className='flex items-center gap-3 order-3'>
           {/* Login/User icon only on mobile */}
           {!session ? (
             <Button
               variant='ghost'
               size='icon'
-              className='hover:text-gray-700 hover:bg-gray-100 lg:hidden'
+              className='text-stone-600 hover:text-stone-900 hover:bg-stone-100 lg:hidden'
               asChild>
               <Link href='/login'>
-                <User size={20} />
+                <User size={19} />
               </Link>
             </Button>
           ) : (
             <Button
               variant='ghost'
               size='icon'
-              className='hover:text-gray-700 hover:bg-gray-100 lg:hidden'
+              className='text-stone-600 hover:text-stone-900 hover:bg-stone-100 lg:hidden'
               asChild>
               <Link href='/dashboard'>
-                <User size={20} />
+                <User size={19} />
               </Link>
             </Button>
           )}
@@ -307,12 +325,12 @@ const Navbar: React.FC<NavbarProps> = ({
           <Button
             variant='ghost'
             size='icon'
-            className='hover:text-gray-700 hover:bg-gray-100'
+            className='text-stone-600 hover:text-stone-900 hover:bg-stone-100'
             asChild>
             <Link href='/cart' className='relative'>
-              <ShoppingCart size={20} />
+              <ShoppingCart size={19} />
               {totalItems > 0 && (
-                <span className='absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-1 text-xs font-bold leading-none transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full'>
+                <span className='absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-medium leading-none transform translate-x-1/2 -translate-y-1/2 bg-stone-800 text-stone-50 rounded-full'>
                   {totalItems}
                 </span>
               )}

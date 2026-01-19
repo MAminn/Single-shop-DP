@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "#root/components/utils/Link";
 import {
   Card,
@@ -9,22 +9,151 @@ import {
   CardFooter,
 } from "#root/components/ui/card";
 import { Button } from "#root/components/ui/button";
+import { Input } from "#root/components/ui/input";
+import { Label } from "#root/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "#root/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "#root/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "#root/components/ui/alert-dialog";
+import { Plus, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { useData } from "vike-react/useData";
+import { navigate } from "vike/client/router";
 import type { Data } from "./+data";
 import { ErrorSection } from "#root/components/dashboard/ErrorSection";
+import { trpc } from "#root/shared/trpc/client";
+import { useToast } from "#root/components/ui/use-toast";
 
 export default function Categories() {
-  const categories = ["men", "women"] as const;
   const fetchData = useData<Data>();
+  const { toast } = useToast();
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   if (!fetchData.success) {
     return <ErrorSection error={fetchData.error} />;
   }
 
+  const mainCategories = fetchData.mainCategories;
   const subCategories = fetchData.subcategories;
 
-  const getSubcategories = (category: (typeof categories)[number]) => {
-    return subCategories.filter((s) => s.type === category);
+  const getSubcategories = (type: string) => {
+    return subCategories.filter((s) => s.type === type);
+  };
+
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) {
+      toast({
+        title: "Error",
+        description: "Category name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const result = await trpc.category.createMain.mutate({
+      name: newCategoryName,
+    });
+
+    if (result.success) {
+      toast({
+        title: "Success",
+        description: `Category "${newCategoryName}" created successfully`,
+      });
+      setCreateDialogOpen(false);
+      setNewCategoryName("");
+      navigate("/dashboard/categories"); // Refresh page
+    } else {
+      toast({
+        title: "Error",
+        description: result.error || "Failed to create category",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRenameCategory = async () => {
+    if (!selectedCategory || !newCategoryName.trim()) {
+      toast({
+        title: "Error",
+        description: "Category name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const result = await trpc.category.renameMain.mutate({
+      id: selectedCategory.id,
+      name: newCategoryName,
+    });
+
+    if (result.success) {
+      toast({
+        title: "Success",
+        description: `Category renamed to "${newCategoryName}"`,
+      });
+      setRenameDialogOpen(false);
+      setNewCategoryName("");
+      setSelectedCategory(null);
+      navigate("/dashboard/categories"); // Refresh page
+    } else {
+      toast({
+        title: "Error",
+        description: result.error || "Failed to rename category",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteCategory = async () => {
+    if (!selectedCategory) return;
+
+    const result = await trpc.category.deleteMain.mutate({
+      id: selectedCategory.id,
+    });
+
+    if (result.success) {
+      toast({
+        title: "Success",
+        description: `Category "${selectedCategory.name}" deleted successfully`,
+      });
+      setDeleteDialogOpen(false);
+      setSelectedCategory(null);
+      navigate("/dashboard/categories"); // Refresh page
+    } else {
+      toast({
+        title: "Cannot Delete Category",
+        description: result.error || "Failed to delete category",
+        variant: "destructive",
+      });
+      setDeleteDialogOpen(false);
+    }
   };
 
   return (
@@ -34,17 +163,93 @@ export default function Categories() {
           <h1 className='text-2xl font-bold'>Categories</h1>
           <p className='text-slate-500'>Manage your product categories</p>
         </div>
+        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className='h-4 w-4 mr-2' />
+              Add Category
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Category</DialogTitle>
+              <DialogDescription>
+                Add a new main category for organizing products
+              </DialogDescription>
+            </DialogHeader>
+            <div className='grid gap-4 py-4'>
+              <div className='grid gap-2'>
+                <Label htmlFor='name'>Category Name</Label>
+                <Input
+                  id='name'
+                  placeholder='e.g., Electronics, Clothing'
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleCreateCategory();
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant='outline'
+                onClick={() => {
+                  setCreateDialogOpen(false);
+                  setNewCategoryName("");
+                }}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateCategory}>Create Category</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-        {categories.map((category) => {
-          const subcategories = getSubcategories(category);
+        {mainCategories.map((category) => {
+          const subcategories = getSubcategories(category.type);
 
           return (
-            <Card key={category} className='relative group p-4'>
+            <Card key={category.id} className='relative group p-4'>
               <CardHeader>
                 <div className='flex justify-between items-center'>
-                  <CardTitle className='capitalize'>{category}</CardTitle>
+                  <CardTitle className='capitalize'>{category.name}</CardTitle>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant='ghost' size='sm' className='h-8 w-8 p-0'>
+                        <MoreVertical className='h-4 w-4' />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align='end'>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setSelectedCategory({
+                            id: category.id,
+                            name: category.name,
+                          });
+                          setNewCategoryName(category.name);
+                          setRenameDialogOpen(true);
+                        }}>
+                        <Pencil className='h-4 w-4 mr-2' />
+                        Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className='text-red-600'
+                        onClick={() => {
+                          setSelectedCategory({
+                            id: category.id,
+                            name: category.name,
+                          });
+                          setDeleteDialogOpen(true);
+                        }}>
+                        <Trash2 className='h-4 w-4 mr-2' />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
                 <CardDescription>
                   {subcategories.length} subcategories
@@ -71,7 +276,7 @@ export default function Categories() {
               </CardContent>
               <CardFooter>
                 <Button variant='outline' className='w-full' asChild>
-                  <Link href={`/dashboard/categories/${category}`}>
+                  <Link href={`/dashboard/categories/${category.type}`}>
                     Manage Subcategories
                   </Link>
                 </Button>
@@ -80,6 +285,69 @@ export default function Categories() {
           );
         })}
       </div>
+
+      {/* Rename Dialog */}
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Category</DialogTitle>
+            <DialogDescription>
+              Change the name of "{selectedCategory?.name}"
+            </DialogDescription>
+          </DialogHeader>
+          <div className='grid gap-4 py-4'>
+            <div className='grid gap-2'>
+              <Label htmlFor='rename'>New Category Name</Label>
+              <Input
+                id='rename'
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleRenameCategory();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => {
+                setRenameDialogOpen(false);
+                setNewCategoryName("");
+                setSelectedCategory(null);
+              }}>
+              Cancel
+            </Button>
+            <Button onClick={handleRenameCategory}>Rename</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Category?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{selectedCategory?.name}"? This
+              action can only be performed if the category has no subcategories
+              and no products.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSelectedCategory(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCategory}
+              className='bg-red-600 hover:bg-red-700'>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

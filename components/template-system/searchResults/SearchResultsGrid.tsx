@@ -30,8 +30,6 @@ export interface SearchResultProduct {
   discountPrice?: number | null;
   stock?: number;
   imageUrl?: string;
-  vendorId: string;
-  vendorName: string | null;
   categoryName?: string;
   available: boolean;
 }
@@ -262,12 +260,9 @@ export function SearchResultsGrid({
                         price: product.price,
                         discountPrice: product.discountPrice ?? undefined,
                         imageUrl: product.imageUrl,
-                        vendorId: product.vendorId,
-                        vendorName: product.vendorName || "Unknown Vendor",
                         categoryName: product.categoryName,
                         available: product.available,
                       }}
-                      showVendor={true}
                     />
                   ))}
                 </div>

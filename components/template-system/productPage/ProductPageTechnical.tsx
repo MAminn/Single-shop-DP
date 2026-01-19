@@ -42,8 +42,6 @@ const DEFAULT_PRODUCT: ProductPageProduct = {
   price: 199.99,
   discountPrice: 149.99,
   stock: 45,
-  vendorId: "vendor-1",
-  vendorName: "TechGear Pro",
   available: true,
   imageUrl:
     "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800",
@@ -142,7 +140,7 @@ export function ProductPageTechnical({
   const discount = hasDiscount
     ? Math.round(
         ((product.price - (product.discountPrice as number)) / product.price) *
-          100
+          100,
       )
     : 0;
 
@@ -178,7 +176,7 @@ export function ProductPageTechnical({
               ? "fill-blue-600 text-blue-600"
               : "fill-gray-300 text-gray-300"
           }`}
-        />
+        />,
       );
     }
 
@@ -194,7 +192,7 @@ export function ProductPageTechnical({
             Home
           </a>
           <ChevronRight className='w-4 h-4' />
-          <a href='/shop' className='hover:text-blue-600'>
+          <a href='/featured/products' className='hover:text-blue-600'>
             Shop
           </a>
           <ChevronRight className='w-4 h-4' />
@@ -345,18 +343,6 @@ export function ProductPageTechnical({
                   </Button>
                 )}
               </div>
-
-              {/* Vendor */}
-              {product.vendorName && (
-                <p className='text-sm text-gray-600 pt-4 border-t border-gray-200'>
-                  Sold by:{" "}
-                  <a
-                    href={`/vendor/${product.vendorId}`}
-                    className='text-blue-600 hover:underline font-medium'>
-                    {product.vendorName}
-                  </a>
-                </p>
-              )}
             </div>
           </div>
 

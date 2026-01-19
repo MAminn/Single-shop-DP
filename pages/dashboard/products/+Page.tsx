@@ -47,7 +47,6 @@ type ProductFormSchema = {
   productImages?: FileMetadata[];
   categoryId: string;
   categoryIds: string[];
-  vendorId: string;
   variants?: { name: string; values: string[] }[];
 };
 
@@ -106,7 +105,6 @@ export default function Products() {
     products: productsData,
     categories,
     vendors,
-    vendorId,
     categoryId,
     totalPages,
     currentPage,
@@ -376,15 +374,11 @@ export default function Products() {
             <DialogTitle>Add New Product</DialogTitle>
           </DialogHeader>
           <ProductForm
-            initialValues={{
-              vendorId:
-                session?.role === "vendor" ? session.vendorId : undefined,
-            }}
+            initialValues={{}}
             onSuccess={handleAddSuccess}
             categories={categories}
             vendors={vendors}
             isLoading={false}
-            vendorId={session?.role === "vendor" ? session.vendorId : undefined}
           />
         </DialogContent>
       </Dialog>
@@ -419,9 +413,6 @@ export default function Products() {
               categories={categories}
               vendors={vendors}
               isLoading={isLoadingImages}
-              vendorId={
-                session?.role === "vendor" ? session.vendorId : undefined
-              }
             />
           )}
         </DialogContent>

@@ -30,8 +30,6 @@ const DEFAULT_PRODUCT: ProductPageProduct = {
   price: 199.99,
   discountPrice: 149.99,
   stock: 45,
-  vendorId: "vendor-1",
-  vendorName: "TechGear Pro",
   available: true,
   imageUrl:
     "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800",
@@ -126,7 +124,7 @@ export function ProductPageMinimal({
               ? "fill-gray-900 text-gray-900"
               : "fill-gray-300 text-gray-300"
           }`}
-        />
+        />,
       );
     }
 
@@ -143,7 +141,7 @@ export function ProductPageMinimal({
               Home
             </a>
             <span className='mx-3'>/</span>
-            <a href='/shop' className='hover:text-gray-900'>
+            <a href='/featured/products' className='hover:text-gray-900'>
               Shop
             </a>
             <span className='mx-3'>/</span>
@@ -312,20 +310,6 @@ export function ProductPageMinimal({
                     </p>
                   </div>
                 ))}
-              </div>
-            )}
-
-            {/* Vendor - Minimal */}
-            {product.vendorName && (
-              <div className='pt-8 border-t border-gray-100'>
-                <a
-                  href={`/vendor/${product.vendorId}`}
-                  className='inline-flex items-center gap-2 text-gray-900 hover:text-gray-600 transition-colors group'>
-                  <span className='text-sm font-light'>
-                    by {product.vendorName}
-                  </span>
-                  <ArrowRight className='w-4 h-4 group-hover:translate-x-1 transition-transform' />
-                </a>
               </div>
             )}
           </div>

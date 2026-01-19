@@ -98,7 +98,8 @@ export function CartPageModernTemplate({
             <p className='text-muted-foreground mb-6'>
               Add some items to get started!
             </p>
-            <Button onClick={() => (window.location.href = "/shop")}>
+            <Button
+              onClick={() => (window.location.href = "/featured/products")}>
               Continue Shopping
             </Button>
           </div>
@@ -169,7 +170,7 @@ export function CartPageModernTemplate({
                         onClick={() =>
                           onQuantityChange?.(
                             item.id,
-                            Math.max(1, item.quantity - 1)
+                            Math.max(1, item.quantity - 1),
                           )
                         }
                         disabled={isUpdating || item.quantity <= 1}>
@@ -289,7 +290,7 @@ export function CartPageModernTemplate({
               <Button
                 variant='outline'
                 className='w-full'
-                onClick={() => (window.location.href = "/shop")}>
+                onClick={() => (window.location.href = "/featured/products")}>
                 Continue Shopping
               </Button>
             </CardContent>

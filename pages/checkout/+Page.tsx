@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useMemo } from "react";
 import {
   useCart,
@@ -6,6 +8,7 @@ import {
 } from "#root/lib/context/CartContext";
 import { useTemplate } from "#root/frontend/contexts/TemplateContext";
 import { getTemplateComponent } from "#root/components/template-system/templateConfig";
+import { trpc } from "#root/shared/trpc/client";
 import type {
   CheckoutPageModernTemplateProps,
   CheckoutCustomerInfo,
@@ -25,6 +28,7 @@ export default function CheckoutPage() {
     tax,
     total,
     promoCode,
+    clearCart,
   } = useCart();
   const { getTemplateId } = useTemplate();
 
@@ -42,7 +46,7 @@ export default function CheckoutPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | undefined>(
-    undefined
+    undefined,
   );
 
   // Convert cart items to checkout order summary items
@@ -91,35 +95,60 @@ export default function CheckoutPage() {
 
   // Handle form submit
   const handleSubmit = async (
-    formValues: Record<string, string>
+    formValues: Record<string, string>,
   ): Promise<void> => {
     setIsSubmitting(true);
     setErrorMessage(undefined);
 
     try {
-      // Update form data
-      setFormData({
-        fullName: formValues.fullName || "",
-        phoneNumber: formValues.phoneNumber || "",
-        email: formValues.email || "",
-        address: formValues.address || "",
-        city: formValues.city || "",
-        state: formValues.state || "",
-        postalCode: formValues.postalCode || "",
-        country: formValues.country || "Egypt",
-        notes: formValues.notes || "",
+      console.log("[Checkout] Starting order submission...");
+      console.log("[Checkout] Cart items:", items.length);
+      console.log("[Checkout] Form data:", formValues);
+
+      // Validate cart has items
+      if (items.length === 0) {
+        throw new Error("Cart is empty");
+      }
+
+      // Prepare order items
+      const orderItems = items.map((item) => ({
+        productId: item.id,
+        quantity: item.quantity,
+      }));
+
+      // Submit order via tRPC
+      const result = await trpc.order.create.mutate({
+        customerName: formValues.fullName,
+        customerEmail: formValues.email,
+        customerPhone: formValues.phoneNumber,
+        shippingAddress: formValues.address,
+        shippingCity: formValues.city,
+        shippingState: formValues.state || null,
+        shippingPostalCode: formValues.postalCode || null,
+        shippingCountry: formValues.country || "Egypt",
+        items: orderItems,
+        notes: formValues.notes || undefined,
+        promoCodeId: promoCode?.id,
       });
 
-      // TODO: Submit order via tRPC
-      // For now, just simulate success
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      console.log("[Checkout] Order creation result:", result);
 
-      // Navigate to success page
-      navigate("/order-confirmation");
+      if (!result.success) {
+        throw new Error(result.error || "Failed to create order");
+      }
+
+      // Clear cart on successful order
+      clearCart();
+
+      console.log("[Checkout] Order created successfully:", result.result?.id);
+
+      // Navigate to order confirmation/success page
+      // TODO: Pass order ID to confirmation page
+      navigate("/");
     } catch (error) {
-      console.error("Order submission failed:", error);
+      console.error("[Checkout] Order submission failed:", error);
       setErrorMessage(
-        error instanceof Error ? error.message : "Failed to submit order"
+        error instanceof Error ? error.message : "Failed to submit order",
       );
     } finally {
       setIsSubmitting(false);
@@ -135,7 +164,7 @@ export default function CheckoutPage() {
   const templateId = getTemplateId("checkoutPage");
   const Template = getTemplateComponent(
     "checkoutPage",
-    templateId || "checkout-modern"
+    templateId || "checkout-modern",
   );
 
   if (!Template) {

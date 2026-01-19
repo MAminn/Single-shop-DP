@@ -48,9 +48,6 @@ function Content({ children }: { children: React.ReactNode }) {
     if (pathname.includes("/dashboard/products")) {
       return "products";
     }
-    if (pathname.includes("/dashboard/vendors")) {
-      return "vendors";
-    }
     if (pathname.includes("/dashboard/admin/templates")) {
       return "templates";
     }
@@ -66,10 +63,6 @@ function Content({ children }: { children: React.ReactNode }) {
     },
     ...(userRole === "admin"
       ? [
-          {
-            label: "Vendors",
-            href: "/dashboard/vendors",
-          },
           {
             label: "Categories",
             href: "/dashboard/categories",

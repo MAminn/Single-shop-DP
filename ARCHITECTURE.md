@@ -4,8 +4,8 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         MERCHANT                                 │
-│                    (Future Admin UI)                             │
+│                         ADMIN                                    │
+│                    (Dashboard UI)                                │
 └────────────────────────────┬────────────────────────────────────┘
                              │
                              │ Updates Content
@@ -111,7 +111,7 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                      CUSTOMER SEES                               │
 │                  Rendered Homepage                               │
-│           (with merchant's custom content)                       │
+│           (with admin's custom content)                          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -304,7 +304,7 @@ lebsy/
 
 ### 3. Public Get, Protected Update
 
-**Why**: Anyone can view, only authenticated can edit  
+**Why**: Anyone can view, only admin can edit  
 **Trade-off**: Need auth system for updates
 
 ### 4. Enum for Icons

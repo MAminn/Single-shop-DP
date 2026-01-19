@@ -39,11 +39,8 @@ interface SortableProduct {
   imageUrl?: string | null;
   available: boolean;
   categoryName?: string | null;
-  vendorId: string;
-  vendorName: string | null;
   stock?: number;
   sku?: string;
-  vendor?: string;
   dateAdded?: string;
   categories?: { id: string; name: string }[];
   images?: { url: string; isPrimary?: boolean }[];
@@ -62,7 +59,6 @@ interface Category {
 
 interface SortingProps {
   categoryId?: string;
-  vendorId?: string;
   categoryType?: "men" | "women";
   categories?: Category[];
 }
@@ -78,7 +74,6 @@ type SortCriteria =
 
 const Sorting: React.FC<SortingProps> = ({
   categoryId,
-  vendorId,
   categoryType,
   categories = [],
 }: SortingProps) => {
@@ -130,9 +125,6 @@ const Sorting: React.FC<SortingProps> = ({
                     : `/uploads/${item.imageUrl}`
                   : undefined,
                 images: item.images,
-                vendor: item.vendorName || "",
-                vendorId: item.vendorId || "",
-                vendorName: item.vendorName || "",
                 categoryName: item.categoryName,
                 categories: item.categories,
                 available: item.stock > 0,
@@ -191,9 +183,6 @@ const Sorting: React.FC<SortingProps> = ({
                     : `/uploads/${item.imageUrl}`
                   : undefined,
                 images: item.images,
-                vendor: item.vendorName || "",
-                vendorId: item.vendorId || "",
-                vendorName: item.vendorName || "",
                 categoryName: item.categoryName,
                 categories: item.categories,
                 available: item.stock > 0,
@@ -216,73 +205,9 @@ const Sorting: React.FC<SortingProps> = ({
       return;
     }
 
-    // Handle vendor
-    if (vendorId) {
-      // Ensure vendorId is valid
-      if (typeof vendorId !== "string" || !vendorId) {
-        console.error("Invalid vendorId:", vendorId);
-        toast({
-          title: "Error",
-          description: "Invalid vendor identifier",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
+    // Single-shop mode: No vendor filtering
 
-      trpc.product.search
-        .query({
-          vendorId: vendorId.toString(),
-          limit: 100,
-          includeOutOfStock: true,
-        })
-        .then((res) => {
-          if (res.success && res.result) {
-            setProducts(
-              res.result.items.map((item) => ({
-                id: item.id,
-                sku: item.id,
-                name: item.name,
-                description: item.description || "",
-                price: Number(item.price),
-                discountPrice: item.discountPrice
-                  ? Number(item.discountPrice)
-                  : null,
-                stock: item.stock,
-                imageUrl: item.imageUrl
-                  ? item.imageUrl.startsWith("http")
-                    ? item.imageUrl
-                    : item.imageUrl.startsWith("/uploads/")
-                    ? item.imageUrl
-                    : `/uploads/${item.imageUrl}`
-                  : undefined,
-                images: item.images,
-                vendor: item.vendorName || "",
-                vendorId: item.vendorId || "",
-                vendorName: item.vendorName || "",
-                categoryName: item.categoryName,
-                categories: item.categories,
-                available: item.stock > 0,
-              }))
-            );
-          } else if (!res.success) {
-            console.error("Failed to fetch vendor products:", res.error);
-            toast({
-              title: "Error",
-              description: "Failed to fetch products",
-              variant: "destructive",
-            });
-          }
-          setIsLoading(false);
-        })
-        .catch((err) => {
-          console.error("Exception while fetching vendor products:", err);
-          setIsLoading(false);
-        });
-      return;
-    }
-
-    // Fetch all products if no categoryId, vendorId, or categoryType
+    // Fetch all products (no vendor filtering in single-shop mode)
     trpc.product.search
       .query({
         limit: 100,
@@ -309,9 +234,6 @@ const Sorting: React.FC<SortingProps> = ({
                   : `/uploads/${item.imageUrl}`
                 : undefined,
               images: item.images,
-              vendor: item.vendorName || "",
-              vendorId: item.vendorId || "",
-              vendorName: item.vendorName || "",
               categoryName: item.categoryName,
               categories: item.categories,
               available: item.stock > 0,
@@ -331,7 +253,7 @@ const Sorting: React.FC<SortingProps> = ({
         console.error("Exception while fetching all products:", err);
         setIsLoading(false);
       });
-  }, [categoryId, vendorId, categoryType, toast]);
+  }, [categoryId, categoryType, toast]);
 
   const toggleCategoryFilter = (categoryId: string) => {
     setSelectedCategories((prev) => {

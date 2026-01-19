@@ -115,20 +115,6 @@ export type {
   CheckoutTotals,
 } from "./checkoutPage/CheckoutPageModernTemplate";
 
-// Export vendor shop components
-export {
-  VendorShopGrid,
-  VendorShopList,
-  VendorShopMinimal,
-} from "./vendorShop";
-export type {
-  VendorShopGridProps,
-  VendorShopListProps,
-  VendorShopMinimalProps,
-  VendorShopVendor,
-  VendorShopProduct,
-} from "./vendorShop";
-
 // Export search results components
 export { SearchResultsGrid, SearchResultsMinimal } from "./searchResults";
 export type {

@@ -153,8 +153,7 @@ export function validateSessionToken(token: string) {
 			token: session.token,
 			email: user.email,
 			expiresAt: session.expiresAt,
-			role: user.role,
-			vendorId: user.vendorId ?? undefined,
+			role: user.role as "admin" | "user", // Single-shop: Only admin and user roles
 		} satisfies SessionValidationResult;
 	});
 }

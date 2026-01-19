@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useMemo } from "react";
 import { useTemplate } from "#root/frontend/contexts/TemplateContext";
 import { useCart } from "#root/lib/context/CartContext";
@@ -91,7 +93,7 @@ export default function CartPage() {
   const templateId = getTemplateId("cartPage");
   const Template = getTemplateComponent(
     "cartPage",
-    templateId || "cart-modern"
+    templateId || "cart-modern",
   );
 
   if (!Template) {

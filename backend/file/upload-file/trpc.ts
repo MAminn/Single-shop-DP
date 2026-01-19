@@ -31,12 +31,13 @@ export const uploadFileProcedure = protectedProcedure
         type: z.string(),
         buffer: z.instanceof(Uint8Array),
       }),
-    })
+    }),
   )
   .mutation(async ({ ctx, input }) => {
     const session = ctx.clientSession;
 
-    if (!session || (session.role !== "admin" && session.role !== "vendor")) {
+    // In single-shop mode, only admins can upload files
+    if (!session || session.role !== "admin") {
       return {
         success: false as const,
         error: "Unauthorized",
@@ -161,7 +162,7 @@ export const uploadFileProcedure = protectedProcedure
           // Log but don't fail the upload if temp file deletion fails
           console.warn(
             "Warning: Could not delete temp file, will be cleaned up later:",
-            tempFilePath
+            tempFilePath,
           );
         }
       } catch (processingError) {
@@ -172,7 +173,7 @@ export const uploadFileProcedure = protectedProcedure
           // Just log if cleanup fails
           console.warn(
             "Failed to clean up temp file after processing error:",
-            tempFilePath
+            tempFilePath,
           );
         }
         throw processingError;
@@ -182,7 +183,7 @@ export const uploadFileProcedure = protectedProcedure
       const result = await runBackendEffect(
         createFile({
           diskname: filename,
-        }).pipe(provideDatabase(ctx))
+        }).pipe(provideDatabase(ctx)),
       ).then(serializeBackendEffectResult);
 
       // Return the result

@@ -108,12 +108,12 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({
   const [localFormData, setLocalFormData] = useState(formData);
   const [localIsSubmitting, setLocalIsSubmitting] = useState(isSubmitting);
   const [localShowOrderConfirmation, setLocalShowOrderConfirmation] = useState(
-    showOrderConfirmation
+    showOrderConfirmation,
   );
   const [localOrderDetails, setLocalOrderDetails] = useState(orderDetails);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setLocalFormData((prev) => ({
@@ -314,7 +314,7 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({
                                     className='text-xs bg-gray-100 px-2 py-1 rounded'>
                                     {key}: {value}
                                   </span>
-                                )
+                                ),
                               )}
                             </div>
                           )}
@@ -362,7 +362,7 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({
             </div>
           </CardContent>
           <CardFooter className='flex gap-4'>
-            <Link href='/'>
+            <Link href='/featured/products'>
               <Button variant='outline' className='flex items-center gap-2'>
                 <Home className='h-4 w-4' />
                 Continue Shopping
@@ -390,7 +390,7 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({
             <p className='text-gray-600 mb-6'>
               Add some items to your cart before proceeding to checkout.
             </p>
-            <Link href='/'>
+            <Link href='/featured/products'>
               <Button className='flex items-center gap-2 mx-auto'>
                 <ArrowLeft className='h-4 w-4' />
                 Continue Shopping
@@ -656,7 +656,7 @@ function OrderSummary({
                             className='text-xs bg-gray-100 px-1 py-0.5 rounded'>
                             {key}: {value}
                           </span>
-                        )
+                        ),
                       )}
                     </div>
                   )}

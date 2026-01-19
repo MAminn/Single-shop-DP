@@ -30,11 +30,8 @@ const Page = () => {
               stock: p.stock,
               imageUrl: p.imageUrl ?? undefined,
               images: p.images,
-              vendorId: p.vendorId || "",
-              vendorName: p.vendorName || null,
               categoryName: p.categoryName || null,
               available: p.stock > 0,
-              vendor: p.vendorName || "",
             })
           );
           setProducts(mappedProducts);

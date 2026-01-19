@@ -60,23 +60,5 @@ export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
 	});
 });
 
-/**
- * Vendor procedure - requires vendor or admin role
- */
-export const vendorProcedure = protectedProcedure.use(async ({ ctx, next }) => {
-	if (ctx.clientSession.role !== "vendor" && ctx.clientSession.role !== "admin") {
-		throw new TRPCError({
-			code: "FORBIDDEN",
-			message: "Vendor access required",
-		});
-	}
-	return next({
-		ctx: {
-			...ctx,
-			clientSession: ctx.clientSession,
-		},
-	});
-});
-
 export const provideDatabase = (ctx: { db: DatabaseClient }) =>
 	Effect.provideService(DatabaseClientService, ctx.db);

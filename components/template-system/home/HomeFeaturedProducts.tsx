@@ -12,9 +12,6 @@ export interface FeaturedProduct {
   stock: number;
   imageUrl?: string;
   images?: { url: string; isPrimary?: boolean }[];
-  vendor?: string;
-  vendorId: string;
-  vendorName: string | null;
   categoryName?: string | null;
   available: boolean;
   categories?: { id: string; name: string }[];
@@ -40,7 +37,7 @@ export function HomeFeaturedProducts({
   title = "Featured Products",
   subtitle,
   showViewAllButton = true,
-  viewAllHref = "/shop",
+  viewAllHref = "/featured/products",
   maxProducts = 8,
 }: HomeFeaturedProductsProps) {
   // Limit the number of products displayed

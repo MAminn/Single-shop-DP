@@ -88,8 +88,6 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({
       available: false,
       categoryId: "",
       categoryName: "",
-      vendorId: "",
-      vendorName: "",
       variants: [],
       specifications: {},
       features: [],
@@ -147,7 +145,6 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({
               : templateData.product.price,
           stock: templateData.product.stock,
           categoryName: templateData.product.categoryName,
-          vendorId: templateData.product.vendorId,
           variants: templateData.product.variants,
           imageUrl:
             templateData.product.images &&
@@ -327,9 +324,6 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({
                 <div className='flex items-center space-x-2 mb-3'>
                   <span className='bg-gray-100 text-gray-900 text-xs font-medium px-3 py-1 rounded-none border border-gray-200'>
                     {templateData.product.categoryName}
-                  </span>
-                  <span className='bg-gray-50 text-gray-700 text-xs font-light px-3 py-1 rounded-none border border-gray-200'>
-                    {templateData.product.vendorName}
                   </span>
                 </div>
                 <h1 className='text-4xl font-light text-gray-900 leading-tight'>

@@ -16,9 +16,6 @@ interface FeaturedProduct {
   stock: number;
   imageUrl?: string;
   images?: { url: string; isPrimary?: boolean }[];
-  vendor: string;
-  vendorId: string;
-  vendorName: string;
   categoryName: string;
   available: boolean;
   categories?: { id: string; name: string }[];
@@ -62,9 +59,6 @@ function Page() {
                   : `/uploads/${item.imageUrl}`
                 : undefined,
               images: item.images,
-              vendor: item.vendorName || "",
-              vendorId: item.vendorId || "",
-              vendorName: item.vendorName || "",
               categoryName: item.categoryName || "",
               categories: item.categories,
               available: item.stock > 0,

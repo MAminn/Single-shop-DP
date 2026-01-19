@@ -113,7 +113,7 @@ const ModernCheckoutTemplate: React.FC<ModernCheckoutTemplateProps> = ({
   const [localFormData, setLocalFormData] = useState(formData);
   const [localIsSubmitting, setLocalIsSubmitting] = useState(isSubmitting);
   const [localShowOrderConfirmation, setLocalShowOrderConfirmation] = useState(
-    showOrderConfirmation
+    showOrderConfirmation,
   );
   const [localOrderDetails, setLocalOrderDetails] = useState(orderDetails);
   const [isVisible, setIsVisible] = useState(false);
@@ -123,7 +123,7 @@ const ModernCheckoutTemplate: React.FC<ModernCheckoutTemplateProps> = ({
   }, []);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setLocalFormData((prev) => ({
@@ -332,7 +332,7 @@ const ModernCheckoutTemplate: React.FC<ModernCheckoutTemplateProps> = ({
                       {localOrderDetails.items.map((item) => (
                         <div
                           key={`${item.id}-${JSON.stringify(
-                            item.selectedOptions
+                            item.selectedOptions,
                           )}`}
                           className='bg-white border border-gray-200 rounded-none p-4'>
                           <div className='flex items-center gap-4'>
@@ -365,7 +365,7 @@ const ModernCheckoutTemplate: React.FC<ModernCheckoutTemplateProps> = ({
                                         className='bg-gray-100 text-gray-800 px-3 py-1 rounded-none text-sm font-medium border border-gray-200'>
                                         {key}: {value}
                                       </span>
-                                    )
+                                    ),
                                   )}
                                 </div>
                               )}
@@ -432,7 +432,7 @@ const ModernCheckoutTemplate: React.FC<ModernCheckoutTemplateProps> = ({
 
               <CardFooter className='p-8 bg-white border-t border-gray-200'>
                 <div className='flex flex-col sm:flex-row gap-4 w-full'>
-                  <Link href='/' className='flex-1'>
+                  <Link href='/featured/products' className='flex-1'>
                     <Button
                       variant='outline'
                       className='w-full h-12 text-lg font-light border border-gray-300 rounded-none hover:bg-gray-50'>
@@ -820,7 +820,7 @@ function ModernOrderSummary({
                               className='text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-none font-medium border border-gray-200'>
                               {key}: {value}
                             </span>
-                          )
+                          ),
                         )}
                       </div>
                     )}

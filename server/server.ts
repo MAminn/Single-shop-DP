@@ -11,12 +11,13 @@ import { authFastifyPlugin } from "#root/backend/auth/api.js";
 import { uploadFileApiPlugin } from "#root/backend/file/upload-file/api";
 import { emailServiceMiddleware } from "#root/shared/email/middleware.server";
 import { fincartWebhookPlugin } from "#root/backend/orders/fincart-webhook/api.js";
+import { ensureDefaultStoreVendor } from "#root/shared/database/bootstrap.js";
 
 const isProduction = process.env.NODE_ENV === "production";
 
 const getRootPath = () => {
   return pipe(fileURLToPath(import.meta.url), dirname, (dirname) =>
-    resolve(dirname, isProduction ? "../.." : "..")
+    resolve(dirname, isProduction ? "../.." : ".."),
   );
 };
 
@@ -116,6 +117,9 @@ async function buildServer() {
 
   await instance.register(drizzleFastifyPlugin);
 
+  // Bootstrap: Ensure default store vendor exists (single-shop mode)
+  await ensureDefaultStoreVendor();
+
   await instance.register(emailServiceMiddleware);
 
   await instance.register(authFasitfyMiddleware);
@@ -165,12 +169,12 @@ async function buildServer() {
     try {
       // Test database connection
       const connectionTest = await request.db.execute(
-        "SELECT 1 as connection_test"
+        "SELECT 1 as connection_test",
       );
 
       // Test database version
       const pgVersion = await request.db.execute(
-        "SELECT version() as pg_version"
+        "SELECT version() as pg_version",
       );
 
       // Check migration table existence
@@ -190,7 +194,7 @@ async function buildServer() {
 
       if (tableExists) {
         migrations = await request.db.execute(
-          'SELECT id, hash, created_at FROM "__drizzle_migrations" ORDER BY created_at DESC LIMIT 10'
+          'SELECT id, hash, created_at FROM "__drizzle_migrations" ORDER BY created_at DESC LIMIT 10',
         );
       }
 
@@ -219,7 +223,7 @@ async function buildServer() {
           databaseUrl: process.env.DATABASE_URL
             ? process.env.DATABASE_URL.replace(
                 /(postgres:\/\/[^:]+):([^@]+)@/,
-                "postgres://$1:***@"
+                "postgres://$1:***@",
               )
             : "not defined",
         },
@@ -272,7 +276,7 @@ async function buildServer() {
           "..",
           "shared",
           "database",
-          "migrations"
+          "migrations",
         );
 
         if (fs.existsSync(migrationsFolder)) {
@@ -280,7 +284,7 @@ async function buildServer() {
 
           // Filter SQL files that aren't the safety file
           const sqlFiles = files.filter(
-            (file) => file.endsWith(".sql") && !file.includes("safety")
+            (file) => file.endsWith(".sql") && !file.includes("safety"),
           );
 
           if (sqlFiles.length > 0) {
@@ -310,7 +314,7 @@ async function buildServer() {
     } catch (error) {
       console.error(
         "[Manual Migration] Error during manual migration initialization:",
-        error
+        error,
       );
       return {
         success: false,
@@ -345,7 +349,7 @@ async function buildServer() {
       reply.status(statusCode);
       httpResponse.pipe(reply.raw);
       return reply;
-    }
+    },
   );
 
   await instance.ready();

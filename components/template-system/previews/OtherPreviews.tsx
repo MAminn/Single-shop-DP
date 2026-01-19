@@ -10,9 +10,6 @@ import {
 // Import actual templates
 import { HomeFeaturedProducts } from "#root/components/template-system/home/HomeFeaturedProducts";
 import { ModernHomeTemplateV2 } from "#root/components/template-system/home/ModernHomeTemplateV2";
-import { VendorShopGrid } from "#root/components/template-system/vendorShop/VendorShopGrid";
-import { VendorShopList } from "#root/components/template-system/vendorShop/VendorShopList";
-import { VendorShopMinimal } from "#root/components/template-system/vendorShop/VendorShopMinimal";
 import { SearchResultsGrid } from "#root/components/template-system/searchResults/SearchResultsGrid";
 import { SearchResultsMinimal } from "#root/components/template-system/searchResults/SearchResultsMinimal";
 import { SortingToolbarTemplate } from "#root/components/template-system/sorting/SortingToolbarTemplate";
@@ -35,30 +32,6 @@ export function ModernHomeTemplateV2Preview() {
   return (
     <PreviewHost>
       <ModernHomeTemplateV2 featuredProducts={mockCategoryProducts} />
-    </PreviewHost>
-  );
-}
-
-export function VendorShopGridPreview() {
-  return (
-    <PreviewHost>
-      <VendorShopGrid vendor={mockVendor} products={mockCategoryProducts} />
-    </PreviewHost>
-  );
-}
-
-export function VendorShopListPreview() {
-  return (
-    <PreviewHost>
-      <VendorShopList vendor={mockVendor} products={mockCategoryProducts} />
-    </PreviewHost>
-  );
-}
-
-export function VendorShopMinimalPreview() {
-  return (
-    <PreviewHost>
-      <VendorShopMinimal vendor={mockVendor} products={mockCategoryProducts} />
     </PreviewHost>
   );
 }

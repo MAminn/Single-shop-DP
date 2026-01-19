@@ -37,11 +37,8 @@ const ModernProductCardTemplate: React.FC<ModernProductCardTemplateProps> = ({
     images: [],
     imageUrl: "",
     available: true,
-    vendorId: "",
-    vendorName: "",
     categoryName: "",
   };
-  const showVendor = data?.showVendor ?? true;
   const showAddToCart = data?.showAddToCart ?? true;
   const showQuickView = data?.showQuickView ?? true;
   const showWishlist = data?.showWishlist ?? true;
@@ -62,11 +59,9 @@ const ModernProductCardTemplate: React.FC<ModernProductCardTemplateProps> = ({
         available: product.available,
         categoryId: "",
         categoryName: product.categoryName || "",
-        vendorId: product.vendorId || "",
-        vendorName: product.vendorName || "",
       },
       1,
-      {}
+      {},
     );
 
     toast({
@@ -92,7 +87,7 @@ const ModernProductCardTemplate: React.FC<ModernProductCardTemplateProps> = ({
     if (product.images && product.images.length > 1) {
       const timer = setInterval(() => {
         setCurrentImageIndex((prevIndex) =>
-          prevIndex === (product.images?.length ?? 0) - 1 ? 0 : prevIndex + 1
+          prevIndex === (product.images?.length ?? 0) - 1 ? 0 : prevIndex + 1,
         );
       }, 2000);
 
@@ -155,7 +150,7 @@ const ModernProductCardTemplate: React.FC<ModernProductCardTemplateProps> = ({
               ((Number.parseFloat(product.price.toString()) -
                 Number.parseFloat(product.discountPrice.toString())) /
                 Number.parseFloat(product.price.toString())) *
-                100
+                100,
             )}
             % OFF
           </Badge>
@@ -214,17 +209,6 @@ const ModernProductCardTemplate: React.FC<ModernProductCardTemplateProps> = ({
 
       {/* Product Info */}
       <div className='p-4'>
-        {/* Vendor Name */}
-        {showVendor && product.vendorName && (
-          <div className='mb-1'>
-            <Link
-              href={`/vendor/${product.vendorId}`}
-              className='text-xs font-light text-gray-600 hover:text-gray-900 uppercase tracking-wider transition-colors'>
-              {product.vendorName}
-            </Link>
-          </div>
-        )}
-
         {/* Product Name */}
         <Link href={`/product/${product.id}`}>
           <h3 className='font-medium text-gray-900 mb-1.5 line-clamp-2 hover:text-gray-700 transition-colors'>

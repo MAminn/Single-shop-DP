@@ -216,7 +216,7 @@ export const ModernCartTemplate: React.FC<ModernCartTemplateProps> = ({
                                   className='px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded'>
                                   {key}: {value}
                                 </span>
-                              )
+                              ),
                             )}
                             <span className='px-2 py-1 bg-gray-900 text-white text-xs rounded'>
                               {item.categoryName}
@@ -396,7 +396,7 @@ export const ModernCartTemplate: React.FC<ModernCartTemplateProps> = ({
                         <ArrowRight className='ml-2 h-4 w-4' />
                       </Button>
                     </Link>
-                    <Link href='/products'>
+                    <Link href='/featured/products'>
                       <Button
                         variant='outline'
                         className='w-full border-gray-300 text-gray-700 hover:bg-gray-50 py-3 rounded-none transition-colors duration-200'>

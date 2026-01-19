@@ -139,11 +139,6 @@ export default function AdminTemplatesPage() {
       description: "Product category pages with filtering",
     },
     {
-      value: "vendorShop",
-      label: "Vendor Shop Pages",
-      description: "Individual vendor storefronts",
-    },
-    {
       value: "searchResults",
       label: "Search Results Pages",
       description: "Search results layout",
@@ -264,7 +259,7 @@ export default function AdminTemplatesPage() {
           const activeTemplateId = getTemplateId(selectedPageType);
           const templates = getTemplatesByCategory(selectedPageType);
           const activeTemplate = templates.find(
-            (t) => t.id === activeTemplateId
+            (t) => t.id === activeTemplateId,
           );
 
           if (!activeTemplate) return null;
@@ -318,11 +313,6 @@ export default function AdminTemplatesPage() {
               },
               checkoutPage: {
                 "checkout-modern": "Multi-step checkout with order summary",
-              },
-              vendorShop: {
-                "vendor-shop-grid": "Standard marketplace layout with sidebar",
-                "vendor-shop-list": "Catalog-heavy list view for many products",
-                "vendor-shop-minimal": "Premium brand-focused minimal design",
               },
               searchResults: {
                 "search-results-grid":
@@ -381,7 +371,7 @@ export default function AdminTemplatesPage() {
           const activeTemplateId = getTemplateId(selectedPageType);
           const templates = getTemplatesByCategory(selectedPageType);
           const availableTemplates = templates.filter(
-            (t) => t.id !== activeTemplateId
+            (t) => t.id !== activeTemplateId,
           );
 
           const getTemplateDescription = (templateId: string): string => {
@@ -434,11 +424,6 @@ export default function AdminTemplatesPage() {
               checkoutPage: {
                 "checkout-modern": "Multi-step checkout with order summary",
               },
-              vendorShop: {
-                "vendor-shop-grid": "Standard marketplace layout with sidebar",
-                "vendor-shop-list": "Catalog-heavy list view for many products",
-                "vendor-shop-minimal": "Premium brand-focused minimal design",
-              },
               searchResults: {
                 "search-results-grid":
                   "Standard search layout with sidebar filters",
@@ -468,7 +453,6 @@ export default function AdminTemplatesPage() {
               home: "/",
               productPage: "/products/classic-white-sneakers",
               categoryPage: "/categories/men",
-              vendorShop: "/brands/nike",
               searchResults: "/search?q=shoes",
               sorting: "/categories/men",
               cartPage: "/cart",
@@ -573,13 +557,13 @@ export default function AdminTemplatesPage() {
                       <h3 className='text-lg font-semibold'>
                         {getTemplateMetadata(
                           selectedCategory,
-                          currentActiveTemplate
+                          currentActiveTemplate,
                         )?.name || "Unknown Template"}
                       </h3>
                       <p className='text-muted-foreground'>
                         {getTemplateMetadata(
                           selectedCategory,
-                          currentActiveTemplate
+                          currentActiveTemplate,
                         )?.description || "No description available"}
                       </p>
                     </div>

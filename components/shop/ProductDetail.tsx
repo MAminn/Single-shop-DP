@@ -56,7 +56,6 @@ import { Textarea } from "#root/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { getVendorUrl } from "#root/lib/utils/route-helpers";
 import type { ProductByIdResult } from "#root/backend/products/get-product-by-id/service";
 import { ErrorSection } from "#root/components/dashboard/ErrorSection";
 import type { Product as CartProductType } from "#root/lib/mock-data/products";
@@ -256,7 +255,6 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
           ? product.imagesCombined.find((img) => img.isPrimary)?.url ||
             product.imagesCombined[0]?.url
           : undefined,
-      vendorId: product.vendorId ? String(product.vendorId) : undefined,
       categoryName: product.categoryName || undefined,
     };
 
@@ -590,15 +588,6 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
             <h1 className='text-3xl font-bold text-gray-900 mb-2'>
               {product.name}
             </h1>
-
-            {product.vendorName && (
-              <Link
-                href={getVendorUrl(product.vendorId)}
-                className='text-sm text-gray-500 flex items-center hover:text-accent-lb transition-colors'>
-                <Store className='inline-block h-4 w-4 mr-1' />
-                {product.vendorName}
-              </Link>
-            )}
           </div>
 
           <div className='flex items-center gap-4'>
@@ -768,18 +757,6 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
                         <span>{product.categoryName}</span>
                       )}
                     </div>
-                  </dd>
-                </div>
-              )}
-              {product.vendorName && (
-                <div className='border-b border-gray-200 pb-3'>
-                  <dt className='text-sm font-medium text-gray-500'>Brand</dt>
-                  <dd className='mt-1 text-sm text-gray-900'>
-                    <Link
-                      href={getVendorUrl(product.vendorId)}
-                      className='hover:text-accent-lb'>
-                      {product.vendorName}
-                    </Link>
                   </dd>
                 </div>
               )}

@@ -24,22 +24,33 @@ import {
 import { Link } from "#root/components/utils/Link";
 import { Button } from "#root/components/ui/button";
 import { useRole } from "#root/lib/context/RoleContext";
+import { isSingleShopMode } from "#root/shared/config/app";
 
 export function DashboardSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const { userRole } = useRole();
 
-  const adminSidebarItems = [
+  // Build admin sidebar items based on shop mode
+  const adminSidebarItemsBase = [
     {
       label: "Overview",
       href: "/dashboard",
       icon: LayoutDashboard,
     },
-    {
+  ];
+
+  // Only show Vendors in multi-vendor mode
+  if (!isSingleShopMode()) {
+    adminSidebarItemsBase.push({
       label: "Vendors",
       href: "/dashboard/vendors",
       icon: Store,
-    },
+    });
+  }
+
+  // Add remaining items
+  const adminSidebarItems = [
+    ...adminSidebarItemsBase,
     {
       label: "Categories",
       href: "/dashboard/categories",

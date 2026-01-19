@@ -7,7 +7,6 @@ import {
   productCategory,
   productImage,
   productVariant,
-  vendor,
 } from "#root/shared/database/drizzle/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { Effect } from "effect";
@@ -27,35 +26,31 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
         const productResult = await db
           .select({
             product: product,
-            vendor: vendor,
             primaryCategory: category,
             primaryImageFile: file,
           })
           .from(product)
-          .innerJoin(vendor, eq(product.vendorId, vendor.id))
           .innerJoin(category, eq(product.categoryId, category.id))
-          .leftJoin(file, eq(product.imageId, file.id)) // Use left join for primary image in case it's missing
+          .leftJoin(file, eq(product.imageId, file.id))
           .where(
             and(
               eq(product.id, input.productId),
-              eq(vendor.status, "active"), // Ensure vendor is active
-              eq(category.deleted, false) // Ensure primary category is not deleted
-            )
+              eq(category.deleted, false), // Ensure primary category is not deleted
+            ),
           )
           .limit(1);
 
         if (productResult.length === 0) {
-          // No product found, or vendor/category criteria not met
+          // No product found, or category criteria not met
           return null;
         }
 
         // Correctly access the nested properties
         const productData = productResult[0];
-        if (!productData) return null; // Should not happen due to length check, but good for type safety
+        if (!productData) return null;
 
         const {
           product: foundProduct,
-          vendor: foundVendor,
           primaryCategory,
           primaryImageFile,
         } = productData;
@@ -85,8 +80,8 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
           .where(
             and(
               eq(productCategory.productId, foundProduct.id),
-              eq(category.deleted, false) // Ensure associated categories are not deleted
-            )
+              eq(category.deleted, false), // Ensure associated categories are not deleted
+            ),
           );
         // No need to order here unless required
 
@@ -99,22 +94,19 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
         // Format the final product object
         const formattedProduct = {
           ...foundProduct,
-          price: Number(foundProduct.price), // Ensure price is a number
+          price: Number(foundProduct.price),
           discountPrice: foundProduct.discountPrice
             ? Number(foundProduct.discountPrice)
-            : null, // Include discount price
-          imageUrl: primaryImageFile?.diskname || null, // Fallback primary image URL
-          vendorName: foundVendor.name,
+            : null,
+          imageUrl: primaryImageFile?.diskname || null,
           categoryName: formatCategoryName(primaryCategory.name),
           available: foundProduct.stock > 0,
           images: images.map((img) => ({
             id: img.id,
-            url: img.diskname ? `/uploads/${img.diskname}` : "", // Construct full URL
+            url: img.diskname ? `/uploads/${img.diskname}` : "",
             diskname: img.diskname,
             isPrimary: img.isPrimary,
           })),
-          // Use detailed images array; fallback to single imageUrl if multiple images are missing
-          // This fallback logic can be refined based on exact requirements
           imagesCombined:
             images.length > 0
               ? images.map((img) => ({
@@ -137,13 +129,12 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
             name: v.name,
             values: v.values,
           })),
-          // Add default/placeholder values for rating and reviewCount
-          rating: 0, // Placeholder - rating calculation needs separate logic/query
-          reviewCount: 0, // Placeholder - review count needs separate logic/query
+          rating: 0,
+          reviewCount: 0,
         };
 
         return formattedProduct;
-      })
+      }),
     );
     // If result is null (product not found or criteria not met), Effect will handle it.
     // Consider adding specific error handling/tagging if needed.
@@ -154,8 +145,8 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
             tag: "NotFound",
             statusCode: 404,
             clientMessage: "Product not found or not available",
-          })
-        )
+          }),
+        ),
       );
     }
     return result;
@@ -170,20 +161,18 @@ export type ProductByIdResult = {
   description: string;
   imageId: string;
   categoryId: string;
-  price: number; // Changed from string to number
-  discountPrice: number | null; // Add discount price
+  price: number;
+  discountPrice: number | null;
   createdAt: Date;
   updatedAt: Date | null;
-  vendorId: string;
   stock: number;
   imageUrl: string | null;
-  vendorName: string;
   categoryName: string;
   available: boolean;
   images: { id: string; url: string; diskname: string; isPrimary: boolean }[];
   imagesCombined: { url: string; isPrimary: boolean }[];
   categories: { id: string; name: string }[];
   variants: { name: string; values: string[] }[];
-  rating: number; // Add rating field
-  reviewCount: number; // Add reviewCount field
+  rating: number;
+  reviewCount: number;
 };

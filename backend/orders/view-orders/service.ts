@@ -2,7 +2,6 @@ import { query } from "#root/shared/database/drizzle/db";
 import {
   order,
   orderItem,
-  vendor,
   user,
 } from "#root/shared/database/drizzle/schema";
 import { and, desc, eq, inArray, type SQL } from "drizzle-orm";
@@ -10,7 +9,6 @@ import { Effect } from "effect";
 import { z } from "zod";
 import type { ClientSession } from "#root/backend/auth/shared/entities";
 import { ServerError } from "#root/shared/error/server";
-import { checkVendorStatus } from "#root/backend/vendor/utils/check-vendor-status";
 
 export const viewOrdersSchema = z.object({
   limit: z.number().min(1).max(100).optional().default(10),
@@ -22,7 +20,7 @@ export const viewOrdersSchema = z.object({
 
 export const viewOrders = (
   input: z.infer<typeof viewOrdersSchema>,
-  session?: ClientSession
+  session?: ClientSession,
 ) =>
   Effect.gen(function* ($) {
     if (!session) {
@@ -33,19 +31,16 @@ export const viewOrders = (
             message: "You must be logged in to view orders",
             statusCode: 401,
             clientMessage: "You must be logged in to view orders",
-          })
-        )
+          }),
+        ),
       );
     }
 
-    // Check vendor status if user is a vendor
-    if (session.role === "vendor" && session.vendorId) {
-      yield* $(checkVendorStatus(session.vendorId, session, "view orders"));
-    }
+    // Admin can view all orders, users can view their own orders
+    // No special authentication needed beyond session check
 
     const { limit, offset, status } = input;
     const isAdmin = session.role === "admin";
-    const isVendor = session.role === "vendor";
 
     return yield* $(
       query(async (db) => {
@@ -56,22 +51,8 @@ export const viewOrders = (
             conditions.push(eq(order.status, status));
           }
 
-          if (isVendor && session.vendorId) {
-            const vendorOrderItems = await tx
-              .select({ orderId: orderItem.orderId })
-              .from(orderItem)
-              .where(eq(orderItem.vendorId, session.vendorId))
-              .execute();
-
-            const vendorOrderIds = vendorOrderItems.map((item) => item.orderId);
-            if (vendorOrderIds.length === 0) {
-              return [];
-            }
-
-            conditions.push(inArray(order.id, vendorOrderIds));
-          }
-
-          if (!isAdmin && !isVendor) {
+          // Users (non-admins) only see their own orders
+          if (!isAdmin) {
             const userResult = await tx
               .select({ id: user.id })
               .from(user)
@@ -116,56 +97,30 @@ export const viewOrders = (
 
           const ordersWithItems = await Promise.all(
             orders.map(async (orderData) => {
+              // Single-shop mode: No vendor data needed
               const items = await tx
                 .select({
                   id: orderItem.id,
                   productId: orderItem.productId,
-                  vendorId: orderItem.vendorId,
+                  vendorId: orderItem.vendorId, // Keep for DB schema compatibility
                   quantity: orderItem.quantity,
                   price: orderItem.price,
                   discountPrice: orderItem.discountPrice,
                   name: orderItem.name,
                 })
                 .from(orderItem)
-                .where(
-                  isVendor && session.vendorId
-                    ? and(
-                        eq(orderItem.orderId, orderData.id),
-                        eq(orderItem.vendorId, session.vendorId)
-                      )
-                    : eq(orderItem.orderId, orderData.id)
-                )
+                .where(eq(orderItem.orderId, orderData.id))
                 .execute();
-
-              const vendorIds = Array.from(
-                new Set(items.map((item) => item.vendorId))
-              ).filter(Boolean);
-
-              const vendors =
-                vendorIds.length > 0
-                  ? await tx
-                      .select({ id: vendor.id, name: vendor.name })
-                      .from(vendor)
-                      .where(inArray(vendor.id, vendorIds))
-                      .execute()
-                  : [];
-
-              const itemsWithVendor = items.map((item) => ({
-                ...item,
-                vendorName:
-                  vendors.find((v) => v.id === item.vendorId)?.name ||
-                  "Unknown Vendor",
-              }));
 
               return {
                 ...orderData,
-                items: itemsWithVendor,
+                items,
               };
-            })
+            }),
           );
 
           return ordersWithItems;
         });
-      })
+      }),
     );
   });

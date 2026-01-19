@@ -155,6 +155,7 @@ export const file = pgTable("file", {
   }),
 });
 
+// Legacy enum - kept for reference but not used in single-shop mode
 export const categoryType = pgEnum("category_type", ["men", "women"]);
 
 export const category = pgTable("category", {
@@ -179,7 +180,7 @@ export const category = pgTable("category", {
     withTimezone: true,
     mode: "date",
   }),
-  type: categoryType("type").notNull().default("men"),
+  type: text("type").notNull().default("general"), // Changed from enum to text for dynamic categories
   deleted: boolean("deleted").notNull().default(false),
 });
 
@@ -482,10 +483,10 @@ export const productCategory = pgTable(
     return {
       productCategoryUnique: uniqueIndex("product_category_unique").on(
         table.productId,
-        table.categoryId
+        table.categoryId,
       ),
     };
-  }
+  },
 );
 
 // Template System Schema
@@ -688,7 +689,7 @@ export const promoCode = pgTable(
     return {
       codeIndex: uniqueIndex("promo_code_code_idx").on(table.code),
     };
-  }
+  },
 );
 
 // Junction table for many-to-many relationship between promo codes and applicable products
@@ -721,10 +722,10 @@ export const promoCodeProducts = pgTable(
     return {
       promoCodeProductUnique: uniqueIndex("promo_code_product_unique_idx").on(
         table.promoCodeId,
-        table.productId
+        table.productId,
       ),
     };
-  }
+  },
 );
 
 // Junction table for many-to-many relationship between promo codes and applicable categories
@@ -757,10 +758,10 @@ export const promoCodeCategories = pgTable(
     return {
       promoCodeCategoryUnique: uniqueIndex("promo_code_category_unique_idx").on(
         table.promoCodeId,
-        table.categoryId
+        table.categoryId,
       ),
     };
-  }
+  },
 );
 
 // Authentication log table for tracking login/registration events
@@ -916,7 +917,7 @@ export const categoryContent = pgTable(
     // Ensure one content record per merchant per category
     uniqueMerchantCategory: uniqueIndex("unique_merchant_category").on(
       table.merchantId,
-      table.categoryId
+      table.categoryId,
     ),
-  })
+  }),
 );

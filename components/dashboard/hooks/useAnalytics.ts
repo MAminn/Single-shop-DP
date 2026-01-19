@@ -151,7 +151,8 @@ const mockTopSellingProducts: TopSellingProduct[] = [
   },
 ];
 
-export const useAnalytics = (role: "admin" | "vendor", vendorId?: string) => {
+// Single-shop mode: Only admin role supported
+export const useAnalytics = (role: "admin", vendorId?: string) => {
   const [analytics, setAnalytics] = useState<AnalyticsData>(
     defaultAnalyticsState
   );
@@ -165,7 +166,7 @@ export const useAnalytics = (role: "admin" | "vendor", vendorId?: string) => {
     }));
 
     try {
-      const result = await trpc.order.stats.query({ vendorId });
+      const result = await trpc.order.stats.query({});
       if (result.success) {
         setAnalytics((prev) => ({
           ...prev,
@@ -197,7 +198,7 @@ export const useAnalytics = (role: "admin" | "vendor", vendorId?: string) => {
       }));
       console.error("Error fetching order stats:", error);
     }
-  }, [vendorId]);
+  }, []);
 
   // Fetch product stats
   const fetchProductStats = useCallback(async () => {
@@ -207,7 +208,7 @@ export const useAnalytics = (role: "admin" | "vendor", vendorId?: string) => {
     }));
 
     try {
-      const result = await trpc.product.stats.query({ vendorId });
+      const result = await trpc.product.stats.query({});
       if (result.success) {
         setAnalytics((prev) => ({
           ...prev,
@@ -239,7 +240,7 @@ export const useAnalytics = (role: "admin" | "vendor", vendorId?: string) => {
       }));
       console.error("Error fetching product stats:", error);
     }
-  }, [vendorId]);
+  }, []);
 
   // Fetch top selling products
   const fetchTopSellingProducts = useCallback(async () => {
@@ -255,7 +256,6 @@ export const useAnalytics = (role: "admin" | "vendor", vendorId?: string) => {
     try {
       const result = await trpc.product.topSelling.query({
         limit: 5,
-        vendorId,
       });
       if (result.success) {
         setAnalytics((prev) => ({
@@ -288,7 +288,7 @@ export const useAnalytics = (role: "admin" | "vendor", vendorId?: string) => {
       }));
       console.error("Error fetching top selling products:", error);
     }
-  }, [vendorId]);
+  }, []);
 
   // Fetch total revenue
   const fetchTotalRevenue = useCallback(async () => {
@@ -298,7 +298,7 @@ export const useAnalytics = (role: "admin" | "vendor", vendorId?: string) => {
     }));
 
     try {
-      const result = await trpc.product.revenue.query({ vendorId });
+      const result = await trpc.product.revenue.query({});
       if (result.success) {
         setAnalytics((prev) => ({
           ...prev,
@@ -330,51 +330,12 @@ export const useAnalytics = (role: "admin" | "vendor", vendorId?: string) => {
       }));
       console.error("Error fetching total revenue:", error);
     }
-  }, [vendorId]);
+  }, []);
 
-  // Fetch recent vendors (admin only)
+  // Fetch recent vendors removed - single-shop mode has no vendors
   const fetchRecentVendors = useCallback(async () => {
-    if (role !== "admin") return;
-
-    setAnalytics((prev) => ({
-      ...prev,
-      recentVendors: { ...prev.recentVendors, isLoading: true, error: null },
-    }));
-
-    try {
-      const result = await trpc.vendor.view.query({ limit: 5 });
-      if (result.success) {
-        setAnalytics((prev) => ({
-          ...prev,
-          recentVendors: {
-            data: result.result,
-            isLoading: false,
-            error: null,
-          },
-        }));
-      } else {
-        setAnalytics((prev) => ({
-          ...prev,
-          recentVendors: {
-            ...prev.recentVendors,
-            isLoading: false,
-            error: result.error || "Failed to fetch recent vendors",
-          },
-        }));
-        console.error("Failed to fetch recent vendors:", result.error);
-      }
-    } catch (error) {
-      setAnalytics((prev) => ({
-        ...prev,
-        recentVendors: {
-          ...prev.recentVendors,
-          isLoading: false,
-          error: "An error occurred while fetching recent vendors",
-        },
-      }));
-      console.error("Error fetching recent vendors:", error);
-    }
-  }, [role]);
+    // No-op in single-shop mode
+  }, []);
 
   // Fetch all analytics data
   const fetchAllAnalytics = useCallback(() => {
@@ -382,16 +343,12 @@ export const useAnalytics = (role: "admin" | "vendor", vendorId?: string) => {
     fetchProductStats();
     fetchTopSellingProducts();
     fetchTotalRevenue();
-    if (role === "admin") {
-      fetchRecentVendors();
-    }
+    // No vendor fetching in single-shop mode
   }, [
     fetchOrderStats,
     fetchProductStats,
     fetchTopSellingProducts,
     fetchTotalRevenue,
-    fetchRecentVendors,
-    role,
   ]);
 
   // Initialize analytics data fetching

@@ -37,11 +37,8 @@ const DefaultProductCardTemplate: React.FC<DefaultProductCardTemplateProps> = ({
     images: [],
     imageUrl: "",
     available: true,
-    vendorId: "",
-    vendorName: "",
     categoryName: "",
   };
-  const showVendor = data?.showVendor ?? true;
   const showAddToCart = data?.showAddToCart ?? true;
   const showQuickView = data?.showQuickView ?? true;
   const showWishlist = data?.showWishlist ?? true;
@@ -62,11 +59,9 @@ const DefaultProductCardTemplate: React.FC<DefaultProductCardTemplateProps> = ({
         available: product.available,
         categoryId: "",
         categoryName: product.categoryName || "",
-        vendorId: product.vendorId || ("" as string),
-        vendorName: product.vendorName || "",
       },
       1,
-      {}
+      {},
     );
 
     toast({
@@ -123,7 +118,7 @@ const DefaultProductCardTemplate: React.FC<DefaultProductCardTemplateProps> = ({
               ((Number.parseFloat(product.price.toString()) -
                 Number.parseFloat(product.discountPrice.toString())) /
                 Number.parseFloat(product.price.toString())) *
-                100
+                100,
             )}
             % OFF
           </Badge>
@@ -176,15 +171,6 @@ const DefaultProductCardTemplate: React.FC<DefaultProductCardTemplateProps> = ({
 
       {/* Product Info */}
       <div className='p-4'>
-        {/* Vendor Name */}
-        {showVendor && product.vendorName && (
-          <div className='mb-1'>
-            <div className='text-xs text-gray-500 hover:text-primary'>
-              {product.vendorName}
-            </div>
-          </div>
-        )}
-
         {/* Product Name */}
         <Link href={productLink}>
           <h3 className='font-medium text-gray-900 mb-1 line-clamp-2 hover:text-primary transition-colors'>

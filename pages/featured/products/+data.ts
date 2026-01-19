@@ -24,8 +24,6 @@ type ProductSuccess = {
     available: boolean;
     categoryId: string;
     categoryName: string | null;
-    vendorId: string;
-    vendorName: string | null;
   }>;
 };
 

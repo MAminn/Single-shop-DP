@@ -240,7 +240,7 @@ export function ModernHomeTemplateV2({
     title: footerCtaTitle = "Ready to Start Shopping?",
     description: footerCtaDesc = "Join thousands of satisfied customers",
     buttonText: footerCtaButtonText = "Browse Products",
-    buttonLink: footerCtaLink = "/shop",
+    buttonLink: footerCtaLink = "/featured/products",
     show: showFooterCta = true,
   } = footerCta;
 
@@ -409,7 +409,7 @@ export function ModernHomeTemplateV2({
             title=''
             products={featuredProducts}
             showViewAllButton={true}
-            viewAllHref='/shop'
+            viewAllHref='/featured/products'
             maxProducts={8}
           />
         </div>

@@ -177,11 +177,11 @@ pnpm drizzle-kit push:pg
 
 ## ✨ Key Benefits
 
-1. **Merchant Freedom** - Edit all text, images, links without code
+1. **Admin Freedom** - Edit all text, images, links without code
 2. **Brand Consistency** - Layout and styling remain professional
 3. **Quick Setup** - Defaults work immediately, customize later
 4. **Type Safe** - Catch errors at compile time
-5. **Scalable** - Ready for multi-tenant expansion
+5. **Scalable** - Ready for single-shop deployment
 6. **Maintainable** - Clear separation of concerns
 
 ## 🧪 Testing

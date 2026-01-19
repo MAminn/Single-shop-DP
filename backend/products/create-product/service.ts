@@ -1,18 +1,16 @@
 import type { ClientSession } from "#root/backend/auth/shared/entities";
-import { checkVendorStatus } from "#root/backend/vendor/utils/check-vendor-status";
 import { query } from "#root/shared/database/drizzle/db";
 import {
   product,
   productVariant,
-  vendor,
   productImage,
   productCategory,
 } from "#root/shared/database/drizzle/schema";
 import { ServerError } from "#root/shared/error/server";
-import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 import { validateProductRules } from "../shared";
+import { getStoreOwnerId } from "#root/shared/config/store";
 
 export const createProductSchema = z.object({
   name: z.string().nonempty().max(255),
@@ -24,14 +22,13 @@ export const createProductSchema = z.object({
     .min(1, "At least one category is required"),
   price: z.number().min(0).max(10000),
   discountPrice: z.number().min(0).max(10000).optional(),
-  vendorId: z.string().uuid(),
   stock: z.number().min(0).max(10000),
   variants: z
     .array(
       z.object({
         name: z.string().nonempty().max(255),
         values: z.array(z.string().nonempty().max(255)),
-      })
+      }),
     )
     .optional(),
   productImages: z
@@ -39,72 +36,42 @@ export const createProductSchema = z.object({
       z.object({
         id: z.string().uuid(),
         isPrimary: z.boolean().optional(),
-      })
+      }),
     )
     .optional(),
 });
 
 export const createProduct = (
   data: z.infer<typeof createProductSchema>,
-  session?: ClientSession
+  session?: ClientSession,
 ) =>
   Effect.gen(function* ($) {
-    if (!session || (session.role !== "admin" && session.role !== "vendor")) {
+    // Admin-only product creation
+    if (!session || session.role !== "admin") {
       return yield* $(
         Effect.fail(
           new ServerError({
             tag: "Unauthorized",
             statusCode: 401,
-            clientMessage: "Unauthorized",
-          })
-        )
+            clientMessage: "Unauthorized - Admin access required",
+          }),
+        ),
       );
     }
 
     yield* $(validateProductRules(data));
 
-    // If this is a vendor, check their status
-    if (session.role === "vendor") {
-      yield* $(
-        checkVendorStatus(data.vendorId, session, "create new products")
-      );
-    }
-
     return yield* $(
       query(async (db) => {
-        const existingVendor = await db
-          .select()
-          .from(vendor)
-          .where(eq(vendor.id, data.vendorId))
-          .then((data) => data[0]);
-
-        if (!existingVendor) {
-          throw new Error("Vendor not found");
-        }
-
-        if (
-          session.role === "vendor" &&
-          session.vendorId !== existingVendor.id
-        ) {
-          throw new Error("Unauthorized");
-        }
-
-        // Check vendor status again at the database level
-        if (existingVendor.status !== "active") {
-          throw new Error(
-            `Cannot create products for a ${existingVendor.status} vendor`
-          );
-        }
-
         const newProduct = await db.transaction(async (tx) => {
           const newProduct = await tx
             .insert(product)
             .values({
               name: data.name,
               description: data.description,
-              imageId: data.imageId, // Keep for backward compatibility
-              categoryId: data.categoryId, // Keep the primary category for backward compatibility
-              vendorId: data.vendorId,
+              imageId: data.imageId,
+              categoryId: data.categoryId,
+              vendorId: getStoreOwnerId(), // Single-shop: use default store owner ID
               price: data.price.toString(),
               discountPrice: data.discountPrice
                 ? data.discountPrice.toString()
@@ -120,18 +87,19 @@ export const createProduct = (
 
           // Create product-category relationships
           if (data.categoryIds && data.categoryIds.length > 0) {
-            for (let i = 0; i < data.categoryIds.length; i++) {
-              const categoryId = data.categoryIds[i];
-              if (categoryId) {
-                const isPrimary = categoryId === data.categoryId;
+            await Promise.all(
+              data.categoryIds.map(async (categoryId) => {
+                if (categoryId) {
+                  const isPrimary = categoryId === data.categoryId;
 
-                await tx.insert(productCategory).values({
-                  productId: newProduct.id,
-                  categoryId: categoryId,
-                  isPrimary: isPrimary,
-                });
-              }
-            }
+                  await tx.insert(productCategory).values({
+                    productId: newProduct.id,
+                    categoryId: categoryId,
+                    isPrimary: isPrimary,
+                  });
+                }
+              })
+            );
           }
 
           // Handle product images
@@ -164,22 +132,16 @@ export const createProduct = (
                     values: variant.values,
                     productId: newProduct.id,
                   };
-                })
+                }),
               )
               .returning()
               .then((data) => data[0]);
           }
 
-          // Update the vendor to be featured if they have products
-          await tx
-            .update(vendor)
-            .set({ featured: true })
-            .where(eq(vendor.id, data.vendorId));
-
           return newProduct;
         });
 
         return newProduct;
-      })
+      }),
     );
   });

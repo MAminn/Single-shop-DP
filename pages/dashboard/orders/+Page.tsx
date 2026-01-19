@@ -60,11 +60,9 @@ import { useToast } from "#root/components/ui/use-toast";
 interface OrderItem {
   id: string;
   productId: string;
-  vendorId: string;
   quantity: number;
   price: string;
   name: string;
-  vendorName?: string;
   discountPrice?: string;
 }
 
@@ -94,7 +92,6 @@ interface Order {
 export default function Orders() {
   const { clientSession } = usePageContext();
   const isAdmin = clientSession?.role === "admin";
-  const isVendor = clientSession?.role === "vendor";
   const { toast } = useToast();
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -250,8 +247,7 @@ export default function Orders() {
         order.customerEmail.toLowerCase().includes(query) ||
         order.items?.some(
           (item) =>
-            item.name.toLowerCase().includes(query) ||
-            item.vendorName?.toLowerCase().includes(query)
+            item.name.toLowerCase().includes(query)
         )
       );
     }
@@ -293,9 +289,7 @@ export default function Orders() {
               Orders
             </h1>
             <p className="text-muted-foreground text-center lg:text-left">
-              {isAdmin
-                ? "Manage all vendor orders across the platform"
-                : "Track and manage your store's orders"}
+              Track and manage your store's orders
             </p>
           </div>
         </div>
@@ -369,7 +363,6 @@ export default function Orders() {
                       <TableHead>Order ID</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Customer</TableHead>
-                      {isAdmin && <TableHead>Vendors</TableHead>}
                       <TableHead>Items</TableHead>
                       <TableHead>Total</TableHead>
                       <TableHead>Status</TableHead>
@@ -384,17 +377,6 @@ export default function Orders() {
                         </TableCell>
                         <TableCell>{formatDate(order.createdAt)}</TableCell>
                         <TableCell>{order.customerName}</TableCell>
-                        {isAdmin && (
-                          <TableCell>
-                            {Array.from(
-                              new Set(
-                                order.items?.map(
-                                  (item) => item.vendorName || "Unknown"
-                                ) || []
-                              )
-                            ).join(", ")}
-                          </TableCell>
-                        )}
                         <TableCell>{order.items?.length || 0}</TableCell>
                         <TableCell>
                           {Number.parseFloat(order.total).toFixed(2)} EGP
@@ -517,7 +499,6 @@ export default function Orders() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Product</TableHead>
-                        {isAdmin && <TableHead>Vendor</TableHead>}
                         <TableHead>Quantity</TableHead>
                         <TableHead>Price</TableHead>
                         <TableHead>Total</TableHead>
@@ -527,11 +508,6 @@ export default function Orders() {
                       {selectedOrder.items?.map((item) => (
                         <TableRow key={item.id}>
                           <TableCell>{item.name}</TableCell>
-                          {isAdmin && (
-                            <TableCell>
-                              {item.vendorName || "Unknown"}
-                            </TableCell>
-                          )}
                           <TableCell>{item.quantity}</TableCell>
                           <TableCell>
                             {item.discountPrice ? (
@@ -584,7 +560,7 @@ export default function Orders() {
                           selectedOrder.status.slice(1)}
                       </Badge>
 
-                      {(isAdmin || isVendor) && (
+                      {isAdmin && (
                         <Select
                           disabled={isUpdating}
                           onValueChange={(value) =>

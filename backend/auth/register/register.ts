@@ -24,8 +24,7 @@ export const registerSchema = z
     phone: z
       .string()
       .regex(/^(\+201|01|00201)[0-2,5]{1}[0-9]{8}/, "Invalid phone number"),
-    role: z.enum(["admin", "vendor", "user"]).default("user"),
-    vendorId: z.string().uuid().optional(),
+    role: z.enum(["admin", "user"]).default("user"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -39,7 +38,6 @@ export const register = ({
   name,
   phone,
   role,
-  vendorId,
 }: z.infer<typeof registerSchema>) => {
   return Effect.gen(function* ($) {
     const existingUser = yield* $(
@@ -76,35 +74,6 @@ export const register = ({
       );
     }
 
-    if (vendorId) {
-      const vendors = yield* $(
-        query(
-          async (db) =>
-            await db
-              .select({
-                id: Tables.vendor.id,
-                name: Tables.vendor.name,
-              })
-              .from(Tables.vendor)
-              .where(eq(Tables.vendor.id, vendorId))
-        )
-      );
-
-      const maybeVendor = vendors[0];
-
-      if (!maybeVendor) {
-        return yield* $(
-          Effect.fail(
-            new ServerError({
-              tag: "VendorNotFound",
-              statusCode: 400,
-              clientMessage: "Vendor not found",
-            })
-          )
-        );
-      }
-    }
-
     // Create verification token
     const verificationToken = randomBytes(32).toString("hex");
     const now = new Date();
@@ -124,7 +93,6 @@ export const register = ({
             passwordDigest,
             name,
             phone,
-            vendorId,
             role,
             emailVerified,
             verificationToken,

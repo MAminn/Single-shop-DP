@@ -13,7 +13,7 @@ export function db() {
 
   const sanitizedUrl = dbUrl.replace(
     /(postgres:\/\/[^:]+):([^@]+)@/,
-    "postgres://$1:***@"
+    "postgres://$1:***@",
   );
 
   try {
@@ -24,7 +24,7 @@ export function db() {
   } catch (error) {
     console.error(
       "[DB Connection] Failed to create database connection:",
-      error
+      error,
     );
     throw error;
   }
@@ -43,11 +43,17 @@ export const query = <A>(fn: (db: DatabaseClient) => Promise<A>) =>
     Effect.flatMap((db) =>
       Effect.tryPromise({
         try: async () => await fn(db),
-        catch: (err) =>
-          new ServerError({
+        catch: (err) => {
+          // If it's already a ServerError, pass it through without re-wrapping
+          if (err instanceof ServerError) {
+            return err;
+          }
+          console.error("[Database Query Error]", err);
+          return new ServerError({
             tag: "DatabaseQueryError",
             cause: err,
-          }),
-      })
-    )
+          });
+        },
+      }),
+    ),
   );

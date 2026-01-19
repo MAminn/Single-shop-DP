@@ -420,8 +420,6 @@ export function CategoryHeroSplit({
                   imageUrl: product.imageUrl,
                   images: product.images,
                   available: product.available,
-                  vendorId: product.vendorId,
-                  vendorName: product.vendorName,
                 }}
               />
             ))}

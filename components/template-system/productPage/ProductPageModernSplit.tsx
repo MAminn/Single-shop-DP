@@ -140,8 +140,6 @@ const MOCK_PRODUCT: ProductPageProduct = {
   price: 199.99,
   discountPrice: 149.99,
   stock: 45,
-  vendorId: "vendor-1",
-  vendorName: "TechGear Pro",
   available: true,
   imageUrl:
     "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800",
@@ -217,7 +215,7 @@ export function ProductPageModernSplit({
   const discountPercentage = hasDiscount
     ? Math.round(
         ((product.price - (product.discountPrice as number)) / product.price) *
-          100
+          100,
       )
     : 0;
 
@@ -250,7 +248,7 @@ export function ProductPageModernSplit({
         <Star
           key={`full-${i}`}
           className='w-5 h-5 fill-yellow-400 text-yellow-400'
-        />
+        />,
       );
     }
 
@@ -259,7 +257,7 @@ export function ProductPageModernSplit({
         <StarHalf
           key='half'
           className='w-5 h-5 fill-yellow-400 text-yellow-400'
-        />
+        />,
       );
     }
 
@@ -324,16 +322,6 @@ export function ProductPageModernSplit({
 
             {/* Right Column - Product Info */}
             <div className='space-y-6'>
-              {/* Vendor */}
-              {product.vendorName && (
-                <div className='flex items-center gap-2'>
-                  <span className='text-sm text-gray-500'>by</span>
-                  <span className='text-sm font-semibold text-purple-600'>
-                    {product.vendorName}
-                  </span>
-                </div>
-              )}
-
               {/* Title */}
               <div>
                 <h1 className='text-3xl sm:text-4xl font-bold text-gray-900 mb-2'>
@@ -581,7 +569,7 @@ export function ProductPageModernSplit({
               title=''
               products={relatedProducts}
               showViewAllButton={true}
-              viewAllHref='/shop'
+              viewAllHref='/featured/products'
               maxProducts={4}
             />
           </div>

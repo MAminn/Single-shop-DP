@@ -59,12 +59,9 @@ const Page = () => {
               stock: item.stock,
               imageUrl: item.imageUrl ?? undefined,
               images: item.images ?? [],
-              vendorId: item.vendorId || "",
-              vendorName: item.vendorName || null,
               categoryName: item.categoryName || null,
               available: item.stock > 0,
-              vendor: item.vendorName || "",
-              brand: item.vendorName || undefined,
+              brand: undefined,
             }));
           setProducts(mappedProducts);
         } else {

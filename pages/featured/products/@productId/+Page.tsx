@@ -1,8 +1,11 @@
+"use client";
+
 import { useState, useEffect, useCallback } from "react";
 import { usePageContext } from "vike-react/usePageContext";
 import { trpc } from "#root/shared/trpc/client";
 import { getTemplateComponent } from "#root/components/template-system/templateConfig";
 import { useTemplate } from "#root/frontend/contexts/TemplateContext";
+import { useCart } from "#root/lib/context/CartContext";
 import type { ProductPageProduct } from "#root/components/template-system/productPage/ProductPageModernSplit";
 import type { FeaturedProduct } from "#root/components/template-system/home/HomeFeaturedProducts";
 
@@ -10,9 +13,10 @@ export default function ProductDetailPage() {
   const pageContext = usePageContext();
   const productId = pageContext.routeParams?.productId as string;
   const { getTemplateId } = useTemplate();
+  const { addItem, items } = useCart();
 
   const [productData, setProductData] = useState<ProductPageProduct | null>(
-    null
+    null,
   );
   const [relatedProducts, setRelatedProducts] = useState<FeaturedProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,7 +71,7 @@ export default function ProductDetailPage() {
       const mappedRelatedProducts: FeaturedProduct[] =
         relatedProductsData?.products
           ?.filter(
-            (rp: { product: { id: string } }) => rp.product.id !== productId
+            (rp: { product: { id: string } }) => rp.product.id !== productId,
           )
           .map((rp) => ({
             id: rp.product.id,
@@ -82,12 +86,9 @@ export default function ProductDetailPage() {
             images: rp.file?.diskname
               ? [{ url: `/uploads/${rp.file.diskname}`, isPrimary: true }]
               : [],
-            vendorId: rp.vendor.id,
-            vendorName: rp.vendor.name,
             categoryName: rp.category.name,
             stock: rp.product.stock || 0,
             available: (rp.product.stock || 0) > 0,
-            vendor: rp.vendor.name,
           })) || [];
 
       // Map product data to ProductPageProduct interface
@@ -102,10 +103,7 @@ export default function ProductDetailPage() {
         description: product.description ?? "No description available.",
         imageUrl: product.images?.[0]?.url ?? undefined,
         images: product.images ?? [],
-        vendorId: product.vendorId,
-        vendorName: product.vendorName ?? null,
         categoryName: product.categoryName ?? null,
-        vendor: product.vendorName ?? "",
         features: [],
         specifications: [],
         available: (product.stock || 0) > 0,
@@ -154,9 +152,34 @@ export default function ProductDetailPage() {
       product={productData ?? undefined}
       relatedProducts={relatedProducts}
       isLoading={isLoading}
-      onAddToCart={(product: ProductPageProduct) =>
-        console.log("Add to cart", product.id)
-      }
+      onAddToCart={(product: ProductPageProduct) => {
+        console.log("[Add to Cart] Before addItem - Cart items:", items.length);
+        console.log("[Add to Cart] Adding product:", product.id, product.name);
+
+        const success = addItem(
+          {
+            id: product.id,
+            name: product.name,
+            price: product.discountPrice ?? product.price,
+            stock: product.stock,
+            imageUrl: product.imageUrl,
+            categoryName: product.categoryName ?? undefined,
+            available: product.available,
+          },
+          1, // quantity
+          {}, // selectedOptions
+        );
+
+        console.log("[Add to Cart] Success:", success);
+        console.log(
+          "[Add to Cart] After addItem - Cart items:",
+          items.length + (success ? 1 : 0),
+        );
+
+        if (!success) {
+          console.error("[Add to Cart] Failed - possibly out of stock");
+        }
+      }}
       onAddToWishlist={(product: ProductPageProduct) =>
         console.log("Add to wishlist", product.id)
       }

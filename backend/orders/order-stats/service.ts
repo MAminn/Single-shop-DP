@@ -5,6 +5,7 @@ import { ServerError } from "#root/shared/error/server";
 import { and, count, eq, inArray } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
+import { isSingleShopMode } from "#root/shared/config/app";
 
 export const getOrderStatsSchema = z.object({
   vendorId: z.string().optional(),
@@ -24,7 +25,7 @@ function normalizeCount(rows: { count: number }[]): number {
 
 export const getOrderStats = (
   input: z.infer<typeof getOrderStatsSchema>,
-  session?: ClientSession
+  session?: ClientSession,
 ) =>
   Effect.gen(function* ($) {
     // Check for authorization
@@ -35,32 +36,37 @@ export const getOrderStats = (
             tag: "Unauthorized",
             statusCode: 401,
             clientMessage: "Unauthorized",
-          })
-        )
+          }),
+        ),
       );
     }
 
-    // If vendorId is provided, make sure the user is authorized to view it
-    if (
-      input.vendorId &&
-      session.role !== "admin" &&
-      session.vendorId !== input.vendorId
-    ) {
-      return yield* $(
-        Effect.fail(
-          new ServerError({
-            tag: "Forbidden",
-            statusCode: 403,
-            clientMessage: "You do not have permission to view this data",
-          })
-        )
-      );
+    // In single-shop mode, only admins can view stats and vendorId is ignored
+    if (isSingleShopMode()) {
+      if (session.role !== "admin") {
+        return yield* $(
+          Effect.fail(
+            new ServerError({
+              tag: "Forbidden",
+              statusCode: 403,
+              clientMessage: "Admin access required",
+            }),
+          ),
+        );
+      }
+      // Ignore vendorId in single-shop mode
+      input.vendorId = undefined;
     }
 
-    // If user is vendor, use their vendorId
-    const targetVendorId =
-      input.vendorId ||
-      (session.role === "vendor" ? session.vendorId : undefined);
+    // Single-shop mode: No vendor authorization needed
+    // In multi-vendor mode, this would check vendor permissions
+    if (!isSingleShopMode()) {
+      // Multi-vendor authorization would go here
+      // Currently no-op since we're in single-shop mode
+    }
+
+    // Only admins can view order stats (vendor role disabled)
+    const targetVendorId = isSingleShopMode() ? undefined : input.vendorId;
 
     return yield* $(
       query(async (db) => {
@@ -99,7 +105,7 @@ export const getOrderStats = (
           .where(
             baseCondition
               ? and(baseCondition, eq(order.status, "pending"))
-              : eq(order.status, "pending")
+              : eq(order.status, "pending"),
           )
           .then(normalizeCount);
 
@@ -110,7 +116,7 @@ export const getOrderStats = (
           .where(
             baseCondition
               ? and(baseCondition, eq(order.status, "processing"))
-              : eq(order.status, "processing")
+              : eq(order.status, "processing"),
           )
           .then(normalizeCount);
 
@@ -121,7 +127,7 @@ export const getOrderStats = (
           .where(
             baseCondition
               ? and(baseCondition, eq(order.status, "shipped"))
-              : eq(order.status, "shipped")
+              : eq(order.status, "shipped"),
           )
           .then(normalizeCount);
 
@@ -132,7 +138,7 @@ export const getOrderStats = (
           .where(
             baseCondition
               ? and(baseCondition, eq(order.status, "delivered"))
-              : eq(order.status, "delivered")
+              : eq(order.status, "delivered"),
           )
           .then(normalizeCount);
 
@@ -143,7 +149,7 @@ export const getOrderStats = (
           .where(
             baseCondition
               ? and(baseCondition, eq(order.status, "cancelled"))
-              : eq(order.status, "cancelled")
+              : eq(order.status, "cancelled"),
           )
           .then(normalizeCount);
 
@@ -157,6 +163,6 @@ export const getOrderStats = (
         };
 
         return orderStats;
-      })
+      }),
     );
   });

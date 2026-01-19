@@ -6,7 +6,6 @@ import {
   product,
   productVariant,
   productCategory,
-  vendor,
 } from "#root/shared/database/drizzle/schema";
 import { and, asc, count, eq, ilike, inArray, or } from "drizzle-orm";
 import { Effect } from "effect";
@@ -18,7 +17,6 @@ export const viewProductsSchema = z.object({
   search: z.string().trim().max(255).optional(),
   sortBy: z.enum(["name", "price", "discountPrice", "stock"]).optional(),
   categoryId: z.string().uuid().optional(),
-  vendorId: z.string().uuid().optional(),
 });
 
 export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
@@ -27,7 +25,6 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
       query(async (db) => {
         return await db.transaction(async (tx) => {
           const baseQueryConditions = [];
-          baseQueryConditions.push(eq(vendor.status, "active"));
           baseQueryConditions.push(eq(category.deleted, false));
 
           if (input.search) {
@@ -35,14 +32,9 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
               or(
                 ilike(product.name, `%${input.search}%`),
                 ilike(product.description, `%${input.search}%`),
-                ilike(vendor.name, `%${input.search}%`),
-                ilike(category.name, `%${input.search}%`)
-              )
+                ilike(category.name, `%${input.search}%`),
+              ),
             );
-          }
-
-          if (input.vendorId) {
-            baseQueryConditions.push(eq(product.vendorId, input.vendorId));
           }
 
           // Handle category filtering (potentially complex due to junction table)
@@ -57,19 +49,19 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
               .execute();
 
             productIdsInCategory = productsInCategoryRes.map(
-              (p) => p.productId
+              (p) => p.productId,
             );
 
             if (productIdsInCategory.length > 0) {
               baseQueryConditions.push(
-                inArray(product.id, productIdsInCategory)
+                inArray(product.id, productIdsInCategory),
               );
             } else {
               // If no products found in junction for this category, the result should be empty
               // Effectively, we add a condition that can't be met.
               // We check product.categoryId as a fallback, but realistically, if junction has no entries, it's 0.
               baseQueryConditions.push(
-                eq(product.categoryId, input.categoryId)
+                eq(product.categoryId, input.categoryId),
               );
               // or maybe just return early? For now, let query return 0 results.
             }
@@ -79,7 +71,6 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
           const countQuery = tx
             .select({ count: count() })
             .from(product)
-            .innerJoin(vendor, eq(product.vendorId, vendor.id))
             .innerJoin(category, eq(product.categoryId, category.id))
             .where(and(...baseQueryConditions));
 
@@ -90,7 +81,6 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
           const pQuery = tx
             .select()
             .from(product)
-            .innerJoin(vendor, eq(product.vendorId, vendor.id))
             .innerJoin(category, eq(product.categoryId, category.id))
             .leftJoin(file, eq(product.imageId, file.id))
             .where(and(...baseQueryConditions))
@@ -105,8 +95,8 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
                     ? product.price
                     : input.sortBy === "discountPrice"
                       ? product.discountPrice
-                      : product.stock
-              )
+                      : product.stock,
+              ),
             );
           }
 
@@ -166,7 +156,7 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
               },
               categories: associatedCategories,
               variants: variants.filter(
-                (variant) => variant.productId === productData.product.id
+                (variant) => variant.productId === productData.product.id,
               ),
             };
           });
@@ -177,6 +167,6 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
             totalCount,
           };
         });
-      })
+      }),
     );
   });

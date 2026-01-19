@@ -2,31 +2,30 @@
 
 ## A) WHAT THIS REPO IS
 
-**Product**: Lebsey is a multi-vendor e-commerce platform (marketplace) that allows:
-- Vendors to register, manage products, and sell through the platform
-- Customers to browse, purchase products from multiple vendors
-- Admins to manage vendors, categories, products, orders, and the entire marketplace
-- A customizable template system for dynamic page layouts
+**Product**: Lebsy Shop is a single-shop e-commerce template (sellable digital product) that provides:
+- Admin-managed product catalog for a single online store
+- Customers browse and purchase products from the single store
+- Admins manage all products, categories, orders, and store settings
+- A customizable template system for dynamic page layouts (homepage, category, product, cart, checkout)
 
 **Users & Roles**:
-- **Admin**: Full system access - manage vendors, approve/reject/suspend, manage categories, view analytics
-- **Vendor**: Manage their own products, view their orders, edit their vendor profile (must be approved and active)
+- **Admin**: Full system access - manage products, categories, orders, store settings, and template configuration
 - **User/Customer**: Browse products, add to cart, place orders, write reviews
 
 **Core Flows**:
-1. **Vendor Onboarding**: Register → Admin Approval → Active Status → Can Create Products
-2. **Shopping**: Browse Products → Add to Cart → Checkout → Order Placement → Order Tracking (Fincart integration)
-3. **Product Management**: Create Product → Assign Categories → Upload Images → Set Variants → Manage Stock
-4. **Order Management**: Customer Places Order → Vendor Fulfills → Status Updates via Fincart Webhooks
-5. **Promo Codes**: Admin creates codes → Customers apply at checkout → Discount applied
-6. **Template System**: Admins assign templates to pages/sections → Dynamic rendering → Analytics tracking
+1. **Shopping**: Browse Products → Add to Cart → Checkout → Order Placement → Order Tracking (Fincart integration)
+2. **Product Management**: Admin Creates Product → Assign Categories → Upload Images → Set Variants → Manage Stock
+3. **Order Management**: Customer Places Order → Admin Fulfills → Status Updates via Fincart Webhooks
+4. **Promo Codes**: Admin creates codes → Customers apply at checkout → Discount applied
+5. **Template System**: Admins assign templates to pages/sections → Dynamic rendering → Customizable store appearance
 
 **What "Done" Means**: 
-- MVP with complete vendor management, product catalog, order processing
-- Fincart payment integration working
-- Template system for customizable UI
-- Multi-vendor support with separate inventories
-- Admin dashboard with analytics
+- Sellable single-shop e-commerce template
+- Admin-only dashboard (no vendor features)
+- Complete shopping flows (browse → cart → checkout → orders)
+- Template system for UI customization
+- Admin manages single store inventory
+- Zero vendor-related code or UI
 
 ---
 
@@ -266,45 +265,44 @@ pnpm format  # Format code
 
 ## F) CURRENT STATUS
 
-### What Works Now
+### What Works Now (Single-Shop Template)
 ✅ User authentication (login, register, email verification)
 ✅ Session management (cookie-based)
-✅ Vendor registration and approval workflow
-✅ Product CRUD operations with multiple images
-✅ Category management (men/women categories)
+✅ Product CRUD operations (admin-only) with multiple images
+✅ Category management (customizable categories)
 ✅ Product search and filtering
-✅ Order creation and management
+✅ Order creation and management (single-store)
 ✅ Fincart payment integration (webhook handler)
 ✅ Promo code system (create, validate, apply discounts)
-✅ Template system (dynamic page layouts)
+✅ Template system (homepage, category, product, cart, checkout templates)
 ✅ File upload system (images)
-✅ Admin dashboard with analytics
-✅ Vendor dashboard for product management
+✅ Admin dashboard (admin-only access)
 ✅ Product reviews system
 ✅ Multi-category assignment for products
 ✅ Product variants (e.g., sizes, colors)
+✅ Single-shop mode enabled by default
+
+### Recently Completed (Transformation)
+✅ Removed vendor registration and approval workflows
+✅ Removed vendor dashboard and shop pages
+✅ Removed vendor-related UI components ("Sold by", shop links)
+✅ Admin-only product management enforced
+✅ Vendor routes disabled/removed
 
 ### What's Half-Done / Messy
 ⚠️ Template analytics tracking (structure exists, not fully implemented)
 ⚠️ Email templates (React Email components exist but may need styling)
 ⚠️ Error handling consistency (mix of Effect and try-catch)
-⚠️ Some tRPC procedures still use `publicProcedure` when they should check auth
 ⚠️ Frontend state management could be more consistent
-⚠️ No comprehensive error logging/monitoring
-
-### Known Bugs
-🐛 None documented in code
-🐛 Database status endpoint exists (`/api/debug/db-status`) suggesting DB connection was an issue
+⚠️ Some legacy vendor references in database schema (legacy columns)
 
 ### Big Refactors Planned
-🔄 Add proper role-based middleware to tRPC procedures
-🔄 Implement proper error logging and monitoring
+🔄 Final cleanup of vendor-related backend code
 🔄 Add comprehensive test coverage
-🔄 Improve template system with more templates
+🔄 Improve template system with additional template variations
 🔄 Add caching layer (Redis) for performance
-🔄 Implement real-time order updates (WebSockets)
 🔄 Add inventory management features
-🔄 Implement vendor payout system
+🔄 Package for marketplace sales (CodeCanyon/Gumroad)
 
 ### Deadline / Priority
 📅 Not specified - appears to be active development
@@ -487,17 +485,16 @@ pnpm format  # Format code
 
 ### Auth Permissions Matrix
 
-| Role    | Create Product | Edit Own Product | Edit Any Product | Approve Vendor | Manage Categories | View Orders | Manage Promo Codes | Access Dashboard |
-|---------|----------------|------------------|------------------|----------------|-------------------|-------------|--------------------| -----------------|
-| Admin   | ✅              | ✅                | ✅                | ✅              | ✅                 | ✅ (All)     | ✅                  | ✅                |
-| Vendor  | ✅ (if active)  | ✅                | ❌                | ❌              | ❌                 | ✅ (Own)     | ❌                  | ✅                |
-| User    | ❌              | ❌                | ❌                | ❌              | ❌                 | ❌           | ❌                  | ❌                |
+| Role    | Create Product | Edit Product | Manage Categories | View Orders | Manage Promo Codes | Access Dashboard |
+|---------|----------------|--------------|-------------------|-------------|--------------------| -----------------|
+| Admin   | ✅              | ✅            | ✅                 | ✅ (All)     | ✅                  | ✅                |
+| User    | ❌              | ❌            | ❌                 | ❌           | ❌                  | ❌                |
 
 **Special Rules**:
-- Vendors must have `status = "active"` to create/edit products
-- Vendors can only manage products where `product.vendorId = user.vendorId`
+- Only admins can access dashboard and manage store
 - Email must be verified for full access
 - Session must be valid (not expired)
+- In single-shop mode, vendor role and features are disabled
 
 ---
 

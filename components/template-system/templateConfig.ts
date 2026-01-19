@@ -37,12 +37,6 @@ import { CartPageModernTemplate } from "./cartPage/CartPageModernTemplate";
 import type { CartPageModernTemplateProps } from "./cartPage/CartPageModernTemplate";
 import { CheckoutPageModernTemplate } from "./checkoutPage/CheckoutPageModernTemplate";
 import type { CheckoutPageModernTemplateProps } from "./checkoutPage/CheckoutPageModernTemplate";
-import { VendorShopGrid } from "./vendorShop/VendorShopGrid";
-import type { VendorShopGridProps } from "./vendorShop/VendorShopGrid";
-import { VendorShopList } from "./vendorShop/VendorShopList";
-import type { VendorShopListProps } from "./vendorShop/VendorShopList";
-import { VendorShopMinimal } from "./vendorShop/VendorShopMinimal";
-import type { VendorShopMinimalProps } from "./vendorShop/VendorShopMinimal";
 import { SearchResultsGrid } from "./searchResults/SearchResultsGrid";
 import type { SearchResultsGridProps } from "./searchResults/SearchResultsGrid";
 import { SearchResultsMinimal } from "./searchResults/SearchResultsMinimal";
@@ -72,9 +66,6 @@ import {
 import {
   HomeFeaturedProductsPreview,
   ModernHomeTemplateV2Preview,
-  VendorShopGridPreview,
-  VendorShopListPreview,
-  VendorShopMinimalPreview,
   SearchResultsGridPreview,
   SearchResultsMinimalPreview,
   SortingToolbarPreview,
@@ -98,7 +89,6 @@ export type TemplateCategory =
   | "categoryPage"
   | "cartPage"
   | "checkoutPage"
-  | "vendorShop"
   | "searchResults";
 
 // Define the structure for a template entry
@@ -118,7 +108,6 @@ export interface TemplateConfig {
   categoryPage: TemplateEntry[];
   cartPage: TemplateEntry[];
   checkoutPage: TemplateEntry[];
-  vendorShop: TemplateEntry[];
   searchResults: TemplateEntry[];
 }
 
@@ -272,27 +261,6 @@ export const templateConfig: TemplateConfig = {
     },
   ],
 
-  vendorShop: [
-    {
-      id: "vendor-shop-grid",
-      label: "Grid Layout (Standard)",
-      component: VendorShopGrid as React.FC<VendorShopGridProps>,
-      previewComponent: VendorShopGridPreview,
-    },
-    {
-      id: "vendor-shop-list",
-      label: "List Layout (Catalog)",
-      component: VendorShopList as React.FC<VendorShopListProps>,
-      previewComponent: VendorShopListPreview,
-    },
-    {
-      id: "vendor-shop-minimal",
-      label: "Minimal Layout (Premium)",
-      component: VendorShopMinimal as React.FC<VendorShopMinimalProps>,
-      previewComponent: VendorShopMinimalPreview,
-    },
-  ],
-
   searchResults: [
     {
       id: "search-results-grid",
@@ -318,7 +286,7 @@ export const templateConfig: TemplateConfig = {
  */
 export function getTemplateComponent(
   category: TemplateCategory,
-  id: string
+  id: string,
 ): TemplateEntry | undefined {
   const categoryTemplates = templateConfig[category];
   return categoryTemplates.find((template) => template.id === id);
@@ -331,7 +299,7 @@ export function getTemplateComponent(
  * @returns Array of template entries for the category
  */
 export function getTemplatesByCategory(
-  category: TemplateCategory
+  category: TemplateCategory,
 ): TemplateEntry[] {
   return templateConfig[category] || [];
 }
@@ -345,7 +313,7 @@ export function getTemplatesByCategory(
  */
 export function templateExists(
   category: TemplateCategory,
-  id: string
+  id: string,
 ): boolean {
   return getTemplateComponent(category, id) !== undefined;
 }

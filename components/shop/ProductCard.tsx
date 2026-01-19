@@ -13,7 +13,7 @@ import { Badge } from "#root/components/ui/badge";
 import { ShoppingCart, Store, Eye } from "lucide-react";
 import { useToast } from "#root/components/ui/use-toast";
 import { useCart } from "#root/lib/context/CartContext";
-import { getProductUrl, getVendorUrl } from "#root/lib/utils/route-helpers";
+import { getProductUrl } from "#root/lib/utils/route-helpers";
 import TemplateRenderer from "#root/frontend/components/template/TemplateRenderer";
 import { useTemplate } from "#root/frontend/contexts/TemplateContext";
 import type { ProductCardTemplateData } from "#root/frontend/components/template/templateRegistry";
@@ -48,8 +48,6 @@ interface Product {
   images?: ProductImage[];
   available: boolean;
   categoryName?: string | null;
-  vendorId: string;
-  vendorName: string | null;
   categories?: { id: string; name: string }[];
 }
 
@@ -103,7 +101,6 @@ export const ProductCard = memo(
                   ? product.price
                   : Number(product.price),
               imageUrl: getDisplayImageUrl(),
-              vendorId: product.vendorId,
               stock: 100, // Assuming available products have stock
             },
             1, // quantity

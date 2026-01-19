@@ -47,8 +47,6 @@ const DEFAULT_PRODUCT: ProductPageProduct = {
   price: 199.99,
   discountPrice: 149.99,
   stock: 45,
-  vendorId: "vendor-1",
-  vendorName: "TechGear Pro",
   available: true,
   imageUrl:
     "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800",
@@ -122,7 +120,7 @@ export function ProductPageClassic({
   const discount = hasDiscount
     ? Math.round(
         ((product.price - (product.discountPrice as number)) / product.price) *
-          100
+          100,
       )
     : 0;
 
@@ -159,7 +157,7 @@ export function ProductPageClassic({
               ? "fill-yellow-400 text-yellow-400"
               : "fill-gray-200 text-gray-200"
           }`}
-        />
+        />,
       );
     }
 
@@ -176,7 +174,7 @@ export function ProductPageClassic({
               Home
             </a>
             <span className='mx-2'>/</span>
-            <a href='/shop' className='hover:text-gray-900'>
+            <a href='/featured/products' className='hover:text-gray-900'>
               Shop
             </a>
             <span className='mx-2'>/</span>
@@ -361,20 +359,6 @@ export function ProductPageClassic({
                 <p className='text-xs text-gray-600'>Easy Returns</p>
               </div>
             </div>
-
-            {/* Vendor Info */}
-            {product.vendorName && (
-              <div className='bg-gray-50 border border-gray-200 rounded-lg p-4'>
-                <p className='text-sm text-gray-600'>
-                  Sold by:{" "}
-                  <a
-                    href={`/vendor/${product.vendorId}`}
-                    className='text-blue-600 hover:underline font-medium'>
-                    {product.vendorName}
-                  </a>
-                </p>
-              </div>
-            )}
           </div>
         </div>
 

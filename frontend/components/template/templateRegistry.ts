@@ -48,9 +48,6 @@ interface FeaturedProduct {
   stock: number;
   imageUrl?: string;
   images?: { url: string; isPrimary?: boolean }[];
-  vendor: string;
-  vendorId: string;
-  vendorName: string;
   categoryName: string;
   available: boolean;
   categories?: { id: string; name: string }[];
@@ -87,8 +84,6 @@ interface Product {
   available: boolean;
   categoryId: string;
   categoryName: string | null;
-  vendorId: string;
-  vendorName: string | null;
   stock: number;
 }
 
@@ -134,7 +129,6 @@ interface CartItem {
     isPrimary?: boolean;
   }>;
   selectedOptions: Record<string, string>;
-  vendorName: string;
   categoryName: string;
   stock: number;
 }
@@ -169,7 +163,6 @@ interface CheckoutItem {
     isPrimary?: boolean;
   }>;
   selectedOptions: Record<string, string>;
-  vendorName: string;
   categoryName: string;
   stock: number;
 }
@@ -263,8 +256,6 @@ interface ProductTemplateData {
     available: boolean;
     categoryId: string;
     categoryName: string;
-    vendorId: string;
-    vendorName: string;
     variants?: ProductVariant[];
     specifications?: Record<string, string>;
     features?: string[];
@@ -278,7 +269,6 @@ interface ProductTemplateData {
     discountPrice?: number | null;
     imageUrl?: string;
     images?: { url: string; isPrimary?: boolean }[];
-    vendorName: string;
     categoryName: string;
   }[];
   selectedOptions: Record<string, string>;
@@ -302,11 +292,8 @@ export interface SortingTemplateData {
     imageUrl?: string | null;
     available: boolean;
     categoryName?: string | null;
-    vendorId: string;
-    vendorName: string | null;
     stock?: number;
     sku?: string;
-    vendor?: string;
     dateAdded?: string;
     categories?: { id: string; name: string }[];
     images?: { url: string; isPrimary?: boolean }[];
@@ -345,8 +332,6 @@ export interface ProductCardTemplateData {
     images?: { url: string; isPrimary?: boolean }[];
     available: boolean;
     categoryName?: string | null;
-    vendorId: string;
-    vendorName: string | null;
     categories?: { id: string; name: string }[];
   };
   showVendor?: boolean;

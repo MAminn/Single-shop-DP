@@ -48,7 +48,6 @@ export function ProductForm({
   initialValues,
   categories,
   vendors = [],
-  vendorId,
   onSuccess,
   isLoading = false,
 }: {
@@ -63,18 +62,19 @@ export function ProductForm({
     productImages: FileMetadata[];
     categoryId: string;
     categoryIds: string[];
-    vendorId: string;
     variants: { name: string; values: string[] }[];
   }>;
   categories: { id: string; name: string }[];
   vendors?: { id: string; name: string }[];
-  vendorId?: string;
   onSuccess?: () => void;
   isLoading?: boolean;
 }) {
   const formSchema = z.object({
     name: z.string().min(1, "Product name is required"),
-    description: z.string(),
+    description: z
+      .string()
+      .min(1, "Product description is required")
+      .max(3000, "Description must be less than 3000 characters"),
     price: z.coerce.number().min(0, "Price must be greater than 0"),
     discountPrice: z.coerce
       .number()
@@ -90,7 +90,7 @@ export function ProductForm({
           url: z.string().optional(),
           diskname: z.string().optional(),
           isPrimary: z.boolean().optional(),
-        })
+        }),
       )
       .min(1, "At least one product image is required")
       .default([]),
@@ -98,13 +98,12 @@ export function ProductForm({
     categoryIds: z
       .array(z.string())
       .min(1, "At least one category is required"),
-    vendorId: z.string(),
     variants: z
       .array(
         z.object({
           name: z.string(),
           values: z.array(z.string()),
-        })
+        }),
       )
       .optional(),
   });
@@ -141,7 +140,6 @@ export function ProductForm({
         initialValues?.categoryIds.length > 0
           ? initialValues.categoryIds[0]
           : initialValues?.categoryId || "",
-      vendorId: initialValues?.vendorId || vendorId || "",
     },
   });
 
@@ -212,7 +210,7 @@ export function ProductForm({
       } else if (values.productImages[0]?.id) {
         console.log(
           "No primary image, using first image ID:",
-          values.productImages[0].id
+          values.productImages[0].id,
         );
         values.imageId = values.productImages[0].id;
       }
@@ -224,7 +222,7 @@ export function ProductForm({
       if (values.categoryIds[0]) {
         console.log(
           "Setting categoryId from categoryIds:",
-          values.categoryIds[0]
+          values.categoryIds[0],
         );
         values.categoryId = values.categoryIds[0];
       }
@@ -282,7 +280,7 @@ export function ProductForm({
       }
 
       toast.success(
-        initialValues?.id ? "Product updated!" : "Product created!"
+        initialValues?.id ? "Product updated!" : "Product created!",
       );
       onSuccess?.();
       if (!initialValues?.id) {
@@ -299,23 +297,22 @@ export function ProductForm({
   return (
     <Form {...form}>
       {isLoading ? (
-        <div className="flex justify-center items-center p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
-          <p className="ml-3">Loading product data...</p>
+        <div className='flex justify-center items-center p-8'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900' />
+          <p className='ml-3'>Loading product data...</p>
         </div>
       ) : (
         <form
           onSubmit={form.handleSubmit(handleFormSubmit)}
-          className="space-y-4 max-h-[70vh] overflow-y-auto p-3"
-        >
+          className='space-y-4 max-h-[70vh] overflow-y-auto p-3'>
           <FormField
             control={form.control}
-            name="name"
+            name='name'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Awesome Product" {...field} />
+                  <Input placeholder='Awesome Product' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -324,14 +321,14 @@ export function ProductForm({
 
           <FormField
             control={form.control}
-            name="description"
+            name='description'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="This product is awesome because..."
-                    className="resize-none"
+                    placeholder='This product is awesome because...'
+                    className='resize-none'
                     {...field}
                   />
                 </FormControl>
@@ -340,17 +337,17 @@ export function ProductForm({
             )}
           />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className='grid grid-cols-2 gap-4'>
             <FormField
               control={form.control}
-              name="price"
+              name='price'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Price</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
-                      placeholder="99.99"
+                      type='number'
+                      placeholder='99.99'
                       {...field}
                       onChange={(e) => {
                         field.onChange(e.target.valueAsNumber);
@@ -364,14 +361,14 @@ export function ProductForm({
 
             <FormField
               control={form.control}
-              name="discountPrice"
+              name='discountPrice'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Discount Price</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
-                      placeholder="99.99"
+                      type='number'
+                      placeholder='99.99'
                       value={field.value ?? ""}
                       onChange={(e) => {
                         field.onChange(e.target.valueAsNumber);
@@ -385,14 +382,14 @@ export function ProductForm({
 
             <FormField
               control={form.control}
-              name="stock"
+              name='stock'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Stock</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
-                      placeholder="100"
+                      type='number'
+                      placeholder='100'
                       {...field}
                       onChange={(e) => {
                         field.onChange(e.target.valueAsNumber);
@@ -407,14 +404,14 @@ export function ProductForm({
 
           <FormField
             control={form.control}
-            name="productImages"
+            name='productImages'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Product Images</FormLabel>
                 <FormControl>
                   <MultiFileUploadInput
-                    name="productImages"
-                    id="productImages"
+                    name='productImages'
+                    id='productImages'
                     value={field.value}
                     onChange={field.onChange}
                   />
@@ -426,28 +423,27 @@ export function ProductForm({
 
           <FormField
             control={form.control}
-            name="categoryIds"
+            name='categoryIds'
             render={({ field }) => (
-              <FormItem className="flex flex-col">
+              <FormItem className='flex flex-col'>
                 <FormLabel>Categories (select multiple)</FormLabel>
-                <div className="flex flex-wrap gap-2 mb-2">
+                <div className='flex flex-wrap gap-2 mb-2'>
                   {field.value.map((categoryId) => {
                     const category = categories.find(
-                      (c) => c.id === categoryId
+                      (c) => c.id === categoryId,
                     );
                     return category ? (
-                      <Badge key={categoryId} className="p-2">
+                      <Badge key={categoryId} className='p-2'>
                         {category.name}
                         <button
-                          type="button"
-                          className="ml-1"
+                          type='button'
+                          className='ml-1'
                           onClick={() => {
                             const newCategoryIds = field.value.filter(
-                              (id) => id !== categoryId
+                              (id) => id !== categoryId,
                             );
                             field.onChange(newCategoryIds);
-                          }}
-                        >
+                          }}>
                           ×
                         </button>
                       </Badge>
@@ -458,13 +454,12 @@ export function ProductForm({
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
-                        type="button"
-                        variant="outline"
+                        type='button'
+                        variant='outline'
                         className={cn(
                           "w-full justify-between",
-                          field.value.length === 0 && "text-muted-foreground"
-                        )}
-                      >
+                          field.value.length === 0 && "text-muted-foreground",
+                        )}>
                         {field.value.length === 0
                           ? "Select categories"
                           : `${field.value.length} ${
@@ -472,13 +467,13 @@ export function ProductForm({
                                 ? "category"
                                 : "categories"
                             } selected`}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-full p-0">
+                  <PopoverContent className='w-full p-0'>
                     <Command>
-                      <CommandInput placeholder="Search categories..." />
+                      <CommandInput placeholder='Search categories...' />
                       <CommandList>
                         <CommandEmpty>No categories found.</CommandEmpty>
                         <CommandGroup>
@@ -492,7 +487,7 @@ export function ProductForm({
                                 if (isSelected) {
                                   // Remove if already selected
                                   newCategoryIds = newCategoryIds.filter(
-                                    (id) => id !== c.id
+                                    (id) => id !== c.id,
                                   );
                                 } else {
                                   // Add if not selected
@@ -500,15 +495,14 @@ export function ProductForm({
                                 }
 
                                 field.onChange(newCategoryIds);
-                              }}
-                            >
-                              <div className="flex items-center">
+                              }}>
+                              <div className='flex items-center'>
                                 <Check
                                   className={cn(
                                     "mr-2 h-4 w-4",
                                     field.value.includes(c.id)
                                       ? "opacity-100"
-                                      : "opacity-0"
+                                      : "opacity-0",
                                   )}
                                 />
                                 {c.name}
@@ -526,16 +520,16 @@ export function ProductForm({
           />
 
           {/* Hidden field for storing the primary categoryId */}
-          <input type="hidden" {...form.register("categoryId")} />
+          <input type='hidden' {...form.register("categoryId")} />
 
           <FormField
-            name="variants"
+            name='variants'
             control={form.control}
             render={({ field }) => {
               return (
                 <FormItem>
-                  <FormLabel className="text-lg">Variants (Optional)</FormLabel>
-                  <p className="text-sm text-muted-foreground mb-2">
+                  <FormLabel className='text-lg'>Variants (Optional)</FormLabel>
+                  <p className='text-sm text-muted-foreground mb-2'>
                     Add product variants like size, color, etc. if needed
                   </p>
                   <FormControl>
@@ -548,77 +542,7 @@ export function ProductForm({
               );
             }}
           />
-
-          {vendorId && (
-            <input
-              type="hidden"
-              {...form.register("vendorId")}
-              value={vendorId}
-            />
-          )}
-          {!vendorId && (
-            <FormField
-              control={form.control}
-              name="vendorId"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Vendor</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          // biome-ignore lint/a11y/useSemanticElements: <explanation>
-                          role="combobox"
-                          className={cn(
-                            "w-[200px] justify-between",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value
-                            ? vendors.find((v) => v.id === field.value)?.name
-                            : "Select vendor"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[200px] p-0">
-                      <Command>
-                        <CommandInput placeholder="Search vendors..." />
-                        <CommandList>
-                          <CommandEmpty>No Vendors found.</CommandEmpty>
-                          <CommandGroup>
-                            {vendors.map((v) => (
-                              <CommandItem
-                                value={v.name}
-                                key={v.id}
-                                onSelect={() => {
-                                  form.setValue("vendorId", v.id);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    v.id === field.value
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                                {v.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-          <Button type="submit" size="lg" className="w-full">
+          <Button type='submit' size='lg' className='w-full'>
             Submit
           </Button>
         </form>
@@ -638,14 +562,13 @@ export function VariantsInput({
   const variants = value || [];
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className='flex flex-col gap-2'>
       {variants.map((v, i) => (
         <Fragment
           key={`variant.${
             // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
             i
-          }`}
-        >
+          }`}>
           <VariantInput
             value={v}
             onChange={(v) => {
@@ -655,16 +578,15 @@ export function VariantsInput({
             }}
           />
           <Button
-            size="sm"
-            className="self-end opacity-90"
+            size='sm'
+            className='self-end opacity-90'
             variant={"destructive"}
-            type="button"
+            type='button'
             onClick={() => {
               const newValue = [...variants];
               newValue.splice(i, 1);
               onChange(newValue);
-            }}
-          >
+            }}>
             <XIcon />
             Remove Variant
           </Button>
@@ -672,14 +594,13 @@ export function VariantsInput({
       ))}
 
       <Button
-        type="button"
+        type='button'
         onClick={() =>
           onChange([
             ...variants,
             { name: `Variant ${variants.length + 1}`, values: [] },
           ])
-        }
-      >
+        }>
         Add Variant
       </Button>
     </div>
@@ -697,8 +618,8 @@ export function VariantInput({
   onChange: (value: { name: string; values: string[] }) => void;
 }) {
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-col gap-1">
+    <div className='flex flex-col gap-2'>
+      <div className='flex flex-col gap-1'>
         <Label>Name</Label>
         <Input
           value={value.name}
@@ -706,14 +627,14 @@ export function VariantInput({
         />
       </div>
 
-      <div className="flex flex-col gap-1">
+      <div className='flex flex-col gap-1'>
         <Label>Values</Label>
         <TagsInput
-          className="outline-1 border-none"
+          className='outline-1 border-none'
           value={value.values}
           onValueChange={(v) => onChange({ ...value, values: v })}
         />
-        <p className="text-sm text-muted-foreground">
+        <p className='text-sm text-muted-foreground'>
           Press Enter to add a value
         </p>
       </div>

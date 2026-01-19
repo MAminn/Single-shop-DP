@@ -1,7 +1,6 @@
 import type { CartItem } from "../context/CartContext";
 import type { Order } from "../mock-data/orders";
 import { orders } from "../mock-data/orders";
-import type { Vendor } from "../mock-data/vendors";
 
 export interface OrderDetails {
   userId: number;

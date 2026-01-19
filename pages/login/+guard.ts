@@ -1,11 +1,21 @@
 import { redirect } from "vike/abort";
+import { isSingleShopMode } from "#root/shared/config/app";
+
 export async function guard(pageContext: Vike.PageContext) {
   if (pageContext.clientSession) {
-    // Redirect normal users to the homepage instead of dashboard
+    // In single-shop mode, only admins go to dashboard
+    if (isSingleShopMode()) {
+      if (pageContext.clientSession.role === "admin") {
+        throw redirect("/dashboard");
+      }
+      // All other roles (user, vendor) go to homepage
+      throw redirect("/");
+    }
+
+    // Multi-vendor mode: redirect users to homepage, admin/vendor to dashboard
     if (pageContext.clientSession.role === "user") {
       throw redirect("/");
     }
-    // Only admin and vendor roles should access the dashboard
     throw redirect("/dashboard");
   }
 }

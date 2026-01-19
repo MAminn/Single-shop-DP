@@ -459,9 +459,9 @@ export default function TemplateAnalyticsComponent({
                   labelFormatter={(value) =>
                     new Date(value).toLocaleDateString()
                   }
-                  formatter={(value: number) => [
-                    `${value}%`,
-                    "Conversion Rate",
+                  formatter={(value: number | undefined) => [
+                    `${value ?? 0}%`,
+                    "Conversion Rate" as const,
                   ]}
                 />
                 <Bar dataKey='conversionRate' fill='#f59e0b' />
@@ -499,9 +499,9 @@ export default function TemplateAnalyticsComponent({
                   labelFormatter={(value) =>
                     new Date(value).toLocaleDateString()
                   }
-                  formatter={(value: number) => [
-                    `${value}/10`,
-                    "Performance Score",
+                  formatter={(value: number | undefined) => [
+                    `${value ?? 0}/10`,
+                    "Performance Score" as const,
                   ]}
                 />
                 <Line
@@ -537,7 +537,7 @@ export default function TemplateAnalyticsComponent({
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: number) => [value.toLocaleString(), ""]}
+                  formatter={(value: number | undefined) => [(value ?? 0).toLocaleString(), "" as const]}
                 />
               </PieChart>
             </ResponsiveContainer>

@@ -1,10 +1,8 @@
 import type { ClientSession } from "#root/backend/auth/shared/entities";
-import { checkVendorStatus } from "#root/backend/vendor/utils/check-vendor-status";
 import { query } from "#root/shared/database/drizzle/db";
 import {
   product,
   productVariant,
-  vendor,
   productImage,
   productCategory,
 } from "#root/shared/database/drizzle/schema";
@@ -25,14 +23,13 @@ export const editProductSchema = z.object({
     .min(1, "At least one category is required"),
   price: z.number().min(0).max(10000),
   discountPrice: z.number().min(0).max(10000).optional(),
-  vendorId: z.string().uuid(),
   stock: z.number().min(0).max(10000),
   variants: z
     .array(
       z.object({
         name: z.string().nonempty().max(255),
         values: z.array(z.string().nonempty().max(255)),
-      })
+      }),
     )
     .optional(),
   productImages: z
@@ -40,61 +37,33 @@ export const editProductSchema = z.object({
       z.object({
         id: z.string().uuid(),
         isPrimary: z.boolean().optional(),
-      })
+      }),
     )
     .optional(),
 });
 
 export const editProduct = (
   data: z.infer<typeof editProductSchema>,
-  session?: ClientSession
+  session?: ClientSession,
 ) =>
   Effect.gen(function* ($) {
-    if (!session || (session.role !== "admin" && session.role !== "vendor")) {
+    // Only admins can edit products (vendor role no longer valid)
+    if (!session || session.role !== "admin") {
       return yield* $(
         Effect.fail(
           new ServerError({
             tag: "Unauthorized",
             statusCode: 401,
             clientMessage: "Unauthorized",
-          })
-        )
+          }),
+        ),
       );
     }
 
     yield* $(validateProductRules(data));
 
-    // If this is a vendor, check their status
-    if (session.role === "vendor") {
-      yield* $(checkVendorStatus(data.vendorId, session, "edit products"));
-    }
-
     return yield* $(
       query(async (db) => {
-        const existingVendor = await db
-          .select()
-          .from(vendor)
-          .where(eq(vendor.id, data.vendorId))
-          .then((data) => data[0]);
-
-        if (!existingVendor) {
-          throw new Error("Vendor not found");
-        }
-
-        if (
-          session.role === "vendor" &&
-          session.vendorId !== existingVendor.id
-        ) {
-          throw new Error("Unauthorized");
-        }
-
-        // Check vendor status again at the database level
-        if (existingVendor.status !== "active") {
-          throw new Error(
-            `Cannot edit products for a ${existingVendor.status} vendor`
-          );
-        }
-
         const existingProduct = await db
           .select()
           .from(product)
@@ -105,10 +74,6 @@ export const editProduct = (
           throw new Error("Product not found");
         }
 
-        if (existingProduct.vendorId !== data.vendorId) {
-          throw new Error("Cannot change product vendor");
-        }
-
         const updatedProduct = await db.transaction(async (tx) => {
           // Update the product
           const updatedProduct = await tx
@@ -116,8 +81,8 @@ export const editProduct = (
             .set({
               name: data.name,
               description: data.description,
-              imageId: data.imageId, // Keep for backward compatibility
-              categoryId: data.categoryId, // Keep the primary category for backward compatibility
+              imageId: data.imageId,
+              categoryId: data.categoryId,
               price: data.price.toString(),
               discountPrice: data.discountPrice
                 ? data.discountPrice.toString()
@@ -187,8 +152,8 @@ export const editProduct = (
                 .where(
                   and(
                     eq(productVariant.productId, data.id),
-                    not(inArray(productVariant.name, newVariantNames))
-                  )
+                    not(inArray(productVariant.name, newVariantNames)),
+                  ),
                 );
 
               // Update or insert variants
@@ -199,8 +164,8 @@ export const editProduct = (
                   .where(
                     and(
                       eq(productVariant.productId, data.id),
-                      eq(productVariant.name, variant.name)
-                    )
+                      eq(productVariant.name, variant.name),
+                    ),
                   )
                   .then((data) => data[0]);
 
@@ -229,6 +194,6 @@ export const editProduct = (
         });
 
         return updatedProduct;
-      })
+      }),
     );
   });

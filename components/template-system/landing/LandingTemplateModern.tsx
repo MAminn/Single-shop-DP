@@ -88,15 +88,15 @@ export function LandingTemplateModern({
     <div className={`landing-template-modern ${className}`}>
       {/* Promotional Banner */}
       {content.promoBanner.enabled && (
-        <div className='bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-4 text-center'>
-          <p className='text-sm sm:text-base font-medium'>
+        <div className='bg-stone-800 text-stone-100 py-3 px-4 text-center border-b border-stone-700'>
+          <p className='text-xs sm:text-sm font-light tracking-wide'>
             {content.promoBanner.text}
             {content.promoBanner.linkText && content.promoBanner.linkUrl && (
               <>
                 {" "}
                 <a
                   href={content.promoBanner.linkUrl}
-                  className='underline font-semibold hover:text-blue-100 transition-colors'>
+                  className='underline font-normal hover:text-stone-300 transition-colors'>
                   {content.promoBanner.linkText}
                 </a>
               </>
@@ -105,105 +105,76 @@ export function LandingTemplateModern({
         </div>
       )}
 
-      {/* Hero Section */}
+      {/* Hero Section - Percé Editorial Style */}
       {content.hero.enabled && (
-        <section
-          // Apply gradient background only if no custom image is set; otherwise use the image with overlay
-          className={`relative text-white overflow-hidden ${
-            content.hero.backgroundImage
-              ? ""
-              : "bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800"
-          }`}
-          style={
-            content.hero.backgroundImage
-              ? {
-                  backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${content.hero.backgroundImage})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }
-              : undefined
-          }>
-          {/* Background Pattern */}
-          <div className='absolute inset-0 opacity-10'>
-            <div
-              className='absolute inset-0'
-              style={{
-                backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-                backgroundSize: "40px 40px",
-              }}
-            />
-          </div>
+        <section className='relative bg-stone-50 overflow-hidden'>
+          <div className='container mx-auto px-6 sm:px-8 lg:px-12 py-16 sm:py-20 lg:py-32'>
+            <div className='grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center'>
+              {/* Left Column - Text Content */}
+              <div className='space-y-8 lg:pr-8'>
+                <h1 className='text-4xl sm:text-5xl lg:text-6xl font-light text-stone-900 leading-tight tracking-tight'>
+                  Designed to be worn with intent.
+                </h1>
 
-          <div className='relative container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-28'>
-            <div className='max-w-3xl mx-auto text-center'>
-              <h1 className='text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight'>
-                {content.hero.title}
-              </h1>
+                <p className='text-base sm:text-lg text-stone-600 font-light leading-relaxed max-w-lg'>
+                  Piercings, refined.
+                </p>
 
-              <p className='text-lg sm:text-xl lg:text-2xl text-blue-100 mb-8 leading-relaxed'>
-                {content.hero.subtitle}
-              </p>
+                <div className='pt-4'>
+                  <Button
+                    size='lg'
+                    className='bg-stone-900 text-stone-50 hover:bg-stone-800 font-light px-10 py-6 text-base border border-stone-900 shadow-none hover:shadow-sm transition-all duration-200 rounded-none'
+                    onClick={handleCtaClick(content.hero.ctaLink)}
+                    asChild={!onCtaClick}>
+                    {onCtaClick ? (
+                      <>Explore the collection</>
+                    ) : (
+                      <a href={content.hero.ctaLink}>Explore the collection</a>
+                    )}
+                  </Button>
+                </div>
+              </div>
 
-              <div className='flex flex-col sm:flex-row gap-4 justify-center items-center'>
-                <Button
-                  size='lg'
-                  className='bg-white text-blue-700 hover:bg-blue-50 font-semibold px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all duration-300 group'
-                  onClick={handleCtaClick(content.hero.ctaLink)}
-                  asChild={!onCtaClick}>
-                  {onCtaClick ? (
-                    <>
-                      {content.hero.ctaText}
-                      <ArrowRight className='ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform' />
-                    </>
-                  ) : (
-                    <a href={content.hero.ctaLink}>
-                      {content.hero.ctaText}
-                      <ArrowRight className='ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform' />
-                    </a>
-                  )}
-                </Button>
+              {/* Right Column - Image Block */}
+              <div className='relative aspect-[4/5] lg:aspect-[3/4] overflow-hidden bg-stone-200'>
+                {content.hero.backgroundImage ? (
+                  <img
+                    src={content.hero.backgroundImage}
+                    alt='Featured collection'
+                    className='w-full h-full object-cover'
+                  />
+                ) : (
+                  <div className='w-full h-full flex items-center justify-center'>
+                    <p className='text-stone-400 text-sm font-light'>
+                      Image placeholder
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-
-          {/* Wave Divider */}
-          <div className='absolute bottom-0 left-0 right-0'>
-            <svg
-              viewBox='0 0 1200 120'
-              preserveAspectRatio='none'
-              className='w-full h-12 sm:h-16 lg:h-20'>
-              <path
-                d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z'
-                className='fill-white'
-              />
-            </svg>
           </div>
         </section>
       )}
 
       {/* Value Propositions Section */}
       {content.valueProps.enabled && content.valueProps.items.length > 0 && (
-        <section className='py-12 sm:py-16 lg:py-20 bg-white'>
-          <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8'>
+        <section className='py-12 sm:py-16 lg:py-20 bg-white border-t border-stone-200'>
+          <div className='container mx-auto px-6 sm:px-8 lg:px-12'>
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12'>
               {content.valueProps.items.map((item, index) => {
                 const IconComponent = ICON_MAP[item.icon];
                 return (
-                  <Card
-                    key={index}
-                    className='border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
-                    <CardContent className='p-6 sm:p-8 text-center'>
-                      <div className='inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4'>
-                        <IconComponent className='w-8 h-8' />
-                      </div>
-                      <h3 className='text-xl font-semibold mb-3 text-gray-900'>
-                        {item.title}
-                      </h3>
-                      <p className='text-gray-600 leading-relaxed'>
-                        {item.description}
-                      </p>
-                    </CardContent>
-                  </Card>
+                  <div key={index} className='text-center space-y-4'>
+                    <div className='inline-flex items-center justify-center w-12 h-12 text-stone-700'>
+                      <IconComponent className='w-6 h-6' />
+                    </div>
+                    <h3 className='text-base font-normal text-stone-900 tracking-wide'>
+                      {item.title}
+                    </h3>
+                    <p className='text-sm text-stone-600 font-light leading-relaxed max-w-xs mx-auto'>
+                      {item.description}
+                    </p>
+                  </div>
                 );
               })}
             </div>

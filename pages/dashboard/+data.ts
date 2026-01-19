@@ -5,6 +5,7 @@ import {
 } from "#root/shared/backend/effect";
 import { DatabaseClientService } from "#root/shared/database/drizzle/db";
 import { Effect } from "effect";
+import { redirect } from "vike/abort";
 
 export async function data(ctx: Vike.PageContext) {
 	const session = ctx.clientSession;
@@ -16,12 +17,9 @@ export async function data(ctx: Vike.PageContext) {
 		} as const;
 	}
 
-	if (session.role === "vendor") {
-		return {
-			success: true,
-			type: "vendor" as const,
-			result: {},
-		} as const;
+	// Single-shop mode: Only admins can access dashboard
+	if (session.role !== "admin") {
+		throw redirect("/");
 	}
 
 	const fetchAdminOverview = await runBackendEffect(
@@ -30,10 +28,7 @@ export async function data(ctx: Vike.PageContext) {
 		),
 	).then(serializeBackendEffectResult);
 
-	return {
-		...fetchAdminOverview,
-		type: "admin",
-	} as const;
+	return fetchAdminOverview;
 }
 
 export type Data = Awaited<ReturnType<typeof data>>;

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { usePageContext } from "vike-react/usePageContext";
 
-type Role = "admin" | "vendor" | "user";
+type Role = "admin" | "user";
 
 interface RoleContextType {
   userRole?: Role;

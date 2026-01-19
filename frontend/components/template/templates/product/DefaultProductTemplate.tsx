@@ -87,8 +87,6 @@ const DefaultProductTemplate: React.FC<DefaultProductTemplateProps> = ({
       available: false,
       categoryId: "",
       categoryName: "",
-      vendorId: "",
-      vendorName: "",
       variants: [],
       specifications: {},
       features: [],
@@ -142,7 +140,6 @@ const DefaultProductTemplate: React.FC<DefaultProductTemplateProps> = ({
               : templateData.product.price,
           stock: templateData.product.stock,
           categoryName: templateData.product.categoryName,
-          vendorId: templateData.product.vendorId,
           variants: templateData.product.variants,
           imageUrl:
             templateData.product.images &&
@@ -245,8 +242,7 @@ const DefaultProductTemplate: React.FC<DefaultProductTemplateProps> = ({
               {templateData.product.name}
             </h1>
             <p className='text-sm text-gray-500 mt-1'>
-              {templateData.product.categoryName} •{" "}
-              {templateData.product.vendorName}
+              {templateData.product.categoryName}
             </p>
           </div>
 
