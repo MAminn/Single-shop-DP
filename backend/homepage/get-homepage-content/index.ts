@@ -12,7 +12,7 @@ import { DEFAULT_HOMEPAGE_CONTENT } from "#root/shared/types/homepage-content";
  * @returns Promise resolving to the homepage content
  */
 export async function getHomepageContent(
-  merchantId: string
+  merchantId: string,
 ): Promise<HomepageContent> {
   try {
     const database = db();
@@ -42,7 +42,7 @@ export async function getHomepageContent(
  * This prevents errors if the schema changes or data is incomplete
  */
 function mergeWithDefaults(
-  storedContent: Partial<HomepageContent>
+  storedContent: Partial<HomepageContent>,
 ): HomepageContent {
   return {
     meta: {
@@ -52,6 +52,10 @@ function mergeWithDefaults(
     hero: {
       ...DEFAULT_HOMEPAGE_CONTENT.hero,
       ...storedContent.hero,
+    },
+    brandStatement: {
+      ...DEFAULT_HOMEPAGE_CONTENT.brandStatement,
+      ...storedContent.brandStatement,
     },
     promoBanner: {
       ...DEFAULT_HOMEPAGE_CONTENT.promoBanner,

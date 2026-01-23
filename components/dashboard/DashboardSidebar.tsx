@@ -9,6 +9,7 @@ import {
   LayoutGrid,
   TicketPercent,
   Palette,
+  Home,
 } from "lucide-react";
 
 import {
@@ -70,6 +71,11 @@ export function DashboardSidebar() {
       label: "Promo Codes",
       href: "/dashboard/promo-codes",
       icon: TicketPercent,
+    },
+    {
+      label: "Homepage",
+      href: "/dashboard/admin/homepage",
+      icon: Home,
     },
     {
       label: "Templates",

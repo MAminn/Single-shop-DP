@@ -634,7 +634,7 @@ export default function AdminTemplatesPage() {
                           {selectedCategory === "productCard" ? (
                             <div className='flex space-x-2'>
                               <Button
-                                variant={isActive ? "secondary" : "default"}
+                                variant={isActive ? "secondary" : "outline"}
                                 size='sm'
                                 className='flex-1'
                                 onClick={() =>
@@ -660,7 +660,7 @@ export default function AdminTemplatesPage() {
                                 Preview
                               </Button>
                               <Button
-                                variant={isActive ? "secondary" : "default"}
+                                variant={isActive ? "secondary" : "outline"}
                                 size='sm'
                                 className='flex-1'
                                 onClick={() =>

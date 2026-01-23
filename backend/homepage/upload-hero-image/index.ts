@@ -7,6 +7,7 @@ import { existsSync } from "node:fs";
 export interface UploadHeroImageInput {
   buffer: Uint8Array;
   mimeType: string;
+  preserveAspect?: boolean; // If true, doesn't crop to 1920x1080
 }
 
 export interface UploadHeroImageResult {
@@ -24,13 +25,14 @@ export interface UploadHeroImageResult {
 export const uploadHeroImage = ({
   buffer,
   mimeType,
+  preserveAspect = false,
 }: UploadHeroImageInput): Effect.Effect<UploadHeroImageResult, Error> => {
   return Effect.gen(function* () {
     // Validate file type
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!allowedTypes.includes(mimeType.toLowerCase())) {
       yield* Effect.fail(
-        new Error("Invalid file type. Only JPG, PNG, and WebP are allowed.")
+        new Error("Invalid file type. Only JPG, PNG, and WebP are allowed."),
       );
     }
 
@@ -57,18 +59,36 @@ export const uploadHeroImage = ({
     // Process and save image using sharp
     yield* Effect.tryPromise({
       try: async () => {
-        await sharp(Buffer.from(buffer))
-          .resize({
-            width: 1920,
-            height: 1080,
-            fit: "cover",
-            position: "center",
-          })
-          .webp({
-            quality: 90,
-            effort: 6,
-          })
-          .toFile(filePath);
+        const sharpInstance = sharp(Buffer.from(buffer));
+
+        if (preserveAspect) {
+          // For brand statement: preserve aspect ratio, max width 1200px
+          await sharpInstance
+            .resize({
+              width: 1200,
+              fit: "inside", // Preserve aspect ratio
+              withoutEnlargement: true,
+            })
+            .webp({
+              quality: 90,
+              effort: 6,
+            })
+            .toFile(filePath);
+        } else {
+          // For hero: crop to 1920x1080 landscape
+          await sharpInstance
+            .resize({
+              width: 1920,
+              height: 1080,
+              fit: "cover",
+              position: "center",
+            })
+            .webp({
+              quality: 90,
+              effort: 6,
+            })
+            .toFile(filePath);
+        }
       },
       catch: (err) => new Error(`Failed to process image: ${err}`),
     });

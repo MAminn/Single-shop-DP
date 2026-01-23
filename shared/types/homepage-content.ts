@@ -27,6 +27,16 @@ export interface HomepageHeroContent {
 }
 
 /**
+ * Brand statement section content
+ */
+export interface HomepageBrandStatementContent {
+  enabled: boolean;
+  title: string;
+  description: string;
+  image?: string;
+}
+
+/**
  * Promotional banner content
  */
 export interface HomepagePromoBannerContent {
@@ -116,6 +126,7 @@ export interface HomepageFooterCtaContent {
 export interface HomepageContent {
   meta: HomepageMetaContent;
   hero: HomepageHeroContent;
+  brandStatement: HomepageBrandStatementContent;
   promoBanner: HomepagePromoBannerContent;
   categories: HomepageCategoriesContent;
   featuredProducts: HomepageFeaturedProductsContent;
@@ -141,6 +152,13 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
     ctaText: "Start Shopping",
     ctaLink: "/shop",
     backgroundImage: undefined,
+  },
+  brandStatement: {
+    enabled: true,
+    title: "Worn with intention. Designed for life.",
+    description:
+      "Every piercing is an expression of self. Our pieces are crafted to honor that commitment—refined in form, enduring in quality, and timeless in design.",
+    image: "/uploads/homepage/brand-statement.jpg",
   },
   promoBanner: {
     enabled: false,

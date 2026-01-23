@@ -3,23 +3,27 @@
 ## A) WHAT THIS REPO IS
 
 **Product**: Lebsy Shop is a single-shop e-commerce template (sellable digital product) that provides:
+
 - Admin-managed product catalog for a single online store
 - Customers browse and purchase products from the single store
 - Admins manage all products, categories, orders, and store settings
 - A customizable template system for dynamic page layouts (homepage, category, product, cart, checkout)
 
 **Users & Roles**:
+
 - **Admin**: Full system access - manage products, categories, orders, store settings, and template configuration
 - **User/Customer**: Browse products, add to cart, place orders, write reviews
 
 **Core Flows**:
+
 1. **Shopping**: Browse Products → Add to Cart → Checkout → Order Placement → Order Tracking (Fincart integration)
 2. **Product Management**: Admin Creates Product → Assign Categories → Upload Images → Set Variants → Manage Stock
 3. **Order Management**: Customer Places Order → Admin Fulfills → Status Updates via Fincart Webhooks
 4. **Promo Codes**: Admin creates codes → Customers apply at checkout → Discount applied
 5. **Template System**: Admins assign templates to pages/sections → Dynamic rendering → Customizable store appearance
 
-**What "Done" Means**: 
+**What "Done" Means**:
+
 - Sellable single-shop e-commerce template
 - Admin-only dashboard (no vendor features)
 - Complete shopping flows (browse → cart → checkout → orders)
@@ -32,11 +36,12 @@
 ## B) TECH STACK & ARCHITECTURE
 
 ### Frontend
+
 - **Framework**: Vike (SSR/SSG framework) + React 19
 - **Styling**: Tailwind CSS 4 + shadcn/ui components (Radix UI primitives)
 - **State Management**: React hooks, tRPC client-side caching
 - **Forms**: React Hook Form + Zod validation
-- **UI Libraries**: 
+- **UI Libraries**:
   - Framer Motion (animations)
   - Recharts (analytics charts)
   - Lucide React (icons)
@@ -44,6 +49,7 @@
   - next-themes (dark mode)
 
 ### Backend
+
 - **Runtime**: Node.js with Fastify
 - **API**: tRPC (type-safe RPC) + some REST endpoints for webhooks
 - **Database**: PostgreSQL with Drizzle ORM
@@ -55,20 +61,24 @@
 - **Email**: Nodemailer with React Email templates
 
 ### Database (Drizzle ORM)
+
 - **Connection**: PostgreSQL via `@fastify/postgres`
 - **Migrations**: Drizzle Kit (`drizzle-kit generate` + `drizzle-kit migrate`)
 - **Schema Location**: `shared/database/drizzle/schema.ts`
 
 ### API Style
+
 - **Primary**: tRPC (type-safe procedures)
 - **Secondary**: REST for webhooks (`/api/webhooks/fincart`) and auth (`/api/auth/*`)
 
 ### Monorepo Structure
+
 - **No**, single repository
 - **Tooling**: pnpm for package management
 - **Build**: Unbuild + Vite
 
 ### Env & Config
+
 - **Env Vars**: `.env` file (currently open in editor)
   - `DATABASE_URL`: PostgreSQL connection string
   - `PORT`: Server port (default 3000)
@@ -85,12 +95,14 @@
 ## C) FOLDER MAP & MENTAL MODEL
 
 ### Main Entry Points
+
 - **Server**: `server/server.ts` - Fastify server setup
 - **Vike Handler**: `server/vike-handler.ts` - SSR rendering
 - **Dev Entry**: `hono-entry.ts` (development with Hono)
 - **Node Entry**: `hono-entry.node.ts` (production)
 
 ### Routing Structure
+
 - **Vike Filesystem Routing**: `/pages/*`
   - `/pages/index/+Page.tsx` → `/` (home page with template system)
   - `/pages/dashboard/` → `/dashboard/*` (admin/vendor dashboard)
@@ -104,6 +116,7 @@
   - `/pages/_error/` → Error page
 
 ### Business Logic Location
+
 - **Backend**: `/backend/` - organized by domain
   - `auth/` - Authentication (login, register, session management)
   - `products/` - Product CRUD, reviews, search, stats
@@ -116,11 +129,13 @@
   - `router/router.ts` - Main tRPC router
 
 ### API Calls Location
+
 - **Client**: `shared/trpc/client.ts` - tRPC client setup
 - **Usage**: Components import `trpc` from `#root/shared/trpc/client`
 - **Example**: `trpc.product.search.query({ limit: 10 })`
 
 ### Auth Boundaries
+
 - **Public Routes**: Home, featured products, product search, login, register
 - **Protected Routes (Dashboard)**: `/dashboard/*` - requires auth + admin/vendor role
   - **Guard**: `pages/dashboard/+guard.ts` - redirects if not authenticated or if role is "user"
@@ -130,6 +145,7 @@
   - User: Shopping only, no dashboard access
 
 ### Shared UI Patterns
+
 - **Components**: `/components/` - reusable React components
   - `ui/` - shadcn/ui primitives (buttons, dialogs, forms, etc.)
   - `dashboard/` - Dashboard-specific components
@@ -144,7 +160,8 @@
 ## D) CONVENTIONS
 
 ### Naming Conventions
-- **Files**: 
+
+- **Files**:
   - React components: PascalCase (`ProductCard.tsx`)
   - Utilities: kebab-case (`use-mobile.ts`)
   - Vike config: `+config.ts`, `+Page.tsx`, `+data.ts`, `+guard.ts`
@@ -154,6 +171,7 @@
 - **Database Tables**: snake_case (`product_category`, `order_item`)
 
 ### Components Pattern
+
 - **Functional Components** with TypeScript
 - **Props Interface**: Defined inline or as separate type
 - **Default Exports** for page components
@@ -162,6 +180,7 @@
 - **Effect Pattern**: Effect.js for backend operations
 
 ### Error Handling Pattern
+
 - **Backend**: Effect.js with `ServerError` class
   - `tag`: Error type identifier
   - `statusCode`: HTTP status code
@@ -172,21 +191,23 @@
   - Toast notifications for user feedback (Sonner)
 
 ### API Client Pattern
-- **tRPC Procedures**: 
+
+- **tRPC Procedures**:
   - `publicProcedure`: No auth required
   - Custom middleware for auth (checks `ctx.clientSession`)
-- **Structure**: 
+- **Structure**:
   ```typescript
-  export const someProcedure = publicProcedure
-    .input(zodSchema)
-    .query|mutation(async ({ ctx, input }) => {
+  export const someProcedure =
+    publicProcedure.input(zodSchema).query |
+    mutation(async ({ ctx, input }) => {
       return await runBackendEffect(
-        someService(input).pipe(provideDatabase(ctx))
+        someService(input).pipe(provideDatabase(ctx)),
       ).then(serializeBackendEffectResult);
     });
   ```
 
 ### Forms/Validation Pattern
+
 - **Zod Schemas**: Define in service files (`service.ts`)
 - **React Hook Form**: For form state management
 - **Validation**: Zod resolver with React Hook Form
@@ -197,13 +218,16 @@
   ```
 
 ### i18n Pattern
+
 - **Not Currently Implemented** - all text is hardcoded in English
 
 ### Testing Pattern
+
 - **Framework**: Vitest configured but no tests written yet
 - **Location**: Would be `*.test.ts` or `*.spec.ts` files
 
 ### Lint/Format
+
 - **Tool**: Biome (fast linter/formatter)
 - **Commands**:
   - `pnpm lint` - lint and fix
@@ -216,11 +240,13 @@
 ## E) ENVIRONMENTS & RUN COMMANDS
 
 ### Install
+
 ```bash
 pnpm install
 ```
 
 ### Database Setup
+
 ```bash
 # Create .env file with DATABASE_URL
 # Then run migrations:
@@ -229,6 +255,7 @@ pnpm drizzle:migrate   # Apply migrations to database
 ```
 
 ### Development
+
 ```bash
 pnpm dev  # Starts Fastify server with Vike, watches backend changes
 # Server runs on http://localhost:3000
@@ -236,28 +263,33 @@ pnpm dev  # Starts Fastify server with Vike, watches backend changes
 ```
 
 ### Build
+
 ```bash
 pnpm build  # Unbuild + Vike build for production
 ```
 
 ### Production
+
 ```bash
 pnpm preview  # Run production build locally
 pnpm start    # Start production server
 ```
 
 ### Database Tools
+
 ```bash
 pnpm drizzle:studio  # Open Drizzle Studio (database GUI)
 ```
 
 ### Lint/Format
+
 ```bash
 pnpm lint    # Lint and auto-fix
 pnpm format  # Format code
 ```
 
 ### Deploy
+
 - **Not configured** - would typically be Docker-based (Dockerfile present)
 - `docker-compose.yml` present for containerization
 
@@ -266,6 +298,7 @@ pnpm format  # Format code
 ## F) CURRENT STATUS
 
 ### What Works Now (Single-Shop Template)
+
 ✅ User authentication (login, register, email verification)
 ✅ Session management (cookie-based)
 ✅ Product CRUD operations (admin-only) with multiple images
@@ -283,6 +316,7 @@ pnpm format  # Format code
 ✅ Single-shop mode enabled by default
 
 ### Recently Completed (Transformation)
+
 ✅ Removed vendor registration and approval workflows
 ✅ Removed vendor dashboard and shop pages
 ✅ Removed vendor-related UI components ("Sold by", shop links)
@@ -290,6 +324,7 @@ pnpm format  # Format code
 ✅ Vendor routes disabled/removed
 
 ### What's Half-Done / Messy
+
 ⚠️ Template analytics tracking (structure exists, not fully implemented)
 ⚠️ Email templates (React Email components exist but may need styling)
 ⚠️ Error handling consistency (mix of Effect and try-catch)
@@ -297,6 +332,7 @@ pnpm format  # Format code
 ⚠️ Some legacy vendor references in database schema (legacy columns)
 
 ### Big Refactors Planned
+
 🔄 Final cleanup of vendor-related backend code
 🔄 Add comprehensive test coverage
 🔄 Improve template system with additional template variations
@@ -305,6 +341,7 @@ pnpm format  # Format code
 🔄 Package for marketplace sales (CodeCanyon/Gumroad)
 
 ### Deadline / Priority
+
 📅 Not specified - appears to be active development
 ⭐ Priority: Vendor management, order processing, payment integration
 
@@ -315,6 +352,7 @@ pnpm format  # Format code
 ### Main Entities
 
 #### User
+
 ```typescript
 {
   id: uuid (PK)
@@ -334,6 +372,7 @@ pnpm format  # Format code
 ```
 
 #### Vendor
+
 ```typescript
 {
   id: uuid (PK)
@@ -349,6 +388,7 @@ pnpm format  # Format code
 ```
 
 #### Product
+
 ```typescript
 {
   id: uuid (PK)
@@ -366,6 +406,7 @@ pnpm format  # Format code
 ```
 
 #### Category
+
 ```typescript
 {
   id: uuid (PK)
@@ -380,6 +421,7 @@ pnpm format  # Format code
 ```
 
 #### Order
+
 ```typescript
 {
   id: uuid (PK)
@@ -415,6 +457,7 @@ pnpm format  # Format code
 ```
 
 #### PromoCode
+
 ```typescript
 {
   id: uuid (PK)
@@ -437,6 +480,7 @@ pnpm format  # Format code
 ```
 
 #### Template (Dynamic Layout System)
+
 ```typescript
 {
   id: uuid (PK)
@@ -485,12 +529,13 @@ pnpm format  # Format code
 
 ### Auth Permissions Matrix
 
-| Role    | Create Product | Edit Product | Manage Categories | View Orders | Manage Promo Codes | Access Dashboard |
-|---------|----------------|--------------|-------------------|-------------|--------------------| -----------------|
-| Admin   | ✅              | ✅            | ✅                 | ✅ (All)     | ✅                  | ✅                |
-| User    | ❌              | ❌            | ❌                 | ❌           | ❌                  | ❌                |
+| Role  | Create Product | Edit Product | Manage Categories | View Orders | Manage Promo Codes | Access Dashboard |
+| ----- | -------------- | ------------ | ----------------- | ----------- | ------------------ | ---------------- |
+| Admin | ✅             | ✅           | ✅                | ✅ (All)    | ✅                 | ✅               |
+| User  | ❌             | ❌           | ❌                | ❌          | ❌                 | ❌               |
 
 **Special Rules**:
+
 - Only admins can access dashboard and manage store
 - Email must be verified for full access
 - Session must be valid (not expired)
@@ -501,16 +546,19 @@ pnpm format  # Format code
 ## H) API MAP
 
 ### Base URLs
+
 - **Development**: `http://localhost:3000`
 - **Production**: Not specified (likely behind proxy)
 
 ### Auth Headers/Cookies
+
 - **Cookie**: `session` - contains session token (Base32 encoded)
 - **No Bearer tokens** - session-based auth only
 
 ### Key tRPC Endpoints
 
 #### 1. Product Search
+
 ```typescript
 trpc.product.search.query({
   query?: string,
@@ -548,6 +596,7 @@ trpc.product.search.query({
 ```
 
 #### 2. Create Product
+
 ```typescript
 trpc.product.create.mutate({
   name: string,
@@ -571,6 +620,7 @@ trpc.product.create.mutate({
 ```
 
 #### 3. Create Order
+
 ```typescript
 trpc.order.create.mutate({
   items: [{
@@ -602,6 +652,7 @@ trpc.order.create.mutate({
 ```
 
 #### 4. Vendor Registration
+
 ```typescript
 trpc.vendor.register.mutate({
   name: string,
@@ -623,6 +674,7 @@ trpc.vendor.register.mutate({
 ```
 
 #### 5. Validate Promo Code
+
 ```typescript
 trpc.promoCode.validate.query({
   code: string,
@@ -649,6 +701,7 @@ trpc.promoCode.validate.query({
 ### REST Endpoints
 
 #### Auth Endpoints (Prefix: `/api/auth`)
+
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login (sets session cookie)
 - `POST /api/auth/logout` - User logout (clears session)
@@ -656,10 +709,12 @@ trpc.promoCode.validate.query({
 - `POST /api/auth/verify-email` - Verify email with token
 
 #### File Upload
+
 - `POST /api/upload` - Upload file (multipart/form-data, max 100MB)
   - Returns: `{ fileId: string, url: string }`
 
 #### Webhook
+
 - `POST /api/webhooks/fincart` - Fincart payment webhook
   - Payload: Fincart webhook data (updates order status)
 
@@ -671,43 +726,55 @@ trpc.promoCode.validate.query({
 
 When I ask you to implement a feature, you MUST respond in this exact format:
 
-#### 1. **Understanding** 
+#### 1. **Understanding**
+
 What you think the request means, including:
+
 - Core functionality requested
 - Expected user interaction
 - Business logic implications
 - Integration points with existing features
 
 #### 2. **Impacted Areas**
+
 List all files/modules that will be affected:
+
 - New files to create
 - Existing files to modify
 - Related systems that might be affected
 - Database schema changes (if any)
 
-#### 3. **Plan** 
+#### 3. **Plan**
+
 Step-by-step implementation approach:
+
 1. First step (e.g., "Create database migration for new table")
 2. Second step (e.g., "Add tRPC procedure in backend")
 3. Third step (e.g., "Create UI component in frontend")
 4. etc.
 
 #### 4. **Code Changes**
+
 Provide actual code snippets or diffs:
+
 - Show before/after for modifications
 - Show complete code for new files
 - Use proper syntax highlighting
 - Include imports and types
 
 #### 5. **Tests/Verification**
+
 How to verify the implementation works:
+
 - Manual testing steps
 - Expected behavior
 - Edge cases to test
 - Data to use for testing
 
 #### 6. **Edge Cases**
+
 Potential issues and how they're handled:
+
 - **Auth/Security**: Who can access this? Any auth bypass risks?
 - **Data Loss**: Any risk of deleting/corrupting data?
 - **Breaking Changes**: Will this break existing functionality?
@@ -721,6 +788,7 @@ Potential issues and how they're handled:
 ## J) ADDITIONAL CONTEXT
 
 ### File Upload System
+
 - **Location**: Files stored in `/uploads` directory
 - **Max Size**: 100MB per file, 10 files max per request
 - **Handling**: `backend/file/upload-file/api.ts`
@@ -728,49 +796,55 @@ Potential issues and how they're handled:
 - **Access**: Static serving via Fastify Static plugin
 
 ### Session Management
+
 - **Token Generation**: 20-byte random → Base32 encoded
 - **Storage**: SHA256 hash of token stored in database
 - **Expiry**: 30 days from creation
 - **Cookie**: HTTP-only, secure in production
 
 ### Effect.js Pattern
+
 The backend uses Effect.js for functional error handling:
+
 ```typescript
 Effect.gen(function* ($) {
   // Dependency injection
   const db = yield* $(DatabaseClientService);
-  
+
   // Operations with automatic error handling
   const result = yield* $(
     Effect.tryPromise({
       try: async () => await someOperation(),
-      catch: (err) => new ServerError({ tag: "OperationFailed", cause: err })
-    })
+      catch: (err) => new ServerError({ tag: "OperationFailed", cause: err }),
+    }),
   );
-  
+
   // Return result
   return result;
 });
 ```
 
 ### Vendor Status Workflow
+
 ```
 pending → (admin approves) → active → (can create products)
    ↓
 rejected (admin rejects)
-   
+
 active → (admin suspends) → suspended
    ↓
 archived (soft delete)
 ```
 
 ### Order + Fincart Integration
+
 - Orders created locally first with `status = "pending"`
 - Fincart webhook updates order status with tracking info
 - Webhook data stored in `fincartWebhookData` JSONB field
 - Status mapping: Fincart status → internal order status
 
 ### Template System
+
 - Admins create templates (React components)
 - Templates assigned to pages/sections via `templateAssignment`
 - Dynamic rendering via `TemplateRenderer` component
@@ -778,6 +852,7 @@ archived (soft delete)
 - Analytics track views, interactions, conversion rates
 
 ### Path Aliases
+
 - `#root/*` maps to repository root (defined in `tsconfig.json` and `vite.config.ts`)
 - Use absolute imports: `import { foo } from "#root/shared/utils"`
 
@@ -786,6 +861,7 @@ archived (soft delete)
 ## K) COMMON TASKS & PATTERNS
 
 ### Adding a New tRPC Procedure
+
 1. Create service file: `backend/[domain]/[action]/service.ts`
    - Define Zod schema
    - Implement Effect-based service function
@@ -798,6 +874,7 @@ archived (soft delete)
 4. Use in frontend: `trpc.[domain].[action].query|mutate()`
 
 ### Adding a New Database Table
+
 1. Edit `shared/database/drizzle/schema.ts`
    - Add table definition with Drizzle schema
    - Add any enums needed
@@ -807,6 +884,7 @@ archived (soft delete)
 4. Update TypeScript types as needed
 
 ### Adding a New Page
+
 1. Create folder: `pages/[route-name]/`
 2. Add `+Page.tsx` - React component
 3. Add `+data.ts` - SSR data fetching (optional)
@@ -814,6 +892,7 @@ archived (soft delete)
 5. Add any page-specific components
 
 ### Adding Auth Protection
+
 1. Page-level: Add `+guard.ts` with redirect logic
 2. API-level: Check `ctx.clientSession` in tRPC procedure
 3. Component-level: Use `usePageContext().clientSession` hook
@@ -823,6 +902,7 @@ archived (soft delete)
 ## L) QUICK REFERENCE
 
 ### Important Files
+
 - `server/server.ts` - Main server setup
 - `backend/router/router.ts` - Main tRPC router
 - `shared/database/drizzle/schema.ts` - Database schema
@@ -832,16 +912,19 @@ archived (soft delete)
 - `layouts/LayoutDefault.tsx` - Main layout
 
 ### Key Types/Interfaces
+
 - `ClientSession` - Current user session data
 - `Context` - tRPC context (db, clientSession, emailService)
 - `ServerError` - Custom error class for backend
 - `DatabaseClient` - Drizzle database client type
 
 ### Key Services
+
 - `DatabaseClientService` - Effect service for database access
 - `EmailService` - Email sending service (Nodemailer)
 
 ### Environment Variables
+
 - `DATABASE_URL` - PostgreSQL connection string (required)
 - `PORT` - Server port (default: 3000)
 - `NODE_ENV` - production | development
@@ -852,6 +935,7 @@ archived (soft delete)
 ## M) SUMMARY FOR CHATGPT
 
 **TLDR**: Lebsey is a full-stack multi-vendor e-commerce platform built with:
+
 - **Frontend**: Vike (SSR) + React 19 + Tailwind + shadcn/ui
 - **Backend**: Fastify + tRPC + PostgreSQL + Drizzle ORM
 - **Auth**: Session-based with Oslo.js cryptography

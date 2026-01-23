@@ -112,13 +112,13 @@ export function SearchResultsGrid({
         <div className='bg-white rounded-lg shadow-sm p-6 mb-6'>
           <div className='flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4'>
             <div className='flex-1'>
-              <h1 className='text-2xl font-bold text-gray-900 mb-2'>
+              <h1 className='text-3xl lg:text-5xl font-light text-stone-900 leading-[1.15] tracking-tight mb-2'>
                 Search Results
               </h1>
               {searchQuery && (
-                <p className='text-gray-600'>
+                <p className='text-sm text-stone-600 font-light leading-relaxed'>
                   {resultCount} {resultCount === 1 ? "result" : "results"} for{" "}
-                  <span className='font-semibold'>"{searchQuery}"</span>
+                  <span className='font-normal italic'>"{searchQuery}"</span>
                 </p>
               )}
             </div>
@@ -143,7 +143,9 @@ export function SearchResultsGrid({
           <aside className='w-full lg:w-72 shrink-0'>
             <div className='bg-white rounded-lg shadow-sm p-6 sticky top-6'>
               <div className='flex items-center justify-between mb-4'>
-                <h2 className='text-lg font-semibold text-gray-900'>Filters</h2>
+                <h2 className='text-xl lg:text-2xl font-normal text-stone-900 leading-snug'>
+                  Filters
+                </h2>
                 <Button
                   variant='ghost'
                   size='sm'
@@ -295,7 +297,7 @@ export function SearchResultsGrid({
                             )}
                             <Button
                               variant={
-                                currentPage === page ? "default" : "outline"
+                                currentPage === page ? "primary" : "outline"
                               }
                               size='sm'
                               onClick={() => onPageChange?.(page)}

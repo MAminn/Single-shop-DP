@@ -62,10 +62,10 @@ export default function HomepageAdminPage() {
   const MERCHANT_ID = "00000000-0000-0000-0000-000000000000";
 
   const [content, setContent] = useState<HomepageContent>(
-    DEFAULT_HOMEPAGE_CONTENT
+    DEFAULT_HOMEPAGE_CONTENT,
   );
   const [originalContent, setOriginalContent] = useState<HomepageContent>(
-    DEFAULT_HOMEPAGE_CONTENT
+    DEFAULT_HOMEPAGE_CONTENT,
   );
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -76,7 +76,7 @@ export default function HomepageAdminPage() {
 
   // Hero CTA dropdown state
   const [heroCTAMode, setHeroCTAMode] = useState<"predefined" | "custom">(
-    "predefined"
+    "predefined",
   );
   const [heroCTACustomValue, setHeroCTACustomValue] = useState("");
 
@@ -106,7 +106,7 @@ export default function HomepageAdminPage() {
         // Initialize hero CTA mode based on loaded content
         const ctaLink = result.result.hero.ctaLink;
         const isPredefined = PREDEFINED_ROUTES.some(
-          (route) => route.value === ctaLink
+          (route) => route.value === ctaLink,
         );
 
         if (isPredefined) {
@@ -205,7 +205,7 @@ export default function HomepageAdminPage() {
   const handleReset = () => {
     if (
       confirm(
-        "Are you sure you want to reset all content to defaults? This will discard all your changes."
+        "Are you sure you want to reset all content to defaults? This will discard all your changes.",
       )
     ) {
       setContent(DEFAULT_HOMEPAGE_CONTENT);
@@ -313,7 +313,7 @@ export default function HomepageAdminPage() {
 
   // Upload hero background image
   const handleUploadHeroImage = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -397,6 +397,78 @@ export default function HomepageAdminPage() {
     }
   };
 
+  // Upload brand statement image
+  const handleUploadBrandStatementImage = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      toast.error("Invalid file type. Only JPG, PNG, and WebP are allowed.");
+      return;
+    }
+
+    // Validate file size (5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("File too large. Maximum size is 5MB.");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      // Convert file to Uint8Array
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = new Uint8Array(arrayBuffer);
+
+      // Upload via tRPC with preserveAspect: true for brand statement
+      const result = await trpc.homepage.uploadHeroImage.mutate({
+        file: {
+          name: file.name,
+          type: file.type,
+          buffer: buffer,
+        },
+        preserveAspect: true, // Don't crop brand statement images
+      });
+
+      if (result.success && result.data) {
+        // Auto-fill the brand statement image URL field
+        setContent((prev) => ({
+          ...prev,
+          brandStatement: {
+            ...prev.brandStatement,
+            image: result.data.url,
+          },
+        }));
+        toast.success("Image uploaded successfully!");
+      } else {
+        toast.error(result.error || "Failed to upload image");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Error uploading image");
+    } finally {
+      setIsUploadingImage(false);
+      // Reset file input
+      event.target.value = "";
+    }
+  };
+
+  // Remove brand statement image
+  const handleRemoveBrandStatementImage = () => {
+    setContent((prev) => ({
+      ...prev,
+      brandStatement: {
+        ...prev.brandStatement,
+        image: undefined,
+      },
+    }));
+    toast.info("Brand statement image removed");
+  };
+
   // Hero CTA handlers
   const handleHeroCTAChange = (value: string) => {
     if (value === "custom") {
@@ -476,14 +548,14 @@ export default function HomepageAdminPage() {
   const updateValueProp = (
     index: number,
     field: keyof ValuePropItem,
-    value: string
+    value: string,
   ) => {
     setContent((prev) => ({
       ...prev,
       valueProps: {
         ...prev.valueProps,
         items: prev.valueProps.items.map((item, i) =>
-          i === index ? { ...item, [field]: value } : item
+          i === index ? { ...item, [field]: value } : item,
         ),
       },
     }));
@@ -810,7 +882,7 @@ export default function HomepageAdminPage() {
                   <Button
                     type='button'
                     variant='outline'
-                    size='default'
+                    size='md'
                     disabled={!content.hero.enabled || isUploadingImage}
                     onClick={() =>
                       document.getElementById("hero-image-upload")?.click()
@@ -865,6 +937,150 @@ export default function HomepageAdminPage() {
                             '<div class="flex items-center justify-center h-full text-sm text-muted-foreground">Failed to load image. Check URL.</div>';
                         }
                       }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Brand Statement Section */}
+        <Card>
+          <CardHeader>
+            <div className='flex items-center justify-between'>
+              <CardTitle>Brand Statement Section</CardTitle>
+              <div className='flex items-center gap-2'>
+                <Label htmlFor='brand-statement-enabled'>Enabled</Label>
+                <Switch
+                  id='brand-statement-enabled'
+                  checked={content.brandStatement.enabled}
+                  onCheckedChange={(checked) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      brandStatement: {
+                        ...prev.brandStatement,
+                        enabled: checked,
+                      },
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <div>
+              <Label htmlFor='brand-statement-title'>Title</Label>
+              <Input
+                id='brand-statement-title'
+                value={content.brandStatement.title}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    brandStatement: {
+                      ...prev.brandStatement,
+                      title: e.target.value,
+                    },
+                  }))
+                }
+                placeholder='Worn with intention. Designed for life.'
+                disabled={!content.brandStatement.enabled}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor='brand-statement-description'>Description</Label>
+              <Textarea
+                id='brand-statement-description'
+                value={content.brandStatement.description}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    brandStatement: {
+                      ...prev.brandStatement,
+                      description: e.target.value,
+                    },
+                  }))
+                }
+                placeholder='Every piercing is an expression of self...'
+                disabled={!content.brandStatement.enabled}
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor='brand-statement-image'>
+                Image URL (optional)
+              </Label>
+              <Input
+                id='brand-statement-image'
+                value={content.brandStatement.image || ""}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    brandStatement: {
+                      ...prev.brandStatement,
+                      image: e.target.value || undefined,
+                    },
+                  }))
+                }
+                placeholder='/uploads/homepage/brand-statement.jpg'
+                disabled={!content.brandStatement.enabled}
+              />
+              <p className='text-sm text-muted-foreground mt-1'>
+                Recommended: Editorial portrait image (ear piercing close-up)
+              </p>
+
+              {/* Upload Controls */}
+              <div className='flex gap-2 mt-3'>
+                <input
+                  type='file'
+                  id='brand-statement-file-input'
+                  accept='image/jpeg,image/jpg,image/png,image/webp'
+                  onChange={handleUploadBrandStatementImage}
+                  className='hidden'
+                  disabled={!content.brandStatement.enabled || isUploadingImage}
+                />
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  disabled={!content.brandStatement.enabled || isUploadingImage}
+                  onClick={() =>
+                    document
+                      .getElementById("brand-statement-file-input")
+                      ?.click()
+                  }>
+                  {isUploadingImage ? "Uploading..." : "Upload Image"}
+                </Button>
+                {content.brandStatement.image && (
+                  <>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      size='sm'
+                      onClick={handleRemoveBrandStatementImage}
+                      disabled={
+                        !content.brandStatement.enabled || isUploadingImage
+                      }>
+                      Remove
+                    </Button>
+                  </>
+                )}
+              </div>
+
+              {content.brandStatement.image && (
+                <div className='mt-3'>
+                  <div className='flex items-center justify-between mb-2'>
+                    <Label className='text-sm text-muted-foreground'>
+                      Preview:
+                    </Label>
+                  </div>
+                  <div className='relative w-full h-48 rounded-lg overflow-hidden border border-border bg-muted'>
+                    <img
+                      src={content.brandStatement.image}
+                      alt='Brand statement preview'
+                      className='w-full h-full object-cover'
                     />
                   </div>
                 </div>

@@ -160,7 +160,7 @@ export default function ProductDetailPage() {
           {
             id: product.id,
             name: product.name,
-            price: product.discountPrice ?? product.price,
+            price: Number(product.discountPrice ?? product.price),
             stock: product.stock,
             imageUrl: product.imageUrl,
             categoryName: product.categoryName ?? undefined,

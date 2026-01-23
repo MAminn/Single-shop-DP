@@ -115,8 +115,8 @@ export function LandingTemplateMinimal({
 
             <div className='flex flex-col sm:flex-row gap-4 justify-center items-center'>
               <Button
+                variant='primary'
                 size='lg'
-                className='bg-gray-900 hover:bg-gray-800 text-white font-light px-10 py-6 text-base rounded-none shadow-none hover:shadow-lg transition-all'
                 onClick={handleCtaClick(content.hero.ctaLink)}
                 asChild={!onCtaClick}>
                 {onCtaClick ? (
@@ -128,9 +128,8 @@ export function LandingTemplateMinimal({
 
               {content.categories.enabled && (
                 <Button
+                  variant='tertiary'
                   size='lg'
-                  variant='ghost'
-                  className='font-light px-10 py-6 text-base hover:bg-gray-50 rounded-none group'
                   onClick={handleCtaClick(content.categories.ctaLink)}
                   asChild={!onCtaClick}>
                   {onCtaClick ? (
@@ -213,7 +212,7 @@ export function LandingTemplateMinimal({
                       {20 + index * 5} items
                     </p>
                   </div>
-                )
+                ),
               )}
             </div>
           </div>
@@ -243,8 +242,8 @@ export function LandingTemplateMinimal({
 
             <div className='mt-12 text-center'>
               <Button
-                variant='link'
-                className='text-gray-900 hover:text-gray-600 font-light text-base group underline'
+                variant='tertiary'
+                size='md'
                 onClick={handleCtaClick(content.featuredProducts.viewAllLink)}
                 asChild={!onCtaClick}>
                 {onCtaClick ? (
@@ -288,10 +287,7 @@ export function LandingTemplateMinimal({
                   className='flex-1 px-0 py-3 border-0 border-b border-gray-300 focus:outline-none focus:border-gray-900 rounded-none text-base font-light placeholder:text-gray-400'
                   required
                 />
-                <Button
-                  type='submit'
-                  size='lg'
-                  className='bg-gray-900 hover:bg-gray-800 text-white font-light px-8 py-3 rounded-none shadow-none hover:shadow-lg transition-all'>
+                <Button type='submit' variant='primary' size='md'>
                   {content.newsletter.ctaText}
                 </Button>
               </div>
@@ -319,8 +315,8 @@ export function LandingTemplateMinimal({
             </p>
 
             <Button
+              variant='primary'
               size='lg'
-              className='bg-gray-900 hover:bg-gray-800 text-white font-light px-12 py-6 text-lg rounded-none shadow-none hover:shadow-xl transition-all'
               onClick={handleCtaClick(content.footerCta.ctaLink)}
               asChild={!onCtaClick}>
               {onCtaClick ? (

@@ -136,7 +136,7 @@ export function ProductCardTemplatePreview({
         <div className="mt-6 flex items-center gap-3">
           <Button 
             size="sm" 
-            variant={showHoverState ? "default" : "outline"}
+            variant={showHoverState ? "primary" : "outline"}
             onClick={() => setShowHoverState(!showHoverState)}
             className="text-xs"
           >

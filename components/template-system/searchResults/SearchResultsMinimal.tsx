@@ -107,11 +107,11 @@ export function SearchResultsMinimal({
           <div className='px-4'>
             {/* Search Title */}
             <div className='text-center mb-8'>
-              <h1 className='text-3xl md:text-4xl font-light text-gray-900 mb-3 tracking-tight'>
+              <h1 className='text-5xl lg:text-7xl font-light text-stone-900 leading-[1.05] tracking-tight mb-4'>
                 Search Results
               </h1>
               {searchQuery && (
-                <p className='text-lg text-gray-600 font-light'>
+                <p className='text-base lg:text-lg text-stone-600 font-light leading-relaxed'>
                   {resultCount} {resultCount === 1 ? "item" : "items"} found for{" "}
                   <span className='italic'>"{searchQuery}"</span>
                 </p>

@@ -25,6 +25,12 @@ const HomepageContentSchema = z.object({
     ctaLink: z.string(),
     backgroundImage: z.string().optional(),
   }),
+  brandStatement: z.object({
+    enabled: z.boolean(),
+    title: z.string(),
+    description: z.string(),
+    image: z.string().optional(),
+  }),
   promoBanner: z.object({
     enabled: z.boolean(),
     text: z.string(),
@@ -52,7 +58,7 @@ const HomepageContentSchema = z.object({
         icon: z.nativeEnum(ValuePropIconType),
         title: z.string(),
         description: z.string(),
-      })
+      }),
     ),
   }),
   newsletter: z.object({
@@ -77,7 +83,7 @@ export const homepageRouter = router({
     .input(
       z.object({
         merchantId: z.string().uuid(),
-      })
+      }),
     )
     .query(async ({ input }) => {
       const content = await getHomepageContent(input.merchantId);
@@ -92,12 +98,12 @@ export const homepageRouter = router({
       z.object({
         merchantId: z.string().uuid(),
         content: HomepageContentSchema,
-      })
+      }),
     )
     .mutation(async ({ input }) => {
       const content = await updateHomepageContent(
         input.merchantId,
-        input.content
+        input.content,
       );
       return {
         success: true,
@@ -113,7 +119,8 @@ export const homepageRouter = router({
           type: z.string(),
           buffer: z.instanceof(Uint8Array),
         }),
-      })
+        preserveAspect: z.boolean().optional(), // For brand statement images
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const session = ctx.clientSession;
@@ -131,7 +138,8 @@ export const homepageRouter = router({
           uploadHeroImage({
             buffer: input.file.buffer,
             mimeType: input.file.type,
-          })
+            preserveAspect: input.preserveAspect,
+          }),
         );
 
         return {

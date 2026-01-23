@@ -37,8 +37,8 @@ export function AppSidebar() {
         res.result.map((c) => ({
           label: c.name,
           to: `/featured/${c.type}/categories/${c.id}`,
-          type: c.type,
-        }))
+          type: c.type as "men" | "women",
+        })),
       );
     });
   }, []);

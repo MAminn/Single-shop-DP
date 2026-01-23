@@ -197,14 +197,14 @@ export function SortingToolbarTemplate({
               {/* View Toggle */}
               <div className='flex items-center gap-1 border rounded-md p-1'>
                 <Button
-                  variant={currentView === "grid" ? "default" : "ghost"}
+                  variant={currentView === "grid" ? "primary" : "ghost"}
                   size='sm'
                   onClick={() => handleViewChange("grid")}
                   className='h-8 w-8 p-0'>
                   <Grid3x3 className='h-4 w-4' />
                 </Button>
                 <Button
-                  variant={currentView === "list" ? "default" : "ghost"}
+                  variant={currentView === "list" ? "primary" : "ghost"}
                   size='sm'
                   onClick={() => handleViewChange("list")}
                   className='h-8 w-8 p-0'>
@@ -260,14 +260,14 @@ export function SortingToolbarTemplate({
               {/* View Toggle */}
               <div className='flex items-center gap-1 border rounded-md p-1'>
                 <Button
-                  variant={currentView === "grid" ? "default" : "ghost"}
+                  variant={currentView === "grid" ? "primary" : "ghost"}
                   size='sm'
                   onClick={() => handleViewChange("grid")}
                   className='h-8 w-8 p-0'>
                   <Grid3x3 className='h-4 w-4' />
                 </Button>
                 <Button
-                  variant={currentView === "list" ? "default" : "ghost"}
+                  variant={currentView === "list" ? "primary" : "ghost"}
                   size='sm'
                   onClick={() => handleViewChange("list")}
                   className='h-8 w-8 p-0'>

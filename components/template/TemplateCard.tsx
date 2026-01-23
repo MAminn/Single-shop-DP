@@ -124,7 +124,7 @@ export function TemplateCard({
               Preview
             </Button>
             <Button
-              variant='default'
+              variant='primary'
               size='sm'
               className='flex-1'
               onClick={(e) => {
@@ -136,7 +136,7 @@ export function TemplateCard({
           </div>
         ) : (
           <Button
-            variant='default'
+            variant='primary'
             size='sm'
             className='w-full'
             onClick={(e) => {

@@ -48,11 +48,11 @@ export function HomeFeaturedProducts({
       <section className='py-16 bg-gray-50'>
         <div className='container mx-auto px-4'>
           <div className='text-center mb-12'>
-            <h2 className='text-3xl md:text-4xl font-bold text-gray-900 mb-3'>
+            <h2 className='text-3xl lg:text-5xl font-light text-stone-900 leading-[1.15] tracking-tight mb-4'>
               {title}
             </h2>
             {subtitle && (
-              <p className='text-gray-600 text-lg max-w-2xl mx-auto'>
+              <p className='text-base lg:text-lg text-stone-600 font-light leading-relaxed max-w-md mx-auto'>
                 {subtitle}
               </p>
             )}
@@ -81,25 +81,25 @@ export function HomeFeaturedProducts({
       <section className='py-16 bg-gray-50'>
         <div className='container mx-auto px-4'>
           <div className='text-center mb-12'>
-            <h2 className='text-3xl md:text-4xl font-bold text-gray-900 mb-3'>
+            <h2 className='text-3xl lg:text-5xl font-light text-stone-900 leading-[1.15] tracking-tight mb-4'>
               {title}
             </h2>
             {subtitle && (
-              <p className='text-gray-600 text-lg max-w-2xl mx-auto'>
+              <p className='text-base lg:text-lg text-stone-600 font-light leading-relaxed max-w-md mx-auto'>
                 {subtitle}
               </p>
             )}
           </div>
           <div className='max-w-md mx-auto text-center py-12 bg-white rounded-lg border border-gray-200'>
             <ShoppingBag className='h-16 w-16 mx-auto text-gray-400 mb-4' />
-            <h3 className='text-xl font-semibold text-gray-900 mb-2'>
+            <h3 className='text-xl lg:text-2xl font-normal text-stone-900 leading-snug mb-2'>
               No Featured Products Yet
             </h3>
-            <p className='text-gray-600 mb-6'>
+            <p className='text-sm text-stone-600 font-light leading-relaxed mb-6'>
               Check back soon for exciting new products!
             </p>
             {showViewAllButton && (
-              <Button asChild>
+              <Button variant='secondary' size='md' asChild>
                 <Link href={viewAllHref}>Browse All Products</Link>
               </Button>
             )}
@@ -141,7 +141,7 @@ export function HomeFeaturedProducts({
         {/* View All Button */}
         {showViewAllButton && (
           <div className='text-center'>
-            <Button asChild size='lg' className='min-w-[200px]'>
+            <Button variant='secondary' size='lg' asChild>
               <Link href={viewAllHref}>
                 View All Products
                 <ShoppingBag className='ml-2 h-5 w-5' />

@@ -106,7 +106,7 @@ export function LandingTemplateEditorial({
           {/* Promotional Strip */}
           {content.promoBanner.enabled && (
             <div className='absolute top-0 left-0 right-0 bg-white/10 backdrop-blur-md text-white py-2 px-4 text-center z-10 border-b border-white/20'>
-              <p className='text-sm font-light'>
+              <p className='text-[11px] uppercase tracking-[0.25em] font-light'>
                 {content.promoBanner.text}
                 {content.promoBanner.linkText &&
                   content.promoBanner.linkUrl && (
@@ -114,7 +114,7 @@ export function LandingTemplateEditorial({
                       {" "}
                       <a
                         href={content.promoBanner.linkUrl}
-                        className='font-medium underline hover:text-gray-200 transition-colors'>
+                        className='font-light underline hover:text-stone-200 transition-colors'>
                         {content.promoBanner.linkText}
                       </a>
                     </>
@@ -125,22 +125,17 @@ export function LandingTemplateEditorial({
 
           {/* Hero Content */}
           <div className='relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 text-center text-white'>
-            <Badge className='mb-6 bg-white/20 text-white hover:bg-white/30 border-white/40 backdrop-blur-sm'>
-              <Sparkles className='w-3 h-3 mr-1' />
-              Premium Collection
-            </Badge>
-
-            <h1 className='text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-light tracking-tight mb-6 leading-tight'>
+            <h1 className='text-5xl lg:text-7xl font-light tracking-tight leading-[1.05] mb-8'>
               {content.hero.title}
             </h1>
 
-            <p className='text-xl sm:text-2xl lg:text-3xl text-gray-200 font-light mb-10 max-w-3xl mx-auto leading-relaxed'>
+            <p className='text-base lg:text-lg text-stone-200 font-light leading-relaxed mb-10 max-w-md mx-auto'>
               {content.hero.subtitle}
             </p>
 
             <Button
+              variant='secondary-light'
               size='lg'
-              className='bg-white text-gray-900 hover:bg-gray-100 font-medium px-10 py-7 text-lg rounded-full shadow-2xl hover:shadow-3xl transition-all group'
               onClick={handleCtaClick(content.hero.ctaLink)}
               asChild={!onCtaClick}>
               {onCtaClick ? (
@@ -160,8 +155,8 @@ export function LandingTemplateEditorial({
           {/* Scroll Indicator */}
           <div className='absolute bottom-8 left-1/2 -translate-x-1/2 z-10'>
             <div className='animate-bounce'>
-              <div className='w-6 h-10 border-2 border-white/40 rounded-full flex items-start justify-center p-2'>
-                <div className='w-1.5 h-1.5 bg-white/60 rounded-full' />
+              <div className='w-6 h-10 border-2 border-stone-400/40 rounded-full flex items-start justify-center p-2'>
+                <div className='w-1.5 h-1.5 bg-stone-400/60 rounded-full' />
               </div>
             </div>
           </div>
@@ -177,22 +172,21 @@ export function LandingTemplateEditorial({
                 <div className='aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden'>
                   {/* Placeholder for collection image */}
                   <div className='w-full h-full flex items-center justify-center'>
-                    <ShoppingBag className='w-24 h-24 text-gray-400' />
+                    <ShoppingBag className='w-24 h-24 text-stone-400' />
                   </div>
                 </div>
               </div>
 
               <div className='order-1 lg:order-2'>
-                <h2 className='text-4xl sm:text-5xl lg:text-6xl font-light text-gray-900 mb-6 leading-tight'>
+                <h2 className='text-3xl lg:text-5xl font-light text-stone-900 leading-[1.15] tracking-tight mb-6'>
                   {content.categories.title}
                 </h2>
-                <p className='text-xl text-gray-600 font-light mb-8 leading-relaxed'>
+                <p className='text-base lg:text-lg text-stone-600 font-light leading-relaxed mb-8 max-w-md'>
                   {content.categories.subtitle}
                 </p>
                 <Button
+                  variant='secondary'
                   size='lg'
-                  variant='outline'
-                  className='border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white font-medium px-8 py-6 rounded-full transition-all group'
                   onClick={handleCtaClick(content.categories.ctaLink)}
                   asChild={!onCtaClick}>
                   {onCtaClick ? (
@@ -218,10 +212,10 @@ export function LandingTemplateEditorial({
         <section className='py-20 sm:py-24 lg:py-32 bg-gray-50'>
           <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
             <div className='max-w-3xl mb-16'>
-              <h2 className='text-4xl sm:text-5xl lg:text-6xl font-light text-gray-900 mb-6 leading-tight'>
+              <h2 className='text-3xl lg:text-5xl font-light text-stone-900 leading-[1.15] tracking-tight mb-6'>
                 {content.featuredProducts.title}
               </h2>
-              <p className='text-xl text-gray-600 font-light leading-relaxed'>
+              <p className='text-base lg:text-lg text-stone-600 font-light leading-relaxed max-w-md'>
                 {content.featuredProducts.subtitle}
               </p>
             </div>
@@ -234,8 +228,8 @@ export function LandingTemplateEditorial({
 
             <div className='mt-12 text-center'>
               <Button
+                variant='primary'
                 size='lg'
-                className='bg-gray-900 hover:bg-gray-800 text-white font-medium px-10 py-6 rounded-full shadow-lg hover:shadow-xl transition-all group'
                 onClick={handleCtaClick(content.featuredProducts.viewAllLink)}
                 asChild={!onCtaClick}>
                 {onCtaClick ? (
@@ -260,10 +254,10 @@ export function LandingTemplateEditorial({
         <section className='py-20 sm:py-24 lg:py-32 bg-white'>
           <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
             <div className='text-center mb-16'>
-              <h2 className='text-4xl sm:text-5xl font-light text-gray-900 mb-4'>
+              <h2 className='text-3xl lg:text-5xl font-light text-stone-900 leading-[1.15] tracking-tight mb-4'>
                 Why Choose Us
               </h2>
-              <p className='text-xl text-gray-600 font-light'>
+              <p className='text-base lg:text-lg text-stone-600 font-light leading-relaxed'>
                 Experience the difference
               </p>
             </div>
@@ -273,13 +267,13 @@ export function LandingTemplateEditorial({
                 const IconComponent = ICON_MAP[item.icon];
                 return (
                   <div key={index} className='text-center'>
-                    <div className='inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-900 text-white mb-6'>
-                      <IconComponent className='w-10 h-10' />
+                    <div className='inline-flex items-center justify-center w-12 h-12 text-stone-700 mb-6'>
+                      <IconComponent className='w-6 h-6' />
                     </div>
-                    <h3 className='text-2xl font-light text-gray-900 mb-4'>
+                    <h3 className='text-xl lg:text-2xl font-normal text-stone-900 leading-snug mb-4'>
                       {item.title}
                     </h3>
-                    <p className='text-gray-600 font-light leading-relaxed'>
+                    <p className='text-sm text-stone-600 font-light leading-relaxed'>
                       {item.description}
                     </p>
                   </div>
@@ -292,13 +286,13 @@ export function LandingTemplateEditorial({
 
       {/* Newsletter - Editorial Format */}
       {content.newsletter.enabled && (
-        <section className='py-20 sm:py-24 lg:py-32 bg-gray-900 text-white'>
+        <section className='py-20 sm:py-24 lg:py-32 bg-stone-900 text-white'>
           <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
             <div className='max-w-3xl mx-auto text-center'>
-              <h2 className='text-4xl sm:text-5xl lg:text-6xl font-light mb-6 leading-tight'>
+              <h2 className='text-3xl lg:text-5xl font-light text-stone-50 leading-[1.15] tracking-tight mb-6'>
                 {content.newsletter.title}
               </h2>
-              <p className='text-xl text-gray-300 font-light mb-10 leading-relaxed'>
+              <p className='text-base lg:text-lg text-stone-300 font-light leading-relaxed mb-10 max-w-md mx-auto'>
                 {content.newsletter.subtitle}
               </p>
 
@@ -306,18 +300,15 @@ export function LandingTemplateEditorial({
                 <input
                   type='email'
                   placeholder={content.newsletter.placeholderText}
-                  className='flex-1 px-6 py-4 bg-white/10 border border-white/20 rounded-full text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent backdrop-blur-sm'
+                  className='flex-1 px-6 py-4 bg-white/10 border border-white/20 rounded-none text-white placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent backdrop-blur-sm'
                   required
                 />
-                <Button
-                  type='submit'
-                  size='lg'
-                  className='bg-white text-gray-900 hover:bg-gray-100 font-medium px-8 py-4 rounded-full'>
+                <Button type='submit' variant='primary-light' size='md'>
                   {content.newsletter.ctaText}
                 </Button>
               </form>
 
-              <p className='text-sm text-gray-400 font-light'>
+              <p className='text-sm text-stone-400 font-light leading-relaxed'>
                 {content.newsletter.privacyText}
               </p>
             </div>
@@ -330,16 +321,16 @@ export function LandingTemplateEditorial({
         <section className='py-20 sm:py-24 lg:py-32 bg-white'>
           <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
             <div className='max-w-4xl mx-auto text-center'>
-              <h2 className='text-5xl sm:text-6xl lg:text-7xl font-light text-gray-900 mb-6 leading-tight'>
+              <h2 className='text-5xl lg:text-7xl font-light text-stone-900 leading-[1.05] tracking-tight mb-6'>
                 {content.footerCta.title}
               </h2>
-              <p className='text-2xl text-gray-600 font-light mb-12 leading-relaxed'>
+              <p className='text-base lg:text-lg text-stone-600 font-light leading-relaxed mb-12 max-w-md mx-auto'>
                 {content.footerCta.subtitle}
               </p>
 
               <Button
+                variant='primary'
                 size='lg'
-                className='bg-gray-900 hover:bg-gray-800 text-white font-medium px-12 py-7 text-lg rounded-full shadow-xl hover:shadow-2xl transition-all group'
                 onClick={handleCtaClick(content.footerCta.ctaLink)}
                 asChild={!onCtaClick}>
                 {onCtaClick ? (

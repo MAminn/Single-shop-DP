@@ -118,11 +118,11 @@ export default function CheckoutPage() {
 
       // Submit order via tRPC
       const result = await trpc.order.create.mutate({
-        customerName: formValues.fullName,
-        customerEmail: formValues.email,
-        customerPhone: formValues.phoneNumber,
-        shippingAddress: formValues.address,
-        shippingCity: formValues.city,
+        customerName: formValues.fullName || "",
+        customerEmail: formValues.email || "",
+        customerPhone: formValues.phoneNumber || "",
+        shippingAddress: formValues.address || "",
+        shippingCity: formValues.city || "",
         shippingState: formValues.state || null,
         shippingPostalCode: formValues.postalCode || null,
         shippingCountry: formValues.country || "Egypt",

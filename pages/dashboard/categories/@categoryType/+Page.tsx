@@ -62,7 +62,7 @@ export default function CategoryDetail() {
           success: true,
           categoryType: initialFetchData.categoryType,
           subcategories: res.result.filter(
-            (s) => s.type === initialFetchData.categoryType
+            (s) => s.type === initialFetchData.categoryType,
           ),
         });
       });
@@ -72,7 +72,7 @@ export default function CategoryDetail() {
         return;
       }
       toast.error(
-        "Something went wrong, please refresh the page and try again."
+        "Something went wrong, please refresh the page and try again.",
       );
     }
   }, [lastFetchDate, initialFetchData]);
@@ -121,7 +121,7 @@ export default function CategoryDetail() {
         return;
       }
       toast.error(
-        "Something went wrong, please refresh the page and try again."
+        "Something went wrong, please refresh the page and try again.",
       );
     }
 
@@ -131,13 +131,13 @@ export default function CategoryDetail() {
   const handleEditSubcategory = async (values: SubCategoryFormSchema) => {
     if (!values.id) {
       alert(
-        "Selected category has no id, this is likely a bug, try refreshing the page."
+        "Selected category has no id, this is likely a bug, try refreshing the page.",
       );
       return;
     }
 
     const res = await trpc.category.edit.mutate(
-      values as SubCategoryFormSchema & { id: string }
+      values as SubCategoryFormSchema & { id: string },
     );
 
     if (!res.success) {
@@ -183,7 +183,7 @@ export default function CategoryDetail() {
       id: subCategory.id,
       name: subCategory.name,
       imageId: subCategory.imageId,
-      type: subCategory.type,
+      type: subCategory.type as "men" | "women",
     });
 
     setIsEditDialogOpen(true);

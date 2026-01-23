@@ -9,9 +9,10 @@
 
 ## 🚫 This Document is Archived
 
-This documentation describes **vendor shop page templates** that were part of the original multi-vendor platform. 
+This documentation describes **vendor shop page templates** that were part of the original multi-vendor platform.
 
 **As of January 2026**, this repository is a **single-shop e-commerce template** and:
+
 - ❌ Vendor shop pages have been removed
 - ❌ Vendor registration/approval workflows are disabled
 - ❌ Multi-vendor features are out of scope
@@ -28,6 +29,7 @@ The following templates were originally implemented but have been removed:
 3. **VendorShopMinimal** - Premium brand-focused layout (REMOVED)
 
 **Files Removed:**
+
 ```
 components/template-system/vendorShop/
 ├── VendorShopGrid.tsx          (DELETED)

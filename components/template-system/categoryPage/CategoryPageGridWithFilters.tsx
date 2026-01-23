@@ -640,7 +640,7 @@ export function CategoryPageGridWithFilters({
                               )}
                               <Button
                                 variant={
-                                  page === currentPage ? "default" : "outline"
+                                  page === currentPage ? "primary" : "outline"
                                 }
                                 size='sm'
                                 onClick={() => handlePageChange(page)}

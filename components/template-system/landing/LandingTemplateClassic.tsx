@@ -89,15 +89,15 @@ export function LandingTemplateClassic({
     <div className={`landing-template-classic ${className}`}>
       {/* Promotional Banner */}
       {content.promoBanner.enabled && (
-        <div className='bg-gray-900 text-white py-2.5 px-4 text-center'>
-          <p className='text-sm font-medium'>
+        <div className='bg-stone-900 text-white py-2.5 px-4 text-center'>
+          <p className='text-[11px] uppercase tracking-[0.25em] font-light'>
             {content.promoBanner.text}
             {content.promoBanner.linkText && content.promoBanner.linkUrl && (
               <>
                 {" "}
                 <a
                   href={content.promoBanner.linkUrl}
-                  className='underline font-semibold hover:text-gray-300 transition-colors'>
+                  className='underline font-light hover:text-stone-300 transition-colors'>
                   {content.promoBanner.linkText}
                 </a>
               </>
@@ -111,22 +111,18 @@ export function LandingTemplateClassic({
         <section className='relative bg-white border-b border-gray-200'>
           <div className='container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24'>
             <div className='max-w-4xl mx-auto text-center'>
-              <Badge className='mb-6 bg-blue-600 text-white hover:bg-blue-700'>
-                Welcome to Our Store
-              </Badge>
-
-              <h1 className='text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight'>
+              <h1 className='text-5xl lg:text-7xl font-light text-stone-900 leading-[1.05] tracking-tight mb-8'>
                 {content.hero.title}
               </h1>
 
-              <p className='text-lg sm:text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto'>
+              <p className='text-base lg:text-lg text-stone-600 font-light leading-relaxed mb-10 max-w-md mx-auto'>
                 {content.hero.subtitle}
               </p>
 
               <div className='flex flex-col sm:flex-row gap-4 justify-center'>
                 <Button
+                  variant='primary'
                   size='lg'
-                  className='bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-6 text-base shadow-lg hover:shadow-xl transition-all group'
                   onClick={handleCtaClick(content.hero.ctaLink)}
                   asChild={!onCtaClick}>
                   {onCtaClick ? (
@@ -144,9 +140,8 @@ export function LandingTemplateClassic({
 
                 {content.categories.enabled && (
                   <Button
+                    variant='secondary'
                     size='lg'
-                    variant='outline'
-                    className='font-semibold px-8 py-6 text-base border-2 hover:bg-gray-50'
                     onClick={handleCtaClick(content.categories.ctaLink)}
                     asChild={!onCtaClick}>
                     {onCtaClick ? (
@@ -189,10 +184,10 @@ export function LandingTemplateClassic({
         <section className='py-12 sm:py-16 lg:py-20 bg-gray-50'>
           <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
             <div className='text-center mb-12'>
-              <h2 className='text-3xl sm:text-4xl font-bold text-gray-900 mb-4'>
+              <h2 className='text-3xl lg:text-5xl font-light text-stone-900 leading-[1.15] tracking-tight mb-4'>
                 {content.categories.title}
               </h2>
-              <p className='text-lg text-gray-600 max-w-2xl mx-auto'>
+              <p className='text-base lg:text-lg text-stone-600 font-light leading-relaxed max-w-md mx-auto'>
                 {content.categories.subtitle}
               </p>
             </div>
@@ -213,7 +208,7 @@ export function LandingTemplateClassic({
                       </h3>
                     </CardContent>
                   </Card>
-                )
+                ),
               )}
             </div>
           </div>
@@ -229,11 +224,11 @@ export function LandingTemplateClassic({
                 const IconComponent = ICON_MAP[item.icon];
                 return (
                   <div key={index} className='flex items-start gap-4'>
-                    <div className='flex-shrink-0 w-12 h-12 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center'>
+                    <div className='flex-shrink-0 w-12 h-12 flex items-center justify-center text-stone-700'>
                       <IconComponent className='w-6 h-6' />
                     </div>
                     <div>
-                      <h3 className='text-lg font-semibold text-gray-900 mb-2'>
+                      <h3 className='text-xl lg:text-2xl font-normal text-stone-900 leading-snug mb-2'>
                         {item.title}
                       </h3>
                       <p className='text-gray-600 text-sm leading-relaxed'>
@@ -254,16 +249,16 @@ export function LandingTemplateClassic({
           <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
             <div className='flex items-end justify-between mb-10'>
               <div>
-                <h2 className='text-3xl sm:text-4xl font-bold text-gray-900 mb-2'>
+                <h2 className='text-3xl lg:text-5xl font-light text-stone-900 leading-[1.15] tracking-tight mb-2'>
                   {content.featuredProducts.title}
                 </h2>
-                <p className='text-lg text-gray-600'>
+                <p className='text-base lg:text-lg text-stone-600 font-light leading-relaxed'>
                   {content.featuredProducts.subtitle}
                 </p>
               </div>
               <Button
-                variant='link'
-                className='hidden sm:flex items-center text-blue-600 hover:text-blue-700 font-semibold group'
+                variant='tertiary'
+                size='md'
                 onClick={handleCtaClick(content.featuredProducts.viewAllLink)}
                 asChild={!onCtaClick}>
                 {onCtaClick ? (
@@ -288,9 +283,9 @@ export function LandingTemplateClassic({
 
             <div className='text-center mt-8 sm:hidden'>
               <Button
-                variant='outline'
-                size='lg'
-                className='font-semibold w-full'
+                variant='secondary'
+                size='md'
+                className='w-full'
                 onClick={handleCtaClick(content.featuredProducts.viewAllLink)}
                 asChild={!onCtaClick}>
                 {onCtaClick ? (
@@ -310,13 +305,13 @@ export function LandingTemplateClassic({
       {content.newsletter.enabled && (
         <section className='py-12 sm:py-16 lg:py-20 bg-white'>
           <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
-            <Card className='border-2 border-blue-600 shadow-xl'>
+            <Card className='border border-stone-200 shadow-none'>
               <CardContent className='p-8 sm:p-12'>
                 <div className='max-w-2xl mx-auto text-center'>
-                  <h2 className='text-3xl sm:text-4xl font-bold text-gray-900 mb-4'>
+                  <h2 className='text-3xl lg:text-5xl font-light text-stone-900 leading-[1.15] tracking-tight mb-4'>
                     {content.newsletter.title}
                   </h2>
-                  <p className='text-lg text-gray-600 mb-8'>
+                  <p className='text-base lg:text-lg text-stone-600 font-light leading-relaxed mb-8'>
                     {content.newsletter.subtitle}
                   </p>
 
@@ -324,18 +319,15 @@ export function LandingTemplateClassic({
                     <input
                       type='email'
                       placeholder={content.newsletter.placeholderText}
-                      className='flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent'
+                      className='flex-1 px-4 py-3 border border-stone-300 rounded-none focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent'
                       required
                     />
-                    <Button
-                      type='submit'
-                      size='lg'
-                      className='bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8'>
+                    <Button type='submit' variant='primary' size='md'>
                       {content.newsletter.ctaText}
                     </Button>
                   </form>
 
-                  <p className='text-sm text-gray-500 mt-4'>
+                  <p className='text-sm text-stone-600 font-light leading-relaxed mt-4'>
                     {content.newsletter.privacyText}
                   </p>
                 </div>
@@ -347,18 +339,18 @@ export function LandingTemplateClassic({
 
       {/* Footer CTA */}
       {content.footerCta.enabled && (
-        <section className='py-12 sm:py-16 lg:py-20 bg-gray-900 text-white'>
+        <section className='py-12 sm:py-16 lg:py-20 bg-stone-900 text-white'>
           <div className='container mx-auto px-4 sm:px-6 lg:px-8 text-center'>
-            <h2 className='text-3xl sm:text-4xl lg:text-5xl font-bold mb-4'>
+            <h2 className='text-3xl lg:text-5xl font-light text-stone-50 leading-[1.15] tracking-tight mb-6'>
               {content.footerCta.title}
             </h2>
-            <p className='text-lg sm:text-xl text-gray-300 mb-8 max-w-2xl mx-auto'>
+            <p className='text-base lg:text-lg text-stone-300 font-light leading-relaxed mb-8 max-w-md mx-auto'>
               {content.footerCta.subtitle}
             </p>
 
             <Button
+              variant='primary-light'
               size='lg'
-              className='bg-white text-gray-900 hover:bg-gray-100 font-semibold px-10 py-6 text-lg shadow-xl hover:shadow-2xl transition-all group'
               onClick={handleCtaClick(content.footerCta.ctaLink)}
               asChild={!onCtaClick}>
               {onCtaClick ? (

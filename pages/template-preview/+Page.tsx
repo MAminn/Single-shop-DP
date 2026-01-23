@@ -95,7 +95,7 @@ export default function TemplatePreviewPage() {
               return (
                 <Button
                   key={key}
-                  variant={viewport === key ? 'default' : 'outline'}
+                  variant={viewport === key ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => setViewport(key as ViewportSize)}
                   className="flex items-center space-x-1"

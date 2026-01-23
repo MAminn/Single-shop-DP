@@ -165,14 +165,14 @@ const ModernProductsTemplate: React.FC<ModernProductsTemplateProps> = ({
               </h2>
               <div className='flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-none p-1'>
                 <Button
-                  variant={viewMode === "grid" ? "default" : "ghost"}
+                  variant={viewMode === "grid" ? "primary" : "ghost"}
                   size='sm'
                   onClick={() => setViewMode("grid")}
                   className='h-8 w-8 p-0 rounded-none'>
                   <Grid className='h-4 w-4' />
                 </Button>
                 <Button
-                  variant={viewMode === "list" ? "default" : "ghost"}
+                  variant={viewMode === "list" ? "primary" : "ghost"}
                   size='sm'
                   onClick={() => setViewMode("list")}
                   className='h-8 w-8 p-0 rounded-none'>

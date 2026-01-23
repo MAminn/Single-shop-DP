@@ -307,7 +307,7 @@ export function CategoryShowcase({
                       return (
                         <Button
                           key={page}
-                          variant={page === currentPage ? "default" : "outline"}
+                          variant={page === currentPage ? "primary" : "outline"}
                           size='icon'
                           onClick={() => onPageChange?.(page)}>
                           {page}

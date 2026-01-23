@@ -264,7 +264,7 @@ export function TemplatePreview({
                   {Object.entries(DEVICE_CONFIGS).map(([key, config]) => (
                     <Button
                       key={key}
-                      variant={device === key ? "default" : "ghost"}
+                      variant={device === key ? "primary" : "ghost"}
                       size='sm'
                       onClick={() => handleDeviceChange(key as PreviewDevice)}
                       className='rounded-none first:rounded-l-md last:rounded-r-md'>
