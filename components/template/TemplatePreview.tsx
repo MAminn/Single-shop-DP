@@ -202,7 +202,7 @@ export function TemplatePreview({
       }
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to refresh preview"
+        err instanceof Error ? err.message : "Failed to refresh preview",
       );
     } finally {
       setIsLoading(false);
@@ -413,7 +413,7 @@ export function TemplatePreview({
                     style={{ left: i * 50 * zoom }}>
                     <span className='text-xs text-gray-600 ml-1'>{i * 50}</span>
                   </div>
-                )
+                ),
               )}
             </div>
 
@@ -430,7 +430,7 @@ export function TemplatePreview({
                       {i * 50}
                     </span>
                   </div>
-                )
+                ),
               )}
             </div>
           </>
@@ -444,7 +444,7 @@ export function TemplatePreview({
               getDeviceFrameClasses(),
               getThemeClasses(),
               showGridLines && "bg-grid-pattern",
-              !allowInteraction && "pointer-events-none"
+              !allowInteraction && "pointer-events-none",
             )}
             style={{
               width: containerDimensions.width,

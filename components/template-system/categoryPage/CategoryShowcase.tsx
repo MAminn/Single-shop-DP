@@ -322,7 +322,7 @@ export function CategoryShowcase({
                       );
                     }
                     return null;
-                  }
+                  },
                 )}
 
                 <Button

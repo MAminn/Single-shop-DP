@@ -184,7 +184,7 @@ const MOCK_PRODUCTS: CategoryPageProduct[] = Array.from(
     brand: MOCK_BRANDS[i % MOCK_BRANDS.length]?.name,
     rating: 3.5 + (i % 3) * 0.5,
     reviewCount: 10 + i * 5,
-  })
+  }),
 );
 
 /**
@@ -631,7 +631,7 @@ export function CategoryPageGridWithFilters({
                             (page) =>
                               page === 1 ||
                               page === totalPages ||
-                              Math.abs(page - currentPage) <= 1
+                              Math.abs(page - currentPage) <= 1,
                           )
                           .map((page, index, array) => (
                             <React.Fragment key={page}>

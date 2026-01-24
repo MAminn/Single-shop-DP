@@ -570,7 +570,7 @@ export function CategoryGridClassic({
                       );
                     }
                     return null;
-                  }
+                  },
                 )}
 
                 <Button

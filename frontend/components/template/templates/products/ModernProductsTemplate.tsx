@@ -89,16 +89,16 @@ const ModernProductsTemplate: React.FC<ModernProductsTemplateProps> = ({
                 ? a.discountPrice
                 : Number(a.discountPrice) || 0
               : typeof a.price === "number"
-              ? a.price
-              : Number(a.price) || 0;
+                ? a.price
+                : Number(a.price) || 0;
           const priceB =
             b.discountPrice !== undefined && b.discountPrice !== null
               ? typeof b.discountPrice === "number"
                 ? b.discountPrice
                 : Number(b.discountPrice) || 0
               : typeof b.price === "number"
-              ? b.price
-              : Number(b.price) || 0;
+                ? b.price
+                : Number(b.price) || 0;
           return priceA - priceB;
         });
         break;
@@ -110,16 +110,16 @@ const ModernProductsTemplate: React.FC<ModernProductsTemplateProps> = ({
                 ? a.discountPrice
                 : Number(a.discountPrice) || 0
               : typeof a.price === "number"
-              ? a.price
-              : Number(a.price) || 0;
+                ? a.price
+                : Number(a.price) || 0;
           const priceB =
             b.discountPrice !== undefined && b.discountPrice !== null
               ? typeof b.discountPrice === "number"
                 ? b.discountPrice
                 : Number(b.discountPrice) || 0
               : typeof b.price === "number"
-              ? b.price
-              : Number(b.price) || 0;
+                ? b.price
+                : Number(b.price) || 0;
           return priceB - priceA;
         });
         break;
