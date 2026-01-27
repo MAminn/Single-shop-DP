@@ -43,6 +43,7 @@ import type { Data } from "./+data";
 import { ErrorSection } from "#root/components/dashboard/ErrorSection";
 import { trpc } from "#root/shared/trpc/client";
 import { useToast } from "#root/components/ui/use-toast";
+import { CategoryImageUpload } from "#root/components/file-uploads/CategoryImageUpload";
 
 export default function Categories() {
   const fetchData = useData<Data>();
@@ -51,9 +52,11 @@ export default function Categories() {
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [categoryImageId, setCategoryImageId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<{
     id: string;
     name: string;
+    imageId?: string | null;
   } | null>(null);
 
   if (!fetchData.success) {
@@ -79,6 +82,7 @@ export default function Categories() {
 
     const result = await trpc.category.createMain.mutate({
       name: newCategoryName,
+      imageId: categoryImageId,
     });
 
     if (result.success) {
@@ -88,6 +92,7 @@ export default function Categories() {
       });
       setCreateDialogOpen(false);
       setNewCategoryName("");
+      setCategoryImageId(null);
       navigate("/dashboard/categories"); // Refresh page
     } else {
       toast({
@@ -111,6 +116,7 @@ export default function Categories() {
     const result = await trpc.category.renameMain.mutate({
       id: selectedCategory.id,
       name: newCategoryName,
+      imageId: categoryImageId,
     });
 
     if (result.success) {
@@ -120,6 +126,7 @@ export default function Categories() {
       });
       setRenameDialogOpen(false);
       setNewCategoryName("");
+      setCategoryImageId(null);
       setSelectedCategory(null);
       navigate("/dashboard/categories"); // Refresh page
     } else {
@@ -192,6 +199,14 @@ export default function Categories() {
                   }}
                 />
               </div>
+              <div className='grid gap-2'>
+                <CategoryImageUpload
+                  value={categoryImageId}
+                  onChange={setCategoryImageId}
+                  label='Category Image (Optional)'
+                  required={false}
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button
@@ -199,6 +214,7 @@ export default function Categories() {
                 onClick={() => {
                   setCreateDialogOpen(false);
                   setNewCategoryName("");
+                  setCategoryImageId(null);
                 }}>
                 Cancel
               </Button>
@@ -213,91 +229,110 @@ export default function Categories() {
           const subcategories = getSubcategories(category.type);
 
           return (
-            <Card key={category.id} className='relative group p-4'>
-              <CardHeader>
-                <div className='flex justify-between items-center'>
-                  <CardTitle className='capitalize'>{category.name}</CardTitle>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant='ghost' size='sm' className='h-8 w-8 p-0'>
-                        <MoreVertical className='h-4 w-4' />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end'>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setSelectedCategory({
-                            id: category.id,
-                            name: category.name,
-                          });
-                          setNewCategoryName(category.name);
-                          setRenameDialogOpen(true);
-                        }}>
-                        <Pencil className='h-4 w-4 mr-2' />
-                        Rename
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className='text-red-600'
-                        onClick={() => {
-                          setSelectedCategory({
-                            id: category.id,
-                            name: category.name,
-                          });
-                          setDeleteDialogOpen(true);
-                        }}>
-                        <Trash2 className='h-4 w-4 mr-2' />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            <Card key={category.id} className='relative group'>
+              {/* Category Image Header */}
+              {category.filename && (
+                <div className='w-full h-32 overflow-hidden rounded-t-lg'>
+                  <img
+                    src={`/uploads/${category.filename}`}
+                    alt={category.name}
+                    className='w-full h-full object-cover'
+                  />
                 </div>
-                <CardDescription>
-                  {subcategories.length} subcategories
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className='space-y-1'>
-                  {subcategories.slice(0, 3).map((subcategory) => (
-                    <li key={subcategory.id} className='text-sm'>
-                      {subcategory.name} ({subcategory.productCount} products)
-                    </li>
-                  ))}
-                  {subcategories.length > 3 && (
-                    <li className='text-sm text-slate-500'>
-                      +{subcategories.length - 3} more...
-                    </li>
-                  )}
-                  {subcategories.length === 0 && (
-                    <li className='text-sm text-slate-500 italic'>
-                      No subcategories yet
-                    </li>
-                  )}
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button variant='outline' className='w-full' asChild>
-                  <Link href={`/dashboard/categories/${category.type}`}>
-                    Manage Subcategories
-                  </Link>
-                </Button>
-              </CardFooter>
+              )}
+              <div className='p-4'>
+                <CardHeader className='p-0 pb-4'>
+                  <div className='flex justify-between items-center'>
+                    <CardTitle className='capitalize'>
+                      {category.name}
+                    </CardTitle>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='h-8 w-8 p-0'>
+                          <MoreVertical className='h-4 w-4' />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align='end'>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedCategory({
+                              id: category.id,
+                              name: category.name,
+                              imageId: category.imageId,
+                            });
+                            setNewCategoryName(category.name);
+                            setCategoryImageId(category.imageId || null);
+                            setRenameDialogOpen(true);
+                          }}>
+                          <Pencil className='h-4 w-4 mr-2' />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className='text-red-600'
+                          onClick={() => {
+                            setSelectedCategory({
+                              id: category.id,
+                              name: category.name,
+                            });
+                            setDeleteDialogOpen(true);
+                          }}>
+                          <Trash2 className='h-4 w-4 mr-2' />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <CardDescription>
+                    {subcategories.length} subcategories
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className='space-y-1'>
+                    {subcategories.slice(0, 3).map((subcategory) => (
+                      <li key={subcategory.id} className='text-sm'>
+                        {subcategory.name} ({subcategory.productCount} products)
+                      </li>
+                    ))}
+                    {subcategories.length > 3 && (
+                      <li className='text-sm text-slate-500'>
+                        +{subcategories.length - 3} more...
+                      </li>
+                    )}
+                    {subcategories.length === 0 && (
+                      <li className='text-sm text-slate-500 italic'>
+                        No subcategories yet
+                      </li>
+                    )}
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  <Button variant='outline' className='w-full' asChild>
+                    <Link href={`/dashboard/categories/${category.type}`}>
+                      Manage Subcategories
+                    </Link>
+                  </Button>
+                </CardFooter>
+              </div>
             </Card>
           );
         })}
       </div>
 
-      {/* Rename Dialog */}
+      {/* Edit Dialog */}
       <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rename Category</DialogTitle>
+            <DialogTitle>Edit Category</DialogTitle>
             <DialogDescription>
-              Change the name of "{selectedCategory?.name}"
+              Update the name and image of "{selectedCategory?.name}"
             </DialogDescription>
           </DialogHeader>
           <div className='grid gap-4 py-4'>
             <div className='grid gap-2'>
-              <Label htmlFor='rename'>New Category Name</Label>
+              <Label htmlFor='rename'>Category Name</Label>
               <Input
                 id='rename'
                 value={newCategoryName}
@@ -309,6 +344,14 @@ export default function Categories() {
                 }}
               />
             </div>
+            <div className='grid gap-2'>
+              <CategoryImageUpload
+                value={categoryImageId}
+                onChange={setCategoryImageId}
+                label='Category Image (Optional)'
+                required={false}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -316,11 +359,12 @@ export default function Categories() {
               onClick={() => {
                 setRenameDialogOpen(false);
                 setNewCategoryName("");
+                setCategoryImageId(null);
                 setSelectedCategory(null);
               }}>
               Cancel
             </Button>
-            <Button onClick={handleRenameCategory}>Rename</Button>
+            <Button onClick={handleRenameCategory}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

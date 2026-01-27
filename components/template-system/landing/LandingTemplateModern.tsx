@@ -16,6 +16,11 @@ import type {
   HomepageContent,
   ValuePropIconType,
 } from "#root/shared/types/homepage-content";
+import {
+  CategoryStrip,
+  CategoryStripSkeleton,
+} from "#root/components/shop/CategoryStrip";
+import type { CategoryStripItem } from "#root/components/shop/CategoryStrip";
 
 /**
  * Props for the LandingTemplateModern component
@@ -30,6 +35,16 @@ export interface LandingTemplateModernProps {
    * Featured products data (fetched dynamically)
    */
   featuredProducts?: FeaturedProduct[];
+
+  /**
+   * Categories data for popular categories section
+   */
+  categories?: CategoryStripItem[];
+
+  /**
+   * Loading state for categories
+   */
+  categoriesLoading?: boolean;
 
   /**
    * Additional CSS classes
@@ -73,6 +88,8 @@ const ICON_MAP: Record<
 export function LandingTemplateModern({
   content,
   featuredProducts,
+  categories,
+  categoriesLoading = false,
   className = "",
   onCtaClick,
 }: LandingTemplateModernProps) {
@@ -165,6 +182,13 @@ export function LandingTemplateModern({
           </div>
         </section>
       )}
+
+      {/* Popular Categories Section */}
+      {categoriesLoading ? (
+        <CategoryStripSkeleton />
+      ) : categories && categories.length > 0 ? (
+        <CategoryStrip categories={categories} />
+      ) : null}
 
       {/* Brand Statement Section - Editorial Split Layout */}
       {content.brandStatement.enabled && (

@@ -5,6 +5,7 @@ import { useTemplate } from "#root/frontend/contexts/TemplateContext";
 import type { LandingTemplateModernProps } from "#root/components/template-system";
 import { DEFAULT_HOMEPAGE_CONTENT } from "#root/shared/types/homepage-content";
 import type { HomepageContent } from "#root/shared/types/homepage-content";
+import type { CategoryStripItem } from "#root/components/shop/CategoryStrip";
 
 export { Page };
 
@@ -23,12 +24,14 @@ interface FeaturedProduct {
 
 function Page() {
   const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>(
-    []
+    [],
   );
   const [homepageContent, setHomepageContent] = useState<HomepageContent>(
-    DEFAULT_HOMEPAGE_CONTENT
+    DEFAULT_HOMEPAGE_CONTENT,
   );
+  const [categories, setCategories] = useState<CategoryStripItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { getTemplateId } = useTemplate();
 
@@ -62,7 +65,7 @@ function Page() {
               categoryName: item.categoryName || "",
               categories: item.categories,
               available: item.stock > 0,
-            }))
+            })),
           );
         }
 
@@ -92,6 +95,37 @@ function Page() {
     fetchData();
   }, []);
 
+  // Fetch categories separately (parallel loading)
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setCategoriesLoading(true);
+      try {
+        const categoriesResult = await trpc.category.view.query();
+
+        if (categoriesResult.success && categoriesResult.result) {
+          const mappedCategories: CategoryStripItem[] = categoriesResult.result
+            .filter((cat: any) => !cat.deleted)
+            .slice(0, 8) // Limit to 8 categories for the strip
+            .map((cat: any) => ({
+              id: cat.id,
+              name: cat.name,
+              slug: cat.slug,
+              imageUrl: cat.filename || null,
+            }));
+
+          setCategories(mappedCategories);
+        }
+      } catch (err) {
+        console.error("Error loading categories:", err);
+        // Continue without categories
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   // Get the selected landing template (default to landing-modern)
   const selectedId = getTemplateId("landing") ?? "landing-modern";
   const templateEntry = getTemplateComponent("landing", selectedId);
@@ -106,6 +140,8 @@ function Page() {
   const templateProps: LandingTemplateModernProps = {
     content: homepageContent,
     featuredProducts,
+    categories,
+    categoriesLoading,
     onCtaClick: (link: string) => {
       window.location.href = link;
     },

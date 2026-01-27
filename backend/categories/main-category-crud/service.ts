@@ -18,6 +18,7 @@ import { eq, and, count, sql } from "drizzle-orm";
  */
 export const createMainCategorySchema = z.object({
   name: z.string().nonempty().max(255).min(1, "Category name is required"),
+  imageId: z.string().uuid().optional().nullable(),
 });
 
 export const createMainCategory = (
@@ -63,7 +64,7 @@ export const createMainCategory = (
               name: input.name,
               slug: slug(input.name),
               type: input.name.toLowerCase() as any, // Dynamic type
-              imageId: null,
+              imageId: input.imageId || null,
             })
             .returning()
             .then((data) => data[0]);
@@ -99,6 +100,7 @@ export const createMainCategory = (
 export const renameMainCategorySchema = z.object({
   id: z.string().uuid(),
   name: z.string().nonempty().max(255).min(1, "Category name is required"),
+  imageId: z.string().uuid().optional().nullable(),
 });
 
 export const renameMainCategory = (
@@ -163,6 +165,7 @@ export const renameMainCategory = (
               name: input.name,
               slug: slug(input.name),
               type: input.name.toLowerCase() as any,
+              ...(input.imageId !== undefined && { imageId: input.imageId }),
               updatedAt: new Date(),
             })
             .where(eq(category.id, input.id))

@@ -82,6 +82,18 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const { session, logout } = useContext(AuthContext);
 
+  // Unified pill-style nav item classes
+  const getNavItemClasses = (isScrolled: boolean) => {
+    const baseClasses =
+      "px-4 py-2 rounded-full text-xs font-light uppercase tracking-wider transition-all duration-[240ms] ease-in-out";
+    const scrolledClasses =
+      "text-stone-500 hover:text-stone-700 hover:bg-stone-100";
+    const transparentClasses =
+      "text-white/60 hover:text-white hover:bg-white/10";
+
+    return `${baseClasses} ${isScrolled ? scrolledClasses : transparentClasses}`;
+  };
+
   const logLinks = [
     { label: "Login", to: "/login" },
     { label: "Register", to: "/register" },
@@ -92,30 +104,6 @@ const Navbar: React.FC<NavbarProps> = ({
     {
       label: "Collection",
       to: "/featured/products",
-    },
-    {
-      label: "Men",
-      to: "/featured/men",
-      subLinks: subcategories
-        .filter((s) => s.type === "men")
-        .map((s) => ({
-          label: s.name,
-          to: `/featured/men/categories/${s.id}`,
-        })),
-    },
-    {
-      label: "Women",
-      to: "/featured/women",
-      subLinks: subcategories
-        .filter((s) => s.type === "women")
-        .map((s) => ({
-          label: s.name,
-          to: `/featured/women/categories/${s.id}`,
-        })),
-    },
-    {
-      label: "Editions",
-      to: "/featured/brands",
     },
   ];
 
@@ -253,7 +241,7 @@ const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Desktop navigation */}
-          <div className='hidden lg:flex gap-6'>
+          <div className='hidden lg:flex gap-2'>
             <NavigationMenu>
               <NavigationMenuList>
                 {links.map((link) => (
@@ -261,11 +249,7 @@ const Navbar: React.FC<NavbarProps> = ({
                     <NavigationMenuLink asChild>
                       <Link
                         href={link.to}
-                        className={`text-sm font-light transition-all duration-[240ms] ease-in-out ${
-                          isScrolled
-                            ? "text-stone-700 hover:text-stone-900"
-                            : "text-white/80 hover:text-white"
-                        }`}>
+                        className={getNavItemClasses(isScrolled)}>
                         {link.label}
                       </Link>
                     </NavigationMenuLink>
@@ -292,17 +276,13 @@ const Navbar: React.FC<NavbarProps> = ({
         {/* Right: User Actions */}
         <div className='flex items-center gap-3 justify-end'>
           {/* Desktop: Auth Links or Dashboard */}
-          <div className='hidden lg:flex items-center gap-5'>
+          <div className='hidden lg:flex items-center gap-2'>
             {!session ? (
               logLinks.map((link) => (
                 <Link
                   key={link.to}
                   href={link.to}
-                  className={`text-sm font-light transition-all duration-[240ms] ease-in-out ${
-                    isScrolled
-                      ? "text-stone-600 hover:text-stone-900"
-                      : "text-white/70 hover:text-white"
-                  }`}>
+                  className={getNavItemClasses(isScrolled)}>
                   {link.label}
                 </Link>
               ))
@@ -311,22 +291,14 @@ const Navbar: React.FC<NavbarProps> = ({
                 {session.role === "admin" && (
                   <Link
                     href='/dashboard'
-                    className={`text-xs font-light transition-all duration-[240ms] ease-in-out uppercase tracking-wider ${
-                      isScrolled
-                        ? "text-stone-500 hover:text-stone-700"
-                        : "text-white/60 hover:text-white"
-                    }`}>
+                    className={getNavItemClasses(isScrolled)}>
                     Dashboard
                   </Link>
                 )}
                 <button
                   onClick={logout}
                   type='submit'
-                  className={`text-sm font-light transition-all duration-[240ms] ease-in-out ${
-                    isScrolled
-                      ? "text-stone-600 hover:text-stone-900"
-                      : "text-white/70 hover:text-white"
-                  }`}>
+                  className={getNavItemClasses(isScrolled)}>
                   Logout
                 </button>
               </>
