@@ -6,7 +6,7 @@ import {
 import { eq, inArray } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
-import { formatCategoryName } from "#root/lib/utils";
+import { formatCategoryName } from "#root/shared/utils/format";
 
 export const getCategoriesSchema = z.object({
   productId: z.string().uuid(),
@@ -36,6 +36,6 @@ export const getCategories = (input: z.infer<typeof getCategoriesSchema>) =>
           type: c.type,
           isPrimary: c.isPrimary,
         }));
-      })
+      }),
     );
   });

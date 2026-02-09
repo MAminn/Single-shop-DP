@@ -1,10 +1,6 @@
-import { formatCategoryName } from "#root/lib/utils";
+import { formatCategoryName } from "#root/shared/utils/format";
 import { query } from "#root/shared/database/drizzle/db";
-import {
-  category,
-  file,
-  product,
-} from "#root/shared/database/drizzle/schema";
+import { category, file, product } from "#root/shared/database/drizzle/schema";
 import { count, eq } from "drizzle-orm";
 
 import { Effect } from "effect";
@@ -35,7 +31,7 @@ export const viewCategories = () =>
           name: result.name,
           displayName: formatCategoryName(result.name), // Add formatted name without prefix
         }));
-      })
+      }),
     );
   });
 

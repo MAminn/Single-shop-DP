@@ -1,4 +1,4 @@
-import { formatCategoryName } from "#root/lib/utils";
+import { formatCategoryName } from "#root/shared/utils/format";
 import { query } from "#root/shared/database/drizzle/db";
 import {
   category,
