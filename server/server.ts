@@ -13,7 +13,9 @@ import { emailServiceMiddleware } from "#root/shared/email/middleware.server";
 import { fincartWebhookPlugin } from "#root/backend/orders/fincart-webhook/api.js";
 import { ensureDefaultStoreVendor } from "#root/shared/database/bootstrap.js";
 
-const isProduction = process.env.NODE_ENV === "production";
+// Normalize NODE_ENV (guard against typos like "=production")
+const rawNodeEnv = (process.env.NODE_ENV || "").replace(/^=/, "").trim();
+const isProduction = rawNodeEnv === "production";
 
 const getRootPath = () => {
   return pipe(fileURLToPath(import.meta.url), dirname, (dirname) =>
@@ -36,10 +38,8 @@ const developmentFastifyConfig = {
   },
 };
 
-const port = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 3000;
-const hmrPort = process.env.HMR_PORT
-  ? Number.parseInt(process.env.HMR_PORT, 10)
-  : 24678;
+const port = Number.parseInt(process.env.PORT || "3000", 10) || 3000;
+const hmrPort = Number.parseInt(process.env.HMR_PORT || "24678", 10) || 24678;
 
 export const instance = Fastify({
   ...(isProduction ? productionFastifyConfig : developmentFastifyConfig),
