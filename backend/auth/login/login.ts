@@ -1,7 +1,7 @@
 import { query } from "#root/shared/database/drizzle/db.js";
 import * as Tables from "#root/shared/database/drizzle/schema.js";
 import { randomUUID } from "node:crypto";
-import { eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { Effect } from "effect";
 import { verify } from "@node-rs/argon2";
 import { createSession, generateSessionToken } from "../session";
@@ -22,14 +22,30 @@ export const login = (email: string, password: string) =>
   Effect.gen(function* ($) {
     // Case-insensitive email lookup
     const normalizedEmail = email.trim().toLowerCase();
+    console.log("[Login] Attempting login for email:", normalizedEmail);
+
+    // Use raw SQL for reliable case-insensitive comparison
     const user = yield* $(
-      query(
-        async (db) =>
-          await db
-            .select()
+      query(async (db) => {
+        const result = await db
+          .select()
+          .from(Tables.user)
+          .where(sql`lower(${Tables.user.email}) = ${normalizedEmail}`);
+        console.log("[Login] Query returned", result.length, "users");
+        if (result.length === 0) {
+          // Debug: show what users exist
+          const allUsers = await db
+            .select({
+              id: Tables.user.id,
+              email: Tables.user.email,
+              role: Tables.user.role,
+            })
             .from(Tables.user)
-            .where(eq(sql`lower(${Tables.user.email})`, normalizedEmail)),
-      ),
+            .limit(5);
+          console.log("[Login] Users in database:", JSON.stringify(allUsers));
+        }
+        return result;
+      }),
       Effect.map((users) => users[0]),
     );
 
