@@ -37,8 +37,8 @@ export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
       confirmPassword: process.env.ADMIN_PASSWORD,
     }).pipe(
       Effect.provideService(DatabaseClientService, app.db),
-      Effect.provideService(EmailService, dummyEmailService)
-    )
+      Effect.provideService(EmailService, dummyEmailService),
+    ),
   )
     .then(serializeBackendEffectResult)
     .then((result) => {
@@ -69,8 +69,8 @@ export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
 
     const getClientSession = await runBackendEffect(
       validateSessionToken(token).pipe(
-        Effect.provideService(DatabaseClientService, req.db)
-      )
+        Effect.provideService(DatabaseClientService, req.db),
+      ),
     ).then(serializeBackendEffectResult);
 
     if (!getClientSession.success) {
@@ -85,7 +85,7 @@ export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
       sameSite: "lax",
       path: "/",
       maxAge: Math.ceil(
-        (clientSession.expiresAt.getTime() - Date.now()) / 1000
+        (clientSession.expiresAt.getTime() - Date.now()) / 1000,
       ),
     });
 
