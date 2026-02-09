@@ -142,8 +142,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
   meta: {
     enabled: true,
     pageTitle: "Welcome to Our Store",
-    pageDescription:
-      "Discover amazing products curated just for you",
+    pageDescription: "Discover amazing products curated just for you",
   },
   hero: {
     enabled: true,
@@ -186,8 +185,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
       {
         icon: ValuePropIconType.SHOPPING,
         title: "Wide Selection",
-        description:
-          "Discover thousands of products from top brands",
+        description: "Discover thousands of products from top brands",
       },
       {
         icon: ValuePropIconType.SHIPPING,
