@@ -1,7 +1,7 @@
 import { query } from "#root/shared/database/drizzle/db.js";
 import * as Tables from "#root/shared/database/drizzle/schema.js";
 import { randomUUID } from "node:crypto";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { Effect } from "effect";
 import { verify } from "@node-rs/argon2";
 import { createSession, generateSessionToken } from "../session";
@@ -20,13 +20,15 @@ const verifyPassword = (hash: string, password: string) =>
 
 export const login = (email: string, password: string) =>
   Effect.gen(function* ($) {
+    // Case-insensitive email lookup
+    const normalizedEmail = email.trim().toLowerCase();
     const user = yield* $(
       query(
         async (db) =>
           await db
             .select()
             .from(Tables.user)
-            .where(eq(Tables.user.email, email)),
+            .where(eq(sql`lower(${Tables.user.email})`, normalizedEmail)),
       ),
       Effect.map((users) => users[0]),
     );

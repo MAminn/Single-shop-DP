@@ -13,7 +13,6 @@ declare module "fastify" {
 }
 
 const drizzleFastifyPlugin = fp(async (app: FastifyInstance) => {
-
   try {
     // Check if DATABASE_URL is set
     if (!process.env.DATABASE_URL) {
@@ -34,7 +33,7 @@ const drizzleFastifyPlugin = fp(async (app: FastifyInstance) => {
       if (errorMessage.includes("already exists")) {
         console.warn(
           "[DB Middleware] Migration warning: Some objects already exist in database. This is often normal when rerunning migrations.",
-          migrationError
+          migrationError,
         );
         // Continue execution as this is not fatal - the schema is likely correct
       } else {
@@ -44,13 +43,41 @@ const drizzleFastifyPlugin = fp(async (app: FastifyInstance) => {
       }
     }
 
+    // Ensure tables that may have been missed by journal-tracked migrations
+    try {
+      await dbInstance.execute(`
+        CREATE TABLE IF NOT EXISTS homepage_content (
+          id UUID PRIMARY KEY,
+          merchant_id UUID NOT NULL UNIQUE,
+          content JSONB NOT NULL,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+        );
+      `);
+      await dbInstance.execute(`
+        CREATE TABLE IF NOT EXISTS category_content (
+          id UUID PRIMARY KEY,
+          merchant_id UUID NOT NULL,
+          category_id TEXT NOT NULL,
+          content JSONB NOT NULL,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS unique_merchant_category
+          ON category_content(merchant_id, category_id);
+      `);
+      console.log("[DB Middleware] Ensured all required tables exist");
+    } catch (tableError) {
+      console.warn("[DB Middleware] Table creation warning:", tableError);
+    }
+
     // Test the connection
     try {
       await dbInstance.execute("SELECT 1");
     } catch (connectionError) {
       console.error(
         "[DB Middleware] ERROR: Failed to connect to database:",
-        connectionError
+        connectionError,
       );
       throw connectionError;
     }
@@ -66,11 +93,10 @@ const drizzleFastifyPlugin = fp(async (app: FastifyInstance) => {
         return dbInstance;
       },
     });
-
   } catch (error) {
     console.error(
       "[DB Middleware] FATAL ERROR during database middleware initialization:",
-      error
+      error,
     );
     throw error; // Rethrow to prevent server startup with a broken DB connection
   }
