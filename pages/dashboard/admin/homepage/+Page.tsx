@@ -715,7 +715,7 @@ export default function HomepageAdminPage() {
                     hero: { ...prev.hero, title: e.target.value },
                   }))
                 }
-                placeholder='Welcome to Our Marketplace'
+                placeholder='Welcome to Our Store'
                 disabled={!content.hero.enabled}
               />
               {getHeroTitleWarning() && (
@@ -736,7 +736,7 @@ export default function HomepageAdminPage() {
                     hero: { ...prev.hero, subtitle: e.target.value },
                   }))
                 }
-                placeholder='Discover amazing products from trusted vendors'
+                placeholder='Discover amazing products curated just for you'
                 disabled={!content.hero.enabled}
                 rows={2}
               />

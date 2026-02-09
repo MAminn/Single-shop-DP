@@ -141,14 +141,14 @@ export interface HomepageContent {
 export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
   meta: {
     enabled: true,
-    pageTitle: "Welcome to Our Marketplace",
+    pageTitle: "Welcome to Our Store",
     pageDescription:
-      "Discover amazing products from trusted vendors around the world",
+      "Discover amazing products curated just for you",
   },
   hero: {
     enabled: true,
-    title: "Welcome to Our Marketplace",
-    subtitle: "Discover amazing products from trusted vendors around the world",
+    title: "Welcome to Our Store",
+    subtitle: "Discover amazing products curated just for you",
     ctaText: "Start Shopping",
     ctaLink: "/shop",
     backgroundImage: undefined,
@@ -187,7 +187,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
         icon: ValuePropIconType.SHOPPING,
         title: "Wide Selection",
         description:
-          "Discover thousands of products from top brands and vendors",
+          "Discover thousands of products from top brands",
       },
       {
         icon: ValuePropIconType.SHIPPING,

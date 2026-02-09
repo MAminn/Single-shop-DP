@@ -18,9 +18,11 @@ const rawNodeEnv = (process.env.NODE_ENV || "").replace(/^=/, "").trim();
 const isProduction = rawNodeEnv === "production";
 
 const getRootPath = () => {
-  return pipe(fileURLToPath(import.meta.url), dirname, (dirname) =>
-    resolve(dirname, isProduction ? "../.." : ".."),
-  );
+  const serverDir = dirname(fileURLToPath(import.meta.url));
+  // When running from source (tsx ./server/server.ts), go one level up.
+  // When running from build (node build/server/server.js), go two levels up.
+  const isBuildDir = serverDir.includes("build");
+  return resolve(serverDir, isBuildDir ? "../.." : "..");
 };
 
 const root = getRootPath();
