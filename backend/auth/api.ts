@@ -39,7 +39,24 @@ export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
       Effect.provideService(DatabaseClientService, app.db),
       Effect.provideService(EmailService, dummyEmailService)
     )
-  ).then(serializeBackendEffectResult);
+  )
+    .then(serializeBackendEffectResult)
+    .then((result) => {
+      if (result.success) {
+        console.log("[Auth] Admin account created or already exists");
+      } else {
+        console.log("[Auth] Admin bootstrap result:", result.error);
+      }
+    })
+    .catch((err) => {
+      console.error("[Auth] Admin bootstrap error:", err);
+    });
+
+  // Determine if cookies should be secure (only over HTTPS)
+  const isSecure =
+    process.env.NODE_ENV === "production" &&
+    (process.env.BASE_URL?.startsWith("https://") ||
+      process.env.PUBLIC_ORIGIN?.startsWith("https://"));
 
   app.post("/token", async (req, res) => {
     const validation = saveTokenSchema.safeParse(req.body);
@@ -64,7 +81,7 @@ export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
 
     res.setCookie("session", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isSecure,
       sameSite: "lax",
       path: "/",
       maxAge: Math.ceil(
