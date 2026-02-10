@@ -13,9 +13,29 @@ import { emailServiceMiddleware } from "#root/shared/email/middleware.server";
 import { fincartWebhookPlugin } from "#root/backend/orders/fincart-webhook/api.js";
 import { ensureDefaultStoreVendor } from "#root/shared/database/bootstrap.js";
 
-// Normalize NODE_ENV (guard against typos like "=production")
-const rawNodeEnv = (process.env.NODE_ENV || "").replace(/^=/, "").trim();
-const isProduction = rawNodeEnv === "production";
+// Normalize env vars — Coolify sometimes injects a leading '=' into values
+function normalizeEnv(key: string): string {
+  const val = (process.env[key] || "").replace(/^=/, "").trim();
+  process.env[key] = val; // Write back so downstream code sees the clean value
+  return val;
+}
+for (const key of [
+  "NODE_ENV",
+  "ADMIN_EMAIL",
+  "ADMIN_PASSWORD",
+  "DATABASE_URL",
+  "BASE_URL",
+  "PUBLIC_ORIGIN",
+  "PORT",
+  "SMTP_HOST",
+  "SMTP_PORT",
+  "SMTP_USER",
+  "SMTP_PASSWORD",
+]) {
+  if (process.env[key]) normalizeEnv(key);
+}
+
+const isProduction = process.env.NODE_ENV === "production";
 
 const getRootPath = () => {
   const serverDir = dirname(fileURLToPath(import.meta.url));

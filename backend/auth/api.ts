@@ -20,21 +20,29 @@ const saveTokenSchema = z.object({
 });
 
 export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
-  if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
+  // Normalize env vars (Coolify sometimes adds leading '=')
+  const adminEmail = (process.env.ADMIN_EMAIL || "").replace(/^=/, "").trim();
+  const adminPassword = (process.env.ADMIN_PASSWORD || "")
+    .replace(/^=/, "")
+    .trim();
+
+  if (!adminEmail || !adminPassword) {
     throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be set");
   }
+
+  console.log(`[Auth] Bootstrapping admin with email: ${adminEmail}`);
 
   // Create a dummy email service for admin registration
   const dummyEmailService = createDummyEmailService(app.log);
 
   runBackendEffect(
     register({
-      email: process.env.ADMIN_EMAIL,
+      email: adminEmail,
       name: "Admin",
-      password: process.env.ADMIN_PASSWORD,
+      password: adminPassword,
       phone: "+201001112233",
       role: "admin",
-      confirmPassword: process.env.ADMIN_PASSWORD,
+      confirmPassword: adminPassword,
     }).pipe(
       Effect.provideService(DatabaseClientService, app.db),
       Effect.provideService(EmailService, dummyEmailService),
