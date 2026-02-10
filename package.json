@@ -4,7 +4,7 @@
   },
   "scripts": {
     "dev": "tsx watch --exclude \"./pages/**/*\" --include \"./backend/**/*\" ./server/server.ts",
-    "start": "tsx ./server/server.ts",
+    "start": "tsx --require ./server/env-preload.cjs ./server/server.ts",
     "build": "unbuild && vike build",
     "preview": "cross-env NODE_ENV=production tsx ./hono-entry.node.ts",
     "lint": "biome lint --write .",
