@@ -133,7 +133,6 @@ async function buildServer() {
   await instance.register(import("@fastify/static"), {
     root: `${root}/uploads`,
     decorateReply: false,
-    wildcard: false,
     prefix: "/uploads",
   });
 
