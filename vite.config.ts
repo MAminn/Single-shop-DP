@@ -21,6 +21,6 @@ export default defineConfig({
     ),
   },
   server: {
-    allowedHosts: ["www.lebsey.com", "lebsey.com"],
+    allowedHosts: ["www.perce-eg.com", "perce-eg.com"],
   },
 });
