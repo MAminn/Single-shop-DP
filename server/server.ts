@@ -80,6 +80,11 @@ instance.addHook("onRoute", (routeOptions) => {
 });
 
 async function buildServer() {
+  // Health check endpoint - registered FIRST so it's always reachable
+  instance.get("/health", async (_request, reply) => {
+    return reply.send({ status: "ok", timestamp: Date.now() });
+  });
+
   await instance.register(import("@fastify/compress"), {
     global: true,
   });
@@ -133,7 +138,28 @@ async function buildServer() {
   await instance.register(import("@fastify/static"), {
     root: `${root}/uploads`,
     decorateReply: false,
+    wildcard: false,
     prefix: "/uploads",
+  });
+
+  // Dynamic route for uploaded files (wildcard: false only registers files existing at boot)
+  instance.get("/uploads/*", async (request, reply) => {
+    const filePath = (request.params as { '*': string })['*'];
+    const fullPath = `${root}/uploads/${filePath}`;
+    const { createReadStream, existsSync } = await import("node:fs");
+    if (!existsSync(fullPath)) {
+      return reply.code(404).send({ error: "File not found" });
+    }
+    const stream = createReadStream(fullPath);
+    // Determine content type from extension
+    const ext = fullPath.split('.').pop()?.toLowerCase();
+    const mimeTypes: Record<string, string> = {
+      jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png",
+      gif: "image/gif", webp: "image/webp", svg: "image/svg+xml",
+      avif: "image/avif", ico: "image/x-icon",
+    };
+    const contentType = mimeTypes[ext || ""] || "application/octet-stream";
+    return reply.type(contentType).send(stream);
   });
 
   await instance.register(drizzleFastifyPlugin);
@@ -358,9 +384,18 @@ async function buildServer() {
         clientSession: request.clientSession,
       };
 
-      const pageContext = await renderPage(pageContextInit);
+      let pageContext: Awaited<ReturnType<typeof renderPage>>;
+      try {
+        pageContext = await renderPage(pageContextInit);
+      } catch (err) {
+        console.error(`[Vike Error] renderPage threw for ${request.raw.url}:`, err);
+        return reply.code(500).send("Internal Server Error");
+      }
       const { httpResponse } = pageContext;
-      if (!httpResponse) return reply.callNotFound();
+      if (!httpResponse) {
+        console.warn(`[Vike 404] No httpResponse for: ${request.raw.url}`);
+        return reply.callNotFound();
+      }
 
       const { statusCode, headers } = httpResponse;
       for (const header of headers) {
@@ -378,6 +413,22 @@ async function buildServer() {
 }
 
 async function main() {
+  console.info(`[Startup] NODE_ENV=${process.env.NODE_ENV}, isProduction=${isProduction}`);
+  console.info(`[Startup] Root path: ${root}`);
+  console.info(`[Startup] Port: ${port}`);
+
+  // Verify dist directory exists in production
+  if (isProduction) {
+    const { existsSync } = await import("node:fs");
+    const distServerExists = existsSync(`${root}/dist/server/entry.mjs`);
+    const distClientExists = existsSync(`${root}/dist/client`);
+    console.info(`[Startup] dist/server/entry.mjs exists: ${distServerExists}`);
+    console.info(`[Startup] dist/client exists: ${distClientExists}`);
+    if (!distServerExists) {
+      console.error("[Startup] CRITICAL: dist/server/entry.mjs missing! Vike pages will not work.");
+    }
+  }
+
   const fastify = await buildServer();
 
   fastify.listen({ port: port, host: "0.0.0.0" }, (err) => {
