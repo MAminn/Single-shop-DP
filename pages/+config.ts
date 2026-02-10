@@ -10,8 +10,8 @@ export default {
   Layout,
 
   // https://vike.dev/head-tags
-  title: "Lebsey",
-  description: "Lebsey website.",
+  title: "Percé",
+  description: "Percé — curated fashion, quiet confidence.",
 
   extends: vikeReact,
 

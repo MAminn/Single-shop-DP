@@ -98,7 +98,7 @@ export default function Page() {
           </h1>
           <p className='text-gray-600 mb-6'>
             Please check your email to verify your account. Once verified, you
-            can log in to access all features of Lebsy.
+            can log in to access all features of Percé.
           </p>
           <Link
             href='/login'

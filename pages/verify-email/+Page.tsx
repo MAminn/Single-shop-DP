@@ -74,7 +74,7 @@ export default function Page() {
               </h1>
               <p className='text-gray-500 text-center mt-2 mb-6'>
                 Your email has been verified. You can now log in to your account
-                and access all features of Lebsy.
+                and access all features of Percé.
               </p>
               <Button className='w-full bg-[#1B4571] hover:bg-[#1B4571]/90'>
                 <a href='/login'>Continue to Login</a>

@@ -6,7 +6,7 @@ export default {
   route: "/featured/products/@productId",
 
   // Set a dynamic title for SEO
-  title: "Product Details | Lebsy",
+  title: "Product Details | Percé",
 
   // Descriptive meta tag
   description: "View product details, specifications, and reviews",

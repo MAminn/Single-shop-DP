@@ -1,4 +1,4 @@
-import logoUrl from "../assets/lebsy-favicon.webp";
+import faviconUrl from "../assets/favicon.svg";
 import { useEffect } from "react";
 
 // Define types for Google Analytics
@@ -23,7 +23,7 @@ export default function HeadDefault() {
   return (
     <>
       {/* Basic favicon */}
-      <link rel="icon" href={logoUrl} />
+      <link rel="icon" href={faviconUrl} type="image/svg+xml" />
 
       {/* Preconnect to critical domains */}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
