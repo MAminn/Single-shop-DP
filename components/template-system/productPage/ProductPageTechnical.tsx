@@ -192,7 +192,7 @@ export function ProductPageTechnical({
             Home
           </a>
           <ChevronRight className='w-4 h-4' />
-          <a href='/featured/products' className='hover:text-blue-600'>
+          <a href='/shop' className='hover:text-blue-600'>
             Shop
           </a>
           <ChevronRight className='w-4 h-4' />

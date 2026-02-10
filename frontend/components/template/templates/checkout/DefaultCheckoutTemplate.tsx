@@ -362,7 +362,7 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({
             </div>
           </CardContent>
           <CardFooter className='flex gap-4'>
-            <Link href='/featured/products'>
+            <Link href='/shop'>
               <Button variant='outline' className='flex items-center gap-2'>
                 <Home className='h-4 w-4' />
                 Continue Shopping
@@ -390,7 +390,7 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({
             <p className='text-gray-600 mb-6'>
               Add some items to your cart before proceeding to checkout.
             </p>
-            <Link href='/featured/products'>
+            <Link href='/shop'>
               <Button className='flex items-center gap-2 mx-auto'>
                 <ArrowLeft className='h-4 w-4' />
                 Continue Shopping

@@ -102,7 +102,7 @@ const Navbar: React.FC<NavbarProps> = ({
   const baseNavLinks = [
     {
       label: "Collection",
-      to: "/featured/products",
+      to: "/shop",
     },
   ];
 

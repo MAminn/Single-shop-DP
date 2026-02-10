@@ -90,7 +90,7 @@ const defaultFooterLinks = [
     links: [
       { id: "men", name: "Men's Collection", url: "/featured/men" },
       { id: "women", name: "Women's Collection", url: "/featured/women" },
-      { id: "all-products", name: "All Products", url: "/featured/products" },
+      { id: "all-products", name: "All Products", url: "/shop" },
       { id: "brands", name: "Brands", url: "/featured/brands" },
     ],
   },

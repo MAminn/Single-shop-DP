@@ -123,7 +123,7 @@ const ModernProductCardTemplate: React.FC<ModernProductCardTemplateProps> = ({
       onMouseLeave={() => setIsHovered(false)}>
       {/* Product Image */}
       <div className='relative aspect-[4/5] overflow-hidden bg-gray-50'>
-        <Link href={`/featured/products/${product.id}`}>
+        <Link href={`/shop/${product.id}`}>
           <img
             src={
               data?.displayImageUrl ||

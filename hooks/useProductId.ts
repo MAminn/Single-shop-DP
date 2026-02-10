@@ -26,11 +26,10 @@ export function useProductId(): {
 
       // Otherwise extract from URL path
       const urlParts = ctx.urlPathname.split("/");
-      // The last part of /featured/products/[id] should be the ID
+      // The last part of /shop/[id] should be the ID
       if (
         urlParts.length >= 3 &&
-        urlParts[1] === "featured" &&
-        urlParts[2] === "products"
+        urlParts[1] === "shop"
       ) {
         const idFromUrl = urlParts[urlParts.length - 1];
         if (

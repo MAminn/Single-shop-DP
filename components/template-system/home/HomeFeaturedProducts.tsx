@@ -37,7 +37,7 @@ export function HomeFeaturedProducts({
   title = "Featured Products",
   subtitle,
   showViewAllButton = true,
-  viewAllHref = "/featured/products",
+  viewAllHref = "/shop",
   maxProducts = 8,
 }: HomeFeaturedProductsProps) {
   // Limit the number of products displayed

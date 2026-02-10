@@ -99,7 +99,7 @@ export function CartPageModernTemplate({
               Add some items to get started!
             </p>
             <Button
-              onClick={() => (window.location.href = "/featured/products")}>
+              onClick={() => (window.location.href = "/shop")}>
               Continue Shopping
             </Button>
           </div>
@@ -290,7 +290,7 @@ export function CartPageModernTemplate({
               <Button
                 variant='outline'
                 className='w-full'
-                onClick={() => (window.location.href = "/featured/products")}>
+                onClick={() => (window.location.href = "/shop")}>
                 Continue Shopping
               </Button>
             </CardContent>

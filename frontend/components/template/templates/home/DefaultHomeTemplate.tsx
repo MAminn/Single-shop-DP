@@ -120,7 +120,7 @@ export default function DefaultHomeTemplate({
               asChild
               size='lg'
               className='bg-accent-lb hover:bg-white hover:text-accent-lb'>
-              <Link href='/featured/products'>
+              <Link href='/shop'>
                 <ShoppingBag className='mr-2 h-5 w-5' />
                 Shop Now
               </Link>
@@ -291,7 +291,7 @@ export default function DefaultHomeTemplate({
             title='Featured Products'
             description='Our latest and most popular items carefully selected for you'
             products={featuredProducts}
-            viewAllLink='/featured/products'
+            viewAllLink='/shop'
             backgroundColor='white'
             limit={4}
           />
@@ -337,7 +337,7 @@ export default function DefaultHomeTemplate({
               asChild
               size='lg'
               className='bg-white text-accent-lb hover:bg-gray-100'>
-              <Link href='/featured/products'>Shop Collections</Link>
+              <Link href='/shop'>Shop Collections</Link>
             </Button>
           </div>
         </div>

@@ -3,7 +3,7 @@
  */
 export default {
   // Ensure the route parameter is properly extracted using the new format
-  route: "/featured/products/@productId",
+  route: "/shop/@productId",
 
   // Set a dynamic title for SEO
   title: "Product Details | Percé",

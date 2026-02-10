@@ -187,7 +187,7 @@ const DefaultCartTemplate: React.FC<DefaultCartTemplateProps> = ({ data }) => {
           </CardHeader>
           <CardContent>
             <Button asChild className='w-full'>
-              <Link href='/featured/products'>
+              <Link href='/shop'>
                 <ShoppingBag className='h-4 w-4 mr-2' />
                 Continue Shopping
               </Link>

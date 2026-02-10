@@ -100,7 +100,7 @@ const Page = () => {
         <div className='container mx-auto px-4 sm:px-6 lg:px-8 pt-6'>
           <div className='flex items-center gap-2 text-sm text-stone-600 mb-4'>
             <a
-              href='/featured/products'
+              href='/shop'
               className='hover:text-stone-900 transition-colors'>
               All Products
             </a>

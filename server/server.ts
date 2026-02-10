@@ -144,7 +144,7 @@ async function buildServer() {
 
   // Dynamic route for uploaded files (wildcard: false only registers files existing at boot)
   instance.get("/uploads/*", async (request, reply) => {
-    const filePath = (request.params as { '*': string })['*'];
+    const filePath = (request.params as { "*": string })["*"];
     const fullPath = `${root}/uploads/${filePath}`;
     const { createReadStream, existsSync } = await import("node:fs");
     if (!existsSync(fullPath)) {
@@ -152,11 +152,16 @@ async function buildServer() {
     }
     const stream = createReadStream(fullPath);
     // Determine content type from extension
-    const ext = fullPath.split('.').pop()?.toLowerCase();
+    const ext = fullPath.split(".").pop()?.toLowerCase();
     const mimeTypes: Record<string, string> = {
-      jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png",
-      gif: "image/gif", webp: "image/webp", svg: "image/svg+xml",
-      avif: "image/avif", ico: "image/x-icon",
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      png: "image/png",
+      gif: "image/gif",
+      webp: "image/webp",
+      svg: "image/svg+xml",
+      avif: "image/avif",
+      ico: "image/x-icon",
     };
     const contentType = mimeTypes[ext || ""] || "application/octet-stream";
     return reply.type(contentType).send(stream);
@@ -185,7 +190,7 @@ async function buildServer() {
   });
 
   // Add product detail route handler - updated to new format
-  instance.get("/featured/products/@productId", async (request, reply) => {
+  instance.get("/shop/@productId", async (request, reply) => {
     const pageContextInit = {
       urlOriginal: request.url,
       headersOriginal: request.headers,
@@ -388,7 +393,10 @@ async function buildServer() {
       try {
         pageContext = await renderPage(pageContextInit);
       } catch (err) {
-        console.error(`[Vike Error] renderPage threw for ${request.raw.url}:`, err);
+        console.error(
+          `[Vike Error] renderPage threw for ${request.raw.url}:`,
+          err,
+        );
         return reply.code(500).send("Internal Server Error");
       }
       const { httpResponse } = pageContext;
@@ -413,7 +421,9 @@ async function buildServer() {
 }
 
 async function main() {
-  console.info(`[Startup] NODE_ENV=${process.env.NODE_ENV}, isProduction=${isProduction}`);
+  console.info(
+    `[Startup] NODE_ENV=${process.env.NODE_ENV}, isProduction=${isProduction}`,
+  );
   console.info(`[Startup] Root path: ${root}`);
   console.info(`[Startup] Port: ${port}`);
 
@@ -425,7 +435,9 @@ async function main() {
     console.info(`[Startup] dist/server/entry.mjs exists: ${distServerExists}`);
     console.info(`[Startup] dist/client exists: ${distClientExists}`);
     if (!distServerExists) {
-      console.error("[Startup] CRITICAL: dist/server/entry.mjs missing! Vike pages will not work.");
+      console.error(
+        "[Startup] CRITICAL: dist/server/entry.mjs missing! Vike pages will not work.",
+      );
     }
   }
 

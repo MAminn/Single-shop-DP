@@ -6,7 +6,7 @@
  * Creates a properly formatted URL for a product detail page
  */
 export function getProductUrl(productId: string): string {
-  return `/featured/products/${encodeURIComponent(productId)}`;
+  return `/shop/${encodeURIComponent(productId)}`;
 }
 
 /**

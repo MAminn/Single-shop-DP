@@ -82,7 +82,7 @@ const DefaultProductCardTemplate: React.FC<DefaultProductCardTemplateProps> = ({
     onUpdateData?.({ isInWishlist: !data?.isInWishlist });
   };
 
-  const productLink = `/featured/products/${product.id}`;
+  const productLink = `/shop/${product.id}`;
 
   return (
     <div

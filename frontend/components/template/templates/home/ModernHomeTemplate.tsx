@@ -170,7 +170,7 @@ export default function ModernHomeTemplate({ data }: ModernHomeTemplateProps) {
                   asChild
                   size='lg'
                   className='bg-gray-900 hover:bg-gray-800 text-white border-0 px-8 py-4 text-base font-medium transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5'>
-                  <Link href='/featured/products'>
+                  <Link href='/shop'>
                     Explore Collection
                     <ArrowRight className='ml-2 h-4 w-4 transition-transform group-hover:translate-x-1' />
                   </Link>
@@ -471,7 +471,7 @@ export default function ModernHomeTemplate({ data }: ModernHomeTemplateProps) {
             title='Trending Products'
             description='Handpicked items that are making waves in fashion'
             products={featuredProducts}
-            viewAllLink='/featured/products'
+            viewAllLink='/shop'
             backgroundColor='gray'
             limit={4}
           />

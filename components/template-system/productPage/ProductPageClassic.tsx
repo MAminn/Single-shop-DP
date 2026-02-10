@@ -174,7 +174,7 @@ export function ProductPageClassic({
               Home
             </a>
             <span className='mx-2'>/</span>
-            <a href='/featured/products' className='hover:text-gray-900'>
+            <a href='/shop' className='hover:text-gray-900'>
               Shop
             </a>
             <span className='mx-2'>/</span>

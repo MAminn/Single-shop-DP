@@ -177,7 +177,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
     title: "Featured Products",
     subtitle: "Check out our handpicked selection of trending products",
     viewAllText: "View All Products",
-    viewAllLink: "/products",
+    viewAllLink: "/shop",
   },
   valueProps: {
     enabled: true,
@@ -213,6 +213,6 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
     title: "Ready to Start Shopping?",
     subtitle: "Join thousands of satisfied customers today",
     ctaText: "Browse Products",
-    ctaLink: "/products",
+    ctaLink: "/shop",
   },
 };

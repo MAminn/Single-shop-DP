@@ -63,7 +63,7 @@ function CategoryTile({ category }: CategoryTileProps) {
       : null;
 
   // Link to products page filtered by category
-  const categoryLink = `/featured/products?category=${category.slug}`;
+  const categoryLink = `/shop?category=${category.slug}`;
 
   return (
     <Link

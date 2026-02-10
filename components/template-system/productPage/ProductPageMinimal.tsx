@@ -141,7 +141,7 @@ export function ProductPageMinimal({
               Home
             </a>
             <span className='mx-3'>/</span>
-            <a href='/featured/products' className='hover:text-gray-900'>
+            <a href='/shop' className='hover:text-gray-900'>
               Shop
             </a>
             <span className='mx-3'>/</span>

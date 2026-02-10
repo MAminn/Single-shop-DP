@@ -569,7 +569,7 @@ export function ProductPageModernSplit({
               title=''
               products={relatedProducts}
               showViewAllButton={true}
-              viewAllHref='/featured/products'
+              viewAllHref='/shop'
               maxProducts={4}
             />
           </div>

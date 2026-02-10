@@ -432,7 +432,7 @@ const ModernCheckoutTemplate: React.FC<ModernCheckoutTemplateProps> = ({
 
               <CardFooter className='p-8 bg-white border-t border-gray-200'>
                 <div className='flex flex-col sm:flex-row gap-4 w-full'>
-                  <Link href='/featured/products' className='flex-1'>
+                  <Link href='/shop' className='flex-1'>
                     <Button
                       variant='outline'
                       className='w-full h-12 text-lg font-light border border-gray-300 rounded-none hover:bg-gray-50'>
