@@ -27,10 +27,7 @@ export function useProductId(): {
       // Otherwise extract from URL path
       const urlParts = ctx.urlPathname.split("/");
       // The last part of /shop/[id] should be the ID
-      if (
-        urlParts.length >= 3 &&
-        urlParts[1] === "shop"
-      ) {
+      if (urlParts.length >= 3 && urlParts[1] === "shop") {
         const idFromUrl = urlParts[urlParts.length - 1];
         if (
           idFromUrl &&
@@ -48,7 +45,7 @@ export function useProductId(): {
       setIsLoading(false);
     } catch (err) {
       setError(
-        `Error parsing product ID: ${err instanceof Error ? err.message : String(err)}`
+        `Error parsing product ID: ${err instanceof Error ? err.message : String(err)}`,
       );
       setIsLoading(false);
     }

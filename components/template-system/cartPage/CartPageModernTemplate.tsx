@@ -98,8 +98,7 @@ export function CartPageModernTemplate({
             <p className='text-muted-foreground mb-6'>
               Add some items to get started!
             </p>
-            <Button
-              onClick={() => (window.location.href = "/shop")}>
+            <Button onClick={() => (window.location.href = "/shop")}>
               Continue Shopping
             </Button>
           </div>

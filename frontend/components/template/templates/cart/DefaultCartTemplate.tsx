@@ -86,7 +86,7 @@ const DefaultCartTemplate: React.FC<DefaultCartTemplateProps> = ({ data }) => {
   const handleUpdateQuantity = (
     itemId: string,
     newQuantity: number,
-    selectedOptions: CartItem["selectedOptions"]
+    selectedOptions: CartItem["selectedOptions"],
   ) => {
     if (newQuantity < 1) return;
     const success = updateQuantity(itemId, newQuantity, selectedOptions);
@@ -101,7 +101,7 @@ const DefaultCartTemplate: React.FC<DefaultCartTemplateProps> = ({ data }) => {
 
   const handleRemoveItem = (
     itemId: string,
-    selectedOptions: CartItem["selectedOptions"]
+    selectedOptions: CartItem["selectedOptions"],
   ) => {
     removeItem(itemId, selectedOptions);
     toast({
@@ -265,7 +265,7 @@ const DefaultCartTemplate: React.FC<DefaultCartTemplateProps> = ({ data }) => {
                                   className='text-xs bg-gray-100 px-2 py-1 rounded'>
                                   {key}: {value}
                                 </span>
-                              )
+                              ),
                             )}
                           </div>
                         </div>
@@ -280,7 +280,7 @@ const DefaultCartTemplate: React.FC<DefaultCartTemplateProps> = ({ data }) => {
                               handleUpdateQuantity(
                                 item.id,
                                 item.quantity - 1,
-                                item.selectedOptions
+                                item.selectedOptions,
                               )
                             }
                             disabled={item.quantity <= 1}>
@@ -296,7 +296,7 @@ const DefaultCartTemplate: React.FC<DefaultCartTemplateProps> = ({ data }) => {
                               handleUpdateQuantity(
                                 item.id,
                                 item.quantity + 1,
-                                item.selectedOptions
+                                item.selectedOptions,
                               )
                             }
                             disabled={item.quantity >= item.stock}>

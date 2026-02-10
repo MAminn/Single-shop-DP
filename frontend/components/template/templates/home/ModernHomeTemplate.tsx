@@ -24,12 +24,12 @@ import { Footer } from "#root/components/globals/Footer";
 
 // Lazy load components for better performance
 const FAQ = lazy(() =>
-  import("#root/components/globals/FAQ").then((mod) => ({ default: mod.FAQ }))
+  import("#root/components/globals/FAQ").then((mod) => ({ default: mod.FAQ })),
 );
 const FeaturedSection = lazy(() =>
   import("#root/components/home/FeaturedSection").then((mod) => ({
     default: mod.FeaturedSection,
-  }))
+  })),
 );
 
 interface FeaturedProduct {
