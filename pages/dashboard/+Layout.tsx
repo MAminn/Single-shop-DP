@@ -17,7 +17,6 @@ import { usePageContext } from "vike-react/usePageContext";
 import { RoleProvider, useRole } from "#root/lib/context/RoleContext";
 import { HomeIcon, Home, Menu } from "lucide-react";
 
-
 export default function DashboardLayout({
   children,
 }: {

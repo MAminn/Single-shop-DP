@@ -18,48 +18,46 @@ export default function HeadDefault() {
     }
   }, []);
 
-
-
   return (
     <>
       {/* Basic favicon */}
-      <link rel="icon" href={faviconUrl} type="image/svg+xml" />
+      <link rel='icon' href={faviconUrl} type='image/svg+xml' />
 
       {/* Preconnect to critical domains */}
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel='preconnect' href='https://fonts.googleapis.com' />
       <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossOrigin="anonymous"
+        rel='preconnect'
+        href='https://fonts.gstatic.com'
+        crossOrigin='anonymous'
       />
 
       {/* Preload critical assets - only preload landing.webp */}
       <link
-        rel="preload"
-        href="/assets/landing.webp"
-        as="image"
-        type="image/webp"
-        fetchPriority="high"
+        rel='preload'
+        href='/assets/landing.webp'
+        as='image'
+        type='image/webp'
+        fetchPriority='high'
       />
 
       {/* Font display optimization with React-friendly approach */}
       <link
         data-font-preload
-        rel="preload"
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
-        as="style"
+        rel='preload'
+        href='https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap'
+        as='style'
       />
 
       {/* Meta tags for performance */}
       <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+        name='viewport'
+        content='width=device-width, initial-scale=1.0, viewport-fit=cover'
       />
-      <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
+      <meta httpEquiv='Content-Type' content='text/html; charset=utf-8' />
 
       {/* Core Web Vitals hints */}
-      <meta name="theme-color" content="#ffffff" />
-      <meta name="color-scheme" content="light" />
+      <meta name='theme-color' content='#ffffff' />
+      <meta name='color-scheme' content='light' />
 
       {/* Critical CSS as separate style tags */}
       <style>{`

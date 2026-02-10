@@ -67,7 +67,7 @@ export default function Page() {
 
       setIsRegistered(true);
       toast.success(
-        "Registration successful! Please check your email to verify your account."
+        "Registration successful! Please check your email to verify your account.",
       );
     } catch (error: unknown) {
       const errorMessage =

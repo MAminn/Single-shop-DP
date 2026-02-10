@@ -34,7 +34,7 @@ export default function Page() {
         setErrorMessage(
           error instanceof Error
             ? error.message
-            : "An unexpected error occurred during verification"
+            : "An unexpected error occurred during verification",
         );
       }
     };
