@@ -91,11 +91,11 @@ export { CategoryShowcase } from "./categoryPage/CategoryShowcase";
 export type { CategoryShowcaseProps } from "./categoryPage/CategoryShowcase";
 
 // Export sorting components
-export { SortingToolbarTemplate } from "./sorting/SortingToolbarTemplate";
+export { SortingMinimalTemplate } from "./sorting/SortingMinimalTemplate";
 export type {
-  SortingToolbarTemplateProps,
+  SortingMinimalTemplateProps,
   SortingPageProduct,
-} from "./sorting/SortingToolbarTemplate";
+} from "./sorting/SortingMinimalTemplate";
 
 // Export cart page components
 export { CartPageModernTemplate } from "./cartPage/CartPageModernTemplate";

@@ -14,7 +14,7 @@ export interface TemplateCardGridProps {
 // Template descriptions for better UX
 const getTemplateDescription = (
   category: TemplateCategory,
-  templateId: string
+  templateId: string,
 ): string => {
   const descriptionMap: Record<string, Record<string, string>> = {
     landing: {
@@ -45,7 +45,7 @@ const getTemplateDescription = (
         "Classic grid with advanced filtering (legacy)",
     },
     sorting: {
-      "sorting-toolbar": "Product listing with toolbar and view options",
+      "sorting-minimal": "Clean product grid with essential sorting",
     },
     cartPage: {
       "cart-modern": "Clean shopping cart with item management",

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { trpc } from "#root/shared/trpc/client";
 import { getTemplateComponent } from "#root/components/template-system/templateConfig";
 import { useTemplate } from "#root/frontend/contexts/TemplateContext";
-import type { SortingPageProduct } from "#root/components/template-system/sorting/SortingToolbarTemplate";
+import type { SortingPageProduct } from "#root/components/template-system/sorting/SortingMinimalTemplate";
 
 const Page: React.FC = () => {
   const [products, setProducts] = useState<SortingPageProduct[]>([]);
@@ -33,7 +33,7 @@ const Page: React.FC = () => {
               images: p.images,
               categoryName: p.categoryName || null,
               available: p.stock > 0,
-            })
+            }),
           );
           setProducts(mappedProducts);
         }
@@ -47,7 +47,7 @@ const Page: React.FC = () => {
     fetchProducts();
   }, []);
 
-  const activeTemplateId = getTemplateId("sorting") ?? "sorting-toolbar";
+  const activeTemplateId = getTemplateId("sorting") ?? "sorting-minimal";
   const TemplateEntry = getTemplateComponent("sorting", activeTemplateId);
 
   if (!TemplateEntry) {

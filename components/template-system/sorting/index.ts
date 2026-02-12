@@ -4,14 +4,8 @@
  * Export point for sorting and product listing templates.
  */
 
-export { SortingToolbarTemplate } from "./SortingToolbarTemplate";
+export { SortingMinimalTemplate } from "./SortingMinimalTemplate";
 export type {
-  SortingToolbarTemplateProps,
+  SortingMinimalTemplateProps,
   SortingPageProduct,
-} from "./SortingToolbarTemplate";
-
-export { SortingGalleryTemplate } from "./SortingGalleryTemplate";
-export type { SortingGalleryTemplateProps } from "./SortingGalleryTemplate";
-
-export { SortingPremiumTemplate } from "./SortingPremiumTemplate";
-export type { SortingPremiumTemplateProps } from "./SortingPremiumTemplate";
+} from "./SortingMinimalTemplate";

@@ -305,12 +305,7 @@ export default function AdminTemplatesPage() {
                   "Classic grid with advanced filtering (legacy)",
               },
               sorting: {
-                "sorting-premium":
-                  "Modern luxury ecommerce (3-4 columns, conversion-focused)",
-                "sorting-gallery":
-                  "Editorial gallery with curated aesthetic (2 columns)",
-                "sorting-toolbar":
-                  "Basic product listing with toolbar and filters",
+                "sorting-minimal": "Clean product grid with essential sorting",
               },
               cartPage: {
                 "cart-modern": "Clean shopping cart with item management",
@@ -419,12 +414,7 @@ export default function AdminTemplatesPage() {
                   "Classic grid with advanced filtering (legacy)",
               },
               sorting: {
-                "sorting-premium":
-                  "Modern luxury ecommerce (3-4 columns, conversion-focused)",
-                "sorting-gallery":
-                  "Editorial gallery with curated aesthetic (2 columns)",
-                "sorting-toolbar":
-                  "Basic product listing with toolbar and filters",
+                "sorting-minimal": "Clean product grid with essential sorting",
               },
               cartPage: {
                 "cart-modern": "Clean shopping cart with item management",

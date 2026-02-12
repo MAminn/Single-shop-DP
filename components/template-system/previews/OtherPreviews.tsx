@@ -12,7 +12,7 @@ import { HomeFeaturedProducts } from "#root/components/template-system/home/Home
 import { ModernHomeTemplateV2 } from "#root/components/template-system/home/ModernHomeTemplateV2";
 import { SearchResultsGrid } from "#root/components/template-system/searchResults/SearchResultsGrid";
 import { SearchResultsMinimal } from "#root/components/template-system/searchResults/SearchResultsMinimal";
-import { SortingToolbarTemplate } from "#root/components/template-system/sorting/SortingToolbarTemplate";
+import { SortingMinimalTemplate } from "#root/components/template-system/sorting/SortingMinimalTemplate";
 import { CartPageModernTemplate } from "#root/components/template-system/cartPage/CartPageModernTemplate";
 import { CheckoutPageModernTemplate } from "#root/components/template-system/checkoutPage/CheckoutPageModernTemplate";
 
@@ -60,10 +60,10 @@ export function SearchResultsMinimalPreview() {
   );
 }
 
-export function SortingToolbarPreview() {
+export function SortingMinimalPreview() {
   return (
     <PreviewHost>
-      <SortingToolbarTemplate products={mockCategoryProducts} />
+      <SortingMinimalTemplate products={mockCategoryProducts} />
     </PreviewHost>
   );
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { trpc } from "#root/shared/trpc/client";
 import { getTemplateComponent } from "#root/components/template-system/templateConfig";
 import { useTemplate } from "#root/frontend/contexts/TemplateContext";
-import type { SortingPageProduct } from "#root/components/template-system/sorting/SortingToolbarTemplate";
+import type { SortingPageProduct } from "#root/components/template-system/sorting/SortingMinimalTemplate";
 
 export default function BrandsPage() {
   const [products, setProducts] = useState<SortingPageProduct[]>([]);
@@ -32,7 +32,7 @@ export default function BrandsPage() {
               images: p.images,
               categoryName: p.categoryName || null,
               available: p.stock > 0,
-            })
+            }),
           );
           setProducts(mappedProducts);
         }
@@ -46,7 +46,7 @@ export default function BrandsPage() {
     fetchProducts();
   }, []);
 
-  const activeTemplateId = getTemplateId("sorting") ?? "sorting-toolbar";
+  const activeTemplateId = getTemplateId("sorting") ?? "sorting-minimal";
   const TemplateEntry = getTemplateComponent("sorting", activeTemplateId);
 
   if (!TemplateEntry) {

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { trpc } from "#root/shared/trpc/client";
 import { getTemplateComponent } from "#root/components/template-system/templateConfig";
 import { useTemplate } from "#root/frontend/contexts/TemplateContext";
-import type { SortingPageProduct } from "#root/components/template-system/sorting/SortingToolbarTemplate";
+import type { SortingPageProduct } from "#root/components/template-system/sorting/SortingMinimalTemplate";
 import { useSearchParams } from "#root/hooks/useSearchParams";
 
 const Page = () => {
@@ -85,7 +85,7 @@ const Page = () => {
     fetchProducts();
   }, [categoryId]);
 
-  const activeTemplateId = getTemplateId("sorting") ?? "sorting-premium";
+  const activeTemplateId = getTemplateId("sorting") ?? "sorting-minimal";
   const TemplateEntry = getTemplateComponent("sorting", activeTemplateId);
 
   if (!TemplateEntry) {
