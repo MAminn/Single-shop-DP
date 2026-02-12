@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Link } from "#root/components/utils/Link";
 import { Search, SlidersHorizontal, X, ChevronRight } from "lucide-react";
 import type { FeaturedProduct } from "../home/HomeFeaturedProducts";
+import heroImage from "#root/assets/landing.webp";
 
 /**
  * Extended product type for sorting pages
@@ -37,6 +38,60 @@ interface FilterState {
   categories: string[];
   priceRange: [number, number];
   inStockOnly: boolean;
+}
+
+/**
+ * Dark hero section for shop page — ensures transparent navbar text is readable.
+ */
+function ShopHero({
+  productCount,
+  hasActiveFilters,
+}: {
+  productCount?: number;
+  hasActiveFilters?: boolean;
+}) {
+  return (
+    <section className='relative w-full h-55 sm:h-65 lg:h-80 overflow-hidden'>
+      {/* Background image */}
+      <img
+        src={heroImage}
+        alt=''
+        aria-hidden='true'
+        className='absolute inset-0 w-full h-full object-cover object-center'
+      />
+
+      {/* Dark overlay */}
+      <div className='absolute inset-0 bg-black/60' />
+
+      {/* Bottom fade into bg-neutral-50 */}
+      {/* <div className='absolute bottom-0 left-0 right-0 h-24 bg-linear-to-t from-neutral-50 to-transparent' /> */}
+
+      {/* Content */}
+      <div className='relative z-10 h-full flex flex-col justify-end max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 lg:pb-14'>
+        {/* Breadcrumbs */}
+        <nav className='flex items-center gap-2 text-sm text-white/60 mb-3'>
+          <Link href='/' className='hover:text-white/90 transition-colors'>
+            Home
+          </Link>
+          <ChevronRight className='w-3.5 h-3.5' />
+          <span className='text-white font-medium'>Shop</span>
+        </nav>
+
+        {/* Title */}
+        <h1 className='text-3xl sm:text-4xl lg:text-5xl font-light tracking-tight text-white mb-1.5'>
+          Collection
+        </h1>
+
+        {/* Subtitle */}
+        {productCount !== undefined && (
+          <p className='text-sm sm:text-base text-white/50 font-light tracking-wide'>
+            {productCount} {productCount === 1 ? "piece" : "pieces"}
+            {hasActiveFilters ? " found" : " curated for you"}
+          </p>
+        )}
+      </div>
+    </section>
+  );
 }
 
 /**
@@ -300,29 +355,29 @@ export function SortingMinimalTemplate({
 
   if (isLoading) {
     return (
-      <div className={`min-h-screen bg-neutral-50 ${className}`}>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12'>
-          <div className='h-4 w-32 bg-neutral-200 rounded mb-6 animate-pulse' />
-          <div className='mb-8'>
-            <div className='h-8 w-48 bg-neutral-200 rounded mb-2 animate-pulse' />
-            <div className='h-4 w-24 bg-neutral-200 rounded animate-pulse' />
-          </div>
-          <div className='flex flex-col sm:flex-row gap-4 mb-8'>
-            <div className='flex-1 h-10 bg-neutral-200 rounded animate-pulse' />
-            <div className='w-full sm:w-48 h-10 bg-neutral-200 rounded animate-pulse' />
-          </div>
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className='bg-white rounded-lg overflow-hidden'>
-                <div className='aspect-square bg-neutral-200 animate-pulse' />
-                <div className='p-4 space-y-3'>
-                  <div className='h-3 w-20 bg-neutral-200 rounded animate-pulse' />
-                  <div className='h-4 w-full bg-neutral-200 rounded animate-pulse' />
-                  <div className='h-4 w-3/4 bg-neutral-200 rounded animate-pulse' />
-                  <div className='h-5 w-16 bg-neutral-200 rounded animate-pulse' />
+      <div className={`min-h-screen ${className}`}>
+        {/* Hero with skeleton */}
+        <ShopHero />
+
+        <div className='bg-neutral-50'>
+          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12'>
+            <div className='flex flex-col sm:flex-row gap-4 mb-8'>
+              <div className='flex-1 h-10 bg-neutral-200 rounded animate-pulse' />
+              <div className='w-full sm:w-48 h-10 bg-neutral-200 rounded animate-pulse' />
+            </div>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className='bg-white rounded-lg overflow-hidden'>
+                  <div className='aspect-square bg-neutral-200 animate-pulse' />
+                  <div className='p-4 space-y-3'>
+                    <div className='h-3 w-20 bg-neutral-200 rounded animate-pulse' />
+                    <div className='h-4 w-full bg-neutral-200 rounded animate-pulse' />
+                    <div className='h-4 w-3/4 bg-neutral-200 rounded animate-pulse' />
+                    <div className='h-5 w-16 bg-neutral-200 rounded animate-pulse' />
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -330,120 +385,109 @@ export function SortingMinimalTemplate({
   }
 
   return (
-    <div className={`min-h-screen bg-neutral-50 ${className}`}>
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12'>
-        <nav className='flex items-center gap-2 text-sm text-neutral-600 mb-6'>
-          <Link href='/' className='hover:text-neutral-900 transition-colors'>
-            Home
-          </Link>
-          <ChevronRight className='w-4 h-4' />
-          <span className='text-neutral-900 font-medium'>Shop</span>
-        </nav>
+    <div className={`min-h-screen ${className}`}>
+      {/* Dark hero for navbar readability */}
+      <ShopHero
+        productCount={filteredAndSortedProducts.length}
+        hasActiveFilters={!!hasActiveFilters}
+      />
 
-        <div className='mb-8 lg:mb-12'>
-          <h1 className='text-3xl lg:text-4xl font-light tracking-tight text-neutral-900 mb-2'>
-            All Products
-          </h1>
-          <p className='text-sm text-neutral-600'>
-            {filteredAndSortedProducts.length}{" "}
-            {filteredAndSortedProducts.length === 1 ? "product" : "products"}
-            {hasActiveFilters && " (filtered)"}
-          </p>
-        </div>
-
-        <div className='lg:hidden mb-6'>
-          <button
-            onClick={() => setMobileFiltersOpen(true)}
-            className='flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-900 border border-neutral-300 rounded-md hover:bg-white transition-colors'>
-            <SlidersHorizontal className='w-4 h-4' />
-            Filters
-            {hasActiveFilters && (
-              <span className='ml-1 px-2 py-0.5 text-xs bg-neutral-900 text-white rounded-full'>
-                {filters.categories.length +
-                  (filters.search ? 1 : 0) +
-                  (filters.inStockOnly ? 1 : 0)}
-              </span>
-            )}
-          </button>
-        </div>
-
-        <div className='flex flex-col sm:flex-row gap-4 mb-8'>
-          <div className='hidden lg:block flex-1'>
-            <div className='relative max-w-md'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400' />
-              <input
-                type='text'
-                placeholder='Search products...'
-                value={filters.search}
-                onChange={(e) =>
-                  setFilters((prev) => ({ ...prev, search: e.target.value }))
-                }
-                className='w-full pl-10 pr-4 py-2 text-sm border border-neutral-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent'
-              />
-            </div>
+      <div className='bg-neutral-50'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12'>
+          <div className='lg:hidden mb-6'>
+            <button
+              onClick={() => setMobileFiltersOpen(true)}
+              className='flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-900 border border-neutral-300 rounded-md hover:bg-white transition-colors'>
+              <SlidersHorizontal className='w-4 h-4' />
+              Filters
+              {hasActiveFilters && (
+                <span className='ml-1 px-2 py-0.5 text-xs bg-neutral-900 text-white rounded-full'>
+                  {filters.categories.length +
+                    (filters.search ? 1 : 0) +
+                    (filters.inStockOnly ? 1 : 0)}
+                </span>
+              )}
+            </button>
           </div>
 
-          <div className='flex items-center gap-3'>
-            <label
-              htmlFor='sort-select'
-              className='text-sm font-medium text-neutral-700 whitespace-nowrap'>
-              Sort by
-            </label>
-            <select
-              id='sort-select'
-              value={currentSort}
-              onChange={handleSortChange}
-              className='flex-1 sm:flex-none sm:w-48 px-4 py-2 text-sm border border-neutral-300 rounded-md bg-white hover:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent'>
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className='lg:grid lg:grid-cols-[240px_1fr] lg:gap-12'>
-          <aside className='hidden lg:block'>
-            <div className='sticky top-24'>
-              <h2 className='text-lg font-medium text-neutral-900 mb-6'>
-                Filters
-              </h2>
-              <FiltersUI />
-            </div>
-          </aside>
-
-          <div>
-            {filteredAndSortedProducts.length === 0 ? (
-              <div className='flex flex-col items-center justify-center py-16 lg:py-24'>
-                <div className='text-center max-w-md'>
-                  <h3 className='text-lg font-medium text-neutral-900 mb-2'>
-                    {emptyStateMessage}
-                  </h3>
-                  <p className='text-sm text-neutral-600 mb-6'>
-                    Try adjusting your filters or browse our full collection
-                  </p>
-                  {hasActiveFilters && (
-                    <button
-                      onClick={clearFilters}
-                      className='px-6 py-2 text-sm font-medium text-white bg-neutral-900 rounded-md hover:bg-neutral-800 transition-colors'>
-                      Clear All Filters
-                    </button>
-                  )}
-                </div>
+          <div className='flex flex-col sm:flex-row gap-4 mb-8'>
+            <div className='hidden lg:block flex-1'>
+              <div className='relative max-w-md'>
+                <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400' />
+                <input
+                  type='text'
+                  placeholder='Search products...'
+                  value={filters.search}
+                  onChange={(e) =>
+                    setFilters((prev) => ({ ...prev, search: e.target.value }))
+                  }
+                  className='w-full pl-10 pr-4 py-2 text-sm border border-neutral-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent'
+                />
               </div>
-            ) : (
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
-                {filteredAndSortedProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    formatPrice={formatPrice}
-                    getImageUrl={getImageUrl}
-                  />
+            </div>
+
+            <div className='flex items-center gap-3'>
+              <label
+                htmlFor='sort-select'
+                className='text-sm font-medium text-neutral-700 whitespace-nowrap'>
+                Sort by
+              </label>
+              <select
+                id='sort-select'
+                value={currentSort}
+                onChange={handleSortChange}
+                className='flex-1 sm:flex-none sm:w-48 px-4 py-2 text-sm border border-neutral-300 rounded-md bg-white hover:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent'>
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
                 ))}
+              </select>
+            </div>
+          </div>
+
+          <div className='lg:grid lg:grid-cols-[240px_1fr] lg:gap-12'>
+            <aside className='hidden lg:block'>
+              <div className='sticky top-24'>
+                <h2 className='text-lg font-medium text-neutral-900 mb-6'>
+                  Filters
+                </h2>
+                <FiltersUI />
               </div>
-            )}
+            </aside>
+
+            <div>
+              {filteredAndSortedProducts.length === 0 ? (
+                <div className='flex flex-col items-center justify-center py-16 lg:py-24'>
+                  <div className='text-center max-w-md'>
+                    <h3 className='text-lg font-medium text-neutral-900 mb-2'>
+                      {emptyStateMessage}
+                    </h3>
+                    <p className='text-sm text-neutral-600 mb-6'>
+                      Try adjusting your filters or browse our full collection
+                    </p>
+                    {hasActiveFilters && (
+                      <button
+                        onClick={clearFilters}
+                        className='px-6 py-2 text-sm font-medium text-white bg-neutral-900 rounded-md hover:bg-neutral-800 transition-colors'>
+                        Clear All Filters
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+                  {filteredAndSortedProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      formatPrice={formatPrice}
+                      getImageUrl={getImageUrl}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -502,7 +546,7 @@ function ProductCard({ product, formatPrice, getImageUrl }: ProductCardProps) {
       className='group block bg-white rounded-lg overflow-hidden border border-transparent hover:border-neutral-200 hover:shadow-lg transition-all duration-300'>
       <div className='relative aspect-square bg-neutral-100 overflow-hidden'>
         {!imageLoaded && (
-          <div className='absolute inset-0 bg-gradient-to-br from-neutral-100 to-neutral-200 animate-pulse' />
+          <div className='absolute inset-0 bg-linear-to-br from-neutral-100 to-neutral-200 animate-pulse' />
         )}
         <img
           src={getImageUrl(product)}
@@ -535,7 +579,7 @@ function ProductCard({ product, formatPrice, getImageUrl }: ProductCardProps) {
           </p>
         )}
 
-        <h3 className='text-sm font-medium text-neutral-900 mb-2 line-clamp-2 min-h-[2.5rem] group-hover:text-neutral-700 transition-colors'>
+        <h3 className='text-sm font-medium text-neutral-900 mb-2 line-clamp-2 min-h-10 group-hover:text-neutral-700 transition-colors'>
           {product.name}
         </h3>
 
