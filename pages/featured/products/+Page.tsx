@@ -85,7 +85,7 @@ const Page = () => {
     fetchProducts();
   }, [categoryId]);
 
-  const activeTemplateId = getTemplateId("sorting") ?? "sorting-toolbar";
+  const activeTemplateId = getTemplateId("sorting") ?? "sorting-premium";
   const TemplateEntry = getTemplateComponent("sorting", activeTemplateId);
 
   if (!TemplateEntry) {

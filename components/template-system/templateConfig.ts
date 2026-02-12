@@ -33,6 +33,10 @@ import { CategoryShowcase } from "./categoryPage/CategoryShowcase";
 import type { CategoryShowcaseProps } from "./categoryPage/CategoryShowcase";
 import { SortingToolbarTemplate } from "./sorting/SortingToolbarTemplate";
 import type { SortingToolbarTemplateProps } from "./sorting/SortingToolbarTemplate";
+import { SortingGalleryTemplate } from "./sorting/SortingGalleryTemplate";
+import type { SortingGalleryTemplateProps } from "./sorting/SortingGalleryTemplate";
+import { SortingPremiumTemplate } from "./sorting/SortingPremiumTemplate";
+import type { SortingPremiumTemplateProps } from "./sorting/SortingPremiumTemplate";
 import { CartPageModernTemplate } from "./cartPage/CartPageModernTemplate";
 import type { CartPageModernTemplateProps } from "./cartPage/CartPageModernTemplate";
 import { CheckoutPageModernTemplate } from "./checkoutPage/CheckoutPageModernTemplate";
@@ -165,8 +169,22 @@ export const templateConfig: TemplateConfig = {
 
   sorting: [
     {
+      id: "sorting-premium",
+      label: "Premium Modern (Recommended)",
+      component:
+        SortingPremiumTemplate as React.FC<SortingPremiumTemplateProps>,
+      previewComponent: SortingToolbarPreview,
+    },
+    {
+      id: "sorting-gallery",
+      label: "Gallery (Editorial)",
+      component:
+        SortingGalleryTemplate as React.FC<SortingGalleryTemplateProps>,
+      previewComponent: SortingToolbarPreview,
+    },
+    {
       id: "sorting-toolbar",
-      label: "Sorting Toolbar Layout",
+      label: "Toolbar (Basic)",
       component:
         SortingToolbarTemplate as React.FC<SortingToolbarTemplateProps>,
       previewComponent: SortingToolbarPreview,

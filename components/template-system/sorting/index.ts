@@ -9,3 +9,9 @@ export type {
   SortingToolbarTemplateProps,
   SortingPageProduct,
 } from "./SortingToolbarTemplate";
+
+export { SortingGalleryTemplate } from "./SortingGalleryTemplate";
+export type { SortingGalleryTemplateProps } from "./SortingGalleryTemplate";
+
+export { SortingPremiumTemplate } from "./SortingPremiumTemplate";
+export type { SortingPremiumTemplateProps } from "./SortingPremiumTemplate";

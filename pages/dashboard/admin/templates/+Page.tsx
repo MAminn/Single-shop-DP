@@ -145,8 +145,8 @@ export default function AdminTemplatesPage() {
     },
     {
       value: "sorting",
-      label: "Product Listing Pages",
-      description: "Product listing with sorting and filtering",
+      label: "Shop Page (All Products)",
+      description: "Main shop page with product browsing and sorting",
     },
     {
       value: "cartPage",
@@ -305,8 +305,12 @@ export default function AdminTemplatesPage() {
                   "Classic grid with advanced filtering (legacy)",
               },
               sorting: {
+                "sorting-premium":
+                  "Modern luxury ecommerce (3-4 columns, conversion-focused)",
+                "sorting-gallery":
+                  "Editorial gallery with curated aesthetic (2 columns)",
                 "sorting-toolbar":
-                  "Product listing with toolbar and view options",
+                  "Basic product listing with toolbar and filters",
               },
               cartPage: {
                 "cart-modern": "Clean shopping cart with item management",
@@ -415,8 +419,12 @@ export default function AdminTemplatesPage() {
                   "Classic grid with advanced filtering (legacy)",
               },
               sorting: {
+                "sorting-premium":
+                  "Modern luxury ecommerce (3-4 columns, conversion-focused)",
+                "sorting-gallery":
+                  "Editorial gallery with curated aesthetic (2 columns)",
                 "sorting-toolbar":
-                  "Product listing with toolbar and view options",
+                  "Basic product listing with toolbar and filters",
               },
               cartPage: {
                 "cart-modern": "Clean shopping cart with item management",
@@ -454,7 +462,7 @@ export default function AdminTemplatesPage() {
               productPage: "/products/classic-white-sneakers",
               categoryPage: "/categories/men",
               searchResults: "/search?q=shoes",
-              sorting: "/categories/men",
+              sorting: "/shop",
               cartPage: "/cart",
               checkoutPage: "/checkout",
             };

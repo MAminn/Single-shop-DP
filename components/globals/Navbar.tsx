@@ -86,9 +86,9 @@ const Navbar: React.FC<NavbarProps> = ({
     const baseClasses =
       "px-4 py-2 rounded-full text-xs font-light uppercase tracking-wider transition-all duration-[240ms] ease-in-out";
     const scrolledClasses =
-      "text-stone-500 hover:text-stone-700 hover:bg-stone-100";
+      "!text-black hover:!text-stone-700 hover:bg-stone-100";
     const transparentClasses =
-      "text-white/60 hover:text-white hover:bg-white/10";
+      "!text-white hover:!text-white/80 hover:bg-white/10";
 
     return `${baseClasses} ${isScrolled ? scrolledClasses : transparentClasses}`;
   };
@@ -174,8 +174,8 @@ const Navbar: React.FC<NavbarProps> = ({
                   size='icon'
                   className={`transition-colors duration-[240ms] ease-in-out ${
                     isScrolled
-                      ? "text-stone-700 hover:bg-stone-100"
-                      : "text-white hover:bg-white/10"
+                      ? "!text-black hover:bg-stone-100"
+                      : "!text-white hover:bg-white/10"
                   }`}>
                   <Menu size={22} />
                 </Button>
@@ -265,8 +265,8 @@ const Navbar: React.FC<NavbarProps> = ({
             href='/'
             className={`text-2xl lg:text-3xl font-light tracking-[0.08em] transition-colors duration-[240ms] ease-in-out ${
               isScrolled
-                ? "text-stone-900 hover:text-stone-700"
-                : "text-white hover:text-stone-200"
+                ? "!text-black hover:!text-stone-700"
+                : "!text-white hover:!text-white/80"
             }`}>
             Percé
           </Link>
@@ -309,8 +309,8 @@ const Navbar: React.FC<NavbarProps> = ({
             size='icon'
             className={`transition-all duration-[240ms] ease-in-out ${
               isScrolled
-                ? "text-stone-700 hover:text-stone-900 hover:bg-stone-100"
-                : "text-white/80 hover:text-white hover:bg-white/10"
+                ? "!text-black hover:!text-stone-700 hover:bg-stone-100"
+                : "!text-white hover:!text-white/80 hover:bg-white/10"
             }`}
             asChild>
             <Link href='/cart' className='relative'>
@@ -319,8 +319,8 @@ const Navbar: React.FC<NavbarProps> = ({
                 <span
                   className={`absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-medium leading-none transform translate-x-1/2 -translate-y-1/2 rounded-full transition-colors duration-[240ms] ease-in-out ${
                     isScrolled
-                      ? "bg-stone-800 text-stone-50"
-                      : "bg-white text-stone-900"
+                      ? "!bg-black !text-white"
+                      : "!bg-white !text-black"
                   }`}>
                   {totalItems}
                 </span>
@@ -335,8 +335,8 @@ const Navbar: React.FC<NavbarProps> = ({
               size='icon'
               className={`lg:hidden transition-all duration-[240ms] ease-in-out ${
                 isScrolled
-                  ? "text-stone-700 hover:text-stone-900 hover:bg-stone-100"
-                  : "text-white/80 hover:text-white hover:bg-white/10"
+                  ? "!text-black hover:!text-stone-700 hover:bg-stone-100"
+                  : "!text-white hover:!text-white/80 hover:bg-white/10"
               }`}
               asChild>
               <Link href='/login'>
@@ -349,8 +349,8 @@ const Navbar: React.FC<NavbarProps> = ({
               size='icon'
               className={`lg:hidden transition-all duration-[240ms] ease-in-out ${
                 isScrolled
-                  ? "text-stone-700 hover:text-stone-900 hover:bg-stone-100"
-                  : "text-white/80 hover:text-white hover:bg-white/10"
+                  ? "!text-black hover:!text-stone-700 hover:bg-stone-100"
+                  : "!text-white hover:!text-white/80 hover:bg-white/10"
               }`}
               asChild>
               <Link href='/dashboard'>
