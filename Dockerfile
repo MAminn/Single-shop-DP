@@ -36,9 +36,8 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 
-# Create uploads directory and declare as volume mount point
+# Create uploads directory
 RUN mkdir -p /app/uploads
-VOLUME ["/app/uploads"]
 
 EXPOSE 3000
 
