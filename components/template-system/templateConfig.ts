@@ -21,6 +21,8 @@ import { ProductPageTechnical } from "./productPage/ProductPageTechnical";
 import type { ProductPageTechnicalProps } from "./productPage/ProductPageTechnical";
 import { ProductPageMinimal } from "./productPage/ProductPageMinimal";
 import type { ProductPageMinimalProps } from "./productPage/ProductPageMinimal";
+import { ProductPagePerce } from "./productPage/ProductPagePerce";
+import type { ProductPagePerceProps } from "./productPage/ProductPagePerce";
 import { CategoryPageGridWithFilters } from "./categoryPage/CategoryPageGridWithFilters";
 import type { CategoryPageGridWithFiltersProps } from "./categoryPage/CategoryPageGridWithFilters";
 import { CategoryGridClassic } from "./categoryPage/CategoryGridClassic";
@@ -55,6 +57,7 @@ import {
   ProductPageTechnicalPreview,
   ProductPageMinimalPreview,
   ProductPageModernSplitPreview,
+  ProductPagePercePreview,
 } from "./previews/ProductPagePreviews";
 import {
   CategoryGridClassicPreview,
@@ -204,6 +207,12 @@ export const templateConfig: TemplateConfig = {
       component:
         ProductPageModernSplit as React.FC<ProductPageModernSplitProps>,
       previewComponent: ProductPageModernSplitPreview,
+    },
+    {
+      id: "product-perce",
+      label: "Percé (Premium Jewelry)",
+      component: ProductPagePerce as React.FC<ProductPagePerceProps>,
+      previewComponent: ProductPagePercePreview,
     },
   ],
 

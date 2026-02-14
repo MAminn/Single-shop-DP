@@ -10,12 +10,16 @@ import { AuthContext } from "#root/context/AuthContext.js";
 import { CartProvider } from "#root/lib/context/CartContext";
 import { TemplateProvider } from "#root/frontend/contexts/TemplateContext";
 import { Toaster as ShadcnToaster } from "#root/components/ui/toaster";
+import {
+  NavbarModeContext,
+  getNavbarMode,
+} from "#root/components/globals/NavbarContext";
 
 // Memoized Content component to prevent unnecessary re-renders
 const Content = memo(({ children }: { children: React.ReactNode }) => {
   const pageContext = usePageContext();
   const [session, setSession] = useState<ClientSession | null>(
-    pageContext.clientSession ?? null
+    pageContext.clientSession ?? null,
   );
 
   useEffect(() => {
@@ -38,7 +42,7 @@ const Content = memo(({ children }: { children: React.ReactNode }) => {
         toast.error(err.message);
       } else {
         toast.error(
-          "Something went wrong, please refresh the page and try again."
+          "Something went wrong, please refresh the page and try again.",
         );
       }
     }
@@ -47,20 +51,22 @@ const Content = memo(({ children }: { children: React.ReactNode }) => {
   };
 
   const isDashboardRoute = pageContext.urlPathname.startsWith("/dashboard");
+  const navbarMode = getNavbarMode(pageContext.urlPathname);
 
   return (
     <AuthContext.Provider value={{ session, logout }}>
       <CartProvider>
         <TemplateProvider>
-          <main
-            id="page-content"
-            className="bg-background h-full text-foreground w-full font-poppins"
-          >
-            {!isDashboardRoute && <Navbar lang="en" />}
-            {children}
-            <Toaster />
-            <ShadcnToaster />
-          </main>
+          <NavbarModeContext.Provider value={navbarMode}>
+            <main
+              id='page-content'
+              className='bg-background h-full text-foreground w-full font-poppins'>
+              {!isDashboardRoute && <Navbar lang='en' />}
+              {children}
+              <Toaster />
+              <ShadcnToaster />
+            </main>
+          </NavbarModeContext.Provider>
         </TemplateProvider>
       </CartProvider>
     </AuthContext.Provider>

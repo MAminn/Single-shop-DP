@@ -23,6 +23,7 @@ import { useCart } from "#root/lib/context/CartContext";
 import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
 import { isSingleShopMode } from "#root/shared/config/app";
+import { useNavbarMode } from "./NavbarContext";
 
 interface NavbarProps {
   lang: string;
@@ -35,8 +36,11 @@ const Navbar: React.FC<NavbarProps> = ({
   sheetDescription = "Navigation menu",
   logoUrl = "",
 }: NavbarProps) => {
+  const mode = useNavbarMode();
+  const isSolid = mode === "solid";
+
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(false);
-  const [isScrolled, setIsScrolled] = useState<boolean>(false);
+  const [isScrolled, setIsScrolled] = useState<boolean>(isSolid);
   const [subcategories, setSubcategories] = useState<
     {
       id: string;
@@ -58,9 +62,13 @@ const Navbar: React.FC<NavbarProps> = ({
     });
   }, []);
 
-  // Scroll detection hook
+  // Scroll detection hook (only matters in overlay mode)
   useEffect(() => {
-    // Check initial scroll position (handles refresh at scrolled position)
+    if (isSolid) {
+      setIsScrolled(true);
+      return;
+    }
+
     if (typeof window !== "undefined") {
       setIsScrolled(window.scrollY > 32);
     }
@@ -73,7 +81,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [isSolid]);
 
   const { totalItems } = useCart();
 
@@ -157,10 +165,14 @@ const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <nav
-      className={`fixed w-full py-4 lg:py-6 top-0 z-[10000] transition-all duration-[240ms] ease-in-out ${
-        isScrolled
-          ? "bg-white border-b border-black/[0.08]"
-          : "bg-transparent border-b border-transparent"
+      className={`w-full py-4 lg:py-6 z-[10000] transition-all duration-[240ms] ease-in-out ${
+        isSolid
+          ? "sticky top-0 bg-white border-b border-black/[0.08]"
+          : `fixed top-0 ${
+              isScrolled
+                ? "bg-white border-b border-black/[0.08]"
+                : "bg-transparent border-b border-transparent"
+            }`
       }`}>
       <div className='px-6 lg:px-8 grid grid-cols-3 items-center min-h-16 max-w-7xl mx-auto'>
         {/* Left: Primary Navigation */}

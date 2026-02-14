@@ -126,8 +126,7 @@ export default function ProductDetailPage() {
     fetchProductData();
   }, [fetchProductData]);
 
-  const activeTemplateId =
-    getTemplateId("productPage") ?? "product-modern-split";
+  const activeTemplateId = getTemplateId("productPage") ?? "product-perce";
   const TemplateEntry = getTemplateComponent("productPage", activeTemplateId);
 
   if (!TemplateEntry) {

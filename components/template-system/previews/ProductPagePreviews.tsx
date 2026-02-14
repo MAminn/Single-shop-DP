@@ -7,6 +7,7 @@ import { ProductPageEditorial } from "#root/components/template-system/productPa
 import { ProductPageTechnical } from "#root/components/template-system/productPage/ProductPageTechnical";
 import { ProductPageMinimal } from "#root/components/template-system/productPage/ProductPageMinimal";
 import { ProductPageModernSplit } from "#root/components/template-system/productPage/ProductPageModernSplit";
+import { ProductPagePerce } from "#root/components/template-system/productPage/ProductPagePerce";
 
 /**
  * Product page template previews - REAL template rendering with mock data
@@ -60,6 +61,17 @@ export function ProductPageModernSplitPreview() {
   return (
     <PreviewHost>
       <ProductPageModernSplit
+        product={mockProduct}
+        relatedProducts={mockRelatedProducts}
+      />
+    </PreviewHost>
+  );
+}
+
+export function ProductPagePercePreview() {
+  return (
+    <PreviewHost>
+      <ProductPagePerce
         product={mockProduct}
         relatedProducts={mockRelatedProducts}
       />
