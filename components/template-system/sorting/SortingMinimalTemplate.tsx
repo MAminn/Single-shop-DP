@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Link } from "#root/components/utils/Link";
 import { Search, SlidersHorizontal, X, ChevronRight } from "lucide-react";
 import type { FeaturedProduct } from "../home/HomeFeaturedProducts";
+import { getProductUrl } from "#root/lib/utils/route-helpers";
 import heroImage from "#root/assets/landing.webp";
 
 /**
@@ -213,11 +214,22 @@ export function SortingMinimalTemplate({
     return `$${numPrice.toFixed(2)}`;
   };
 
+  const resolveImagePath = (url: string | undefined | null): string => {
+    if (!url) return "/placeholder.jpg";
+    if (
+      url.startsWith("http") ||
+      url.startsWith("/uploads/") ||
+      url.startsWith("/assets/")
+    )
+      return url;
+    return `/uploads/${url}`;
+  };
+
   const getImageUrl = (product: SortingPageProduct): string => {
-    if (product.imageUrl) return product.imageUrl;
+    if (product.imageUrl) return resolveImagePath(product.imageUrl);
     if (product.images && product.images.length > 0) {
       const primaryImage = product.images.find((img) => img.isPrimary);
-      return primaryImage?.url || product.images[0]?.url || "/placeholder.jpg";
+      return resolveImagePath(primaryImage?.url || product.images[0]?.url);
     }
     return "/placeholder.jpg";
   };
@@ -542,7 +554,7 @@ function ProductCard({ product, formatPrice, getImageUrl }: ProductCardProps) {
 
   return (
     <Link
-      href={`/featured/products/${product.id}`}
+      href={getProductUrl(product.id)}
       className='group block bg-white rounded-lg overflow-hidden border border-transparent hover:border-neutral-200 hover:shadow-lg transition-all duration-300'>
       <div className='relative aspect-square bg-neutral-100 overflow-hidden'>
         {!imageLoaded && (

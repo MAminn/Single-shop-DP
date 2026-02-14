@@ -60,6 +60,19 @@ const Page = () => {
         });
 
         if (result.success && result.result) {
+          const resolveImagePath = (
+            url: string | null | undefined,
+          ): string | undefined => {
+            if (!url) return undefined;
+            if (
+              url.startsWith("http") ||
+              url.startsWith("/uploads/") ||
+              url.startsWith("/assets/")
+            )
+              return url;
+            return `/uploads/${url}`;
+          };
+
           const mappedProducts: SortingPageProduct[] = result.result.items.map(
             (p) => ({
               id: p.id,
@@ -67,8 +80,11 @@ const Page = () => {
               price: Number(p.price),
               discountPrice: p.discountPrice ? Number(p.discountPrice) : null,
               stock: p.stock,
-              imageUrl: p.imageUrl ?? undefined,
-              images: p.images,
+              imageUrl: resolveImagePath(p.imageUrl),
+              images: p.images?.map((img) => ({
+                ...img,
+                url: resolveImagePath(img.url) ?? img.url,
+              })),
               categoryName: p.categoryName || null,
               available: p.stock > 0,
             }),
