@@ -6,6 +6,7 @@ import type { LandingTemplateModernProps } from "#root/components/template-syste
 import { DEFAULT_HOMEPAGE_CONTENT } from "#root/shared/types/homepage-content";
 import type { HomepageContent } from "#root/shared/types/homepage-content";
 import type { CategoryStripItem } from "#root/components/shop/CategoryStrip";
+import type { NewArrivalProduct } from "#root/components/shop/NewArrivals";
 
 export { Page };
 
@@ -30,8 +31,10 @@ function Page() {
     DEFAULT_HOMEPAGE_CONTENT,
   );
   const [categories, setCategories] = useState<CategoryStripItem[]>([]);
+  const [newArrivals, setNewArrivals] = useState<NewArrivalProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [newArrivalsLoading, setNewArrivalsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { getTemplateId } = useTemplate();
 
@@ -126,6 +129,48 @@ function Page() {
     fetchCategories();
   }, []);
 
+  // Fetch new arrivals (newest products, parallel loading)
+  useEffect(() => {
+    const fetchNewArrivals = async () => {
+      setNewArrivalsLoading(true);
+      try {
+        const result = await trpc.product.search.query({
+          limit: 8,
+          sortBy: "newest",
+          includeOutOfStock: true,
+        });
+
+        if (result.success && result.result) {
+          setNewArrivals(
+            result.result.items.map((item) => ({
+              id: item.id,
+              name: item.name,
+              price: Number(item.price),
+              discountPrice: item.discountPrice
+                ? Number(item.discountPrice)
+                : null,
+              stock: item.stock,
+              imageUrl: item.imageUrl
+                ? item.imageUrl.startsWith("http")
+                  ? item.imageUrl
+                  : `/uploads/${item.imageUrl}`
+                : undefined,
+              images: item.images,
+              categoryName: item.categoryName || null,
+              available: item.stock > 0,
+            })),
+          );
+        }
+      } catch (err) {
+        console.error("Error loading new arrivals:", err);
+      } finally {
+        setNewArrivalsLoading(false);
+      }
+    };
+
+    fetchNewArrivals();
+  }, []);
+
   // Get the selected landing template (default to landing-modern)
   const selectedId = getTemplateId("landing") ?? "landing-modern";
   const templateEntry = getTemplateComponent("landing", selectedId);
@@ -142,6 +187,8 @@ function Page() {
     featuredProducts,
     categories,
     categoriesLoading,
+    newArrivals,
+    newArrivalsLoading,
     onCtaClick: (link: string) => {
       window.location.href = link;
     },

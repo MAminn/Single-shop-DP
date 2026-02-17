@@ -9,6 +9,7 @@ import {
 } from "#root/shared/database/drizzle/schema";
 import {
   and,
+  desc,
   eq,
   ilike,
   inArray,
@@ -25,6 +26,7 @@ export const searchProductsSchema = z.object({
   categoryIds: z.array(z.string().uuid()).optional(),
   categoryType: z.enum(["men", "women"]).optional(),
   search: z.string().trim().max(255).optional(),
+  sortBy: z.enum(["newest", "price-asc", "price-desc"]).optional(),
   limit: z.number().min(1).max(100).optional().default(12),
   offset: z.number().min(0).optional().default(0),
   includeOutOfStock: z.boolean().optional().default(false),
@@ -131,6 +133,18 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
           )
           .limit(input.limit)
           .offset(input.offset);
+
+        // Apply sort order
+        if (input.sortBy === "newest") {
+          productsQuery.orderBy(desc(product.createdAt));
+        } else if (input.sortBy === "price-asc") {
+          productsQuery.orderBy(product.price);
+        } else if (input.sortBy === "price-desc") {
+          productsQuery.orderBy(desc(product.price));
+        } else {
+          // Default: newest first
+          productsQuery.orderBy(desc(product.createdAt));
+        }
 
         // Run both queries
         const [totalCount, items] = await Promise.all([

@@ -26,8 +26,6 @@ import {
   TableRow,
 } from "#root/components/ui/table";
 
-import { addSubcategory, updateSubcategory, deleteSubcategory } from "../store";
-import type { Subcategory } from "../store";
 import { useData } from "vike-react/useData";
 import type { Data } from "./+data";
 import type { SubCategoryFormSchema } from "./components";
@@ -183,7 +181,7 @@ export default function CategoryDetail() {
       id: subCategory.id,
       name: subCategory.name,
       imageId: subCategory.imageId,
-      type: subCategory.type as "men" | "women",
+      type: subCategory.type,
     });
 
     setIsEditDialogOpen(true);

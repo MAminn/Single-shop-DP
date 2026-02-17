@@ -13,7 +13,7 @@ import { eq } from "drizzle-orm";
 
 export const createCategorySchema = z.object({
 	name: z.string().nonempty().max(255),
-	type: z.enum(["men", "women"]),
+	type: z.string().nonempty().max(255),
 	imageId: z.string().uuid(),
 });
 

@@ -21,6 +21,10 @@ import {
   CategoryStripSkeleton,
 } from "#root/components/shop/CategoryStrip";
 import type { CategoryStripItem } from "#root/components/shop/CategoryStrip";
+import {
+  NewArrivals,
+  type NewArrivalProduct,
+} from "#root/components/shop/NewArrivals";
 
 /**
  * Props for the LandingTemplateModern component
@@ -45,6 +49,16 @@ export interface LandingTemplateModernProps {
    * Loading state for categories
    */
   categoriesLoading?: boolean;
+
+  /**
+   * New arrivals products (latest added, fetched dynamically)
+   */
+  newArrivals?: NewArrivalProduct[];
+
+  /**
+   * Loading state for new arrivals
+   */
+  newArrivalsLoading?: boolean;
 
   /**
    * Additional CSS classes
@@ -90,6 +104,8 @@ export function LandingTemplateModern({
   featuredProducts,
   categories,
   categoriesLoading = false,
+  newArrivals,
+  newArrivalsLoading = false,
   className = "",
   onCtaClick,
 }: LandingTemplateModernProps) {
@@ -234,6 +250,9 @@ export function LandingTemplateModern({
           </div>
         </section>
       )}
+
+      {/* New Arrivals Section */}
+      <NewArrivals products={newArrivals} isLoading={newArrivalsLoading} />
 
       {/* Value Propositions Section */}
       {content.valueProps.enabled && content.valueProps.items.length > 0 && (

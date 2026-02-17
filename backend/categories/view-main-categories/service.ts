@@ -6,27 +6,38 @@ import { Effect } from "effect";
 
 /**
  * View Main Categories
- * Returns unique main categories (distinct by type) with subcategory count
+ * Returns unique main categories (distinct by type) with subcategory count.
+ * Includes imageId and filename for display.
  */
 export const viewMainCategories = () =>
   Effect.gen(function* ($) {
     return yield* $(
       query(async (db) => {
-        // Get all categories, then group by type in JavaScript
+        // Get all categories with their file info, then group by type in JS
         const allCategories = await db
           .select({
             id: category.id,
             name: category.name,
             type: category.type,
+            imageId: category.imageId,
+            filename: file.diskname,
           })
           .from(category)
+          .leftJoin(file, eq(category.imageId, file.id))
           .where(eq(category.deleted, false))
           .orderBy(category.type, category.createdAt);
 
         // Group by type and get the first one as main category
         const categoryMap = new Map<
           string,
-          { id: string; name: string; type: string; subcategoryCount: number }
+          {
+            id: string;
+            name: string;
+            type: string;
+            imageId: string | null;
+            filename: string | null;
+            subcategoryCount: number;
+          }
         >();
 
         for (const cat of allCategories) {
@@ -36,6 +47,8 @@ export const viewMainCategories = () =>
               id: cat.id,
               name: cat.name,
               type: cat.type,
+              imageId: cat.imageId,
+              filename: cat.filename,
               subcategoryCount: 0,
             });
           } else {

@@ -14,7 +14,7 @@ import { eq } from "drizzle-orm";
 export const editCategorySchema = z.object({
   id: z.string().uuid(),
   name: z.string().nonempty().max(255),
-  type: z.enum(["men", "women"]),
+  type: z.string().nonempty().max(255),
   imageId: z.string().uuid().optional().nullable(),
 });
 

@@ -20,7 +20,7 @@ const formSchema = z.object({
   id: z.string().uuid().optional().catch(undefined),
   name: z.string().nonempty().max(255),
   imageId: z.string().uuid(),
-  type: z.enum(["men", "women"]),
+  type: z.string().nonempty().max(255),
 });
 
 export type SubCategoryFormSchema = z.infer<typeof formSchema>;
@@ -32,7 +32,7 @@ export default function SubCategoryForm({
 }: {
   defaultValues?: SubCategoryFormSchema;
   onSubmit: (values: SubCategoryFormSchema) => PromiseLike<void>;
-  type: "men" | "women";
+  type: string;
 }) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
