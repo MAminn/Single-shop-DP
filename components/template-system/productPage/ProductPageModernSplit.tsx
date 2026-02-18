@@ -106,7 +106,7 @@ const DEFAULT_FEATURES: ProductFeature[] = [
   {
     icon: "package",
     title: "Free Shipping",
-    description: "On orders over $50",
+    description: "On orders over EGP 50",
   },
   {
     icon: "shield",
@@ -354,15 +354,15 @@ export function ProductPageModernSplit({
                 {hasDiscount ? (
                   <>
                     <span className='text-4xl font-bold text-purple-600'>
-                      ${product.discountPrice}
+                      EGP {product.discountPrice}
                     </span>
                     <span className='text-2xl text-gray-400 line-through'>
-                      ${product.price.toFixed(2)}
+                      EGP {product.price.toFixed(2)}
                     </span>
                   </>
                 ) : (
                   <span className='text-4xl font-bold text-gray-900'>
-                    ${product.price.toFixed(2)}
+                    EGP {product.price.toFixed(2)}
                   </span>
                 )}
               </div>

@@ -223,7 +223,7 @@ export const ModernCartTemplate: React.FC<ModernCartTemplateProps> = ({
                             </span>
                           </div>
                           <p className='text-xl font-light text-gray-900'>
-                            ${item.price.toFixed(2)}
+                            EGP {item.price.toFixed(2)}
                           </p>
                         </div>
                         <div className='flex items-center space-x-4'>
@@ -281,7 +281,7 @@ export const ModernCartTemplate: React.FC<ModernCartTemplateProps> = ({
                             Code Applied: {appliedPromo}
                           </p>
                           <p className='text-gray-600 text-sm'>
-                            You saved ${discount.toFixed(2)}
+                            You saved EGP {discount.toFixed(2)}
                           </p>
                         </div>
                       </div>
@@ -335,7 +335,7 @@ export const ModernCartTemplate: React.FC<ModernCartTemplateProps> = ({
                     <div className='flex justify-between'>
                       <span className='text-gray-600'>Subtotal</span>
                       <span className='font-medium text-gray-900'>
-                        ${subtotal.toFixed(2)}
+                        EGP {subtotal.toFixed(2)}
                       </span>
                     </div>
                     <div className='flex justify-between items-center'>
@@ -347,21 +347,21 @@ export const ModernCartTemplate: React.FC<ModernCartTemplateProps> = ({
                         {shipping === 0 ? (
                           <span className='text-gray-900'>FREE</span>
                         ) : (
-                          `$${shipping.toFixed(2)}`
+                          `EGP ${shipping.toFixed(2)}`
                         )}
                       </span>
                     </div>
                     <div className='flex justify-between'>
                       <span className='text-gray-600'>Tax</span>
                       <span className='font-medium text-gray-900'>
-                        ${tax.toFixed(2)}
+                        EGP {tax.toFixed(2)}
                       </span>
                     </div>
                     {discount > 0 && (
                       <div className='flex justify-between'>
                         <span className='text-gray-600'>Discount</span>
                         <span className='font-medium text-gray-900'>
-                          -${discount.toFixed(2)}
+                          -EGP {discount.toFixed(2)}
                         </span>
                       </div>
                     )}
@@ -371,7 +371,7 @@ export const ModernCartTemplate: React.FC<ModernCartTemplateProps> = ({
                     <div className='flex justify-between text-lg'>
                       <span className='font-medium text-gray-900'>Total</span>
                       <span className='font-medium text-gray-900'>
-                        ${total.toFixed(2)}
+                        EGP {total.toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -380,9 +380,9 @@ export const ModernCartTemplate: React.FC<ModernCartTemplateProps> = ({
                     <div className='bg-gray-50 p-4 border border-gray-200 mt-4'>
                       <p className='text-sm text-gray-700'>
                         <span className='font-medium'>Free shipping</span> on
-                        orders over $100. Add{" "}
+                        orders over EGP 100. Add{" "}
                         <span className='font-medium'>
-                          ${(100 - subtotal).toFixed(2)}
+                          EGP {(100 - subtotal).toFixed(2)}
                         </span>{" "}
                         more to qualify.
                       </p>

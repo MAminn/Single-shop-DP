@@ -56,7 +56,7 @@ async function updateFullHomepage(merchantId: string) {
         {
           icon: ValuePropIconType.SHIPPING,
           title: "Free Shipping",
-          description: "On orders over $50",
+          description: "On orders over EGP 50",
         },
         {
           icon: ValuePropIconType.RETURNS,

@@ -363,8 +363,8 @@ export function CategoryPageGridWithFilters({
             className='mb-2'
           />
           <div className='flex items-center justify-between text-sm text-gray-600'>
-            <span>${filters.priceRange?.[0] || priceRangeLimits[0]}</span>
-            <span>${filters.priceRange?.[1] || priceRangeLimits[1]}</span>
+            <span>EGP {filters.priceRange?.[0] || priceRangeLimits[0]}</span>
+            <span>EGP {filters.priceRange?.[1] || priceRangeLimits[1]}</span>
           </div>
         </div>
       </div>
@@ -593,11 +593,11 @@ export function CategoryPageGridWithFilters({
                                 </h3>
                                 <div className='flex items-center gap-2 mb-2'>
                                   <span className='text-2xl font-bold text-purple-600'>
-                                    ${product.price}
+                                    EGP {product.price}
                                   </span>
                                   {product.discountPrice && (
                                     <span className='text-gray-400 line-through'>
-                                      ${product.discountPrice}
+                                      EGP {product.discountPrice}
                                     </span>
                                   )}
                                 </div>

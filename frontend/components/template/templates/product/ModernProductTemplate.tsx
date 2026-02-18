@@ -154,12 +154,12 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({
               : undefined,
         },
         templateData.quantity,
-        templateData.selectedOptions
+        templateData.selectedOptions,
       );
 
       if (!success) {
         console.error(
-          "Failed to add to cart: insufficient stock or invalid quantity"
+          "Failed to add to cart: insufficient stock or invalid quantity",
         );
       }
     } catch (error) {
@@ -336,10 +336,10 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({
                 {discountPrice ? (
                   <>
                     <span className='text-4xl font-light text-gray-900'>
-                      ${discountPrice}
+                      EGP {discountPrice}
                     </span>
                     <span className='text-2xl text-gray-400 line-through font-light'>
-                      ${price}
+                      EGP {price}
                     </span>
                     <span className='bg-gray-900 text-white text-sm font-medium px-3 py-1 rounded-none'>
                       {Math.round(((price - discountPrice) / price) * 100)}% OFF
@@ -347,7 +347,7 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({
                   </>
                 ) : (
                   <span className='text-4xl font-light text-gray-900'>
-                    ${price}
+                    EGP {price}
                   </span>
                 )}
               </div>
@@ -478,7 +478,7 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({
                   <div>
                     <p className='font-medium text-gray-900'>Free Shipping</p>
                     <p className='text-sm text-gray-600 font-light'>
-                      On orders over $50
+                      On orders over EGP 50
                     </p>
                   </div>
                 </div>
@@ -699,15 +699,15 @@ const ModernProductTemplate: React.FC<ModernProductTemplateProps> = ({
                         {product.discountPrice ? (
                           <>
                             <span className='font-medium text-gray-900'>
-                              ${product.discountPrice}
+                              EGP {product.discountPrice}
                             </span>
                             <span className='text-sm text-gray-400 line-through font-light'>
-                              ${product.price}
+                              EGP {product.price}
                             </span>
                           </>
                         ) : (
                           <span className='font-medium text-gray-900'>
-                            ${product.price}
+                            EGP {product.price}
                           </span>
                         )}
                       </div>

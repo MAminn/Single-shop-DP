@@ -211,7 +211,7 @@ export function SortingMinimalTemplate({
     if (price === null || price === undefined) return "N/A";
     const numPrice = typeof price === "string" ? parseFloat(price) : price;
     if (isNaN(numPrice)) return "N/A";
-    return `$${numPrice.toFixed(2)}`;
+    return `EGP ${numPrice.toFixed(2)}`;
   };
 
   const resolveImagePath = (url: string | undefined | null): string => {

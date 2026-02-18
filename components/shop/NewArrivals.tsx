@@ -48,7 +48,7 @@ function resolveImageUrl(product: NewArrivalProduct): string | null {
 }
 
 function formatPrice(value: number): string {
-  return `€${value.toFixed(2).replace(".", ",")}`;
+  return `EGP ${value.toFixed(2).replace(".", ",")}`;
 }
 
 // ─── Badge logic ─────────────────────────────────────────────────────────────
@@ -70,17 +70,16 @@ function getBadge(product: NewArrivalProduct): {
 
 function NewArrivalsSkeleton({ count = 5 }: { count?: number }) {
   return (
-    <div className="flex gap-0 overflow-hidden">
+    <div className='flex gap-0 overflow-hidden'>
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="shrink-0 w-[72vw] sm:w-[42vw] lg:w-[22%] border-r border-stone-100 last:border-r-0"
-        >
-          <div className="aspect-3/4 bg-stone-50 animate-pulse" />
-          <div className="px-5 py-4 space-y-2.5">
-            <div className="h-3 w-20 bg-stone-100 animate-pulse" />
-            <div className="h-3 w-32 bg-stone-100 animate-pulse" />
-            <div className="h-3 w-16 bg-stone-100 animate-pulse" />
+          className='shrink-0 w-[72vw] sm:w-[42vw] lg:w-[22%] border-r border-stone-100 last:border-r-0'>
+          <div className='aspect-3/4 bg-stone-50 animate-pulse' />
+          <div className='px-5 py-4 space-y-2.5'>
+            <div className='h-3 w-20 bg-stone-100 animate-pulse' />
+            <div className='h-3 w-32 bg-stone-100 animate-pulse' />
+            <div className='h-3 w-16 bg-stone-100 animate-pulse' />
           </div>
         </div>
       ))}
@@ -102,17 +101,16 @@ function NewArrivalCard({ product }: { product: NewArrivalProduct }) {
       className={cn(
         "group relative block shrink-0 snap-start",
         "w-[72vw] sm:w-[42vw] lg:w-[22%]",
-        
+
         "focus:outline-none",
-      )}
-    >
+      )}>
       {/* Image area */}
-      <div className="relative  bg-stone-50 overflow-hidden">
+      <div className='relative  bg-stone-50 overflow-hidden'>
         {imageUrl ? (
           <img
             src={imageUrl}
             alt={product.name}
-            loading="lazy"
+            loading='lazy'
             className={cn(
               "w-full h-full object-cover object-center",
               "transition-transform duration-700 ease-out",
@@ -120,8 +118,8 @@ function NewArrivalCard({ product }: { product: NewArrivalProduct }) {
             )}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <span className="text-stone-200 text-[11px] uppercase tracking-[0.2em] font-light">
+          <div className='w-full h-full flex items-center justify-center'>
+            <span className='text-stone-200 text-[11px] uppercase tracking-[0.2em] font-light'>
               No image
             </span>
           </div>
@@ -137,63 +135,60 @@ function NewArrivalCard({ product }: { product: NewArrivalProduct }) {
               badge.type === "sold-out"
                 ? "text-stone-400 bg-white/80"
                 : "text-stone-600 bg-white/80",
-            )}
-          >
+            )}>
             {badge.label}
           </span>
         )}
 
         {/* Wishlist placeholder — top right (visual only) */}
         <button
-          type="button"
-          aria-label="Add to wishlist"
+          type='button'
+          aria-label='Add to wishlist'
           className={cn(
             "absolute top-4 right-4",
             "w-8 h-8 flex items-center justify-center",
             "text-stone-300 hover:text-stone-500 transition-colors duration-300",
           )}
-          onClick={(e) => e.preventDefault()}
-        >
+          onClick={(e) => e.preventDefault()}>
           <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.2"
-            className="w-4.5 h-4.5"
-          >
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            xmlns='http://www.w3.org/2000/svg'
+            viewBox='0 0 24 24'
+            fill='none'
+            stroke='currentColor'
+            strokeWidth='1.2'
+            className='w-4.5 h-4.5'>
+            <path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' />
           </svg>
         </button>
       </div>
 
       {/* Info area */}
-      <div className="px-5 py-4 space-y-1.5">
+      <div className='px-5 py-4 space-y-1.5'>
         {/* Product name */}
-        <h3 className="text-[12px] sm:text-[13px] text-stone-800 font-normal leading-snug tracking-wide line-clamp-2">
+        <h3 className='text-[12px] sm:text-[13px] text-stone-800 font-normal leading-snug tracking-wide line-clamp-2'>
           {product.name}
         </h3>
 
         {/* Category — subtle */}
         {product.categoryName && (
-          <p className="text-[10px] text-stone-400 font-light tracking-wide uppercase">
+          <p className='text-[10px] text-stone-400 font-light tracking-wide uppercase'>
             {product.categoryName}
           </p>
         )}
 
         {/* Price */}
-        <div className="flex items-center gap-2 pt-0.5">
+        <div className='flex items-center gap-2 pt-0.5'>
           {hasDiscount ? (
             <>
-              <span className="text-[12px] text-stone-800 font-normal tracking-wide">
+              <span className='text-[12px] text-stone-800 font-normal tracking-wide'>
                 {formatPrice(product.discountPrice!)}
               </span>
-              <span className="text-[11px] text-stone-300 line-through font-light tracking-wide">
+              <span className='text-[11px] text-stone-300 line-through font-light tracking-wide'>
                 {formatPrice(product.price)}
               </span>
             </>
           ) : (
-            <span className="text-[12px] text-stone-800 font-normal tracking-wide">
+            <span className='text-[12px] text-stone-800 font-normal tracking-wide'>
               {formatPrice(product.price)}
             </span>
           )}
@@ -257,18 +252,18 @@ export function NewArrivals({
 
   return (
     <section className={cn("py-14 sm:py-18 lg:py-24 bg-white", className)}>
-      <div className="container mx-auto px-6 sm:px-8 lg:px-12">
+      <div className='container mx-auto px-6 sm:px-8 lg:px-12'>
         {/* Section header */}
-        <div className="flex items-center justify-between mb-8 sm:mb-10">
-          <h2 className="text-base sm:text-lg font-medium text-stone-900 tracking-wide uppercase">
+        <div className='flex items-center justify-between mb-8 sm:mb-10'>
+          <h2 className='text-base sm:text-lg font-medium text-stone-900 tracking-wide uppercase'>
             {title}
           </h2>
 
           {/* Navigation arrows */}
-          <div className="flex items-center gap-1">
+          <div className='flex items-center gap-1'>
             <button
-              type="button"
-              aria-label="Scroll left"
+              type='button'
+              aria-label='Scroll left'
               disabled={!canScrollLeft}
               onClick={() => scroll("left")}
               className={cn(
@@ -276,13 +271,12 @@ export function NewArrivals({
                 canScrollLeft
                   ? "text-stone-600 hover:text-stone-900"
                   : "text-stone-200 cursor-default",
-              )}
-            >
-              <ChevronLeft className="w-4 h-4" strokeWidth={1.5} />
+              )}>
+              <ChevronLeft className='w-4 h-4' strokeWidth={1.5} />
             </button>
             <button
-              type="button"
-              aria-label="Scroll right"
+              type='button'
+              aria-label='Scroll right'
               disabled={!canScrollRight}
               onClick={() => scroll("right")}
               className={cn(
@@ -290,24 +284,22 @@ export function NewArrivals({
                 canScrollRight
                   ? "text-stone-600 hover:text-stone-900"
                   : "text-stone-200 cursor-default",
-              )}
-            >
-              <ChevronRight className="w-4 h-4" strokeWidth={1.5} />
+              )}>
+              <ChevronRight className='w-4 h-4' strokeWidth={1.5} />
             </button>
           </div>
         </div>
       </div>
 
       {/* Scrollable product strip — full-bleed */}
-      <div className="container mx-auto px-6 sm:px-8 lg:px-12">
+      <div className='container mx-auto px-6 sm:px-8 lg:px-12'>
         {isLoading ? (
           <NewArrivalsSkeleton />
         ) : (
           <div
             ref={scrollRef}
-            className="overflow-x-auto overflow-y-hidden scrollbar-hide snap-x snap-mandatory"
-          >
-            <div className="flex gap-4 w-full">
+            className='overflow-x-auto overflow-y-hidden scrollbar-hide snap-x snap-mandatory'>
+            <div className='flex gap-4 w-full'>
               {displayed.map((product) => (
                 <NewArrivalCard key={product.id} product={product} />
               ))}

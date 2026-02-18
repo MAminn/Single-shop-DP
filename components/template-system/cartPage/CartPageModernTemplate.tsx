@@ -60,7 +60,7 @@ export function CartPageModernTemplate({
   totals,
   isLoading = false,
   isUpdating = false,
-  currency = "$",
+  currency = "EGP",
   onQuantityChange,
   onRemoveItem,
   onApplyCoupon,
@@ -233,7 +233,7 @@ export function CartPageModernTemplate({
                     <span>
                       {totals.shipping === 0
                         ? "Free"
-                        : `${currency}${totals.shipping.toFixed(2)}`}
+                        : `${currency} ${totals.shipping.toFixed(2)}`}
                     </span>
                   </div>
                 )}

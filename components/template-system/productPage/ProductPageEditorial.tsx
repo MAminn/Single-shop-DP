@@ -90,7 +90,7 @@ export function ProductPageEditorial({
   const discount = hasDiscount
     ? Math.round(
         ((product.price - (product.discountPrice as number)) / product.price) *
-          100
+          100,
       )
     : 0;
 
@@ -126,7 +126,7 @@ export function ProductPageEditorial({
               ? "fill-gray-900 text-gray-900"
               : "fill-gray-300 text-gray-300"
           }`}
-        />
+        />,
       );
     }
 
@@ -203,15 +203,15 @@ export function ProductPageEditorial({
             {hasDiscount ? (
               <>
                 <span className='text-5xl font-light text-gray-900'>
-                  ${(product.discountPrice as number).toFixed(2)}
+                  EGP {(product.discountPrice as number).toFixed(2)}
                 </span>
                 <span className='text-3xl font-light text-gray-400 line-through'>
-                  ${product.price.toFixed(2)}
+                  EGP {product.price.toFixed(2)}
                 </span>
               </>
             ) : (
               <span className='text-5xl font-light text-gray-900'>
-                ${product.price.toFixed(2)}
+                EGP {product.price.toFixed(2)}
               </span>
             )}
           </div>

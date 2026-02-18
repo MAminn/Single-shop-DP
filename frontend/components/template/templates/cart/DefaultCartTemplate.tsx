@@ -308,15 +308,16 @@ const DefaultCartTemplate: React.FC<DefaultCartTemplateProps> = ({ data }) => {
                           <div className='flex items-center gap-2'>
                             {hasDiscount && (
                               <span className='text-sm text-gray-500 line-through'>
-                                ${item.price.toFixed(2)}
+                                EGP {item.price.toFixed(2)}
                               </span>
                             )}
                             <span className='font-semibold'>
-                              ${displayPrice.toFixed(2)}
+                              EGP {displayPrice.toFixed(2)}
                             </span>
                           </div>
                           <p className='text-xs text-gray-500'>
-                            ${(displayPrice * item.quantity).toFixed(2)} total
+                            EGP {(displayPrice * item.quantity).toFixed(2)}{" "}
+                            total
                           </p>
                         </div>
                       </div>
@@ -337,7 +338,7 @@ const DefaultCartTemplate: React.FC<DefaultCartTemplateProps> = ({ data }) => {
             <CardContent className='space-y-4'>
               <div className='flex justify-between'>
                 <span>Subtotal ({totalItems} items)</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>EGP {subtotal.toFixed(2)}</span>
               </div>
 
               {/* Promo Code Section */}
@@ -394,27 +395,27 @@ const DefaultCartTemplate: React.FC<DefaultCartTemplateProps> = ({ data }) => {
               {discount > 0 && (
                 <div className='flex justify-between text-green-600'>
                   <span>Discount</span>
-                  <span>-${discount.toFixed(2)}</span>
+                  <span>-EGP {discount.toFixed(2)}</span>
                 </div>
               )}
 
               <div className='flex justify-between'>
                 <span>Shipping</span>
                 <span>
-                  {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
+                  {shipping === 0 ? "Free" : `EGP ${shipping.toFixed(2)}`}
                 </span>
               </div>
 
               <div className='flex justify-between'>
                 <span>Tax</span>
-                <span>${tax.toFixed(2)}</span>
+                <span>EGP {tax.toFixed(2)}</span>
               </div>
 
               <Separator />
 
               <div className='flex justify-between text-lg font-semibold'>
                 <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>EGP {total.toFixed(2)}</span>
               </div>
             </CardContent>
             <CardFooter>

@@ -321,7 +321,7 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({
                         </div>
                       </div>
                       <p className='font-medium'>
-                        ${(item.price * item.quantity).toFixed(2)}
+                        EGP {(item.price * item.quantity).toFixed(2)}
                       </p>
                     </div>
                   ))}
@@ -335,27 +335,29 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({
                 <div className='space-y-2 pl-6'>
                   <div className='flex justify-between'>
                     <span>Subtotal:</span>
-                    <span>${localOrderDetails.subtotal.toFixed(2)}</span>
+                    <span>EGP {localOrderDetails.subtotal.toFixed(2)}</span>
                   </div>
                   {localOrderDetails.discount &&
                     localOrderDetails.discount > 0 && (
                       <div className='flex justify-between text-green-600'>
                         <span>Discount:</span>
-                        <span>-${localOrderDetails.discount.toFixed(2)}</span>
+                        <span>
+                          -EGP {localOrderDetails.discount.toFixed(2)}
+                        </span>
                       </div>
                     )}
                   <div className='flex justify-between'>
                     <span>Shipping:</span>
-                    <span>${localOrderDetails.shipping.toFixed(2)}</span>
+                    <span>EGP {localOrderDetails.shipping.toFixed(2)}</span>
                   </div>
                   <div className='flex justify-between'>
                     <span>Tax:</span>
-                    <span>${localOrderDetails.tax.toFixed(2)}</span>
+                    <span>EGP {localOrderDetails.tax.toFixed(2)}</span>
                   </div>
                   <Separator />
                   <div className='flex justify-between font-semibold text-lg'>
                     <span>Total:</span>
-                    <span>${localOrderDetails.total.toFixed(2)}</span>
+                    <span>EGP {localOrderDetails.total.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -663,11 +665,11 @@ function OrderSummary({
                   <div className='flex items-center gap-2 mt-1'>
                     {hasDiscount && (
                       <span className='text-xs text-gray-400 line-through'>
-                        ${item.price.toFixed(2)}
+                        EGP {item.price.toFixed(2)}
                       </span>
                     )}
                     <span className='text-sm font-medium'>
-                      ${(Number(displayPrice) * item.quantity).toFixed(2)}
+                      EGP {(Number(displayPrice) * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -691,7 +693,7 @@ function OrderSummary({
               -
               {promoCode.discountType === "percentage"
                 ? `${promoCode.discountValue}%`
-                : `$${promoCode.discountValue}`}
+                : `EGP ${promoCode.discountValue}`}
             </span>
           </div>
         )}
@@ -700,26 +702,26 @@ function OrderSummary({
         <div className='space-y-2'>
           <div className='flex justify-between text-sm'>
             <span>Subtotal:</span>
-            <span>${subtotal.toFixed(2)}</span>
+            <span>EGP {subtotal.toFixed(2)}</span>
           </div>
           {discount > 0 && (
             <div className='flex justify-between text-sm text-green-600'>
               <span>Discount:</span>
-              <span>-${discount.toFixed(2)}</span>
+              <span>-EGP {discount.toFixed(2)}</span>
             </div>
           )}
           <div className='flex justify-between text-sm'>
             <span>Shipping:</span>
-            <span>${shipping.toFixed(2)}</span>
+            <span>EGP {shipping.toFixed(2)}</span>
           </div>
           <div className='flex justify-between text-sm'>
             <span>Tax:</span>
-            <span>${tax.toFixed(2)}</span>
+            <span>EGP {tax.toFixed(2)}</span>
           </div>
           <Separator />
           <div className='flex justify-between font-semibold'>
             <span>Total:</span>
-            <span>${total.toFixed(2)}</span>
+            <span>EGP {total.toFixed(2)}</span>
           </div>
         </div>
       </CardContent>

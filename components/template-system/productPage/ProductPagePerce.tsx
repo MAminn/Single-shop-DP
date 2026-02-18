@@ -532,11 +532,11 @@ export function ProductPagePerce({
               {/* Price */}
               <div className='mb-5 flex items-baseline gap-2.5'>
                 <span className='text-lg font-light tracking-wide text-stone-900'>
-                  ${Number(displayPrice).toFixed(2)}
+                  EGP {Number(displayPrice).toFixed(2)}
                 </span>
                 {hasDiscount && (
                   <span className='text-[13px] text-stone-400 line-through'>
-                    ${Number(product.price).toFixed(2)}
+                    EGP {Number(product.price).toFixed(2)}
                   </span>
                 )}
               </div>

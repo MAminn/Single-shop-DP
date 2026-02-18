@@ -156,7 +156,7 @@ const DEFAULT_FEATURES: FeatureItem[] = [
   {
     icon: "shipping",
     title: "Fast & Free Shipping",
-    description: "Free delivery on orders over $50",
+    description: "Free delivery on orders over EGP 50",
   },
   {
     icon: "security",

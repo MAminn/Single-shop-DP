@@ -89,7 +89,7 @@ export function CheckoutPageModernTemplate({
   errorMessage = null,
   onSubmit,
   onEditCart,
-  currency = "$",
+  currency = "EGP",
 }: CheckoutPageModernTemplateProps) {
   const formatAddress = (address?: CheckoutAddress) => {
     if (!address) return "Not provided";
@@ -262,7 +262,7 @@ export function CheckoutPageModernTemplate({
                       {totals.shipping === 0 ? (
                         <Badge variant='secondary'>Free</Badge>
                       ) : (
-                        `${currency}${totals.shipping.toFixed(2)}`
+                        `${currency} ${totals.shipping.toFixed(2)}`
                       )}
                     </span>
                   </div>

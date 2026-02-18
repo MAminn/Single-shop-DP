@@ -41,18 +41,18 @@ export default function SubCategoryForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 py-10">
-        <input type="hidden" {...form.register("id")} />
+      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8 py-10'>
+        <input type='hidden' {...form.register("id")} />
         <FormField
           control={form.control}
-          name="name"
+          name='name'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Name</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="Shirts, Pants, etc"
-                  type="text"
+                  placeholder='Shirts, Pants, etc'
+                  type='text'
                   {...field}
                 />
               </FormControl>
@@ -63,19 +63,19 @@ export default function SubCategoryForm({
         />
         <FormField
           control={form.control}
-          name="imageId"
+          name='imageId'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Image</FormLabel>
               <FormControl>
-                <FileUploadInput id="image" {...field} />
+                <FileUploadInput id='image' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <input type="hidden" value={type} {...form.register("type")} />
-        <Button type="submit" className="w-full">
+        <input type='hidden' value={type} {...form.register("type")} />
+        <Button type='submit' className='w-full'>
           Submit
         </Button>
       </form>

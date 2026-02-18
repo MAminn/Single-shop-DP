@@ -27,8 +27,8 @@ export function ProductCardTemplatePreview({
     slug: "premium-cotton-tshirt",
     description:
       "Luxurious cotton t-shirt with a comfortable fit and stylish design",
-    price: "$39.99",
-    discountPrice: "$29.99",
+    price: "EGP 39.99",
+    discountPrice: "EGP 29.99",
     imageUrl: "https://placehold.co/400x500/e2e8f0/1e293b?text=Premium+Tee",
     images: [
       {

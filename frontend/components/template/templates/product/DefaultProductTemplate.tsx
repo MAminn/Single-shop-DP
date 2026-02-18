@@ -149,12 +149,12 @@ const DefaultProductTemplate: React.FC<DefaultProductTemplateProps> = ({
               : undefined,
         },
         templateData.quantity,
-        templateData.selectedOptions
+        templateData.selectedOptions,
       );
 
       if (!success) {
         console.error(
-          "Failed to add to cart: insufficient stock or invalid quantity"
+          "Failed to add to cart: insufficient stock or invalid quantity",
         );
       }
     } catch (error) {
@@ -251,17 +251,19 @@ const DefaultProductTemplate: React.FC<DefaultProductTemplateProps> = ({
             {discountPrice ? (
               <>
                 <span className='text-3xl font-bold text-red-600'>
-                  ${discountPrice}
+                  EGP {discountPrice}
                 </span>
                 <span className='text-xl text-gray-500 line-through'>
-                  ${price}
+                  EGP {price}
                 </span>
                 <span className='bg-red-100 text-red-800 text-sm font-medium px-2 py-1 rounded'>
                   {Math.round(((price - discountPrice) / price) * 100)}% OFF
                 </span>
               </>
             ) : (
-              <span className='text-3xl font-bold text-gray-900'>${price}</span>
+              <span className='text-3xl font-bold text-gray-900'>
+                EGP {price}
+              </span>
             )}
           </div>
 
@@ -372,7 +374,7 @@ const DefaultProductTemplate: React.FC<DefaultProductTemplateProps> = ({
               <div className='flex items-center space-x-3'>
                 <Truck className='h-5 w-5 text-gray-400' />
                 <span className='text-sm text-gray-600'>
-                  Free shipping on orders over $50
+                  Free shipping on orders over EGP 50
                 </span>
               </div>
               <div className='flex items-center space-x-3'>
@@ -630,15 +632,15 @@ const DefaultProductTemplate: React.FC<DefaultProductTemplateProps> = ({
                     {product.discountPrice ? (
                       <>
                         <span className='text-sm font-bold text-red-600'>
-                          ${product.discountPrice}
+                          EGP {product.discountPrice}
                         </span>
                         <span className='text-xs text-gray-500 line-through'>
-                          ${product.price}
+                          EGP {product.price}
                         </span>
                       </>
                     ) : (
                       <span className='text-sm font-bold text-gray-900'>
-                        ${product.price}
+                        EGP {product.price}
                       </span>
                     )}
                   </div>

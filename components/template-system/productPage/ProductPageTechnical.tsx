@@ -276,10 +276,10 @@ export function ProductPageTechnical({
                   {hasDiscount ? (
                     <>
                       <span className='text-3xl font-bold text-blue-600'>
-                        ${(product.discountPrice as number).toFixed(2)}
+                        EGP {(product.discountPrice as number).toFixed(2)}
                       </span>
                       <span className='text-xl text-gray-400 line-through'>
-                        ${product.price.toFixed(2)}
+                        EGP {product.price.toFixed(2)}
                       </span>
                       {discount > 0 && (
                         <Badge className='bg-red-600 text-white'>
@@ -289,7 +289,7 @@ export function ProductPageTechnical({
                     </>
                   ) : (
                     <span className='text-3xl font-bold text-gray-900'>
-                      ${product.price.toFixed(2)}
+                      EGP {product.price.toFixed(2)}
                     </span>
                   )}
                 </div>

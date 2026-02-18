@@ -313,10 +313,10 @@ export function CategoryGridClassic({
           />
           <div className='flex items-center justify-between mt-3 text-sm text-gray-700'>
             <span className='font-medium'>
-              ${filters.priceRange?.[0] || priceRangeLimits[0]}
+              EGP {filters.priceRange?.[0] || priceRangeLimits[0]}
             </span>
             <span className='font-medium'>
-              ${filters.priceRange?.[1] || priceRangeLimits[1]}
+              EGP {filters.priceRange?.[1] || priceRangeLimits[1]}
             </span>
           </div>
         </div>

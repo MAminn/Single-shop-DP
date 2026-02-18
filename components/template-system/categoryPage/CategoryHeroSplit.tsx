@@ -221,8 +221,8 @@ export function CategoryHeroSplit({
             }
           />
           <div className='flex items-center justify-between mt-3 text-sm text-gray-700'>
-            <span>${filters.priceRange?.[0] || priceRangeLimits[0]}</span>
-            <span>${filters.priceRange?.[1] || priceRangeLimits[1]}</span>
+            <span>EGP {filters.priceRange?.[0] || priceRangeLimits[0]}</span>
+            <span>EGP {filters.priceRange?.[1] || priceRangeLimits[1]}</span>
           </div>
         </div>
       </div>

@@ -372,7 +372,7 @@ const ModernCheckoutTemplate: React.FC<ModernCheckoutTemplateProps> = ({
                             </div>
                             <div className='text-right'>
                               <p className='text-2xl font-light text-gray-900'>
-                                ${(item.price * item.quantity).toFixed(2)}
+                                EGP {(item.price * item.quantity).toFixed(2)}
                               </p>
                             </div>
                           </div>
@@ -393,7 +393,7 @@ const ModernCheckoutTemplate: React.FC<ModernCheckoutTemplateProps> = ({
                             Subtotal:
                           </span>
                           <span className='font-light'>
-                            ${localOrderDetails.subtotal.toFixed(2)}
+                            EGP {localOrderDetails.subtotal.toFixed(2)}
                           </span>
                         </div>
                         {localOrderDetails.discount &&
@@ -401,7 +401,7 @@ const ModernCheckoutTemplate: React.FC<ModernCheckoutTemplateProps> = ({
                             <div className='flex justify-between text-lg text-gray-900'>
                               <span className='font-light'>Discount:</span>
                               <span className='font-light'>
-                                -${localOrderDetails.discount.toFixed(2)}
+                                -EGP {localOrderDetails.discount.toFixed(2)}
                               </span>
                             </div>
                           )}
@@ -410,19 +410,19 @@ const ModernCheckoutTemplate: React.FC<ModernCheckoutTemplateProps> = ({
                             Shipping:
                           </span>
                           <span className='font-light'>
-                            ${localOrderDetails.shipping.toFixed(2)}
+                            EGP {localOrderDetails.shipping.toFixed(2)}
                           </span>
                         </div>
                         <div className='flex justify-between text-lg'>
                           <span className='text-gray-600 font-light'>Tax:</span>
                           <span className='font-light'>
-                            ${localOrderDetails.tax.toFixed(2)}
+                            EGP {localOrderDetails.tax.toFixed(2)}
                           </span>
                         </div>
                         <Separator className='my-4' />
                         <div className='flex justify-between text-2xl font-medium text-gray-900 border-t border-gray-200 pt-4'>
                           <span>Total:</span>
-                          <span>${localOrderDetails.total.toFixed(2)}</span>
+                          <span>EGP {localOrderDetails.total.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
@@ -827,11 +827,11 @@ function ModernOrderSummary({
                     <div className='flex items-center gap-2 mt-2'>
                       {hasDiscount && (
                         <span className='text-sm text-gray-400 line-through'>
-                          ${item.price.toFixed(2)}
+                          EGP {item.price.toFixed(2)}
                         </span>
                       )}
                       <span className='font-medium text-gray-900'>
-                        ${(Number(displayPrice) * item.quantity).toFixed(2)}
+                        EGP {(Number(displayPrice) * item.quantity).toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -857,7 +857,7 @@ function ModernOrderSummary({
                 -
                 {promoCode.discountType === "percentage"
                   ? `${promoCode.discountValue}%`
-                  : `$${promoCode.discountValue}`}
+                  : `EGP ${promoCode.discountValue}`}
               </span>
             </div>
           </div>
@@ -869,27 +869,27 @@ function ModernOrderSummary({
         <div className='space-y-4'>
           <div className='flex justify-between text-lg'>
             <span className='text-gray-600 font-light'>Subtotal:</span>
-            <span className='font-light'>${subtotal.toFixed(2)}</span>
+            <span className='font-light'>EGP {subtotal.toFixed(2)}</span>
           </div>
           {discount > 0 && (
             <div className='flex justify-between text-lg text-gray-900'>
               <span className='font-light'>Discount:</span>
-              <span className='font-light'>-${discount.toFixed(2)}</span>
+              <span className='font-light'>-EGP {discount.toFixed(2)}</span>
             </div>
           )}
           <div className='flex justify-between text-lg'>
             <span className='text-gray-600 font-light'>Shipping:</span>
-            <span className='font-light'>${shipping.toFixed(2)}</span>
+            <span className='font-light'>EGP {shipping.toFixed(2)}</span>
           </div>
           <div className='flex justify-between text-lg'>
             <span className='text-gray-600 font-light'>Tax:</span>
-            <span className='font-light'>${tax.toFixed(2)}</span>
+            <span className='font-light'>EGP {tax.toFixed(2)}</span>
           </div>
 
           <div className='bg-gray-50 border  rounded-none p-4 border-t border-gray-200'>
             <div className='flex justify-between text-2xl font-medium'>
               <span className='text-gray-900'>Total:</span>
-              <span className='text-gray-900'>${total.toFixed(2)}</span>
+              <span className='text-gray-900'>EGP {total.toFixed(2)}</span>
             </div>
           </div>
         </div>
