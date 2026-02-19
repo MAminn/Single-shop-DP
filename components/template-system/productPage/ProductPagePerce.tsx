@@ -426,19 +426,17 @@ function MobileImageCarousel({
         ref={scrollRef}
         onScroll={handleScroll}
         className='flex snap-x snap-mandatory overflow-x-auto scrollbar-hide'
-        style={{ WebkitOverflowScrolling: 'touch' }}
-      >
+        style={{ WebkitOverflowScrolling: "touch" }}>
         {images.map((img, i) => (
           <div
             key={i}
             className='w-full shrink-0 snap-center'
-            onClick={() => onOpenLightbox(i)}
-          >
+            onClick={() => onOpenLightbox(i)}>
             <img
               src={img.url}
               alt={`Product image ${i + 1}`}
               className='w-full aspect-square object-cover'
-              loading={i === 0 ? 'eager' : 'lazy'}
+              loading={i === 0 ? "eager" : "lazy"}
             />
           </div>
         ))}
@@ -452,12 +450,13 @@ function MobileImageCarousel({
               key={i}
               type='button'
               onClick={() => {
-                scrollRef.current?.scrollTo({ left: i * (scrollRef.current?.clientWidth || 0), behavior: 'smooth' });
+                scrollRef.current?.scrollTo({
+                  left: i * (scrollRef.current?.clientWidth || 0),
+                  behavior: "smooth",
+                });
               }}
               className={`h-1.5 rounded-full transition-all duration-200 ${
-                i === activeIdx
-                  ? 'w-5 bg-stone-800'
-                  : 'w-1.5 bg-stone-400/50'
+                i === activeIdx ? "w-5 bg-stone-800" : "w-1.5 bg-stone-400/50"
               }`}
             />
           ))}
@@ -519,17 +518,23 @@ export function ProductPagePerce({
       {/* ── Breadcrumb ── */}
       <div className='mx-auto max-w-7xl px-4 sm:px-6 pt-4 sm:pt-6 pb-2 lg:px-10'>
         <nav className='flex items-center gap-1.5 text-[11px] sm:text-[12px] text-stone-400 overflow-x-auto scrollbar-hide'>
-          <a href='/' className='shrink-0 transition-colors hover:text-stone-600'>
+          <a
+            href='/'
+            className='shrink-0 transition-colors hover:text-stone-600'>
             Home
           </a>
           <span className='text-stone-300'>/</span>
-          <a href='/shop' className='shrink-0 transition-colors hover:text-stone-600'>
+          <a
+            href='/shop'
+            className='shrink-0 transition-colors hover:text-stone-600'>
             Collection
           </a>
           {product.categoryName && (
             <>
               <span className='text-stone-300'>/</span>
-              <span className='text-stone-500 truncate'>{product.categoryName}</span>
+              <span className='text-stone-500 truncate'>
+                {product.categoryName}
+              </span>
             </>
           )}
         </nav>
@@ -832,7 +837,9 @@ export function ProductPagePerce({
       <div className='fixed bottom-0 left-0 right-0 z-40 border-t border-stone-200 bg-white/95 backdrop-blur-sm px-4 py-3 sm:hidden'>
         <div className='flex items-center gap-3'>
           <div className='flex-1 min-w-0'>
-            <p className='text-[12px] font-light text-stone-500 truncate'>{product.name}</p>
+            <p className='text-[12px] font-light text-stone-500 truncate'>
+              {product.name}
+            </p>
             <p className='text-[14px] font-medium text-stone-900'>
               EGP {Number(displayPrice).toFixed(2)}
               {hasDiscount && (
@@ -846,8 +853,7 @@ export function ProductPagePerce({
             type='button'
             onClick={handleAddToCart}
             disabled={!product.available || product.stock === 0}
-            className='flex h-11 items-center justify-center gap-2 rounded-lg bg-stone-800 px-6 text-[11px] font-normal uppercase tracking-[0.15em] text-stone-100 transition-colors hover:bg-stone-700 disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-stone-400'
-          >
+            className='flex h-11 items-center justify-center gap-2 rounded-lg bg-stone-800 px-6 text-[11px] font-normal uppercase tracking-[0.15em] text-stone-100 transition-colors hover:bg-stone-700 disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-stone-400'>
             <ShoppingCart size={14} strokeWidth={1.5} />
             Add to Bag
           </button>

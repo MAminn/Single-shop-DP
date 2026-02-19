@@ -30,7 +30,7 @@ interface TemplateContextType {
 
 // Create context
 const TemplateContext = createContext<TemplateContextType | undefined>(
-  undefined
+  undefined,
 );
 
 // Local storage key for template selection
