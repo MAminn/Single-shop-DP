@@ -183,14 +183,14 @@ const DefaultProductCardTemplate: React.FC<DefaultProductCardTemplateProps> = ({
           {product.discountPrice ? (
             <>
               <span className='font-semibold text-primary'>
-                {product.discountPrice}
+                {product.discountPrice} EGP
               </span>
               <span className='text-sm text-gray-500 line-through'>
-                {product.price}
+                {product.price} EGP
               </span>
             </>
           ) : (
-            <span className='font-semibold text-primary'>{product.price}</span>
+            <span className='font-semibold text-primary'>{product.price} EGP</span>
           )}
         </div>
       </div>

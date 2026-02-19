@@ -240,14 +240,14 @@ const ModernProductCardTemplate: React.FC<ModernProductCardTemplateProps> = ({
           {product.discountPrice ? (
             <>
               <span className='font-medium text-gray-900'>
-                {product.discountPrice}
+                {product.discountPrice} EGP
               </span>
               <span className='text-sm text-gray-500 line-through font-light'>
-                {product.price}
+                {product.price} EGP
               </span>
             </>
           ) : (
-            <span className='font-medium text-gray-900'>{product.price}</span>
+            <span className='font-medium text-gray-900'>{product.price} EGP</span>
           )}
         </div>
 
