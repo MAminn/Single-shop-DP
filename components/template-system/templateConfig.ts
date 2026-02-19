@@ -123,24 +123,24 @@ export interface TemplateConfig {
 export const templateConfig: TemplateConfig = {
   landing: [
     {
+      id: "landing-editorial",
+      label: "Demo 1: Editorial (Premium Luxury — Default)",
+      component:
+        LandingTemplateEditorial as React.FC<LandingTemplateEditorialProps>,
+      previewComponent: LandingEditorialPreview,
+    },
+    {
       id: "landing-modern",
-      label: "Demo 1: Modern (Blue Gradient)",
+      label: "Demo 2: Modern (Blue Gradient)",
       component: LandingTemplateModern as React.FC<LandingTemplateModernProps>,
       previewComponent: LandingModernPreview,
     },
     {
       id: "landing-classic",
-      label: "Demo 2: Classic (Commerce-First)",
+      label: "Demo 3: Classic (Commerce-First)",
       component:
         LandingTemplateClassic as React.FC<LandingTemplateClassicProps>,
       previewComponent: LandingClassicPreview,
-    },
-    {
-      id: "landing-editorial",
-      label: "Demo 3: Editorial (Premium Luxury)",
-      component:
-        LandingTemplateEditorial as React.FC<LandingTemplateEditorialProps>,
-      previewComponent: LandingEditorialPreview,
     },
     {
       id: "landing-minimal",
@@ -178,6 +178,12 @@ export const templateConfig: TemplateConfig = {
 
   productPage: [
     {
+      id: "product-perce",
+      label: "Percé (Premium — Default)",
+      component: ProductPagePerce as React.FC<ProductPagePerceProps>,
+      previewComponent: ProductPagePercePreview,
+    },
+    {
       id: "product-classic",
       label: "Demo 1: Classic (Conversion-Focused)",
       component: ProductPageClassic as React.FC<ProductPageClassicProps>,
@@ -207,12 +213,6 @@ export const templateConfig: TemplateConfig = {
       component:
         ProductPageModernSplit as React.FC<ProductPageModernSplitProps>,
       previewComponent: ProductPageModernSplitPreview,
-    },
-    {
-      id: "product-perce",
-      label: "Percé (Premium Jewelry)",
-      component: ProductPagePerce as React.FC<ProductPagePerceProps>,
-      previewComponent: ProductPagePercePreview,
     },
   ],
 

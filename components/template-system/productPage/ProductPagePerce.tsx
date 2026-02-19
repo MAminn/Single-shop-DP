@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { HomeFeaturedProducts } from "../home/HomeFeaturedProducts";
 import type {
   ProductPageProduct,
@@ -208,7 +208,7 @@ function Lightbox({
   };
 
   return (
-    <div className='fixed inset-0 z-[50000] flex items-center justify-center bg-black/95 backdrop-blur-sm'>
+    <div className='fixed inset-0 z-50000 flex items-center justify-center bg-black/95 backdrop-blur-sm'>
       {/* Close */}
       <button
         type='button'
@@ -353,21 +353,21 @@ function StarRating({ rating, count }: { rating: number; count?: number }) {
 
 function Skeleton() {
   return (
-    <div className='bg-white py-10 lg:py-14'>
-      <div className='mx-auto max-w-7xl px-6 lg:px-10'>
-        <div className='grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14'>
+    <div className='bg-white py-6 lg:py-14'>
+      <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-10'>
+        <div className='grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-14'>
           <div className='lg:col-span-7 space-y-1.5'>
-            <div className='h-[480px] animate-pulse rounded bg-stone-100' />
+            <div className='aspect-square sm:aspect-auto sm:h-120 animate-pulse rounded bg-stone-100' />
             <div className='flex gap-1.5'>
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className='aspect-square w-[72px] animate-pulse rounded bg-stone-100'
+                  className='aspect-square w-16 sm:w-18 animate-pulse rounded bg-stone-100'
                 />
               ))}
             </div>
           </div>
-          <div className='lg:col-span-5 space-y-5 pt-2'>
+          <div className='lg:col-span-5 space-y-4 sm:space-y-5 pt-1 lg:pt-2'>
             <div className='h-3 w-20 animate-pulse rounded bg-stone-100' />
             <div className='h-7 w-3/4 animate-pulse rounded bg-stone-100' />
             <div className='h-4 w-28 animate-pulse rounded bg-stone-100' />
@@ -381,6 +381,88 @@ function Skeleton() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Mobile Image Carousel ──────────────────────────────────────────────────
+
+function MobileImageCarousel({
+  images,
+  onOpenLightbox,
+  hasDiscount,
+  discountPct,
+}: {
+  images: ProductImage[];
+  onOpenLightbox: (index: number) => void;
+  hasDiscount: boolean;
+  discountPct: number;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const scrollLeft = el.scrollLeft;
+    const width = el.clientWidth;
+    const newIdx = Math.round(scrollLeft / width);
+    setActiveIdx(newIdx);
+  }, []);
+
+  return (
+    <div className='relative -mx-4 sm:hidden'>
+      {/* Sale badge */}
+      {hasDiscount && (
+        <div className='absolute left-4 top-3.5 z-10'>
+          <span className='inline-block bg-stone-800 px-2.5 py-1 text-[10px] font-medium tracking-widest text-white uppercase'>
+            Save {discountPct}%
+          </span>
+        </div>
+      )}
+
+      {/* Horizontal scroll container */}
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className='flex snap-x snap-mandatory overflow-x-auto scrollbar-hide'
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        {images.map((img, i) => (
+          <div
+            key={i}
+            className='w-full shrink-0 snap-center'
+            onClick={() => onOpenLightbox(i)}
+          >
+            <img
+              src={img.url}
+              alt={`Product image ${i + 1}`}
+              className='w-full aspect-square object-cover'
+              loading={i === 0 ? 'eager' : 'lazy'}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Dot indicators */}
+      {images.length > 1 && (
+        <div className='absolute bottom-3 left-0 right-0 flex justify-center gap-1.5'>
+          {images.map((_, i) => (
+            <button
+              key={i}
+              type='button'
+              onClick={() => {
+                scrollRef.current?.scrollTo({ left: i * (scrollRef.current?.clientWidth || 0), behavior: 'smooth' });
+              }}
+              className={`h-1.5 rounded-full transition-all duration-200 ${
+                i === activeIdx
+                  ? 'w-5 bg-stone-800'
+                  : 'w-1.5 bg-stone-400/50'
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -435,32 +517,45 @@ export function ProductPagePerce({
   return (
     <div className={`product-page-perce bg-white ${className}`}>
       {/* ── Breadcrumb ── */}
-      <div className='mx-auto max-w-7xl px-6 pt-6 pb-2 lg:px-10'>
-        <nav className='flex items-center gap-1.5 text-[12px] text-stone-400'>
-          <a href='/' className='transition-colors hover:text-stone-600'>
+      <div className='mx-auto max-w-7xl px-4 sm:px-6 pt-4 sm:pt-6 pb-2 lg:px-10'>
+        <nav className='flex items-center gap-1.5 text-[11px] sm:text-[12px] text-stone-400 overflow-x-auto scrollbar-hide'>
+          <a href='/' className='shrink-0 transition-colors hover:text-stone-600'>
             Home
           </a>
           <span className='text-stone-300'>/</span>
-          <a href='/shop' className='transition-colors hover:text-stone-600'>
+          <a href='/shop' className='shrink-0 transition-colors hover:text-stone-600'>
             Collection
           </a>
           {product.categoryName && (
             <>
               <span className='text-stone-300'>/</span>
-              <span className='text-stone-500'>{product.categoryName}</span>
+              <span className='text-stone-500 truncate'>{product.categoryName}</span>
             </>
           )}
         </nav>
       </div>
 
       {/* ────────────────── Product Section ────────────────── */}
-      <section className='pb-16 lg:pb-24'>
-        <div className='mx-auto max-w-7xl px-6 lg:px-10'>
-          <div className='grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-14'>
+      <section className='pb-24 sm:pb-16 lg:pb-24'>
+        <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-10'>
+          <div className='grid grid-cols-1 items-start gap-5 sm:gap-8 lg:grid-cols-12 lg:gap-14'>
             {/* ── LEFT: Media Column (7/12) ── */}
             <div className='lg:col-span-7'>
-              {/* Main image + thumbnails as a single tight block */}
-              <div className='flex flex-col gap-1.5'>
+              {/* Mobile swipeable image carousel */}
+              {images.length > 0 && (
+                <MobileImageCarousel
+                  images={images}
+                  onOpenLightbox={(idx) => {
+                    setSelectedIdx(idx);
+                    setLightboxOpen(true);
+                  }}
+                  hasDiscount={hasDiscount}
+                  discountPct={discountPct}
+                />
+              )}
+
+              {/* Desktop: Main image + thumbnails */}
+              <div className='hidden sm:flex flex-col gap-1.5'>
                 {/* Main image */}
                 {currentImage && (
                   <div className='relative'>
@@ -488,7 +583,7 @@ export function ProductPagePerce({
                         key={i}
                         type='button'
                         onClick={() => setSelectedIdx(i)}
-                        className={`relative aspect-square w-[68px] shrink-0 overflow-hidden transition-all duration-200 ${
+                        className={`relative aspect-square w-17 shrink-0 overflow-hidden transition-all duration-200 ${
                           selectedIdx === i
                             ? "ring-1 ring-stone-800 ring-offset-1"
                             : "opacity-50 hover:opacity-85"
@@ -506,7 +601,7 @@ export function ProductPagePerce({
             </div>
 
             {/* ── RIGHT: Product Info Column (5/12) ── */}
-            <div className='lg:sticky lg:top-8 lg:col-span-5 flex flex-col pt-1 lg:pt-0'>
+            <div className='lg:sticky lg:top-8 lg:col-span-5 flex flex-col pt-0 lg:pt-0'>
               {/* Category */}
               {product.categoryName && (
                 <span className='mb-2.5 text-[11px] font-normal uppercase tracking-[0.18em] text-stone-400'>
@@ -515,7 +610,7 @@ export function ProductPagePerce({
               )}
 
               {/* Title */}
-              <h1 className='mb-3 text-[1.55rem] font-light leading-[1.35] tracking-wide text-stone-900 sm:text-[1.75rem] lg:text-[1.85rem]'>
+              <h1 className='mb-2 sm:mb-3 text-[1.3rem] font-light leading-[1.3] tracking-wide text-stone-900 sm:text-[1.75rem] lg:text-[1.85rem]'>
                 {product.name}
               </h1>
 
@@ -530,19 +625,19 @@ export function ProductPagePerce({
               )}
 
               {/* Price */}
-              <div className='mb-5 flex items-baseline gap-2.5'>
-                <span className='text-lg font-light tracking-wide text-stone-900'>
+              <div className='mb-3 sm:mb-5 flex items-baseline gap-2.5'>
+                <span className='text-base sm:text-lg font-light tracking-wide text-stone-900'>
                   EGP {Number(displayPrice).toFixed(2)}
                 </span>
                 {hasDiscount && (
-                  <span className='text-[13px] text-stone-400 line-through'>
+                  <span className='text-[12px] sm:text-[13px] text-stone-400 line-through'>
                     EGP {Number(product.price).toFixed(2)}
                   </span>
                 )}
               </div>
 
               {/* Availability */}
-              <div className='mb-5 flex items-center gap-2'>
+              <div className='mb-3 sm:mb-5 flex items-center gap-2'>
                 {product.available && product.stock > 0 ? (
                   <>
                     <span className='h-1.5 w-1.5 rounded-full bg-emerald-500' />
@@ -561,11 +656,11 @@ export function ProductPagePerce({
               </div>
 
               {/* Divider */}
-              <div className='mb-5 h-px bg-stone-200' />
+              <div className='mb-3 sm:mb-5 h-px bg-stone-200' />
 
               {/* Short Description */}
               {product.description && (
-                <p className='mb-6 text-[14px] leading-[1.85] text-stone-500'>
+                <p className='mb-4 sm:mb-6 text-[13px] sm:text-[14px] leading-[1.75] sm:leading-[1.85] text-stone-500'>
                   {product.description}
                 </p>
               )}
@@ -617,22 +712,22 @@ export function ProductPagePerce({
               </div>
 
               {/* Trust indicators */}
-              <div className='mb-7 flex flex-wrap items-center gap-5 border-t border-stone-100 pt-5'>
+              <div className='mb-5 sm:mb-7 flex flex-wrap items-center gap-3 sm:gap-5 border-t border-stone-100 pt-4 sm:pt-5'>
                 <div className='flex items-center gap-1.5'>
                   <Truck size={13} className='text-stone-400' />
-                  <span className='text-[11px] tracking-wide text-stone-400'>
-                    Complimentary Shipping
+                  <span className='text-[10px] sm:text-[11px] tracking-wide text-stone-400'>
+                    Free Shipping
                   </span>
                 </div>
                 <div className='flex items-center gap-1.5'>
                   <Shield size={13} className='text-stone-400' />
-                  <span className='text-[11px] tracking-wide text-stone-400'>
+                  <span className='text-[10px] sm:text-[11px] tracking-wide text-stone-400'>
                     Secure Checkout
                   </span>
                 </div>
                 <div className='flex items-center gap-1.5'>
                   <RotateCcw size={13} className='text-stone-400' />
-                  <span className='text-[11px] tracking-wide text-stone-400'>
+                  <span className='text-[10px] sm:text-[11px] tracking-wide text-stone-400'>
                     30-Day Returns
                   </span>
                 </div>
@@ -732,6 +827,32 @@ export function ProductPagePerce({
           onClose={() => setLightboxOpen(false)}
         />
       )}
+
+      {/* ── Mobile Sticky Add-to-Cart Bar ── */}
+      <div className='fixed bottom-0 left-0 right-0 z-40 border-t border-stone-200 bg-white/95 backdrop-blur-sm px-4 py-3 sm:hidden'>
+        <div className='flex items-center gap-3'>
+          <div className='flex-1 min-w-0'>
+            <p className='text-[12px] font-light text-stone-500 truncate'>{product.name}</p>
+            <p className='text-[14px] font-medium text-stone-900'>
+              EGP {Number(displayPrice).toFixed(2)}
+              {hasDiscount && (
+                <span className='ml-1.5 text-[11px] text-stone-400 line-through font-light'>
+                  EGP {Number(product.price).toFixed(2)}
+                </span>
+              )}
+            </p>
+          </div>
+          <button
+            type='button'
+            onClick={handleAddToCart}
+            disabled={!product.available || product.stock === 0}
+            className='flex h-11 items-center justify-center gap-2 rounded-lg bg-stone-800 px-6 text-[11px] font-normal uppercase tracking-[0.15em] text-stone-100 transition-colors hover:bg-stone-700 disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-stone-400'
+          >
+            <ShoppingCart size={14} strokeWidth={1.5} />
+            Add to Bag
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

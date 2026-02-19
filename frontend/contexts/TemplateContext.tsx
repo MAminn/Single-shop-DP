@@ -51,6 +51,25 @@ function getDefaultSelection(): TemplateSelection {
   return defaultSelection;
 }
 
+// Validate that saved template IDs still exist in templateConfig
+function validateSelection(saved: TemplateSelection): TemplateSelection {
+  const defaults = getDefaultSelection();
+  const validated: TemplateSelection = { ...defaults };
+
+  (Object.keys(saved) as TemplateCategory[]).forEach((category) => {
+    const id = saved[category];
+    if (id && templateConfig[category]) {
+      const exists = templateConfig[category].some((t) => t.id === id);
+      if (exists) {
+        validated[category] = id;
+      }
+      // If the saved ID doesn't exist, keep the default (already set above)
+    }
+  });
+
+  return validated;
+}
+
 // Template provider component
 export function TemplateProvider({ children }: { children: ReactNode }) {
   // Initialize selection state from localStorage or defaults
@@ -59,7 +78,7 @@ export function TemplateProvider({ children }: { children: ReactNode }) {
       const saved = localStorage.getItem(TEMPLATE_SELECTION_KEY);
       if (saved) {
         try {
-          return JSON.parse(saved);
+          return validateSelection(JSON.parse(saved));
         } catch (error) {
           console.error("Failed to parse saved template selection:", error);
         }
