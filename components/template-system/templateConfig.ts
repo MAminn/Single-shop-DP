@@ -123,17 +123,17 @@ export interface TemplateConfig {
 export const templateConfig: TemplateConfig = {
   landing: [
     {
+      id: "landing-modern",
+      label: "Demo 1: Modern (Default)",
+      component: LandingTemplateModern as React.FC<LandingTemplateModernProps>,
+      previewComponent: LandingModernPreview,
+    },
+    {
       id: "landing-editorial",
-      label: "Demo 1: Editorial (Premium Luxury — Default)",
+      label: "Demo 2: Editorial (Premium Luxury)",
       component:
         LandingTemplateEditorial as React.FC<LandingTemplateEditorialProps>,
       previewComponent: LandingEditorialPreview,
-    },
-    {
-      id: "landing-modern",
-      label: "Demo 2: Modern (Blue Gradient)",
-      component: LandingTemplateModern as React.FC<LandingTemplateModernProps>,
-      previewComponent: LandingModernPreview,
     },
     {
       id: "landing-classic",
