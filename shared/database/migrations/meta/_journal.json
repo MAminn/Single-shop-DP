@@ -71,6 +71,20 @@
       "when": 1768828255792,
       "tag": "0009_ancient_leader",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1771081062463,
+      "tag": "0010_groovy_golden_guardian",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1771347295494,
+      "tag": "0011_third_mephistopheles",
+      "breakpoints": true
     }
   ]
 }

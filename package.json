@@ -11,7 +11,10 @@
     "format": "biome format --write .",
     "drizzle:generate": "drizzle-kit generate",
     "drizzle:migrate": "drizzle-kit migrate",
-    "drizzle:studio": "drizzle-kit studio"
+    "drizzle:studio": "drizzle-kit studio",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@fastify/compress": "^8.0.1",

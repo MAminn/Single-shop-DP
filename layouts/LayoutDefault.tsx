@@ -9,6 +9,7 @@ import { TRPCClientError } from "@trpc/client";
 import { AuthContext } from "#root/context/AuthContext.js";
 import { CartProvider } from "#root/lib/context/CartContext";
 import { TemplateProvider } from "#root/frontend/contexts/TemplateContext";
+import { TrackingProvider } from "#root/frontend/contexts/TrackingContext";
 import { Toaster as ShadcnToaster } from "#root/components/ui/toaster";
 import {
   NavbarModeContext,
@@ -58,14 +59,17 @@ const Content = memo(({ children }: { children: React.ReactNode }) => {
       <CartProvider>
         <TemplateProvider>
           <NavbarModeContext.Provider value={navbarMode}>
-            <main
-              id='page-content'
-              className='bg-background h-full text-foreground w-full font-poppins'>
-              {!isDashboardRoute && <Navbar lang='en' />}
-              {children}
-              <Toaster />
-              <ShadcnToaster />
-            </main>
+            <TrackingProvider>
+              <main
+                id="page-content"
+                className="bg-background h-full text-foreground w-full font-poppins"
+              >
+                {!isDashboardRoute && <Navbar lang="en" />}
+                {children}
+                <Toaster />
+                <ShadcnToaster />
+              </main>
+            </TrackingProvider>
           </NavbarModeContext.Provider>
         </TemplateProvider>
       </CartProvider>

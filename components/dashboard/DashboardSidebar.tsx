@@ -10,6 +10,7 @@ import {
   TicketPercent,
   Palette,
   Home,
+  Radio,
 } from "lucide-react";
 
 import {
@@ -81,6 +82,11 @@ export function DashboardSidebar() {
       label: "Templates",
       href: "/dashboard/admin/templates",
       icon: Palette,
+    },
+    {
+      label: "Pixels & Tracking",
+      href: "/dashboard/admin/pixels",
+      icon: Radio,
     },
   ];
 

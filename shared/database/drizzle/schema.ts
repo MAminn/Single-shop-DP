@@ -921,3 +921,199 @@ export const categoryContent = pgTable(
     ),
   }),
 );
+
+// ─── Pixel Tracking ─────────────────────────────────────────────────────────
+
+export const pixelPlatform = pgEnum("pixel_platform", [
+  "meta",
+  "google_ga4",
+  "tiktok",
+  "snapchat",
+  "pinterest",
+  "custom",
+]);
+
+/**
+ * Pixel configuration table
+ * Stores merchant's connected pixel/tracking accounts
+ */
+export const pixelConfig = pgTable("pixel_config", {
+  id: uuid("id")
+    .$defaultFn(() => v7())
+    .primaryKey(),
+  platform: pixelPlatform("platform").notNull(),
+  pixelId: text("pixel_id").notNull(),
+  accessToken: text("access_token"),
+  enabled: boolean("enabled").notNull().default(true),
+  enableClientSide: boolean("enable_client_side").notNull().default(true),
+  enableServerSide: boolean("enable_server_side").notNull().default(false),
+  consentRequired: boolean("consent_required").notNull().default(false),
+  consentCategory: text("consent_category"),
+  settings: jsonb("settings"),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }),
+});
+
+/**
+ * Tracking event table (append-only log)
+ * Stores every tracking event received from the client beacon
+ */
+export const trackingEvent = pgTable("tracking_event", {
+  id: uuid("id")
+    .$defaultFn(() => v7())
+    .primaryKey(),
+  sessionId: text("session_id").notNull(),
+  userId: uuid("user_id").references(() => user.id, {
+    onDelete: "set null",
+    onUpdate: "cascade",
+  }),
+  eventName: text("event_name").notNull(),
+  eventId: text("event_id").notNull(),
+  eventData: jsonb("event_data").notNull(),
+  pageUrl: text("page_url"),
+  referrer: text("referrer"),
+  utmSource: text("utm_source"),
+  utmMedium: text("utm_medium"),
+  utmCampaign: text("utm_campaign"),
+  userAgent: text("user_agent"),
+  ipHash: text("ip_hash"),
+  deviceType: text("device_type"),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+    .defaultNow()
+    .notNull(),
+});
+
+/**
+ * Tracking event delivery table (append-only log)
+ * Tracks which pixel platforms received each event and their delivery status
+ */
+export const trackingEventDelivery = pgTable("tracking_event_delivery", {
+  id: uuid("id")
+    .$defaultFn(() => v7())
+    .primaryKey(),
+  trackingEventId: uuid("tracking_event_id")
+    .notNull()
+    .references(() => trackingEvent.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  platform: pixelPlatform("platform").notNull(),
+  sent: boolean("sent").notNull().default(false),
+  sentAt: timestamp("sent_at", { withTimezone: true, mode: "date" }),
+  platformEventId: text("platform_event_id"),
+  error: text("error"),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+    .defaultNow()
+    .notNull(),
+});
+
+// ─── Custom Tracking Events ─────────────────────────────────────────────────
+
+export const customEventTriggerType = pgEnum("custom_event_trigger_type", [
+  "manual",
+  "css_selector",
+  "url_match",
+  "time_on_page",
+]);
+
+/**
+ * Custom tracking event definitions
+ * Merchant-defined custom events with automated trigger configuration
+ */
+export const customTrackingEvent = pgTable("custom_tracking_event", {
+  id: uuid("id")
+    .$defaultFn(() => v7())
+    .primaryKey(),
+  name: text("name").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  description: text("description"),
+  triggerType: customEventTriggerType("trigger_type").notNull(),
+  triggerConfig: jsonb("trigger_config").notNull().default({}),
+  eventData: jsonb("event_data").notNull().default({}),
+  platformMapping: jsonb("platform_mapping").notNull().default({}),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }),
+});
+
+// ─── Attribution Touchpoints ────────────────────────────────────────────────
+
+export const attributionChannel = pgEnum("attribution_channel", [
+  "organic",
+  "paid_meta",
+  "paid_google",
+  "paid_tiktok",
+  "paid_snapchat",
+  "paid_pinterest",
+  "direct",
+  "email",
+  "referral",
+  "social",
+]);
+
+/**
+ * Attribution touchpoint table (append-only log)
+ * Captures every marketing touchpoint for multi-touch attribution
+ */
+export const attributionTouchpoint = pgTable("attribution_touchpoint", {
+  id: uuid("id")
+    .$defaultFn(() => v7())
+    .primaryKey(),
+  sessionId: text("session_id").notNull(),
+  userId: uuid("user_id").references(() => user.id, {
+    onDelete: "set null",
+    onUpdate: "cascade",
+  }),
+  channel: attributionChannel("channel").notNull(),
+  source: text("source"),
+  medium: text("medium"),
+  campaign: text("campaign"),
+  term: text("term"),
+  content: text("content"),
+  landingPage: text("landing_page"),
+  referrer: text("referrer"),
+  clickId: text("click_id"),
+  clickIdType: text("click_id_type"),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+    .defaultNow()
+    .notNull(),
+});
+
+// ─── Tracking Consent ───────────────────────────────────────────────────────
+
+export const consentMethod = pgEnum("consent_method", [
+  "banner_accept",
+  "banner_reject",
+  "settings_page",
+  "implied",
+]);
+
+/**
+ * Tracking consent table (append-only log)
+ * Stores consent decisions for GDPR/privacy compliance audit trail
+ */
+export const trackingConsent = pgTable("tracking_consent", {
+  id: uuid("id")
+    .$defaultFn(() => v7())
+    .primaryKey(),
+  sessionId: text("session_id").notNull(),
+  userId: uuid("user_id").references(() => user.id, {
+    onDelete: "set null",
+    onUpdate: "cascade",
+  }),
+  consentGiven: boolean("consent_given").notNull(),
+  consentCategories: jsonb("consent_categories")
+    .notNull()
+    .default({ analytics: false, marketing: false, functional: true }),
+  consentMethodType: consentMethod("consent_method").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+    .defaultNow()
+    .notNull(),
+});

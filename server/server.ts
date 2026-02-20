@@ -12,6 +12,8 @@ import { uploadFileApiPlugin } from "#root/backend/file/upload-file/api";
 import { emailServiceMiddleware } from "#root/shared/email/middleware.server";
 import { fincartWebhookPlugin } from "#root/backend/orders/fincart-webhook/api.js";
 import { ensureDefaultStoreVendor } from "#root/shared/database/bootstrap.js";
+import { listActiveClientConfigsRaw } from "#root/backend/pixel-tracking/pixel-config/ssr.js";
+import { trackBeaconPlugin } from "#root/server/routes/track.js";
 
 // Normalize env vars — Coolify sometimes injects a leading '=' into values
 function normalizeEnv(key: string): string {
@@ -66,6 +68,9 @@ const hmrPort = Number.parseInt(process.env.HMR_PORT || "24678", 10) || 24678;
 export const instance = Fastify({
   ...(isProduction ? productionFastifyConfig : developmentFastifyConfig),
   bodyLimit: 100 * 1024 * 1024,
+  routerOptions: {
+    maxParamLength: 1000, // tRPC batch requests encode comma-separated procedure names in a single :path param
+  },
 });
 
 // Configure body size limit for all routes
@@ -187,6 +192,11 @@ async function buildServer() {
   // Register Fincart webhook endpoint
   await instance.register(fincartWebhookPlugin, {
     prefix: "/api/webhooks/fincart",
+  });
+
+  // Register tracking beacon endpoint
+  await instance.register(trackBeaconPlugin, {
+    prefix: "/api/track",
   });
 
   // Add product detail route handler - updated to new format
@@ -382,11 +392,15 @@ async function buildServer() {
       logLevel: "silent",
     },
     async (request, reply) => {
+      // Fetch active pixel configs for SSR script injection (best-effort)
+      const pixelConfigs = await listActiveClientConfigsRaw(request.db);
+
       const pageContextInit = {
         urlOriginal: request.raw.url || "",
         headersOriginal: request.headers,
         db: request.db,
         clientSession: request.clientSession,
+        pixelConfigs,
       };
 
       let pageContext: Awaited<ReturnType<typeof renderPage>>;
