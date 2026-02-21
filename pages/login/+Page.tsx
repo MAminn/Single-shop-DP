@@ -177,6 +177,13 @@ export default function Page() {
             {isSubmitting ? "Entering..." : "Login"}
           </Button>
 
+          {/* Forgot password link */}
+          <Link
+            href='/forgot-password'
+            className='text-center text-[12px] text-[#9C918A] hover:text-[#C4A574] transition-all duration-500 tracking-[0.04em] font-light'>
+            Forgot password?
+          </Link>
+
           {/* Secondary action - understated and elegant */}
           <div className='flex items-center justify-center gap-2 mt-4'>
             <div className='h-[1px] flex-1 bg-gradient-to-r from-transparent via-[#D9D3CC] to-transparent opacity-40' />

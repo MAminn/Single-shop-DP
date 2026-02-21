@@ -1,7 +1,7 @@
 import type React from "react";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import { Button } from "#root/components/ui/button";
-import { Menu, ShoppingCart, Globe, User } from "lucide-react";
+import { Menu, ShoppingCart, Globe, User, Search, X } from "lucide-react";
 import {
   Sheet,
   SheetTrigger,
@@ -23,7 +23,9 @@ import { useCart } from "#root/lib/context/CartContext";
 import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
 import { isSingleShopMode } from "#root/shared/config/app";
+import { STORE_NAME } from "#root/shared/config/branding";
 import { useNavbarMode } from "./NavbarContext";
+import { navigate } from "vike/client/router";
 
 interface NavbarProps {
   lang: string;
@@ -41,6 +43,9 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(false);
   const [isScrolled, setIsScrolled] = useState<boolean>(isSolid);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [subcategories, setSubcategories] = useState<
     {
       id: string;
@@ -86,6 +91,16 @@ const Navbar: React.FC<NavbarProps> = ({
   const { totalItems } = useCart();
 
   const handleCloseSheet = () => setIsSheetOpen(false);
+
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setIsSearchOpen(false);
+      setSearchQuery("");
+      handleCloseSheet();
+    }
+  };
 
   const { session, logout } = useContext(AuthContext);
 
@@ -200,12 +215,26 @@ const Navbar: React.FC<NavbarProps> = ({
                       href='/'
                       onClick={handleCloseSheet}
                       className='text-2xl font-light tracking-wide text-stone-900'>
-                      Percé
+                      {STORE_NAME}
                     </Link>
                   </div>
 
-                  {/* Main navigation links */}
+                  {/* Main navigation links */}}
                   <div className='p-6 flex-1'>
+                    {/* Mobile search */}
+                    <form onSubmit={handleSearchSubmit} className="mb-6">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Search products..."
+                          className="w-full pl-9 pr-4 py-2.5 text-sm rounded-lg border border-stone-200 bg-white text-stone-900 placeholder-stone-400 outline-none focus:border-stone-400"
+                        />
+                      </div>
+                    </form>
+
                     <div className='flex flex-col gap-5 mb-8'>
                       {links.map((link) => (
                         <Link
@@ -243,7 +272,7 @@ const Navbar: React.FC<NavbarProps> = ({
                   {/* Footer section with company name */}
                   <div className='mt-auto border-t border-stone-200 p-6'>
                     <p className='text-xs text-stone-400 tracking-wide'>
-                      Percé
+                      {STORE_NAME}
                     </p>
                   </div>
                 </div>
@@ -280,7 +309,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 ? "!text-black hover:!text-stone-700"
                 : "!text-white hover:!text-white/80"
             }`}>
-            Percé
+            {STORE_NAME}
           </Link>
         </div>
 
@@ -315,6 +344,55 @@ const Navbar: React.FC<NavbarProps> = ({
               </>
             )}
           </div>
+
+          {/* Search button (desktop + mobile) */}
+          {isSearchOpen ? (
+            <form onSubmit={handleSearchSubmit} className="flex items-center gap-1">
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products..."
+                autoFocus
+                className={`w-32 lg:w-48 px-3 py-1.5 text-sm rounded-full border bg-transparent outline-none transition-colors ${
+                  isScrolled
+                    ? "border-gray-300 text-black placeholder-gray-400 focus:border-black"
+                    : "border-white/30 text-white placeholder-white/60 focus:border-white"
+                }`}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => { setIsSearchOpen(false); setSearchQuery(""); }}
+                className={`transition-colors ${
+                  isScrolled
+                    ? "!text-black hover:bg-stone-100"
+                    : "!text-white hover:bg-white/10"
+                }`}
+              >
+                <X size={18} />
+              </Button>
+            </form>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setIsSearchOpen(true);
+                setTimeout(() => searchInputRef.current?.focus(), 100);
+              }}
+              className={`transition-all duration-[240ms] ease-in-out ${
+                isScrolled
+                  ? "!text-black hover:!text-stone-700 hover:bg-stone-100"
+                  : "!text-white hover:!text-white/80 hover:bg-white/10"
+              }`}
+            >
+              <Search size={20} />
+            </Button>
+          )}
+
           {/* Cart button */}
           <Button
             variant='ghost'

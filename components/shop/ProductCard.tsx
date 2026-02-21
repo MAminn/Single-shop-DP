@@ -63,7 +63,7 @@ interface ProductCardProps {
 export const ProductCard = memo(
   ({
     product,
-    showVendor = true,
+    showVendor = false,
     showImage = true,
     imageSize = "medium",
     className = "",

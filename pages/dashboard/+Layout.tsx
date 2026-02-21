@@ -15,6 +15,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "#root/components/ui/tabs.jsx";
 import { usePageContext } from "vike-react/usePageContext";
 import { RoleProvider, useRole } from "#root/lib/context/RoleContext";
+import { STORE_NAME } from "#root/shared/config/branding";
 import { HomeIcon, Home, Menu } from "lucide-react";
 
 export default function DashboardLayout({
@@ -120,7 +121,7 @@ function Content({ children }: { children: React.ReactNode }) {
                   </Tabs>
                 </div>
                 <Link href='/' className='text-2xl font-light tracking-tight'>
-                  Percé
+                  {STORE_NAME}
                 </Link>
                 <div className='flex items-center gap-2'>
                   <Link href='/'>
@@ -136,7 +137,7 @@ function Content({ children }: { children: React.ReactNode }) {
               {userRole === "admin" && (
                 <div className='bg-blue-50 dark:bg-blue-900 p-2 text-sm'>
                   <strong>Admin Mode:</strong> You have full access to all
-                  vendors, products, categories, and orders.
+                  products, categories, and orders.
                 </div>
               )}
             </header>

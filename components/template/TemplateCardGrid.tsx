@@ -53,11 +53,6 @@ const getTemplateDescription = (
     checkoutPage: {
       "checkout-modern": "Multi-step checkout with order summary",
     },
-    vendorShop: {
-      "vendor-shop-grid": "Standard marketplace layout with sidebar",
-      "vendor-shop-list": "Catalog-heavy list view for many products",
-      "vendor-shop-minimal": "Premium brand-focused minimal design",
-    },
     searchResults: {
       "search-results-grid": "Standard search layout with sidebar filters",
       "search-results-minimal": "Clean, typography-first search results",

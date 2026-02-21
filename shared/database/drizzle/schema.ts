@@ -67,6 +67,30 @@ export const session = pgTable("session", {
   }).notNull(),
 });
 
+export const passwordResetToken = pgTable("password_reset_token", {
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => v7()),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => user.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  token: text("token").unique().notNull(),
+  used: boolean("used").notNull().default(false),
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+    mode: "date",
+  })
+    .defaultNow()
+    .notNull(),
+  expiresAt: timestamp("expires_at", {
+    withTimezone: true,
+    mode: "date",
+  }).notNull(),
+});
+
 export const vendorStatus = pgEnum("vendor_status", [
   "pending",
   "rejected",

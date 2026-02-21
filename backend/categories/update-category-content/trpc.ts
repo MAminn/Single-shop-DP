@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { protectedProcedure } from "#root/shared/trpc/server";
+import { adminProcedure } from "#root/shared/trpc/server";
 import { updateCategoryContent } from "./index";
 
 // Zod schema for category content validation
@@ -17,9 +17,9 @@ const CategoryContentSchema = z.object({
 
 /**
  * tRPC procedure to update category content
- * Protected - requires authentication
+ * Admin-only — single-shop mode means only admins manage content
  */
-export const updateCategoryContentProcedure = protectedProcedure
+export const updateCategoryContentProcedure = adminProcedure
   .input(
     z.object({
       merchantId: z.string().uuid(),
@@ -27,10 +27,7 @@ export const updateCategoryContentProcedure = protectedProcedure
       content: CategoryContentSchema,
     })
   )
-  .mutation(async ({ input, ctx }) => {
-    // TODO: Add authorization check - ensure user owns this merchant
-    // For now, we'll use the merchantId from input
-
+  .mutation(async ({ input }) => {
     const updatedContent = await updateCategoryContent(
       input.merchantId,
       input.categoryId,

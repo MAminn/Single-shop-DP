@@ -427,7 +427,7 @@ const ModernSortingTemplate: React.FC<ModernSortingTemplateProps> = ({
                 <ProductCard
                   key={product.id}
                   product={product}
-                  showVendor={true}
+                  showVendor={false}
                   showImage={true}
                   imageSize='medium'
                   className='h-full border border-gray-200 overflow-hidden'

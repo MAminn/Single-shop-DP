@@ -23,10 +23,3 @@ export const SINGLE_SHOP_MODE = process.env.SINGLE_SHOP_MODE === "true";
 export function isSingleShopMode(): boolean {
   return SINGLE_SHOP_MODE;
 }
-
-/**
- * Check if multi-vendor features should be enabled
- */
-export function isMultiVendorMode(): boolean {
-  return !SINGLE_SHOP_MODE;
-}

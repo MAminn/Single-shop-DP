@@ -173,7 +173,7 @@ const DefaultProductsTemplate: React.FC<DefaultProductsTemplateProps> = ({
               <ProductCard
                 key={product.id}
                 product={product}
-                showVendor={true}
+                showVendor={false}
               />
             ))}
           </div>

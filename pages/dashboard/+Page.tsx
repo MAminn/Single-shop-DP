@@ -242,7 +242,7 @@ function AdminDashboard() {
           products={analytics.topSellingProducts.data}
           isLoading={analytics.topSellingProducts.isLoading}
           error={analytics.topSellingProducts.error}
-          showVendor={true}
+          showVendor={false}
         />
       </div> */}
     </div>

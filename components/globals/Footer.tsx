@@ -2,6 +2,7 @@ import { useState, type FC } from "react";
 import { Link } from "#root/components/utils/Link";
 import { Button } from "#root/components/ui/button";
 import { ChevronRight, Mail, ExternalLink } from "lucide-react";
+import { STORE_NAME } from "#root/shared/config/branding";
 
 // Custom Icon Components to replace the unavailable TikTok icon
 const FacebookIcon = () => (
@@ -65,19 +66,19 @@ const defaultSocialLinks = [
   {
     id: "facebook",
     name: "Facebook",
-    url: "https://www.facebook.com/people/Lebsey/61573656966243",
+    url: "#",
     icon: FacebookIcon,
   },
   {
     id: "instagram",
     name: "Instagram",
-    url: "https://www.instagram.com/lebsey_mall/",
+    url: "#",
     icon: InstagramIcon,
   },
   {
     id: "tiktok",
     name: "TikTok",
-    url: "https://www.tiktok.com/@lebsey_mall?is_from_webapp=1&sender_device=pc",
+    url: "#",
     icon: TikTokIcon,
   },
 ];
@@ -98,7 +99,7 @@ const defaultFooterLinks = [
     id: "customer-service",
     title: "Customer Service",
     links: [
-      { id: "contact", name: "Contact Us", url: "mailto:cs@lebsey.com" },
+      { id: "contact", name: "Contact Us", url: "#" },
       { id: "faq", name: "FAQ", url: "#faq" },
       { id: "shipping", name: "Shipping & Returns", url: "#" },
       { id: "privacy", name: "Privacy Policy", url: "#" },
@@ -128,8 +129,8 @@ interface FooterProps {
 }
 
 export const Footer: FC<FooterProps> = ({
-  brandName = "Lebsey",
-  description = "Simplifying online fashion shopping by bringing together multiple brands and designers in one seamless marketplace.",
+  brandName = STORE_NAME,
+  description = "Curated fashion and quality products, all in one place.",
   socialLinks = defaultSocialLinks,
   footerLinks = defaultFooterLinks,
   showNewsletter = true,

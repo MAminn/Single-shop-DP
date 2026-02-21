@@ -165,10 +165,7 @@ export function SearchResultsGrid({
                   <p className='font-medium text-gray-700 mb-2'>Price Range</p>
                   <p className='text-xs'>Price filters will appear here</p>
                 </div>
-                <div className='pb-4 border-b'>
-                  <p className='font-medium text-gray-700 mb-2'>Vendors</p>
-                  <p className='text-xs'>Vendor filters will appear here</p>
-                </div>
+
                 <div>
                   <p className='font-medium text-gray-700 mb-2'>Availability</p>
                   <p className='text-xs'>Stock filters will appear here</p>

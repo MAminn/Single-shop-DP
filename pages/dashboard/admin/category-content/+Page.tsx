@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { trpc } from "#root/shared/trpc/client";
+import { getStoreOwnerId } from "#root/shared/config/store";
 import { toast } from "sonner";
 import { Button } from "#root/components/ui/button";
 import {
@@ -29,8 +30,7 @@ import { Save, RotateCcw, AlertCircle, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription } from "#root/components/ui/alert";
 
 export default function CategoryContentAdminPage() {
-  // TODO: Replace with real merchantId from session when merchant system is implemented
-  const MERCHANT_ID = "00000000-0000-0000-0000-000000000000";
+const MERCHANT_ID = getStoreOwnerId();
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [content, setContent] = useState<CategoryContent>(

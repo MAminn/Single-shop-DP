@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { trpc } from "#root/shared/trpc/client";
+import { getStoreOwnerId } from "#root/shared/config/store";
 import { toast } from "sonner";
 import { Button } from "#root/components/ui/button";
 import {
@@ -57,9 +58,7 @@ export default function HomepageAdminPage() {
   const pageContext = usePageContext();
   const session = pageContext.clientSession;
 
-  // TODO: Replace with real merchantId from session when merchant system is implemented
-  // For now, using default UUID as placeholder
-  const MERCHANT_ID = "00000000-0000-0000-0000-000000000000";
+const MERCHANT_ID = getStoreOwnerId();
 
   const [content, setContent] = useState<HomepageContent>(
     DEFAULT_HOMEPAGE_CONTENT,

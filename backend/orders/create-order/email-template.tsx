@@ -129,13 +129,7 @@ export const NewOrderEmailTemplate = ({
                     )}
                   </Column>
                 </Row>
-                {item.vendorName && (
-                  <Row style={vendorRow}>
-                    <Column style={vendorCell} colSpan={3}>
-                      Vendor: {item.vendorName}
-                    </Column>
-                  </Row>
-                )}
+
               </React.Fragment>
             ))}
 

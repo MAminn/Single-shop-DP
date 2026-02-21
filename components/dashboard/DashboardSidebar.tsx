@@ -90,7 +90,7 @@ export function DashboardSidebar() {
     },
   ];
 
-  const vendorSidebarItems = [
+  const defaultSidebarItems = [
     {
       label: "Overview",
       href: "/dashboard",
@@ -109,7 +109,7 @@ export function DashboardSidebar() {
   ];
 
   const sideBarItems =
-    userRole === "admin" ? adminSidebarItems : vendorSidebarItems;
+    userRole === "admin" ? adminSidebarItems : defaultSidebarItems;
 
   return (
     <Sidebar collapsible='icon' className='h-full border-none'>

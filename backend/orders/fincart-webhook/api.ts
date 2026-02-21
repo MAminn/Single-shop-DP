@@ -5,14 +5,29 @@ import { provideDatabase } from "#root/shared/trpc/server";
 import { fincartWebhookSchema, processFincartWebhook } from "./service";
 import { ServerError } from "#root/shared/error/server";
 
-// Environment variable for webhook secret token
-const FINCART_WEBHOOK_SECRET =
-  process.env.FINCART_WEBHOOK_SECRET || "your-default-secret-token-change-this";
+// Environment variable for webhook secret token — MUST be set in production
+const FINCART_WEBHOOK_SECRET = process.env.FINCART_WEBHOOK_SECRET;
+
+if (!FINCART_WEBHOOK_SECRET) {
+  console.warn(
+    "[Fincart Webhook] FINCART_WEBHOOK_SECRET is not set. Webhook endpoint will reject all requests.",
+  );
+}
 
 export const fincartWebhookPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.post("/", async (request, reply) => {
     try {
       const log = request.log.child({ module: "fincart-webhook" });
+
+      // Reject all requests if the webhook secret is not configured
+      if (!FINCART_WEBHOOK_SECRET) {
+        log.error("FINCART_WEBHOOK_SECRET is not configured");
+        return reply.status(503).send({
+          success: false,
+          error: "Webhook endpoint not configured",
+        });
+      }
+
       log.info({ body: request.body }, "Received webhook from Fincart");
 
       // Validate the request body against our schema

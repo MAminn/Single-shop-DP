@@ -150,8 +150,11 @@ export function validateSessionToken(token: string) {
 		}
 
 		return {
+			id: user.id,
 			token: session.token,
 			email: user.email,
+			name: user.name,
+			phone: user.phone,
 			expiresAt: session.expiresAt,
 			role: user.role as "admin" | "user", // Single-shop: Only admin and user roles
 		} satisfies SessionValidationResult;

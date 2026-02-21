@@ -213,7 +213,7 @@ export function ModernHomeTemplateV2({
 }: ModernHomeTemplateV2Props) {
   const {
     title = "Discover Amazing Products",
-    subtitle = "Shop the latest trends from top vendors around the world",
+    subtitle = "Shop the latest trends and exclusive collections",
     ctaText = "Shop Now",
     ctaLink = "/shop",
     backgroundImage,

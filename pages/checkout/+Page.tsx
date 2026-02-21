@@ -16,6 +16,7 @@ import type {
   CheckoutOrderSummaryItem,
   CheckoutTotals,
 } from "#root/components/template-system";
+import { STORE_CURRENCY } from "#root/shared/config/branding";
 import { navigate } from "vike/client/router";
 
 export default function CheckoutPage() {
@@ -142,9 +143,11 @@ export default function CheckoutPage() {
 
       console.log("[Checkout] Order created successfully:", result.result?.id);
 
-      // Navigate to order confirmation/success page
-      // TODO: Pass order ID to confirmation page
-      navigate("/");
+      // Navigate to order confirmation page with order details
+      const orderId = result.result?.id ?? "";
+      const orderTotal = result.result?.total ?? "";
+      const email = encodeURIComponent(formValues.email || "");
+      navigate(`/order-confirmation?id=${orderId}&total=${orderTotal}&email=${email}`);
     } catch (error) {
       console.error("[Checkout] Order submission failed:", error);
       setErrorMessage(
@@ -181,7 +184,7 @@ export default function CheckoutPage() {
     errorMessage,
     onSubmit: handleSubmit,
     onEditCart: handleEditCart,
-    currency: "EGP",
+    currency: STORE_CURRENCY,
   };
 
   return <Template.component {...templateProps} />;

@@ -130,7 +130,7 @@ export function HomeFeaturedProducts({
             <ProductCard
               key={product.id}
               product={product}
-              showVendor={true}
+              showVendor={false}
               showImage={true}
               imageSize='medium'
               className='h-full transition-all hover:shadow-lg'

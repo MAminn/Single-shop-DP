@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { trpc } from "#root/shared/trpc/client";
+import { getStoreOwnerId } from "#root/shared/config/store";
 import { getTemplateComponent } from "#root/components/template-system";
 import { useTemplate } from "#root/frontend/contexts/TemplateContext";
 import type { LandingTemplateModernProps } from "#root/components/template-system";
@@ -73,8 +74,7 @@ function Page() {
         }
 
         // Fetch homepage content
-        // TODO: Replace with actual merchantId from context/auth
-        const merchantId = "00000000-0000-0000-0000-000000000000";
+        const merchantId = getStoreOwnerId();
         try {
           const contentResult = await trpc.homepage.getContent.query({
             merchantId,

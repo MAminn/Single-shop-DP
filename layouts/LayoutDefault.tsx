@@ -1,4 +1,5 @@
 import Navbar from "#root/components/globals/Navbar.jsx";
+import { Footer } from "#root/components/globals/Footer";
 import { useEffect, useState, memo } from "react";
 import "./style.css";
 import { trpc } from "#root/shared/trpc/client.js";
@@ -66,6 +67,7 @@ const Content = memo(({ children }: { children: React.ReactNode }) => {
               >
                 {!isDashboardRoute && <Navbar lang="en" />}
                 {children}
+                {!isDashboardRoute && <Footer />}
                 <Toaster />
                 <ShadcnToaster />
               </main>

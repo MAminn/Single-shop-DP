@@ -87,7 +87,7 @@ export function ProductCardTemplatePreview({
       vendorId: sampleProduct.vendorId,
       vendorName: sampleProduct.vendorName,
     },
-    showVendor: true,
+    showVendor: false,
     showAddToCart: true,
     showQuickView: true,
     showWishlist: true,

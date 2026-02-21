@@ -237,7 +237,7 @@ const ModernProductsTemplate: React.FC<ModernProductsTemplateProps> = ({
                 style={{
                   animationDelay: `${index * 100}ms`,
                 }}>
-                <ProductCard product={product} showVendor={true} />
+                <ProductCard product={product} showVendor={false} />
               </div>
             ))}
           </div>

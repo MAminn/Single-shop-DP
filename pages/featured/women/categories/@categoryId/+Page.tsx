@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ErrorSection } from "#root/components/dashboard/ErrorSection";
 import { usePageContext } from "vike-react/usePageContext";
 import { trpc } from "#root/shared/trpc/client";
+import { getStoreOwnerId } from "#root/shared/config/store";
 import { getTemplateComponent } from "#root/components/template-system/templateConfig";
 import { useTemplate } from "#root/frontend/contexts/TemplateContext";
 import type {
@@ -42,7 +43,7 @@ const Page = () => {
             includeOutOfStock: true,
           }),
           trpc.category.getContent.query({
-            merchantId: "00000000-0000-0000-0000-000000000000", // TODO: Replace with actual merchant ID
+            merchantId: getStoreOwnerId(),
             categoryId: categoryId,
           }),
         ]);
