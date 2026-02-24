@@ -219,7 +219,7 @@ const Navbar: React.FC<NavbarProps> = ({
                     </Link>
                   </div>
 
-                  {/* Main navigation links */}}
+                  {/* Main navigation links */}
                   <div className='p-6 flex-1'>
                     {/* Mobile search */}
                     <form onSubmit={handleSearchSubmit} className="mb-6">
