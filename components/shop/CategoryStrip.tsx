@@ -28,11 +28,11 @@ export function CategoryStrip({ categories, className }: CategoryStripProps) {
 
   return (
     <section className={cn("bg-white", className)}>
-      {/* Near-full-bleed — minimal horizontal padding */}
-      <div className='p-1'>
-        {/* Horizontal scroll on mobile, seamless row on desktop */}
-        <div className='overflow-x-auto  scrollbar-hide snap-x snap-mandatory'>
-          <div className='flex gap-0.75 sm:gap-1'>
+      {/* Vertical stack on mobile, near-full-bleed row on desktop */}
+      <div className='px-4 py-4 sm:p-1'>
+        {/* Vertical on mobile, horizontal scroll on sm+ */}
+        <div className='sm:overflow-x-auto sm:scrollbar-hide sm:snap-x sm:snap-mandatory'>
+          <div className='flex flex-col gap-4 sm:flex-row sm:gap-1'>
             {categories.map((category) => (
               <CategoryTile key={category.id} category={category} />
             ))}
@@ -61,9 +61,10 @@ function CategoryTile({ category }: CategoryTileProps) {
       href={categoryLink}
       className={cn(
         "group relative block",
-        "shrink-0 snap-start snap-always",
-        "w-[78vw] sm:w-[44vw] lg:flex-1",
-        "h-[50vh] sm:h-[36vh] lg:h-[50vh]",
+        "sm:shrink-0 sm:snap-start sm:snap-always",
+        "w-full sm:w-[44vw] lg:flex-1",
+        "h-60 sm:h-[36vh] lg:h-[50vh]",
+        "rounded-xl sm:rounded-none",
         "overflow-hidden",
         "focus:outline-none focus:ring-1 focus:ring-stone-300 focus:ring-offset-1",
       )}>
@@ -98,7 +99,7 @@ function CategoryTile({ category }: CategoryTileProps) {
         <div
           className={cn(
             "absolute inset-0",
-            "bg-linear-to-t from-black/30 via-transparent to-transparent",
+            "bg-linear-to-t from-black/45 via-black/5 to-transparent sm:from-black/30 sm:via-transparent",
             "transition-opacity duration-500 ease-out",
             "group-hover:from-black/35",
           )}
@@ -106,8 +107,8 @@ function CategoryTile({ category }: CategoryTileProps) {
       )}
 
       {/* Category label — bottom-left, editorial uppercase */}
-      <div className='absolute inset-x-0 bottom-0 px-6 pb-7 sm:px-8 sm:pb-9'>
-        <h3 className='text-white/90 text-[12px] sm:text-[13px] font-light uppercase tracking-[0.22em] leading-none'>
+      <div className='absolute inset-x-0 bottom-0 px-5 pb-5 sm:px-8 sm:pb-9'>
+        <h3 className='text-white/90 text-[11px] sm:text-[13px] font-light uppercase tracking-[0.25em] sm:tracking-[0.22em] leading-none'>
           {category.name}
         </h3>
       </div>
@@ -119,12 +120,12 @@ function CategoryTile({ category }: CategoryTileProps) {
 export function CategoryStripSkeleton() {
   return (
     <section className='bg-white'>
-      <div className='px-0.75 sm:px-1'>
-        <div className='flex gap-0.75 sm:gap-1 overflow-hidden'>
+      <div className='px-4 py-1 sm:p-1'>
+        <div className='flex flex-col gap-4 sm:flex-row sm:gap-1 sm:overflow-hidden'>
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className='shrink-0 w-[78vw] sm:w-[44vw] lg:flex-1 h-[50vh] sm:h-[36vh] lg:h-[38vh] bg-stone-50 animate-pulse'
+              className='w-full sm:w-[44vw] lg:flex-1 h-60 sm:h-[36vh] lg:h-[38vh] rounded-xl sm:rounded-none bg-stone-50 animate-pulse'
             />
           ))}
         </div>
