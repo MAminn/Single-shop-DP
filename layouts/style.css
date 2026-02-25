@@ -222,12 +222,14 @@ input[type="number"] {
   .scrollbar-hide::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
   }
+}
 
-  /*
-   * Hero section height — uses dvh (dynamic viewport height) with vh fallback.
-   * dvh accounts for the mobile address bar, ensuring identical sizing
-   * across localhost (desktop emulator) and real mobile browsers.
-   */
+/*
+ * Hero section height — in @layer components so it's never tree-shaken.
+ * Uses dvh (dynamic viewport height) with vh fallback so mobile browsers
+ * account for the address bar, matching desktop emulator sizing exactly.
+ */
+@layer components {
   .hero-h {
     height: 50vh;
     height: 50dvh;
