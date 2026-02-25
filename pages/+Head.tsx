@@ -179,7 +179,7 @@ export default function HeadDefault() {
 
       <style>{`
         /* Prevent layout shifts */
-        img { display: block; max-width: 100%; height: auto; }
+        img { display: block; max-width: 100%; }
         
         /* Responsive containers for mobile first approach */
         .container { 
