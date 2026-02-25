@@ -105,7 +105,7 @@ function NewArrivalCard({ product }: { product: NewArrivalProduct }) {
         "focus:outline-none",
       )}>
       {/* Image area */}
-      <div className='relative  bg-stone-50 overflow-hidden'>
+      <div className='relative aspect-3/4 bg-stone-50 overflow-hidden'>
         {imageUrl ? (
           <img
             src={imageUrl}
