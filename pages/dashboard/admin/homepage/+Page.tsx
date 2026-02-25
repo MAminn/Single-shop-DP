@@ -58,7 +58,7 @@ export default function HomepageAdminPage() {
   const pageContext = usePageContext();
   const session = pageContext.clientSession;
 
-const MERCHANT_ID = getStoreOwnerId();
+  const MERCHANT_ID = getStoreOwnerId();
 
   const [content, setContent] = useState<HomepageContent>(
     DEFAULT_HOMEPAGE_CONTENT,
@@ -1055,25 +1055,32 @@ const MERCHANT_ID = getStoreOwnerId();
                     size='md'
                     disabled={!content.hero.enabled || isUploadingMobileImage}
                     onClick={() =>
-                      document.getElementById("hero-mobile-image-upload")?.click()
+                      document
+                        .getElementById("hero-mobile-image-upload")
+                        ?.click()
                     }>
                     {isUploadingMobileImage ? (
                       <>Uploading...</>
                     ) : (
                       <>
                         <Upload className='w-4 h-4 mr-2' />
-                        {content.hero.mobileBackgroundImage ? "Replace" : "Upload"}
+                        {content.hero.mobileBackgroundImage
+                          ? "Replace"
+                          : "Upload"}
                       </>
                     )}
                   </Button>
                 </div>
               </div>
               <p className='text-sm text-muted-foreground mt-1'>
-                Used on mobile screens only (≤640px). Falls back to desktop hero image if empty.
+                Used on mobile screens only (≤640px). Falls back to desktop hero
+                image if empty.
               </p>
               {content.hero.mobileBackgroundImage && (
                 <div className='mt-3'>
-                  <Label className='text-sm text-muted-foreground'>Preview:</Label>
+                  <Label className='text-sm text-muted-foreground'>
+                    Preview:
+                  </Label>
                   <div className='relative w-full max-w-50 h-32 rounded-lg overflow-hidden border border-border bg-muted mt-1'>
                     <img
                       src={content.hero.mobileBackgroundImage}
