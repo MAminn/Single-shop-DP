@@ -222,4 +222,20 @@ input[type="number"] {
   .scrollbar-hide::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
   }
+
+  /*
+   * Hero section height — uses dvh (dynamic viewport height) with vh fallback.
+   * dvh accounts for the mobile address bar, ensuring identical sizing
+   * across localhost (desktop emulator) and real mobile browsers.
+   */
+  .hero-h {
+    height: 50vh;
+    height: 50dvh;
+  }
+  @media (min-width: 768px) {
+    .hero-h {
+      height: 100vh;
+      height: 100dvh;
+    }
+  }
 }

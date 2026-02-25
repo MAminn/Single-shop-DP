@@ -140,11 +140,11 @@ export function LandingTemplateModern({
 
       {/* Hero Section - Percé Editorial Style */}
       {content.hero.enabled && (
-        <section className='relative bg-stone-900 overflow-hidden md:h-screen h-[50vh] '>
+        <section className='relative bg-stone-900 overflow-hidden hero-h'>
           {/* Full-bleed Background Image with mobile variant */}
           <div className='absolute inset-0 z-0'>
             {content.hero.backgroundImage ? (
-              <picture>
+              <picture className='block w-full h-full'>
                 {/* Mobile-specific hero image (<=640px), falls back to desktop */}
                 <source
                   media='(max-width: 640px)'
@@ -164,8 +164,15 @@ export function LandingTemplateModern({
             )}
           </div>
 
-          {/* Dark Overlay for Text Readability */}
-          <div className='absolute inset-0 z-1 bg-linear-to-b from-black/40 via-black/35 to-black/50' />
+          {/* Dark Overlay for Text Readability — inline style to avoid production CSS stripping */}
+          <div
+            className='absolute inset-0'
+            style={{
+              zIndex: 1,
+              backgroundImage:
+                "linear-gradient(to bottom, rgba(0,0,0,0.40), rgba(0,0,0,0.35), rgba(0,0,0,0.50))",
+            }}
+          />
 
           {/* Content Overlay - Centered Editorial Layout */}
           <div className='relative z-10 container mx-auto px-6 sm:px-8 lg:px-12 h-full flex items-center justify-center'>
