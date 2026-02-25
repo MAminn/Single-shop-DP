@@ -1,10 +1,10 @@
 import { useState, type FC } from "react";
 import { Link } from "#root/components/utils/Link";
-import { Button } from "#root/components/ui/button";
-import { ChevronRight, Mail, ExternalLink } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { STORE_NAME } from "#root/shared/config/branding";
 
-// Custom Icon Components to replace the unavailable TikTok icon
+// ─── Social Icons ────────────────────────────────────────────────────────────
+
 const FacebookIcon = () => (
   <svg
     xmlns='http://www.w3.org/2000/svg'
@@ -13,7 +13,7 @@ const FacebookIcon = () => (
     viewBox='0 0 24 24'
     fill='none'
     stroke='currentColor'
-    strokeWidth='2'
+    strokeWidth='1.2'
     strokeLinecap='round'
     strokeLinejoin='round'
     aria-labelledby='facebook-title'>
@@ -30,7 +30,7 @@ const InstagramIcon = () => (
     viewBox='0 0 24 24'
     fill='none'
     stroke='currentColor'
-    strokeWidth='2'
+    strokeWidth='1.2'
     strokeLinecap='round'
     strokeLinejoin='round'
     aria-labelledby='instagram-title'>
@@ -49,7 +49,7 @@ const TikTokIcon = () => (
     viewBox='0 0 24 24'
     fill='none'
     stroke='currentColor'
-    strokeWidth='2'
+    strokeWidth='1.2'
     strokeLinecap='round'
     strokeLinejoin='round'
     aria-labelledby='tiktok-title'>
@@ -61,43 +61,28 @@ const TikTokIcon = () => (
   </svg>
 );
 
-// Default social links
+// ─── Default Data ────────────────────────────────────────────────────────────
+
 const defaultSocialLinks = [
-  {
-    id: "facebook",
-    name: "Facebook",
-    url: "#",
-    icon: FacebookIcon,
-  },
-  {
-    id: "instagram",
-    name: "Instagram",
-    url: "#",
-    icon: InstagramIcon,
-  },
-  {
-    id: "tiktok",
-    name: "TikTok",
-    url: "#",
-    icon: TikTokIcon,
-  },
+  { id: "facebook", name: "Facebook", url: "#", icon: FacebookIcon },
+  { id: "instagram", name: "Instagram", url: "#", icon: InstagramIcon },
+  { id: "tiktok", name: "TikTok", url: "#", icon: TikTokIcon },
 ];
 
-// Default navigation links
 const defaultFooterLinks = [
   {
     id: "shop",
     title: "Shop",
     links: [
-      { id: "men", name: "Men's Collection", url: "/featured/men" },
-      { id: "women", name: "Women's Collection", url: "/featured/women" },
       { id: "all-products", name: "All Products", url: "/shop" },
-      { id: "brands", name: "Brands", url: "/featured/brands" },
+      { id: "new-arrivals", name: "New Arrivals", url: "/featured/new" },
+      { id: "women", name: "Women", url: "/featured/women" },
+      { id: "men", name: "Men", url: "/featured/men" },
     ],
   },
   {
-    id: "customer-service",
-    title: "Customer Service",
+    id: "help",
+    title: "Help",
     links: [
       { id: "contact", name: "Contact Us", url: "#" },
       { id: "faq", name: "FAQ", url: "#faq" },
@@ -106,6 +91,8 @@ const defaultFooterLinks = [
     ],
   },
 ];
+
+// ─── Props ───────────────────────────────────────────────────────────────────
 
 interface FooterProps {
   brandName?: string;
@@ -119,18 +106,16 @@ interface FooterProps {
   footerLinks?: Array<{
     id: string;
     title: string;
-    links: Array<{
-      id: string;
-      name: string;
-      url: string;
-    }>;
+    links: Array<{ id: string; name: string; url: string }>;
   }>;
   showNewsletter?: boolean;
 }
 
+// ─── Component ───────────────────────────────────────────────────────────────
+
 export const Footer: FC<FooterProps> = ({
   brandName = STORE_NAME,
-  description = "Curated fashion and quality products, all in one place.",
+  description = "Sculptural piercings & curated jewelry — crafted with intention.",
   socialLinks = defaultSocialLinks,
   footerLinks = defaultFooterLinks,
   showNewsletter = true,
@@ -139,29 +124,78 @@ export const Footer: FC<FooterProps> = ({
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically handle the newsletter subscription
     alert(`Thank you for subscribing with ${email}!`);
     setEmail("");
   };
 
   return (
-    <footer className='bg-gray-900 text-white pt-16 pb-8'>
-      <div className='container mx-auto px-4'>
-        <div className='grid grid-cols-1 md:grid-cols-4 gap-8 mb-12'>
-          {/* Brand column */}
-          <div className='space-y-6'>
-            <h3 className='text-xl font-bold mb-4'>{brandName}</h3>
-            <p className='text-gray-400 text-sm leading-relaxed'>
+    <footer className='bg-[#0F100E] text-[#A19887] selection:bg-[#8F7666]/20'>
+      {/* ── Newsletter block — full-width, centered, editorial ── */}
+      {showNewsletter && (
+        <div className='border-b border-[#1E1B17]'>
+          <div className='container mx-auto px-6 md:px-12 lg:px-20 py-20 md:py-24'>
+            <div className='max-w-xl mx-auto text-center space-y-8'>
+              {/* Decorative micro-line */}
+              <div className='w-8 h-px bg-[#8F7666]/40 mx-auto' />
+
+              <h3 className='text-[#DDD8C2] text-[11px] md:text-[12px] font-light tracking-[0.28em] uppercase leading-none'>
+                Stay in the loop
+              </h3>
+              <p className='text-[12px] md:text-[13px] text-[#6B5F52] font-light leading-[1.8] tracking-[0.02em] max-w-sm mx-auto'>
+                New arrivals, exclusive offers &amp; editorial moments —
+                delivered quietly.
+              </p>
+
+              <form
+                onSubmit={handleSubscribe}
+                className='flex items-end gap-4 max-w-sm mx-auto pt-2'>
+                <input
+                  type='email'
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder='your@email.com'
+                  required
+                  className='flex-1 bg-transparent border-0 border-b border-[#2F261B] px-0 pb-3 pt-1 text-[14px] md:text-[15px] text-[#DDD8C2] placeholder:text-[#3A3028] font-light tracking-[0.03em] focus:outline-none focus:border-[#8F7666] transition-colors duration-700'
+                />
+                <button
+                  type='submit'
+                  className='pb-3 text-[#4A3F35] hover:text-[#A19887] transition-colors duration-700'
+                  aria-label='Subscribe'>
+                  <ArrowRight className='w-[18px] h-[18px]' strokeWidth={1.2} />
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Main footer grid ── */}
+      <div className='container mx-auto px-6 md:px-12 lg:px-20 py-16 md:py-20'>
+        <div className='grid grid-cols-1 md:grid-cols-12 gap-14 md:gap-8 lg:gap-12'>
+          {/* Brand column — dominant */}
+          <div className='md:col-span-5 lg:col-span-5 space-y-7'>
+            <Link
+              href='/'
+              className='inline-block text-[26px] md:text-[28px] font-extralight tracking-[0.18em] text-[#DDD8C2] uppercase hover:opacity-70 transition-opacity duration-700'>
+              {brandName}
+            </Link>
+
+            {/* Subtle brand accent line */}
+            <div className='w-10 h-px bg-[#2F261B]' />
+
+            <p className='text-[12px] md:text-[13px] text-[#6B5F52] font-light leading-[1.9] tracking-[0.01em] max-w-[280px]'>
               {description}
             </p>
-            <div className='flex space-x-4'>
+
+            {/* Social icons — larger, more spaced, opacity hover */}
+            <div className='flex items-center gap-7 pt-3'>
               {socialLinks.map((social) => (
                 <a
                   key={social.id}
                   href={social.url}
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='text-gray-400 hover:text-accent-lb transition-colors duration-300'
+                  className='text-[#4A3F35] opacity-60 hover:opacity-100 transition-opacity duration-700'
                   aria-label={`Visit our ${social.name} page`}>
                   <social.icon />
                 </a>
@@ -169,23 +203,21 @@ export const Footer: FC<FooterProps> = ({
             </div>
           </div>
 
-          {/* Navigation columns */}
+          {/* Spacer */}
+          <div className='hidden lg:block lg:col-span-1' />
+
+          {/* Nav columns */}
           {footerLinks.map((column) => (
-            <div key={column.id}>
-              <h3 className='text-lg font-semibold mb-6'>{column.title}</h3>
-              <ul className='space-y-4'>
+            <div key={column.id} className='md:col-span-3 lg:col-span-2'>
+              <h4 className='text-[9px] md:text-[10px] uppercase tracking-[0.22em] text-[#8F7666] font-normal mb-7 md:mb-8'>
+                {column.title}
+              </h4>
+              <ul className='space-y-5'>
                 {column.links.map((link) => (
                   <li key={link.id}>
                     <Link
                       href={link.url}
-                      className='text-gray-400 hover:text-accent-lb transition-colors duration-300 text-sm flex items-center'>
-                      {link.url.startsWith("mailto:") ? (
-                        <Mail className='mr-2 h-4 w-4' />
-                      ) : link.url.startsWith("http") ? (
-                        <ExternalLink className='mr-2 h-4 w-4' />
-                      ) : (
-                        <ChevronRight className='mr-2 h-4 w-4' />
-                      )}
+                      className='text-[12px] md:text-[13px] text-[#5A5048] hover:text-[#DDD8C2] font-light tracking-[0.03em] transition-colors duration-700'>
                       {link.name}
                     </Link>
                   </li>
@@ -193,58 +225,32 @@ export const Footer: FC<FooterProps> = ({
               </ul>
             </div>
           ))}
-
-          {/* Newsletter */}
-          {showNewsletter && (
-            <div>
-              <h3 className='text-lg font-semibold mb-6'>Stay Updated</h3>
-              <p className='text-gray-400 text-sm mb-4'>
-                Subscribe to our newsletter for the latest products, trends, and
-                exclusive offers.
-              </p>
-              <form
-                onSubmit={handleSubscribe}
-                className='flex flex-col space-y-3'>
-                <input
-                  type='email'
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder='Your email address'
-                  required
-                  className='px-4 py-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-lb'
-                />
-                <Button
-                  type='submit'
-                  className='bg-accent-lb text-white hover:bg-accent-db transition-colors'>
-                  Subscribe
-                </Button>
-              </form>
-            </div>
-          )}
         </div>
+      </div>
 
-        {/* Bottom footer */}
-        <div className='pt-8 mt-8 border-t border-gray-800 text-center text-gray-500 text-sm'>
-          <p>
-            © {new Date().getFullYear()} {brandName}. All rights reserved.
+      {/* ── Bottom legal strip ── */}
+      <div className='border-t border-[#1E1B17]'>
+        <div className='container mx-auto px-6 md:px-12 lg:px-20 py-7 flex flex-col md:flex-row items-center justify-between gap-4'>
+          <p className='text-[10px] text-[#3A3028] font-light tracking-[0.08em]'>
+            &copy; {new Date().getFullYear()} {brandName}
           </p>
-          <p className='mt-2'>
+          <div className='flex items-center gap-8'>
             <Link
               href='#'
-              className='text-gray-500 hover:text-accent-lb transition-colors mx-2'>
-              Terms of Service
+              className='text-[10px] text-[#3A3028] hover:text-[#6B5F52] font-light tracking-[0.08em] transition-colors duration-700'>
+              Terms
             </Link>
             <Link
               href='#'
-              className='text-gray-500 hover:text-accent-lb transition-colors mx-2'>
-              Privacy Policy
+              className='text-[10px] text-[#3A3028] hover:text-[#6B5F52] font-light tracking-[0.08em] transition-colors duration-700'>
+              Privacy
             </Link>
             <Link
               href='#'
-              className='text-gray-500 hover:text-accent-lb transition-colors mx-2'>
-              Cookie Policy
+              className='text-[10px] text-[#3A3028] hover:text-[#6B5F52] font-light tracking-[0.08em] transition-colors duration-700'>
+              Cookies
             </Link>
-          </p>
+          </div>
         </div>
       </div>
     </footer>

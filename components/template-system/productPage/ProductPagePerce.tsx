@@ -700,7 +700,7 @@ export function ProductPagePerce({
                   type='button'
                   onClick={handleAddToCart}
                   disabled={!product.available || product.stock === 0}
-                  className='flex h-12 flex-1 items-center justify-center gap-2.5 rounded-lg bg-stone-800 text-[11.5px] font-normal uppercase tracking-[0.18em] text-stone-100 transition-colors duration-200 hover:bg-stone-700 disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-stone-400'>
+                  className='flex h-12 p-4 flex-1 items-center justify-center gap-2.5 rounded-lg bg-stone-800 text-[11.5px] font-normal uppercase tracking-[0.18em] text-stone-100 transition-colors duration-200 hover:bg-stone-700 disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-stone-400'>
                   <ShoppingCart size={14} strokeWidth={1.5} />
                   Add to Bag
                 </button>

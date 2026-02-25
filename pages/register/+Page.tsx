@@ -1,21 +1,12 @@
-import AnimatedContent from "#root/components/utils/AnimatedContent";
-import { Button } from "#root/components/ui/button.jsx";
+import { Button } from "#root/components/ui/button";
+import { Input } from "#root/components/ui/input";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
-import { navigate } from "vike/client/router";
-import {
-  CheckCircle,
-  Eye,
-  EyeOff,
-  Mail,
-  Phone,
-  User,
-  UserPlus,
-} from "lucide-react";
+import { ArrowLeft, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { Link } from "#root/components/utils/Link";
 
 const formSchema = z
@@ -80,185 +71,234 @@ export default function Page() {
     }
   };
 
-  if (isRegistered) {
-    return (
-      <AnimatedContent
-        distance={100}
-        direction='vertical'
-        reverse={false}
-        config={{ tension: 60, friction: 30 }}
-        initialOpacity={0}
-        animateOpacity
-        scale={1}
-        threshold={0.1}>
-        <div className='max-w-md mx-auto my-20 px-6 py-10 bg-white rounded-lg shadow-md text-center'>
-          <CheckCircle className='h-16 w-16 text-green-500 mx-auto mb-6' />
-          <h1 className='text-2xl font-bold text-center text-[#1B4571] mb-4'>
-            Registration Successful!
-          </h1>
-          <p className='text-gray-600 mb-6'>
-            Please check your email to verify your account. Once verified, you
-            can log in to access all features of Percé.
-          </p>
-          <Link
-            href='/login'
-            className='bg-[#1B4571] hover:bg-[#1B4571]/90 py-2 px-6'>
-            Go to Login
-          </Link>
-        </div>
-      </AnimatedContent>
-    );
-  }
-
   return (
-    <AnimatedContent
-      distance={200}
-      direction='vertical'
-      reverse={false}
-      config={{ tension: 60, friction: 30 }}
-      initialOpacity={0}
-      animateOpacity
-      scale={1.5}
-      threshold={0.2}>
-      <section className='w-full h-full flex justify-center items-center'>
-        <div className='w-full lg:max-w-xl gap-8 h-auto min-h-[700px] mt-12 bg-white rounded-3xl flex flex-col lg:flex-row justify-around items-start'>
-          <div className='w-full h-full px-4 pb-12 lg:py-12 lg:pl-8 flex flex-col gap-8 order-2 lg:order-1'>
-            <h1 className='text-2xl md:text-4xl text-center font-semibold mb-6 mt-10'>
-              Register An Account
-            </h1>
+    <section className='relative w-full min-h-screen flex justify-center items-center py-12 md:py-24 px-4 md:px-8 overflow-hidden'>
+      {/* Background — matches login page */}
+      <div className='absolute inset-0 bg-gradient-to-br from-[#1A1612] via-[#2B231D] to-[#1C1814]' />
+
+      {/* Subtle grain texture */}
+      <div
+        className='absolute inset-0 opacity-[0.015]'
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+        }}
+      />
+
+      {/* Cinematic vignette */}
+      <div className='absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)]' />
+
+      {/* Card */}
+      <div className='relative w-full max-w-[460px] h-auto bg-[#F8F6F3] rounded-[20px] flex flex-col gap-8 p-10 md:p-12 shadow-[0_12px_60px_rgba(0,0,0,0.08),0_4px_20px_rgba(0,0,0,0.04)] animate-in fade-in duration-700 ease-out'>
+        {/* Soft inner glow */}
+        <div className='absolute inset-0 rounded-[20px] shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]' />
+
+        {isRegistered ? (
+          /* ── Success state ── */
+          <div className='relative flex flex-col items-center gap-6 text-center'>
+            <div className='w-16 h-16 rounded-full bg-[#E8F5E9] flex items-center justify-center'>
+              <CheckCircle className='w-8 h-8 text-[#4CAF50]' />
+            </div>
+            <div className='space-y-3'>
+              <h1 className='text-[24px] md:text-[28px] font-light tracking-[-0.02em] text-[#2B231D] leading-tight'>
+                You're all set
+              </h1>
+              <p className='text-[14px] text-[#8B7E74] leading-relaxed max-w-[320px]'>
+                Please check your email to verify your account. Once verified,
+                you can log in to access all features.
+              </p>
+            </div>
+            <Link
+              href='/login'
+              className='inline-flex items-center gap-2 text-[13px] text-[#2B231D] hover:text-[#C4A574] transition-all duration-500 tracking-[0.04em] font-light mt-4'>
+              <ArrowLeft className='w-4 h-4' />
+              Go to login
+            </Link>
+          </div>
+        ) : (
+          /* ── Registration form ── */
+          <>
+            <div className='relative space-y-3'>
+              <h1 className='text-[28px] md:text-[32px] text-center font-light tracking-[-0.02em] text-[#2B231D] leading-tight'>
+                Create account
+              </h1>
+              <p className='text-center text-[13px] text-[#8B7E74] tracking-wide leading-relaxed'>
+                Join us — it only takes a moment
+              </p>
+            </div>
 
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className='flex flex-col gap-4'>
-              <div className='relative'>
-                <span className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400'>
-                  <User className='h-5 w-5' />
-                </span>
-                <input
-                  {...form.register("name")}
-                  type='text'
-                  placeholder='Full Name'
-                  className='border border-gray-300 rounded-lg pl-10 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-[#1B4571]'
-                />
-                {form.formState.errors.name && (
-                  <p className='text-red-500 text-sm mt-1'>
-                    {form.formState.errors.name.message}
-                  </p>
-                )}
+              className='relative flex flex-col gap-6 w-full'>
+              {/* Name + Email — side by side on md+ */}
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                {/* Name */}
+                <div className='relative'>
+                  <label
+                    htmlFor='name'
+                    className='block text-[10px] uppercase tracking-[0.12em] text-[#8B7E74] mb-3 font-medium'>
+                    Full name
+                  </label>
+                  <Input
+                    {...form.register("name")}
+                    id='name'
+                    type='text'
+                    placeholder='Jane Doe'
+                    className='border-0 border-b border-[#D9D3CC] bg-transparent rounded-none px-0 py-3 w-full text-[15px] focus:outline-none focus:ring-0 focus:border-[#C4A574] transition-all duration-500 placeholder:text-[#BFB5AA] text-[#2B231D] font-light'
+                    disabled={isSubmitting}
+                  />
+                  {form.formState.errors.name && (
+                    <p className='text-[#9D6B6B] text-[11px] mt-2.5 tracking-wide'>
+                      {form.formState.errors.name.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Email */}
+                <div className='relative'>
+                  <label
+                    htmlFor='email'
+                    className='block text-[10px] uppercase tracking-[0.12em] text-[#8B7E74] mb-3 font-medium'>
+                    Email
+                  </label>
+                  <Input
+                    {...form.register("email")}
+                    id='email'
+                    type='email'
+                    placeholder='your@email.com'
+                    className='border-0 border-b border-[#D9D3CC] bg-transparent rounded-none px-0 py-3 w-full text-[15px] focus:outline-none focus:ring-0 focus:border-[#C4A574] transition-all duration-500 placeholder:text-[#BFB5AA] text-[#2B231D] font-light'
+                    disabled={isSubmitting}
+                  />
+                  {form.formState.errors.email && (
+                    <p className='text-[#9D6B6B] text-[11px] mt-2.5 tracking-wide'>
+                      {form.formState.errors.email.message}
+                    </p>
+                  )}
+                </div>
               </div>
 
+              {/* Phone */}
               <div className='relative'>
-                <span className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400'>
-                  <Mail className='h-5 w-5' />
-                </span>
-                <input
-                  {...form.register("email")}
-                  type='email'
-                  placeholder='Email'
-                  className='border border-gray-300 rounded-lg pl-10 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-[#1B4571]'
-                />
-                {form.formState.errors.email && (
-                  <p className='text-red-500 text-sm mt-1'>
-                    {form.formState.errors.email.message}
-                  </p>
-                )}
-              </div>
-
-              <div className='relative'>
-                <span className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400'>
-                  <Phone className='h-5 w-5' />
-                </span>
-                <input
+                <label
+                  htmlFor='phone'
+                  className='block text-[10px] uppercase tracking-[0.12em] text-[#8B7E74] mb-3 font-medium'>
+                  Phone
+                </label>
+                <Input
                   {...form.register("phone")}
+                  id='phone'
                   type='tel'
-                  placeholder='Phone (+201xxxxxxxxx or 01xxxxxxxxx)'
-                  className='border border-gray-300 rounded-lg pl-10 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-[#1B4571]'
+                  placeholder='+201xxxxxxxxx'
+                  className='border-0 border-b border-[#D9D3CC] bg-transparent rounded-none px-0 py-3 w-full text-[15px] focus:outline-none focus:ring-0 focus:border-[#C4A574] transition-all duration-500 placeholder:text-[#BFB5AA] text-[#2B231D] font-light'
+                  disabled={isSubmitting}
                 />
                 {form.formState.errors.phone && (
-                  <p className='text-red-500 text-sm mt-1'>
+                  <p className='text-[#9D6B6B] text-[11px] mt-2.5 tracking-wide'>
                     {form.formState.errors.phone.message}
                   </p>
                 )}
               </div>
 
-              <div className='relative'>
-                <span className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400'>
-                  <User className='h-5 w-5' />
-                </span>
-                <input
-                  {...form.register("password")}
-                  type={showPassword ? "text" : "password"}
-                  placeholder='Password'
-                  className='border border-gray-300 rounded-lg pl-10 pr-12 py-2 w-full focus:outline-none focus:ring-2 focus:ring-[#1B4571]'
-                />
-                <button
-                  type='button'
-                  onClick={() => setShowPassword(!showPassword)}
-                  className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400'>
-                  {showPassword ? (
-                    <EyeOff className='h-5 w-5' />
-                  ) : (
-                    <Eye className='h-5 w-5' />
+              {/* Password + Confirm — side by side on md+ */}
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                {/* Password */}
+                <div className='relative'>
+                  <label
+                    htmlFor='password'
+                    className='block text-[10px] uppercase tracking-[0.12em] text-[#8B7E74] mb-3 font-medium'>
+                    Password
+                  </label>
+                  <div className='relative'>
+                    <Input
+                      {...form.register("password")}
+                      id='password'
+                      type={showPassword ? "text" : "password"}
+                      placeholder='Min. 8 characters'
+                      className='border-0 border-b border-[#D9D3CC] bg-transparent rounded-none px-0 py-3 w-full pr-10 text-[15px] focus:outline-none focus:ring-0 focus:border-[#C4A574] transition-all duration-500 placeholder:text-[#BFB5AA] text-[#2B231D] font-light'
+                      disabled={isSubmitting}
+                    />
+                    <button
+                      type='button'
+                      onClick={() => setShowPassword(!showPassword)}
+                      className='absolute right-0 top-1/2 transform -translate-y-1/2 text-[#9C918A] hover:text-[#C4A574] transition-colors duration-500 opacity-60 hover:opacity-100'
+                      disabled={isSubmitting}>
+                      {showPassword ? (
+                        <EyeOff className='h-[15px] w-[15px]' />
+                      ) : (
+                        <Eye className='h-[15px] w-[15px]' />
+                      )}
+                    </button>
+                  </div>
+                  {form.formState.errors.password && (
+                    <p className='text-[#9D6B6B] text-[11px] mt-2.5 tracking-wide'>
+                      {form.formState.errors.password.message}
+                    </p>
                   )}
-                </button>
-                {form.formState.errors.password && (
-                  <p className='text-red-500 text-sm mt-1'>
-                    {form.formState.errors.password.message}
-                  </p>
-                )}
+                </div>
+
+                {/* Confirm Password */}
+                <div className='relative'>
+                  <label
+                    htmlFor='confirmPassword'
+                    className='block text-[10px] uppercase tracking-[0.12em] text-[#8B7E74] mb-3 font-medium'>
+                    Confirm password
+                  </label>
+                  <div className='relative'>
+                    <Input
+                      {...form.register("confirmPassword")}
+                      id='confirmPassword'
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder='Repeat password'
+                      className='border-0 border-b border-[#D9D3CC] bg-transparent rounded-none px-0 py-3 w-full pr-10 text-[15px] focus:outline-none focus:ring-0 focus:border-[#C4A574] transition-all duration-500 placeholder:text-[#BFB5AA] text-[#2B231D] font-light'
+                      disabled={isSubmitting}
+                    />
+                    <button
+                      type='button'
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className='absolute right-0 top-1/2 transform -translate-y-1/2 text-[#9C918A] hover:text-[#C4A574] transition-colors duration-500 opacity-60 hover:opacity-100'
+                      disabled={isSubmitting}>
+                      {showConfirmPassword ? (
+                        <EyeOff className='h-[15px] w-[15px]' />
+                      ) : (
+                        <Eye className='h-[15px] w-[15px]' />
+                      )}
+                    </button>
+                  </div>
+                  {form.formState.errors.confirmPassword && (
+                    <p className='text-[#9D6B6B] text-[11px] mt-2.5 tracking-wide'>
+                      {form.formState.errors.confirmPassword.message}
+                    </p>
+                  )}
+                </div>
               </div>
 
-              <div className='relative'>
-                <span className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400'>
-                  <User className='h-5 w-5' />
-                </span>
-                <input
-                  {...form.register("confirmPassword")}
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder='Confirm Password'
-                  className='border border-gray-300 rounded-lg pl-10 pr-12 py-2 w-full focus:outline-none focus:ring-2 focus:ring-[#1B4571]'
-                />
-                <button
-                  type='button'
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400'>
-                  {showConfirmPassword ? (
-                    <EyeOff className='h-5 w-5' />
-                  ) : (
-                    <Eye className='h-5 w-5' />
-                  )}
-                </button>
-                {form.formState.errors.confirmPassword && (
-                  <p className='text-red-500 text-sm mt-1'>
-                    {form.formState.errors.confirmPassword.message}
-                  </p>
-                )}
-              </div>
-
+              {/* Submit button */}
               <Button
+                className='w-full bg-[#2B231D] hover:bg-[#3A3028] text-[#F8F6F3] font-normal text-[14px] tracking-[0.04em] mt-4 py-7 rounded-[14px] transition-all duration-500 shadow-[0_4px_16px_rgba(43,35,29,0.12)] hover:shadow-[0_6px_24px_rgba(43,35,29,0.18)] uppercase'
                 type='submit'
-                disabled={isSubmitting}
-                className='w-full bg-[#1B4571] hover:bg-[#1B4571]/90 text-white py-2 rounded-lg flex items-center justify-center gap-2 mt-4'>
-                {isSubmitting ? (
-                  "Registering..."
-                ) : (
-                  <>
-                    <UserPlus className='h-5 w-5' />
-                    <span>Register</span>
-                  </>
-                )}
+                disabled={isSubmitting}>
+                {isSubmitting ? "Creating account..." : "Create account"}
               </Button>
 
-              <p className='text-sm text-center mt-4'>
-                Already have an account?{" "}
-                <a href='/login' className='text-[#1B4571] hover:underline'>
-                  Login here
-                </a>
-              </p>
+              {/* Divider + login link */}
+              <div className='flex items-center justify-center gap-2 mt-2'>
+                <div className='h-[1px] flex-1 bg-gradient-to-r from-transparent via-[#D9D3CC] to-transparent opacity-40' />
+                <p className='text-center text-[12px] text-[#9C918A] tracking-[0.04em] px-4'>
+                  Already have an account?
+                </p>
+                <div className='h-[1px] flex-1 bg-gradient-to-r from-transparent via-[#D9D3CC] to-transparent opacity-40' />
+              </div>
+
+              <Link
+                href='/login'
+                className='text-center text-[13px] text-[#2B231D] hover:text-[#C4A574] transition-all duration-500 tracking-[0.04em] font-light opacity-80 hover:opacity-100 -mt-2'>
+                Sign in instead
+              </Link>
             </form>
-          </div>
-        </div>
-      </section>
-    </AnimatedContent>
+          </>
+        )}
+      </div>
+    </section>
   );
 }
