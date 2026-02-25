@@ -70,6 +70,7 @@ const MERCHANT_ID = getStoreOwnerId();
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingMobileImage, setIsUploadingMobileImage] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [imageUrlCopied, setImageUrlCopied] = useState(false);
 
@@ -379,6 +380,71 @@ const MERCHANT_ID = getStoreOwnerId();
       },
     }));
     toast.info("Background image removed");
+  };
+
+  // Upload mobile hero background image
+  const handleUploadMobileHeroImage = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      toast.error("Invalid file type. Only JPG, PNG, and WebP are allowed.");
+      return;
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("File too large. Maximum size is 5MB.");
+      return;
+    }
+
+    setIsUploadingMobileImage(true);
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = new Uint8Array(arrayBuffer);
+
+      const result = await trpc.homepage.uploadMobileHeroImage.mutate({
+        file: {
+          name: file.name,
+          type: file.type,
+          buffer: buffer,
+        },
+      });
+
+      if (result.success && result.data) {
+        setContent((prev) => ({
+          ...prev,
+          hero: {
+            ...prev.hero,
+            mobileBackgroundImage: result.data.url,
+          },
+        }));
+        toast.success("Mobile hero image uploaded successfully!");
+      } else {
+        toast.error(result.error || "Failed to upload image");
+      }
+    } catch (error) {
+      console.error("Mobile upload error:", error);
+      toast.error("Error uploading mobile image");
+    } finally {
+      setIsUploadingMobileImage(false);
+      event.target.value = "";
+    }
+  };
+
+  // Remove mobile hero background image
+  const handleRemoveMobileHeroImage = () => {
+    setContent((prev) => ({
+      ...prev,
+      hero: {
+        ...prev.hero,
+        mobileBackgroundImage: undefined,
+      },
+    }));
+    toast.info("Mobile background image removed");
   };
 
   // Copy image URL to clipboard
@@ -934,6 +1000,92 @@ const MERCHANT_ID = getStoreOwnerId();
                         if (parent) {
                           parent.innerHTML =
                             '<div class="flex items-center justify-center h-full text-sm text-muted-foreground">Failed to load image. Check URL.</div>';
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Background Image */}
+            <div>
+              <Label htmlFor='hero-mobile-bg-image'>
+                Mobile Background Image (optional)
+              </Label>
+              <div className='flex gap-2'>
+                <Input
+                  id='hero-mobile-bg-image'
+                  value={content.hero.mobileBackgroundImage || ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      hero: {
+                        ...prev.hero,
+                        mobileBackgroundImage: e.target.value || undefined,
+                      },
+                    }))
+                  }
+                  placeholder='/uploads/homepage/hero-mobile.webp or https://...'
+                  disabled={!content.hero.enabled}
+                />
+                <div className='flex gap-2'>
+                  {content.hero.mobileBackgroundImage && (
+                    <Button
+                      type='button'
+                      variant='outline'
+                      size='icon'
+                      disabled={!content.hero.enabled}
+                      onClick={handleRemoveMobileHeroImage}
+                      title='Remove mobile image'>
+                      <X className='w-4 h-4' />
+                    </Button>
+                  )}
+                  <input
+                    type='file'
+                    id='hero-mobile-image-upload'
+                    accept='image/jpeg,image/jpg,image/png,image/webp'
+                    onChange={handleUploadMobileHeroImage}
+                    disabled={!content.hero.enabled || isUploadingMobileImage}
+                    className='hidden'
+                  />
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='md'
+                    disabled={!content.hero.enabled || isUploadingMobileImage}
+                    onClick={() =>
+                      document.getElementById("hero-mobile-image-upload")?.click()
+                    }>
+                    {isUploadingMobileImage ? (
+                      <>Uploading...</>
+                    ) : (
+                      <>
+                        <Upload className='w-4 h-4 mr-2' />
+                        {content.hero.mobileBackgroundImage ? "Replace" : "Upload"}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <p className='text-sm text-muted-foreground mt-1'>
+                Used on mobile screens only (≤640px). Falls back to desktop hero image if empty.
+              </p>
+              {content.hero.mobileBackgroundImage && (
+                <div className='mt-3'>
+                  <Label className='text-sm text-muted-foreground'>Preview:</Label>
+                  <div className='relative w-full max-w-50 h-32 rounded-lg overflow-hidden border border-border bg-muted mt-1'>
+                    <img
+                      src={content.hero.mobileBackgroundImage}
+                      alt='Mobile hero background preview'
+                      className='w-full h-full object-cover'
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        target.style.display = "none";
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML =
+                            '<div class="flex items-center justify-center h-full text-sm text-muted-foreground">Failed to load image.</div>';
                         }
                       }}
                     />

@@ -24,6 +24,8 @@ export interface HomepageHeroContent {
   ctaText: string;
   ctaLink: string;
   backgroundImage?: string;
+  /** Mobile-specific hero background image. Falls back to backgroundImage if empty. */
+  mobileBackgroundImage?: string;
 }
 
 /**
@@ -151,6 +153,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
     ctaText: "Start Shopping",
     ctaLink: "/shop",
     backgroundImage: undefined,
+    mobileBackgroundImage: undefined,
   },
   brandStatement: {
     enabled: true,

@@ -140,15 +140,25 @@ export function LandingTemplateModern({
 
       {/* Hero Section - Percé Editorial Style */}
       {content.hero.enabled && (
-        <section className='relative bg-stone-900 overflow-hidden h-screen '>
-          {/* Full-bleed Background Image */}
+        <section className='relative bg-stone-900 overflow-hidden md:h-screen h-[50vh] '>
+          {/* Full-bleed Background Image with mobile variant */}
           <div className='absolute inset-0 z-0'>
             {content.hero.backgroundImage ? (
-              <img
-                src={content.hero.backgroundImage}
-                alt='Featured collection'
-                className='w-full h-full object-cover'
-              />
+              <picture>
+                {/* Mobile-specific hero image (<=640px), falls back to desktop */}
+                <source
+                  media='(max-width: 640px)'
+                  srcSet={
+                    content.hero.mobileBackgroundImage ||
+                    content.hero.backgroundImage
+                  }
+                />
+                <img
+                  src={content.hero.backgroundImage}
+                  alt='Featured collection'
+                  className='w-full h-full object-cover'
+                />
+              </picture>
             ) : (
               <div className='w-full h-full bg-stone-800' />
             )}
@@ -159,9 +169,9 @@ export function LandingTemplateModern({
 
           {/* Content Overlay - Centered Editorial Layout */}
           <div className='relative z-10 container mx-auto px-6 sm:px-8 lg:px-12 h-full flex items-center justify-center'>
-            <div className='w-full max-w-3xl text-center space-y-4 sm:space-y-5 lg:space-y-6'>
+            <div className='w-full max-w-3xl text-center space-y-4 sm:space-y-5 lg:space-y-6 translate-y-10'>
               {/* Headline - Editorial Serif Feel */}
-              <h1 className='text-5xl lg:text-7xl font-light text-stone-50 leading-[1.05] tracking-tight max-w-2xl mx-auto'>
+              <h1 className='text-3xl md:text-5xl lg:text-7xl font-light text-stone-50 leading-[1.05] tracking-tight max-w-2xl mx-auto'>
                 {content.hero.title}
               </h1>
 

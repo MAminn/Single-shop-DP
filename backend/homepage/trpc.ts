@@ -24,6 +24,7 @@ const HomepageContentSchema = z.object({
     ctaText: z.string(),
     ctaLink: z.string(),
     backgroundImage: z.string().optional(),
+    mobileBackgroundImage: z.string().optional(),
   }),
   brandStatement: z.object({
     enabled: z.boolean(),
@@ -148,6 +149,50 @@ export const homepageRouter = router({
         };
       } catch (error) {
         console.error("Homepage hero image upload error:", error);
+        return {
+          success: false as const,
+          error:
+            error instanceof Error ? error.message : "Failed to upload image",
+        };
+      }
+    }),
+
+  uploadMobileHeroImage: protectedProcedure
+    .input(
+      z.object({
+        file: z.object({
+          name: z.string(),
+          type: z.string(),
+          buffer: z.instanceof(Uint8Array),
+        }),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const session = ctx.clientSession;
+
+      // Only admins can upload homepage hero images
+      if (!session || session.role !== "admin") {
+        return {
+          success: false as const,
+          error: "Unauthorized. Only admins can upload homepage images.",
+        };
+      }
+
+      try {
+        const result = await Effect.runPromise(
+          uploadHeroImage({
+            buffer: input.file.buffer,
+            mimeType: input.file.type,
+            filenamePrefix: "hero-mobile",
+          }),
+        );
+
+        return {
+          success: true as const,
+          data: result,
+        };
+      } catch (error) {
+        console.error("Mobile hero image upload error:", error);
         return {
           success: false as const,
           error:

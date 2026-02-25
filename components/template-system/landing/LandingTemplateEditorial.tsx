@@ -91,14 +91,26 @@ export function LandingTemplateEditorial({
           {/* Background */}
           <div className='absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-black'>
             {content.hero.backgroundImage && (
-              <div
-                className='absolute inset-0 opacity-40'
-                style={{
-                  backgroundImage: `url(${content.hero.backgroundImage})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }}
-              />
+              <>
+                {/* Desktop background */}
+                <div
+                  className='absolute inset-0 opacity-40 hidden sm:block'
+                  style={{
+                    backgroundImage: `url(${content.hero.backgroundImage})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                />
+                {/* Mobile background (<=640px) — uses mobile image if set, else desktop */}
+                <div
+                  className='absolute inset-0 opacity-40 block sm:hidden'
+                  style={{
+                    backgroundImage: `url(${content.hero.mobileBackgroundImage || content.hero.backgroundImage})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                />
+              </>
             )}
             <div className='absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent' />
           </div>

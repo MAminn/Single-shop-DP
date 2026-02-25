@@ -8,6 +8,8 @@ export interface UploadHeroImageInput {
   buffer: Uint8Array;
   mimeType: string;
   preserveAspect?: boolean; // If true, doesn't crop to 1920x1080
+  /** Filename prefix, defaults to "hero" */
+  filenamePrefix?: string;
 }
 
 export interface UploadHeroImageResult {
@@ -26,6 +28,7 @@ export const uploadHeroImage = ({
   buffer,
   mimeType,
   preserveAspect = false,
+  filenamePrefix = "hero",
 }: UploadHeroImageInput): Effect.Effect<UploadHeroImageResult, Error> => {
   return Effect.gen(function* () {
     // Validate file type
@@ -53,7 +56,7 @@ export const uploadHeroImage = ({
 
     // Generate unique filename
     const fileId = v7();
-    const filename = `hero-${fileId}.webp`;
+    const filename = `${filenamePrefix}-${fileId}.webp`;
     const filePath = `${uploadsDir}/${filename}`;
 
     // Process and save image using sharp
