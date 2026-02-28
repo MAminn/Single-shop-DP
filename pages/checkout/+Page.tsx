@@ -19,6 +19,40 @@ import type {
 import { STORE_CURRENCY } from "#root/shared/config/branding";
 import { navigate } from "vike/client/router";
 
+/** Parse a Zod validation error (JSON array) into a friendly message */
+function parseOrderError(error: unknown): string {
+  if (error instanceof Error) {
+    const msg = error.message;
+    // Try to parse Zod-style array of issues
+    try {
+      const issues = JSON.parse(msg);
+      if (Array.isArray(issues)) {
+        const fieldLabels: Record<string, string> = {
+          customerName: "Full Name",
+          customerEmail: "Email",
+          customerPhone: "Phone Number",
+          shippingAddress: "Shipping Address",
+          shippingCity: "City",
+          shippingState: "State",
+          shippingPostalCode: "Postal Code",
+          shippingCountry: "Country",
+        };
+        return issues
+          .map((issue: { path?: string[]; message?: string }) => {
+            const field = issue.path?.[0];
+            const label = field ? fieldLabels[field] ?? field : "Unknown field";
+            return `${label}: ${issue.message ?? "Invalid value"}`;
+          })
+          .join("\n");
+      }
+    } catch {
+      // Not JSON — use raw message
+    }
+    return msg;
+  }
+  return "Failed to submit order. Please try again.";
+}
+
 export default function CheckoutPage() {
   const {
     items,
@@ -32,18 +66,6 @@ export default function CheckoutPage() {
     clearCart,
   } = useCart();
   const { getTemplateId } = useTemplate();
-
-  const [formData, setFormData] = useState({
-    fullName: "",
-    phoneNumber: "",
-    email: "",
-    address: "",
-    city: "",
-    state: "",
-    postalCode: "",
-    country: "Egypt",
-    notes: "",
-  });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | undefined>(
@@ -59,29 +81,6 @@ export default function CheckoutPage() {
       quantity: item.quantity,
     }));
   }, [items]);
-
-  // Build customer info (only if form has data)
-  const customerInfo: CheckoutCustomerInfo | undefined = useMemo(() => {
-    if (!formData.fullName && !formData.email) return undefined;
-    return {
-      name: formData.fullName,
-      email: formData.email,
-      phone: formData.phoneNumber || undefined,
-    };
-  }, [formData]);
-
-  // Build shipping address (only if form has data)
-  const shippingAddress: CheckoutAddress | undefined = useMemo(() => {
-    if (!formData.address && !formData.city) return undefined;
-    return {
-      line1: formData.address,
-      line2: formData.notes || undefined,
-      city: formData.city,
-      state: formData.state || undefined,
-      postalCode: formData.postalCode,
-      country: formData.country,
-    };
-  }, [formData]);
 
   // Build totals object
   const totals: CheckoutTotals = useMemo(() => {
@@ -102,17 +101,13 @@ export default function CheckoutPage() {
     setErrorMessage(undefined);
 
     try {
-      console.log("[Checkout] Starting order submission...");
-      console.log("[Checkout] Cart items:", items.length);
-      console.log("[Checkout] Form data:", formValues);
-
       // Validate cart has items
       if (items.length === 0) {
-        throw new Error("Cart is empty");
+        throw new Error("Your cart is empty. Please add items before placing an order.");
       }
 
       // Prepare order items
-      const orderItems = items.map((item) => ({
+      const orderItemsPayload = items.map((item) => ({
         productId: item.id,
         quantity: item.quantity,
       }));
@@ -127,12 +122,10 @@ export default function CheckoutPage() {
         shippingState: formValues.state || null,
         shippingPostalCode: formValues.postalCode || null,
         shippingCountry: formValues.country || "Egypt",
-        items: orderItems,
+        items: orderItemsPayload,
         notes: formValues.notes || undefined,
         promoCodeId: promoCode?.id,
       });
-
-      console.log("[Checkout] Order creation result:", result);
 
       if (!result.success) {
         throw new Error(result.error || "Failed to create order");
@@ -141,8 +134,6 @@ export default function CheckoutPage() {
       // Clear cart on successful order
       clearCart();
 
-      console.log("[Checkout] Order created successfully:", result.result?.id);
-
       // Navigate to order confirmation page with order details
       const orderId = result.result?.id ?? "";
       const orderTotal = result.result?.total ?? "";
@@ -150,9 +141,7 @@ export default function CheckoutPage() {
       navigate(`/order-confirmation?id=${orderId}&total=${orderTotal}&email=${email}`);
     } catch (error) {
       console.error("[Checkout] Order submission failed:", error);
-      setErrorMessage(
-        error instanceof Error ? error.message : "Failed to submit order",
-      );
+      setErrorMessage(parseOrderError(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -175,9 +164,6 @@ export default function CheckoutPage() {
   }
 
   const templateProps: CheckoutPageModernTemplateProps = {
-    customer: customerInfo,
-    shippingAddress,
-    billingAddress: shippingAddress, // Use same address for billing
     items: orderItems,
     totals,
     isSubmitting,

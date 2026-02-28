@@ -3,7 +3,7 @@ import {
   trackingEvent,
   trackingEventDelivery,
 } from "#root/shared/database/drizzle/schema";
-import { desc, eq, and, sql, count, gte } from "drizzle-orm";
+import { desc, eq, and, sql, count, gte, countDistinct } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 
@@ -95,6 +95,38 @@ export const getDeliveryStats = () =>
         .where(gte(trackingEvent.createdAt, month))
         .execute();
 
+      // Unique sessions per period
+      const [sessions24h] = await db
+        .select({ total: countDistinct(trackingEvent.sessionId) })
+        .from(trackingEvent)
+        .where(gte(trackingEvent.createdAt, day))
+        .execute();
+
+      const [sessions7d] = await db
+        .select({ total: countDistinct(trackingEvent.sessionId) })
+        .from(trackingEvent)
+        .where(gte(trackingEvent.createdAt, week))
+        .execute();
+
+      const [sessions30d] = await db
+        .select({ total: countDistinct(trackingEvent.sessionId) })
+        .from(trackingEvent)
+        .where(gte(trackingEvent.createdAt, month))
+        .execute();
+
+      // Event counts by event name (last 30 days)
+      const eventTypeCounts = await db
+        .select({
+          eventName: trackingEvent.eventName,
+          total: count(),
+          uniqueSessions: countDistinct(trackingEvent.sessionId),
+        })
+        .from(trackingEvent)
+        .where(gte(trackingEvent.createdAt, month))
+        .groupBy(trackingEvent.eventName)
+        .orderBy(desc(count()))
+        .execute();
+
       // Deliveries success/fail per platform
       const platformStats = await db
         .select({
@@ -111,6 +143,10 @@ export const getDeliveryStats = () =>
         events24h: events24h?.total ?? 0,
         events7d: events7d?.total ?? 0,
         events30d: events30d?.total ?? 0,
+        sessions24h: sessions24h?.total ?? 0,
+        sessions7d: sessions7d?.total ?? 0,
+        sessions30d: sessions30d?.total ?? 0,
+        eventTypeCounts,
         platformStats,
       };
     });
