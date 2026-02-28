@@ -9,7 +9,7 @@
 
 import { z } from "zod";
 import { Effect } from "effect";
-import { t, publicProcedure, protectedProcedure, provideDatabase } from "#root/shared/trpc/server";
+import { t, publicProcedure, provideDatabase } from "#root/shared/trpc/server";
 import {
   runBackendEffect,
   serializeBackendEffectResult,
@@ -55,7 +55,8 @@ const createPaymentSessionSchema = z.object({
   cancelUrl: z.string().url(),
 });
 
-const createPaymentSessionProcedure = protectedProcedure
+// Public — guests who placed an order need to create payment sessions too
+const createPaymentSessionProcedure = publicProcedure
   .input(createPaymentSessionSchema)
   .mutation(async ({ ctx, input }) => {
     return await runBackendEffect(
@@ -219,7 +220,8 @@ const verifyPaymentSchema = z.object({
   orderId: z.string().uuid(),
 });
 
-const verifyPaymentProcedure = protectedProcedure
+// Public — guests need to verify their payment status too
+const verifyPaymentProcedure = publicProcedure
   .input(verifyPaymentSchema)
   .query(async ({ ctx, input }) => {
     return await runBackendEffect(
