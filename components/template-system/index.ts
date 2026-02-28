@@ -113,6 +113,7 @@ export type {
   CheckoutAddress,
   CheckoutOrderSummaryItem,
   CheckoutTotals,
+  PaymentMethodOption,
 } from "./checkoutPage/CheckoutPageModernTemplate";
 
 // Export search results components

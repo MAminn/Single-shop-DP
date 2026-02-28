@@ -18,6 +18,10 @@ import {
   User,
   MapPin,
   Loader2,
+  CreditCard,
+  Banknote,
+  Wallet,
+  Shield,
 } from "lucide-react";
 
 /**
@@ -63,6 +67,15 @@ export interface CheckoutTotals {
 }
 
 /**
+ * Payment method option from the server
+ */
+export interface PaymentMethodOption {
+  id: string;
+  label: string;
+  description: string;
+}
+
+/**
  * Props for CheckoutPageModernTemplate
  */
 export interface CheckoutPageModernTemplateProps {
@@ -76,6 +89,10 @@ export interface CheckoutPageModernTemplateProps {
   onSubmit?: (formValues: Record<string, string>) => void | Promise<void>;
   onEditCart?: () => void;
   currency?: string;
+  /** Available payment methods (fetched from server). If undefined/empty, only COD is shown */
+  paymentMethods?: PaymentMethodOption[];
+  /** Whether payment methods are loading */
+  paymentMethodsLoading?: boolean;
 }
 
 /**
@@ -94,6 +111,8 @@ export function CheckoutPageModernTemplate({
   onSubmit,
   onEditCart,
   currency = "EGP",
+  paymentMethods,
+  paymentMethodsLoading = false,
 }: CheckoutPageModernTemplateProps) {
   const [form, setForm] = useState({
     fullName: customer?.name ?? "",
@@ -105,6 +124,7 @@ export function CheckoutPageModernTemplate({
     postalCode: shippingAddress?.postalCode ?? "",
     country: shippingAddress?.country ?? "Egypt",
     notes: "",
+    paymentMethod: "cod",
   });
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -308,6 +328,80 @@ export function CheckoutPageModernTemplate({
               </CardContent>
             </Card>
 
+            {/* Payment Method */}
+            {(() => {
+              const methods = paymentMethods && paymentMethods.length > 0
+                ? paymentMethods
+                : [{ id: "cod", label: "Cash on Delivery", description: "Pay when your order is delivered to your doorstep" }];
+              const showPaymentSection = methods.length > 1;
+
+              if (!showPaymentSection) return null;
+
+              const getPaymentIcon = (id: string) => {
+                switch (id) {
+                  case "stripe": return <CreditCard className="w-5 h-5" />;
+                  case "paymob": return <Wallet className="w-5 h-5" />;
+                  default: return <Banknote className="w-5 h-5" />;
+                }
+              };
+
+              return (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CreditCard className="w-5 h-5 text-primary" />
+                      Payment Method
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {paymentMethodsLoading ? (
+                      <div className="flex items-center justify-center py-4 gap-2 text-muted-foreground">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Loading payment options...
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {methods.map((method) => (
+                          <label
+                            key={method.id}
+                            className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                              form.paymentMethod === method.id
+                                ? "border-primary bg-primary/5"
+                                : "border-border hover:border-muted-foreground/30"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="paymentMethod"
+                              value={method.id}
+                              checked={form.paymentMethod === method.id}
+                              onChange={(e) => updateField("paymentMethod", e.target.value)}
+                              className="mt-1 accent-primary"
+                            />
+                            <div className="flex items-start gap-3 flex-1">
+                              <div className={`mt-0.5 ${form.paymentMethod === method.id ? "text-primary" : "text-muted-foreground"}`}>
+                                {getPaymentIcon(method.id)}
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium">{method.label}</p>
+                                <p className="text-sm text-muted-foreground">{method.description}</p>
+                              </div>
+                            </div>
+                            {method.id !== "cod" && (
+                              <div className="flex items-center gap-1 text-xs text-green-600 mt-1">
+                                <Shield className="w-3 h-3" />
+                                Secure
+                              </div>
+                            )}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })()}
+
             {/* Order Items */}
             <Card>
               <CardHeader>
@@ -421,8 +515,13 @@ export function CheckoutPageModernTemplate({
                       <Loader2 className='w-4 h-4 animate-spin' />
                       Processing...
                     </span>
-                  ) : (
+                  ) : form.paymentMethod === "cod" ? (
                     "Place Order"
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4" />
+                      Place Order & Pay
+                    </span>
                   )}
                 </Button>
 

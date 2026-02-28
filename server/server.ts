@@ -11,6 +11,8 @@ import { authFastifyPlugin } from "#root/backend/auth/api.js";
 import { uploadFileApiPlugin } from "#root/backend/file/upload-file/api";
 import { emailServiceMiddleware } from "#root/shared/email/middleware.server";
 import { fincartWebhookPlugin } from "#root/backend/orders/fincart-webhook/api.js";
+import { stripeWebhookPlugin } from "#root/backend/payments/stripe-webhook.js";
+import { paymobWebhookPlugin } from "#root/backend/payments/paymob-webhook.js";
 import { ensureDefaultStoreVendor } from "#root/shared/database/bootstrap.js";
 import { listActiveClientConfigsRaw } from "#root/backend/pixel-tracking/pixel-config/ssr.js";
 import { trackBeaconPlugin } from "#root/server/routes/track.js";
@@ -33,6 +35,13 @@ for (const key of [
   "SMTP_PORT",
   "SMTP_USER",
   "SMTP_PASSWORD",
+  "STRIPE_SECRET_KEY",
+  "STRIPE_WEBHOOK_SECRET",
+  "VITE_STRIPE_PUBLIC_KEY",
+  "PAYMOB_API_KEY",
+  "PAYMOB_INTEGRATION_ID",
+  "PAYMOB_IFRAME_ID",
+  "PAYMOB_HMAC_SECRET",
 ]) {
   if (process.env[key]) normalizeEnv(key);
 }
@@ -204,6 +213,16 @@ async function buildServer() {
   // Register Fincart webhook endpoint
   await instance.register(fincartWebhookPlugin, {
     prefix: "/api/webhooks/fincart",
+  });
+
+  // Register Stripe webhook endpoint (no-ops if Stripe is not configured)
+  await instance.register(stripeWebhookPlugin, {
+    prefix: "/api/webhooks/stripe",
+  });
+
+  // Register Paymob webhook endpoint (no-ops if Paymob is not configured)
+  await instance.register(paymobWebhookPlugin, {
+    prefix: "/api/webhooks/paymob",
   });
 
   // Register tracking beacon endpoint

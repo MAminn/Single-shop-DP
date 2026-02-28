@@ -306,6 +306,21 @@ export const orderStatus = pgEnum("order_status", [
   "cancelled",
 ]);
 
+export const paymentMethodEnum = pgEnum("payment_method", [
+  "cod",
+  "stripe",
+  "paymob",
+]);
+
+export const paymentStatusEnum = pgEnum("payment_status", [
+  "not_required",
+  "pending",
+  "processing",
+  "paid",
+  "failed",
+  "refunded",
+]);
+
 export const order = pgTable("order", {
   id: uuid("id")
     .primaryKey()
@@ -348,6 +363,12 @@ export const order = pgTable("order", {
   }).notNull(),
   status: orderStatus("status").notNull().default("pending"),
   notes: text("notes"),
+  // Payment gateway fields
+  paymentMethod: paymentMethodEnum("payment_method").notNull().default("cod"),
+  paymentStatus: paymentStatusEnum("payment_status").notNull().default("not_required"),
+  paymentSessionId: text("payment_session_id"),
+  paymentTransactionId: text("payment_transaction_id"),
+  paymentGatewayData: jsonb("payment_gateway_data"),
   createdAt: timestamp("created_at", {
     withTimezone: true,
     mode: "date",

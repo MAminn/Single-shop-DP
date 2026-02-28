@@ -15,6 +15,7 @@ import { productRouter } from "#root/backend/products/trpc";
 import { promoCodesRouter } from "#root/backend/promo-codes/trpc";
 import { homepageRouter } from "#root/backend/homepage/trpc";
 import { pixelTrackingRouter } from "#root/backend/pixel-tracking/trpc";
+import { paymentRouter } from "#root/backend/payments/trpc";
 import { publicProcedure, router, t } from "./server";
 
 const authRouter = t.router({
@@ -40,6 +41,7 @@ export const appRouter = router({
   promoCode: promoCodesRouter,
   homepage: homepageRouter,
   pixelTracking: pixelTrackingRouter,
+  payment: paymentRouter,
 });
 
 export type AppRouter = typeof appRouter;

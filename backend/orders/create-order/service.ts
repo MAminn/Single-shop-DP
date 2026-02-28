@@ -35,6 +35,7 @@ export const createOrderSchema = z.object({
   items: z.array(OrderItemSchema).min(1),
   notes: z.string().optional(),
   promoCodeId: z.string().uuid().optional(),
+  paymentMethod: z.enum(["cod", "stripe", "paymob"]).optional().default("cod"),
 });
 
 // Manually define the insert type matching the schema's nullability
@@ -433,6 +434,7 @@ export const createOrder = (
           const total = discountedSubtotal + shipping + tax;
 
           // Only include fields directly provided or calculated
+          const isOnlinePayment = input.paymentMethod === "stripe" || input.paymentMethod === "paymob";
           const insertData = {
             userId: userId,
             customerName: input.customerName,
@@ -450,6 +452,8 @@ export const createOrder = (
             tax: tax.toString(),
             total: total.toString(),
             notes: input.notes,
+            paymentMethod: input.paymentMethod ?? "cod",
+            paymentStatus: isOnlinePayment ? "pending" : "not_required",
           };
 
           const definedInsertData = Object.fromEntries(
@@ -613,25 +617,30 @@ export const createOrder = (
 
     // Single-shop mode: No vendor notifications needed
 
-    // Send order to Fincart
-    try {
-      // Use Effect to handle the async operation correctly
-      yield* $(Effect.promise(() => sendOrderToFincart(result))).pipe(
-        Effect.tap((fincartResult) => {
-          if (!fincartResult.success) {
-            console.error(
-              "Failed to send order to Fincart:",
-              fincartResult.error,
-            );
-          }
-        }),
-        Effect.catchAll((error) => {
-          console.error("Exception when sending order to Fincart:", error);
-          return Effect.succeed(undefined);
-        }),
-      );
-    } catch (error) {
-      console.error("Exception when sending order to Fincart:", error);
+    // Send order to Fincart (only for COD orders — online payment orders are shipped after payment confirmation)
+    const isOnlinePaymentOrder = input.paymentMethod === "stripe" || input.paymentMethod === "paymob";
+    if (!isOnlinePaymentOrder) {
+      try {
+        // Use Effect to handle the async operation correctly
+        yield* $(Effect.promise(() => sendOrderToFincart(result))).pipe(
+          Effect.tap((fincartResult) => {
+            if (!fincartResult.success) {
+              console.error(
+                "Failed to send order to Fincart:",
+                fincartResult.error,
+              );
+            }
+          }),
+          Effect.catchAll((error) => {
+            console.error("Exception when sending order to Fincart:", error);
+            return Effect.succeed(undefined);
+          }),
+        );
+      } catch (error) {
+        console.error("Exception when sending order to Fincart:", error);
+      }
+    } else {
+      console.log(`[Order ${result.id}] Online payment (${input.paymentMethod}) — Fincart shipment deferred until payment confirmed`);
     }
 
     return result;
