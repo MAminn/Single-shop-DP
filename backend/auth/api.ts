@@ -104,7 +104,12 @@ export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
   });
 
   app.delete("/token", async (req, res) => {
-    res.clearCookie("session");
+    res.clearCookie("session", {
+      path: "/",
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: "lax",
+    });
 
     return res.status(200).send({
       success: true,

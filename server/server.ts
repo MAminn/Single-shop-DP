@@ -76,6 +76,7 @@ const hmrPort = Number.parseInt(process.env.HMR_PORT || "24678", 10) || 24678;
 
 export const instance = Fastify({
   ...(isProduction ? productionFastifyConfig : developmentFastifyConfig),
+  trustProxy: true, // Required: app runs behind Coolify/Traefik reverse proxy
   bodyLimit: 100 * 1024 * 1024,
   routerOptions: {
     maxParamLength: 1000, // tRPC batch requests encode comma-separated procedure names in a single :path param
