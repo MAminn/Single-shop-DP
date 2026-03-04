@@ -88,6 +88,11 @@ export function DashboardSidebar() {
       href: "/dashboard/admin/pixels",
       icon: Radio,
     },
+    {
+      label: "Settings",
+      href: "/dashboard/settings",
+      icon: Settings,
+    },
   ];
 
   const defaultSidebarItems = [

@@ -20,7 +20,6 @@ export const NewOrderEmailTemplate = ({
   items,
   shippingFees,
   subTotal,
-  tax,
   address,
   city,
   country,
@@ -41,7 +40,6 @@ export const NewOrderEmailTemplate = ({
   }[];
   shippingFees: number;
   subTotal: number;
-  tax: number;
   total: number;
   address: string;
   city: string;
@@ -69,7 +67,7 @@ export const NewOrderEmailTemplate = ({
           <Section style={header}>
             <Row>
               <Column>
-                <Heading as="h1" style={logo}>
+                <Heading as='h1' style={logo}>
                   Lebsy
                 </Heading>
               </Column>
@@ -92,7 +90,7 @@ export const NewOrderEmailTemplate = ({
 
           {/* Order Summary */}
           <Section style={section}>
-            <Heading as="h2" style={sectionTitle}>
+            <Heading as='h2' style={sectionTitle}>
               Order Summary
             </Heading>
             <Row style={tableHeaderRow}>
@@ -103,8 +101,7 @@ export const NewOrderEmailTemplate = ({
 
             {items.map((item) => (
               <React.Fragment
-                key={item.id || `item-${item.name}-${item.price}`}
-              >
+                key={item.id || `item-${item.name}-${item.price}`}>
                 <Row style={tableRow}>
                   <Column style={tableCell}>{item.name}</Column>
                   <Column style={tableCell}>{item.quantity}</Column>
@@ -115,8 +112,7 @@ export const NewOrderEmailTemplate = ({
                           style={{
                             textDecoration: "line-through",
                             color: "#888",
-                          }}
-                        >
+                          }}>
                           {formatPrice(item.price)} EGP
                         </span>
                         <br />
@@ -129,7 +125,6 @@ export const NewOrderEmailTemplate = ({
                     )}
                   </Column>
                 </Row>
-
               </React.Fragment>
             ))}
 
@@ -149,12 +144,6 @@ export const NewOrderEmailTemplate = ({
                 {formatPrice(shippingFees)} EGP
               </Column>
             </Row>
-            <Row style={summaryRow}>
-              <Column style={summaryLabelCell} colSpan={2}>
-                Tax
-              </Column>
-              <Column style={summaryValueCell}>{formatPrice(tax)} EGP</Column>
-            </Row>
             <Row style={totalRow}>
               <Column style={totalLabelCell} colSpan={2}>
                 Total
@@ -165,7 +154,7 @@ export const NewOrderEmailTemplate = ({
 
           {/* Shipping Address */}
           <Section style={section}>
-            <Heading as="h2" style={sectionTitle}>
+            <Heading as='h2' style={sectionTitle}>
               Shipping Address
             </Heading>
             <Row>
@@ -192,7 +181,7 @@ export const NewOrderEmailTemplate = ({
 
           {/* Customer Information */}
           <Section style={section}>
-            <Heading as="h2" style={sectionTitle}>
+            <Heading as='h2' style={sectionTitle}>
               Customer Information
             </Heading>
             <Row>
@@ -216,7 +205,7 @@ export const NewOrderEmailTemplate = ({
             <Text style={footerText}>
               If you have any questions about your order, please contact our
               customer service team at
-              <Link href="mailto:support@lebsy.com" style={link}>
+              <Link href='mailto:support@lebsy.com' style={link}>
                 {" "}
                 support@lebsy.com
               </Link>

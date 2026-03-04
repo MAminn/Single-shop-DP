@@ -62,7 +62,6 @@ const DefaultCartTemplate: React.FC<DefaultCartTemplateProps> = ({ data }) => {
     applyPromoCode,
     removePromoCode,
     shipping: contextShipping,
-    tax: contextTax,
   } = useCart();
 
   // Use provided data or fallback to context data
@@ -73,7 +72,6 @@ const DefaultCartTemplate: React.FC<DefaultCartTemplateProps> = ({ data }) => {
   const total = cartData?.total ?? contextTotal;
   const promoCode = cartData?.promoCode ?? contextPromoCode;
   const shipping = cartData?.shipping ?? contextShipping;
-  const tax = cartData?.tax ?? contextTax;
   const isLoading = cartData?.isLoading || false;
   const error = cartData?.error || null;
 
@@ -404,11 +402,6 @@ const DefaultCartTemplate: React.FC<DefaultCartTemplateProps> = ({ data }) => {
                 <span>
                   {shipping === 0 ? "Free" : `EGP ${shipping.toFixed(2)}`}
                 </span>
-              </div>
-
-              <div className='flex justify-between'>
-                <span>Tax</span>
-                <span>EGP {tax.toFixed(2)}</span>
               </div>
 
               <Separator />

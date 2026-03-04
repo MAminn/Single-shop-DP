@@ -40,7 +40,9 @@ function parseOrderError(error: unknown): string {
         return issues
           .map((issue: { path?: string[]; message?: string }) => {
             const field = issue.path?.[0];
-            const label = field ? fieldLabels[field] ?? field : "Unknown field";
+            const label = field
+              ? (fieldLabels[field] ?? field)
+              : "Unknown field";
             return `${label}: ${issue.message ?? "Invalid value"}`;
           })
           .join("\n");
@@ -60,7 +62,6 @@ export default function CheckoutPage() {
     subtotal,
     discount,
     shipping,
-    tax,
     total,
     promoCode,
     clearCart,
@@ -87,18 +88,27 @@ export default function CheckoutPage() {
           setPaymentMethods(res.methods);
         }
       } catch (err) {
-        console.warn("[Checkout] Could not fetch payment methods, defaulting to COD:", err);
+        console.warn(
+          "[Checkout] Could not fetch payment methods, defaulting to COD:",
+          err,
+        );
         // Fallback — just show COD
         if (!cancelled) {
           setPaymentMethods([
-            { id: "cod", label: "Cash on Delivery", description: "Pay when your order is delivered" },
+            {
+              id: "cod",
+              label: "Cash on Delivery",
+              description: "Pay when your order is delivered",
+            },
           ]);
         }
       } finally {
         if (!cancelled) setPaymentMethodsLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Convert cart items to checkout order summary items
@@ -117,10 +127,9 @@ export default function CheckoutPage() {
       subtotal,
       discount: discount > 0 ? discount : undefined,
       shipping: shipping > 0 ? shipping : undefined,
-      tax: tax > 0 ? tax : undefined,
       grandTotal: total,
     };
-  }, [subtotal, discount, shipping, tax, total]);
+  }, [subtotal, discount, shipping, total]);
 
   // Handle form submit
   const handleSubmit = async (
@@ -130,12 +139,15 @@ export default function CheckoutPage() {
     setErrorMessage(undefined);
 
     const selectedPaymentMethod = formValues.paymentMethod || "cod";
-    const isOnlinePayment = selectedPaymentMethod === "stripe" || selectedPaymentMethod === "paymob";
+    const isOnlinePayment =
+      selectedPaymentMethod === "stripe" || selectedPaymentMethod === "paymob";
 
     try {
       // Validate cart has items
       if (items.length === 0) {
-        throw new Error("Your cart is empty. Please add items before placing an order.");
+        throw new Error(
+          "Your cart is empty. Please add items before placing an order.",
+        );
       }
 
       // Prepare order items
@@ -171,7 +183,8 @@ export default function CheckoutPage() {
       // ─── Online payment: create payment session & redirect ──────────
       if (isOnlinePayment && orderId) {
         try {
-          const origin = typeof window !== "undefined" ? window.location.origin : "";
+          const origin =
+            typeof window !== "undefined" ? window.location.origin : "";
           const paymentResult = await trpc.payment.createSession.mutate({
             orderId,
             paymentMethod: selectedPaymentMethod as "stripe" | "paymob",
@@ -187,22 +200,28 @@ export default function CheckoutPage() {
             return;
           }
 
-          throw new Error("Could not create payment session. Please try again.");
+          throw new Error(
+            "Could not create payment session. Please try again.",
+          );
         } catch (payErr) {
           console.error("[Checkout] Payment session creation failed:", payErr);
           setErrorMessage(
-            "Failed to initialize payment. Your order was created — you can pay later from your order history, or contact support."
+            "Failed to initialize payment. Your order was created — you can pay later from your order history, or contact support.",
           );
           // Still clear cart and navigate to confirmation (order exists, payment pending)
           clearCart();
-          navigate(`/order-confirmation?id=${orderId}&total=${orderTotal}&email=${email}&payment=pending`);
+          navigate(
+            `/order-confirmation?id=${orderId}&total=${orderTotal}&email=${email}&payment=pending`,
+          );
           return;
         }
       }
 
       // ─── COD flow: just navigate to confirmation ──────────────────────
       clearCart();
-      navigate(`/order-confirmation?id=${orderId}&total=${orderTotal}&email=${email}`);
+      navigate(
+        `/order-confirmation?id=${orderId}&total=${orderTotal}&email=${email}`,
+      );
     } catch (error) {
       console.error("[Checkout] Order submission failed:", error);
       setErrorMessage(parseOrderError(error));

@@ -231,8 +231,7 @@ export const mockCartItems = [
 export const mockCartTotals = {
   subtotal: 189.98,
   shipping: 10.0,
-  tax: 20.0,
   discount: 0,
-  total: 219.98,
-  grandTotal: 219.98,
+  total: 199.98,
+  grandTotal: 199.98,
 };

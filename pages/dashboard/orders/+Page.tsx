@@ -78,7 +78,6 @@ interface Order {
   shippingCountry: string | null;
   subtotal: string;
   shipping: string;
-  tax: string;
   discount: string | null;
   promoCodeId: string | null;
   total: string;
@@ -145,7 +144,7 @@ export default function Orders() {
                   } as Order;
                 })
               : []
-            : []
+            : [],
         );
       } else {
         setError(result.error || "Failed to fetch orders");
@@ -245,10 +244,7 @@ export default function Orders() {
         order.id.toLowerCase().includes(query) ||
         order.customerName.toLowerCase().includes(query) ||
         order.customerEmail.toLowerCase().includes(query) ||
-        order.items?.some(
-          (item) =>
-            item.name.toLowerCase().includes(query)
-        )
+        order.items?.some((item) => item.name.toLowerCase().includes(query))
       );
     }
     return true;
@@ -282,44 +278,44 @@ export default function Orders() {
 
   return (
     <AlertDialog>
-      <div className="p-6 space-y-6 w-full h-full">
-        <div className="flex justify-center lg:justify-between items-center flex-wrap gap-2">
+      <div className='p-6 space-y-6 w-full h-full'>
+        <div className='flex justify-center lg:justify-between items-center flex-wrap gap-2'>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-center lg:text-left">
+            <h1 className='text-2xl font-bold tracking-tight text-center lg:text-left'>
               Orders
             </h1>
-            <p className="text-muted-foreground text-center lg:text-left">
+            <p className='text-muted-foreground text-center lg:text-left'>
               Track and manage your store's orders
             </p>
           </div>
         </div>
 
         <Card>
-          <CardHeader className="pb-3">
-            <div className="flex flex-col gap-4 md:flex-row justify-between">
-              <div className="flex items-center gap-2 w-full md:w-1/3">
-                <Search className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='pb-3'>
+            <div className='flex flex-col gap-4 md:flex-row justify-between'>
+              <div className='flex items-center gap-2 w-full md:w-1/3'>
+                <Search className='h-4 w-4 text-muted-foreground' />
                 <Input
-                  placeholder="Search orders..."
+                  placeholder='Search orders...'
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-9"
+                  className='h-9'
                 />
               </div>
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-muted-foreground" />
+              <div className='flex flex-col gap-3 sm:flex-row'>
+                <div className='flex items-center gap-2'>
+                  <Filter className='h-4 w-4 text-muted-foreground' />
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="h-9 w-[180px]">
-                      <SelectValue placeholder="Filter by status" />
+                    <SelectTrigger className='h-9 w-[180px]'>
+                      <SelectValue placeholder='Filter by status' />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="processing">Processing</SelectItem>
-                      <SelectItem value="shipped">Shipped</SelectItem>
-                      <SelectItem value="delivered">Delivered</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value='all'>All Statuses</SelectItem>
+                      <SelectItem value='pending'>Pending</SelectItem>
+                      <SelectItem value='processing'>Processing</SelectItem>
+                      <SelectItem value='shipped'>Shipped</SelectItem>
+                      <SelectItem value='delivered'>Delivered</SelectItem>
+                      <SelectItem value='cancelled'>Cancelled</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -328,35 +324,34 @@ export default function Orders() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="text-center py-10">
-                <Loader2 className="mx-auto h-12 w-12 text-muted-foreground animate-spin" />
-                <h3 className="mt-4 text-lg font-semibold">
+              <div className='text-center py-10'>
+                <Loader2 className='mx-auto h-12 w-12 text-muted-foreground animate-spin' />
+                <h3 className='mt-4 text-lg font-semibold'>
                   Loading orders...
                 </h3>
               </div>
             ) : error ? (
-              <div className="text-center py-10 text-red-500">
+              <div className='text-center py-10 text-red-500'>
                 <p>{error}</p>
                 <Button
-                  variant="outline"
-                  className="mt-4"
-                  onClick={fetchOrders}
-                >
+                  variant='outline'
+                  className='mt-4'
+                  onClick={fetchOrders}>
                   Try Again
                 </Button>
               </div>
             ) : filteredOrders.length === 0 ? (
-              <div className="text-center py-10">
-                <Package className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-semibold">No orders found</h3>
-                <p className="mt-2 text-muted-foreground">
+              <div className='text-center py-10'>
+                <Package className='mx-auto h-12 w-12 text-muted-foreground' />
+                <h3 className='mt-4 text-lg font-semibold'>No orders found</h3>
+                <p className='mt-2 text-muted-foreground'>
                   {searchQuery || statusFilter !== "all"
                     ? "Try adjusting your filters"
                     : "When you receive orders, they'll appear here"}
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className='overflow-x-auto'>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -366,13 +361,13 @@ export default function Orders() {
                       <TableHead>Items</TableHead>
                       <TableHead>Total</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className='text-right'>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredOrders.map((order) => (
                       <TableRow key={order.id}>
-                        <TableCell className="font-medium">
+                        <TableCell className='font-medium'>
                           {order.id.slice(0, 8)}
                         </TableCell>
                         <TableCell>{formatDate(order.createdAt)}</TableCell>
@@ -382,7 +377,7 @@ export default function Orders() {
                           {Number.parseFloat(order.total).toFixed(2)} EGP
                           {order.discount &&
                             Number.parseFloat(order.discount) > 0 && (
-                              <div className="text-xs text-green-600">
+                              <div className='text-xs text-green-600'>
                                 <span>
                                   -
                                   {Number.parseFloat(order.discount).toFixed(2)}{" "}
@@ -393,33 +388,30 @@ export default function Orders() {
                         </TableCell>
                         <TableCell>
                           <Badge
-                            variant="outline"
-                            className={getStatusColor(order.status)}
-                          >
+                            variant='outline'
+                            className={getStatusColor(order.status)}>
                             {order.status.charAt(0).toUpperCase() +
                               order.status.slice(1)}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center gap-2 justify-end">
+                        <TableCell className='text-right'>
+                          <div className='flex items-center gap-2 justify-end'>
                             <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewDetails(order)}
-                            >
-                              <Eye className="h-4 w-4" />
-                              <span className="sr-only">View Details</span>
+                              variant='ghost'
+                              size='sm'
+                              onClick={() => handleViewDetails(order)}>
+                              <Eye className='h-4 w-4' />
+                              <span className='sr-only'>View Details</span>
                             </Button>
                             {isAdmin && (
                               <AlertDialogTrigger asChild>
                                 <Button
-                                  variant="destructive"
-                                  size="sm"
+                                  variant='destructive'
+                                  size='sm'
                                   onClick={() => setOrderToDeleteId(order.id)}
-                                  disabled={isUpdating}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                  <span className="sr-only">Delete Order</span>
+                                  disabled={isUpdating}>
+                                  <Trash2 className='h-4 w-4' />
+                                  <span className='sr-only'>Delete Order</span>
                                 </Button>
                               </AlertDialogTrigger>
                             )}
@@ -432,8 +424,8 @@ export default function Orders() {
               </div>
             )}
           </CardContent>
-          <CardFooter className="border-t px-6 py-4">
-            <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
+          <CardFooter className='border-t px-6 py-4'>
+            <div className='flex items-center justify-between w-full text-xs text-muted-foreground'>
               <div>
                 Showing {filteredOrders.length} of {orders.length} orders
               </div>
@@ -442,7 +434,7 @@ export default function Orders() {
         </Card>
 
         <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className='max-w-3xl max-h-[90vh] overflow-y-auto'>
             {selectedOrder && (
               <>
                 <DialogHeader>
@@ -452,32 +444,32 @@ export default function Orders() {
                   </DialogDescription>
                 </DialogHeader>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4 my-4'>
                   <div>
-                    <h3 className="font-medium text-sm mb-2">
+                    <h3 className='font-medium text-sm mb-2'>
                       Customer Information
                     </h3>
-                    <div className="space-y-1 text-sm">
+                    <div className='space-y-1 text-sm'>
                       <p>
-                        <span className="font-medium">Name:</span>{" "}
+                        <span className='font-medium'>Name:</span>{" "}
                         {selectedOrder.customerName}
                       </p>
                       <p>
-                        <span className="font-medium">Email:</span>{" "}
+                        <span className='font-medium'>Email:</span>{" "}
                         {selectedOrder.customerEmail || "N/A"}
                       </p>
                       <p>
-                        <span className="font-medium">Phone:</span>{" "}
+                        <span className='font-medium'>Phone:</span>{" "}
                         {selectedOrder.customerPhone}
                       </p>
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="font-medium text-sm mb-2">
+                    <h3 className='font-medium text-sm mb-2'>
                       Shipping Address
                     </h3>
-                    <div className="space-y-1 text-sm">
+                    <div className='space-y-1 text-sm'>
                       <p>{selectedOrder.shippingAddress}</p>
                       <p>
                         {selectedOrder.shippingCity}
@@ -493,8 +485,8 @@ export default function Orders() {
                   </div>
                 </div>
 
-                <div className="my-4">
-                  <h3 className="font-medium text-sm mb-2">Order Items</h3>
+                <div className='my-4'>
+                  <h3 className='font-medium text-sm mb-2'>Order Items</h3>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -512,12 +504,12 @@ export default function Orders() {
                           <TableCell>
                             {item.discountPrice ? (
                               <>
-                                <span className="line-through text-gray-500">
+                                <span className='line-through text-gray-500'>
                                   {Number.parseFloat(item.price).toFixed(2)} EGP
                                 </span>
-                                <span className="text-red-600 block">
+                                <span className='text-red-600 block'>
                                   {Number.parseFloat(
-                                    item.discountPrice
+                                    item.discountPrice,
                                   ).toFixed(2)}{" "}
                                   EGP
                                 </span>
@@ -531,7 +523,7 @@ export default function Orders() {
                           <TableCell>
                             {(
                               Number.parseFloat(
-                                item.discountPrice || item.price
+                                item.discountPrice || item.price,
                               ) * item.quantity
                             ).toFixed(2)}{" "}
                             EGP
@@ -541,8 +533,7 @@ export default function Orders() {
                         <TableRow>
                           <TableCell
                             colSpan={isAdmin ? 5 : 4}
-                            className="text-center text-muted-foreground"
-                          >
+                            className='text-center text-muted-foreground'>
                             No items found for this order.
                           </TableCell>
                         </TableRow>
@@ -551,10 +542,10 @@ export default function Orders() {
                   </Table>
                 </div>
 
-                <div className="flex justify-between items-start my-4">
+                <div className='flex justify-between items-start my-4'>
                   <div>
-                    <h3 className="font-medium text-sm mb-2">Order Status</h3>
-                    <div className="flex items-center gap-3">
+                    <h3 className='font-medium text-sm mb-2'>Order Status</h3>
+                    <div className='flex items-center gap-3'>
                       <Badge className={getStatusColor(selectedOrder.status)}>
                         {selectedOrder.status.charAt(0).toUpperCase() +
                           selectedOrder.status.slice(1)}
@@ -565,30 +556,29 @@ export default function Orders() {
                           disabled={isUpdating}
                           onValueChange={(value) =>
                             updateOrderStatus(selectedOrder.id, value)
-                          }
-                        >
-                          <SelectTrigger className="h-8 w-[160px]">
-                            <SelectValue placeholder="Update status" />
+                          }>
+                          <SelectTrigger className='h-8 w-[160px]'>
+                            <SelectValue placeholder='Update status' />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="processing">
+                            <SelectItem value='pending'>Pending</SelectItem>
+                            <SelectItem value='processing'>
                               Processing
                             </SelectItem>
-                            <SelectItem value="shipped">Shipped</SelectItem>
-                            <SelectItem value="delivered">Delivered</SelectItem>
-                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                            <SelectItem value='shipped'>Shipped</SelectItem>
+                            <SelectItem value='delivered'>Delivered</SelectItem>
+                            <SelectItem value='cancelled'>Cancelled</SelectItem>
                           </SelectContent>
                         </Select>
                       )}
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    <h3 className="font-medium text-sm mb-2">Order Summary</h3>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span className="font-medium">Subtotal:</span>
+                  <div className='text-right'>
+                    <h3 className='font-medium text-sm mb-2'>Order Summary</h3>
+                    <div className='space-y-1 text-sm'>
+                      <div className='flex justify-between'>
+                        <span className='font-medium'>Subtotal:</span>
                         <span>
                           {Number.parseFloat(selectedOrder.subtotal).toFixed(2)}{" "}
                           EGP
@@ -597,36 +587,29 @@ export default function Orders() {
 
                       {selectedOrder.discount &&
                         Number.parseFloat(selectedOrder.discount) > 0 && (
-                          <div className="flex justify-between">
-                            <span className="font-medium text-green-600">
+                          <div className='flex justify-between'>
+                            <span className='font-medium text-green-600'>
                               Discount:
                             </span>
-                            <span className="text-green-600">
+                            <span className='text-green-600'>
                               -
                               {Number.parseFloat(
-                                selectedOrder.discount
+                                selectedOrder.discount,
                               ).toFixed(2)}{" "}
                               EGP
                             </span>
                           </div>
                         )}
 
-                      <div className="flex justify-between">
-                        <span className="font-medium">Shipping:</span>
+                      <div className='flex justify-between'>
+                        <span className='font-medium'>Shipping:</span>
                         <span>
                           {Number.parseFloat(selectedOrder.shipping).toFixed(2)}{" "}
                           EGP
                         </span>
                       </div>
 
-                      <div className="flex justify-between">
-                        <span className="font-medium">Tax:</span>
-                        <span>
-                          {Number.parseFloat(selectedOrder.tax).toFixed(2)} EGP
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between font-bold">
+                      <div className='flex justify-between font-bold'>
                         <span>Total:</span>
                         <span>
                           {Number.parseFloat(selectedOrder.total).toFixed(2)}{" "}
@@ -638,9 +621,9 @@ export default function Orders() {
                 </div>
 
                 {selectedOrder.notes && (
-                  <div className="my-4 border-t pt-4">
-                    <h3 className="font-medium text-sm mb-2">Order Notes</h3>
-                    <p className="text-sm text-muted-foreground">
+                  <div className='my-4 border-t pt-4'>
+                    <h3 className='font-medium text-sm mb-2'>Order Notes</h3>
+                    <p className='text-sm text-muted-foreground'>
                       {selectedOrder.notes}
                     </p>
                   </div>
@@ -648,9 +631,8 @@ export default function Orders() {
 
                 <DialogFooter>
                   <Button
-                    variant="outline"
-                    onClick={() => setIsDetailsOpen(false)}
-                  >
+                    variant='outline'
+                    onClick={() => setIsDetailsOpen(false)}>
                     Close
                   </Button>
                 </DialogFooter>
@@ -665,7 +647,7 @@ export default function Orders() {
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
               order
-              <span className="font-mono font-semibold">
+              <span className='font-mono font-semibold'>
                 {" "}
                 {orderToDeleteId?.substring(0, 8)}...
               </span>
@@ -677,10 +659,9 @@ export default function Orders() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDeleteOrder}
-              disabled={isUpdating}
-            >
+              disabled={isUpdating}>
               {isUpdating ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
               ) : null}
               Delete
             </AlertDialogAction>

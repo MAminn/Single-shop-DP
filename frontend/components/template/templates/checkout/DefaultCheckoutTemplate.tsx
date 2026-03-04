@@ -61,7 +61,6 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({
     total: contextTotal,
     promoCode: contextPromoCode,
     shipping: contextShipping,
-    tax: contextTax,
   } = useCart();
   const { toast } = useToast();
 
@@ -71,7 +70,6 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({
   const subtotal = checkoutData?.subtotal ?? contextSubtotal;
   const discount = checkoutData?.discount ?? contextDiscount;
   const shipping = checkoutData?.shipping ?? contextShipping;
-  const tax = checkoutData?.tax ?? contextTax;
   const total = checkoutData?.total ?? contextTotal;
   const promoCode = checkoutData?.promoCode ?? contextPromoCode;
   const formData = checkoutData?.formData || {
@@ -189,7 +187,6 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({
         items: items as CheckoutItem[],
         subtotal: subtotal,
         shipping: shipping,
-        tax: tax,
         discount: discount,
         total: total,
         status: "pending",
@@ -350,10 +347,7 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({
                     <span>Shipping:</span>
                     <span>EGP {localOrderDetails.shipping.toFixed(2)}</span>
                   </div>
-                  <div className='flex justify-between'>
-                    <span>Tax:</span>
-                    <span>EGP {localOrderDetails.tax.toFixed(2)}</span>
-                  </div>
+
                   <Separator />
                   <div className='flex justify-between font-semibold text-lg'>
                     <span>Total:</span>
@@ -580,7 +574,6 @@ const DefaultCheckoutTemplate: React.FC<DefaultCheckoutTemplateProps> = ({
             items={items as CheckoutItem[]}
             subtotal={subtotal}
             shipping={shipping}
-            tax={tax}
             discount={discount}
             total={total}
             promoCode={promoCode}
@@ -595,7 +588,6 @@ function OrderSummary({
   items,
   subtotal,
   shipping,
-  tax,
   discount = 0,
   total,
   promoCode,
@@ -603,7 +595,6 @@ function OrderSummary({
   items: CheckoutItem[];
   subtotal: number;
   shipping: number;
-  tax: number;
   discount?: number;
   total: number;
   promoCode?: {
@@ -713,10 +704,6 @@ function OrderSummary({
           <div className='flex justify-between text-sm'>
             <span>Shipping:</span>
             <span>EGP {shipping.toFixed(2)}</span>
-          </div>
-          <div className='flex justify-between text-sm'>
-            <span>Tax:</span>
-            <span>EGP {tax.toFixed(2)}</span>
           </div>
           <Separator />
           <div className='flex justify-between font-semibold'>

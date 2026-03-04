@@ -57,6 +57,9 @@ function Content({ children }: { children: React.ReactNode }) {
     if (pathname.includes("/dashboard/admin/pixels")) {
       return "pixels";
     }
+    if (pathname.includes("/dashboard/settings")) {
+      return "settings";
+    }
     return "overview";
   };
 
@@ -84,6 +87,10 @@ function Content({ children }: { children: React.ReactNode }) {
           {
             label: "Pixels",
             href: "/dashboard/admin/pixels",
+          },
+          {
+            label: "Settings",
+            href: "/dashboard/settings",
           },
         ]
       : []),

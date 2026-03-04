@@ -139,7 +139,6 @@ interface CartTemplateData {
   subtotal: number;
   discount: number;
   shipping: number;
-  tax: number;
   total: number;
   promoCode?: {
     id: string;
@@ -173,7 +172,6 @@ interface CheckoutTemplateData {
   subtotal: number;
   discount: number;
   shipping: number;
-  tax: number;
   total: number;
   promoCode?: {
     id: string;
@@ -210,7 +208,6 @@ interface CheckoutTemplateData {
     items: CheckoutItem[];
     subtotal: number;
     shipping: number;
-    tax: number;
     discount?: number;
     total: number;
     status: string;
@@ -610,7 +607,7 @@ const templates: Record<TemplateCategory, TemplateInfo[]> = {
 // Helper function to get template component
 export function getTemplateComponent(
   category: TemplateCategory,
-  templateId: string
+  templateId: string,
 ) {
   const categoryTemplates = templates[category];
   if (!categoryTemplates) {
@@ -621,7 +618,7 @@ export function getTemplateComponent(
   const template = categoryTemplates.find((t) => t.id === templateId);
   if (!template) {
     console.warn(
-      `Template "${templateId}" not found in category "${category}"`
+      `Template "${templateId}" not found in category "${category}"`,
     );
     return categoryTemplates[0]?.component || null;
   }
@@ -631,7 +628,7 @@ export function getTemplateComponent(
 
 // Helper function to get available templates for a category
 export function getAvailableTemplates(
-  category: TemplateCategory
+  category: TemplateCategory,
 ): TemplateInfo[] {
   return templates[category] || [];
 }
@@ -639,7 +636,7 @@ export function getAvailableTemplates(
 // Helper function to get template metadata
 export function getTemplateMetadata(
   category: TemplateCategory,
-  templateId: string
+  templateId: string,
 ): TemplateInfo | null {
   const categoryTemplates = templates[category];
   if (!categoryTemplates) {

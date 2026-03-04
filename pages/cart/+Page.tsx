@@ -24,7 +24,6 @@ export default function CartPage() {
     applyPromoCode,
     removePromoCode,
     shipping,
-    tax,
   } = useCart();
   const { getTemplateId } = useTemplate();
   const [isLoading, setIsLoading] = useState(false);
@@ -54,10 +53,9 @@ export default function CartPage() {
       subtotal,
       discount: discount > 0 ? discount : undefined,
       shipping: shipping > 0 ? shipping : undefined,
-      tax: tax > 0 ? tax : undefined,
       grandTotal: total,
     };
-  }, [subtotal, discount, shipping, tax, total]);
+  }, [subtotal, discount, shipping, total]);
 
   // Handle quantity change
   const handleQuantityChange = (itemId: string, newQuantity: number): void => {

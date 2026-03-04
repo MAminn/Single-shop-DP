@@ -21,27 +21,26 @@ interface CartContextType {
   addItem: (
     item: Product,
     quantity: number,
-    selectedOptions: CartItem["selectedOptions"]
+    selectedOptions: CartItem["selectedOptions"],
   ) => boolean;
   removeItem: (itemId: string, options?: CartItem["selectedOptions"]) => void;
   updateQuantity: (
     itemId: string,
     quantity: number,
-    options?: CartItem["selectedOptions"]
+    options?: CartItem["selectedOptions"],
   ) => boolean;
   clearCart: () => void;
   totalItems: number;
   subtotal: number;
   discount: number;
   shipping: number;
-  tax: number;
   total: number;
   promoCode: PromoCodeInfo | null;
   applyPromoCode: (code: string) => Promise<boolean>;
   removePromoCode: () => void;
   findItemInCart: (
     itemId: string,
-    options: CartItem["selectedOptions"]
+    options: CartItem["selectedOptions"],
   ) => CartItem | undefined;
 }
 
@@ -51,6 +50,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [promoCode, setPromoCode] = useState<PromoCodeInfo | null>(null);
   const [discount, setDiscount] = useState<number>(0);
+  const [shipping, setShipping] = useState<number>(0);
 
   useEffect(() => {
     const savedCart = localStorage.getItem("cart");
@@ -74,12 +74,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("promoCode");
       }
     }
+
+    // Fetch shipping fee from backend
+    trpc.settings.getShippingFee
+      .query()
+      .then((result) => {
+        if (result.success) {
+          setShipping(result.result);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch shipping fee:", err);
+      });
   }, []);
 
   // Calculate subtotal
   const subtotal = items.reduce(
     (total, item) => total + item.price * item.quantity,
-    0
+    0,
   );
 
   useEffect(() => {
@@ -116,19 +128,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const findItemInCart = (
     itemId: string,
-    options: CartItem["selectedOptions"]
+    options: CartItem["selectedOptions"],
   ) => {
     return items.find(
       (item) =>
         item.id === itemId &&
-        JSON.stringify(item.selectedOptions) === JSON.stringify(options)
+        JSON.stringify(item.selectedOptions) === JSON.stringify(options),
     );
   };
 
   const addItem = (
     product: Product,
     quantity: number,
-    selectedOptions: CartItem["selectedOptions"]
+    selectedOptions: CartItem["selectedOptions"],
   ) => {
     if (!product.stock || product.stock < quantity) {
       return false;
@@ -137,7 +149,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const existingItemIndex = items.findIndex(
       (item) =>
         item.id === product.id &&
-        JSON.stringify(item.selectedOptions) === JSON.stringify(selectedOptions)
+        JSON.stringify(item.selectedOptions) ===
+          JSON.stringify(selectedOptions),
     );
 
     if (existingItemIndex >= 0) {
@@ -171,7 +184,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const removeItem = (
     itemId: string,
-    options?: CartItem["selectedOptions"]
+    options?: CartItem["selectedOptions"],
   ) => {
     if (options) {
       setItems((prev) =>
@@ -180,8 +193,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
             !(
               item.id === itemId &&
               JSON.stringify(item.selectedOptions) === JSON.stringify(options)
-            )
-        )
+            ),
+        ),
       );
     } else {
       setItems((prev) => prev.filter((item) => item.id !== itemId));
@@ -191,7 +204,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const updateQuantity = (
     itemId: string,
     quantity: number,
-    options?: CartItem["selectedOptions"]
+    options?: CartItem["selectedOptions"],
   ) => {
     if (quantity <= 0) return false;
 
@@ -201,7 +214,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       targetItemIndex = items.findIndex(
         (item) =>
           item.id === itemId &&
-          JSON.stringify(item.selectedOptions) === JSON.stringify(options)
+          JSON.stringify(item.selectedOptions) === JSON.stringify(options),
       );
     } else {
       targetItemIndex = items.findIndex((item) => item.id === itemId);
@@ -271,14 +284,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const totalItems = items.reduce((total, item) => total + item.quantity, 0);
 
-  // Fixed shipping cost
-  const shipping = 5;
-
-  // Calculate tax based on subtotal minus discount
-  const tax = (subtotal - discount) * 0.05;
-
-  // Calculate total including shipping and tax
-  const total = subtotal - discount + shipping + tax;
+  // Calculate total including shipping (no tax)
+  const total = subtotal - discount + shipping;
 
   return (
     <CartContext.Provider
@@ -292,14 +299,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         subtotal,
         discount,
         shipping,
-        tax,
         total,
         promoCode,
         applyPromoCode,
         removePromoCode,
         findItemInCart,
-      }}
-    >
+      }}>
       {children}
     </CartContext.Provider>
   );

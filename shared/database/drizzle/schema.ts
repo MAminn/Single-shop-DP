@@ -365,7 +365,9 @@ export const order = pgTable("order", {
   notes: text("notes"),
   // Payment gateway fields
   paymentMethod: paymentMethodEnum("payment_method").notNull().default("cod"),
-  paymentStatus: paymentStatusEnum("payment_status").notNull().default("not_required"),
+  paymentStatus: paymentStatusEnum("payment_status")
+    .notNull()
+    .default("not_required"),
   paymentSessionId: text("payment_session_id"),
   paymentTransactionId: text("payment_transaction_id"),
   paymentGatewayData: jsonb("payment_gateway_data"),
@@ -1159,6 +1161,29 @@ export const trackingConsent = pgTable("tracking_consent", {
   userAgent: text("user_agent"),
   expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+    .defaultNow()
+    .notNull(),
+});
+
+// ─── Store Settings ─────────────────────────────────────────────────────────
+// Single-row table holding admin-configurable store-wide settings.
+// We use a fixed key ("default") enforced by a unique constraint so only one
+// row ever exists.
+export const storeSettings = pgTable("store_settings", {
+  id: uuid("id")
+    .$defaultFn(() => v7())
+    .primaryKey(),
+  key: text("key").unique().notNull().default("default"),
+  shippingFee: decimal("shipping_fee", {
+    precision: 10,
+    scale: 2,
+  })
+    .notNull()
+    .default("0"),
+  updatedAt: timestamp("updated_at", {
+    withTimezone: true,
+    mode: "date",
+  })
     .defaultNow()
     .notNull(),
 });

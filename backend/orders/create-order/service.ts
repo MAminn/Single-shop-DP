@@ -17,6 +17,7 @@ import { NewOrderEmailTemplate } from "./email-template";
 import axios from "axios";
 import { validatePromoCode } from "#root/backend/promo-codes/validate-promo-code/validate-promo-code";
 import { getStoreOwnerId } from "#root/shared/config/store";
+import { getShippingFeeRaw } from "#root/backend/settings/get-shipping-fee";
 
 const OrderItemSchema = z.object({
   productId: z.string().uuid(),
@@ -82,7 +83,6 @@ interface FincartOrderData {
   shippingPostalCode: string;
   subtotal: string | number;
   shipping: string | number;
-  tax: string | number;
   total: string | number;
   notes: string | null | undefined;
   items: Array<{
@@ -326,8 +326,7 @@ export const createOrder = (
             return acc + priceToUse * item.quantity;
           }, 0);
 
-          const shipping = 5;
-          const taxRate = 0.05;
+          const shipping = await getShippingFeeRaw(tx);
 
           // Check if a promo code is applied
           let discount = 0;
@@ -429,12 +428,13 @@ export const createOrder = (
           }
 
           const discountedSubtotal = subtotal - discount;
-          const tax = discountedSubtotal * taxRate;
-          // Ensure shipping is included in the total
-          const total = discountedSubtotal + shipping + tax;
+          // Ensure shipping is included in the total (no tax)
+          const total = discountedSubtotal + shipping;
 
           // Only include fields directly provided or calculated
-          const isOnlinePayment = input.paymentMethod === "stripe" || input.paymentMethod === "paymob";
+          const isOnlinePayment =
+            input.paymentMethod === "stripe" ||
+            input.paymentMethod === "paymob";
           const insertData = {
             userId: userId,
             customerName: input.customerName,
@@ -449,7 +449,7 @@ export const createOrder = (
             discount: discount > 0 ? discount.toString() : null,
             promoCodeId: input.promoCodeId || null,
             shipping: shipping.toString(),
-            tax: tax.toString(),
+            tax: "0",
             total: total.toString(),
             notes: input.notes,
             paymentMethod: input.paymentMethod ?? "cod",
@@ -557,7 +557,7 @@ export const createOrder = (
           })),
           shippingFees: Number.parseFloat(result.shipping),
           subTotal: Number.parseFloat(result.subtotal),
-          tax: Number.parseFloat(result.tax),
+
           total: Number.parseFloat(result.total),
           address: result.shippingAddress,
           city: result.shippingCity,
@@ -618,7 +618,8 @@ export const createOrder = (
     // Single-shop mode: No vendor notifications needed
 
     // Send order to Fincart (only for COD orders — online payment orders are shipped after payment confirmation)
-    const isOnlinePaymentOrder = input.paymentMethod === "stripe" || input.paymentMethod === "paymob";
+    const isOnlinePaymentOrder =
+      input.paymentMethod === "stripe" || input.paymentMethod === "paymob";
     if (!isOnlinePaymentOrder) {
       try {
         // Use Effect to handle the async operation correctly
@@ -640,7 +641,9 @@ export const createOrder = (
         console.error("Exception when sending order to Fincart:", error);
       }
     } else {
-      console.log(`[Order ${result.id}] Online payment (${input.paymentMethod}) — Fincart shipment deferred until payment confirmed`);
+      console.log(
+        `[Order ${result.id}] Online payment (${input.paymentMethod}) — Fincart shipment deferred until payment confirmed`,
+      );
     }
 
     return result;

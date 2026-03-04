@@ -31,7 +31,6 @@ export interface CartPageTotals {
   subtotal: number;
   discount?: number;
   shipping?: number;
-  tax?: number;
   grandTotal: number;
 }
 
@@ -234,15 +233,6 @@ export function CartPageModernTemplate({
                       {totals.shipping === 0
                         ? "Free"
                         : `${currency} ${totals.shipping.toFixed(2)}`}
-                    </span>
-                  </div>
-                )}
-                {totals.tax !== undefined && totals.tax > 0 && (
-                  <div className='flex justify-between'>
-                    <span>Tax</span>
-                    <span>
-                      {currency}
-                      {totals.tax.toFixed(2)}
                     </span>
                   </div>
                 )}

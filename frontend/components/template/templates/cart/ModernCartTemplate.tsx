@@ -57,7 +57,6 @@ export const ModernCartTemplate: React.FC<ModernCartTemplateProps> = ({
     applyPromoCode: contextApplyPromoCode,
     removePromoCode: contextRemovePromoCode,
     shipping: contextShipping,
-    tax: contextTax,
   } = useCart();
 
   // Use provided data or fallback to context data
@@ -68,7 +67,6 @@ export const ModernCartTemplate: React.FC<ModernCartTemplateProps> = ({
   const total = cartData?.total ?? contextTotal;
   const promoCode = cartData?.promoCode ?? contextPromoCode;
   const shipping = cartData?.shipping ?? contextShipping;
-  const tax = cartData?.tax ?? contextTax;
 
   const [promoCodeInput, setPromoCodeInput] = useState("");
   const [appliedPromo, setAppliedPromo] = useState(promoCode?.code || "");
@@ -349,12 +347,6 @@ export const ModernCartTemplate: React.FC<ModernCartTemplateProps> = ({
                         ) : (
                           `EGP ${shipping.toFixed(2)}`
                         )}
-                      </span>
-                    </div>
-                    <div className='flex justify-between'>
-                      <span className='text-gray-600'>Tax</span>
-                      <span className='font-medium text-gray-900'>
-                        EGP {tax.toFixed(2)}
                       </span>
                     </div>
                     {discount > 0 && (

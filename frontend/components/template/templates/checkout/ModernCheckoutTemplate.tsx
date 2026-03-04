@@ -66,7 +66,6 @@ const ModernCheckoutTemplate: React.FC<ModernCheckoutTemplateProps> = ({
     total: contextTotal,
     promoCode: contextPromoCode,
     shipping: contextShipping,
-    tax: contextTax,
   } = useCart();
   const { toast } = useToast();
 
@@ -76,7 +75,6 @@ const ModernCheckoutTemplate: React.FC<ModernCheckoutTemplateProps> = ({
   const subtotal = checkoutData?.subtotal ?? contextSubtotal;
   const discount = checkoutData?.discount ?? contextDiscount;
   const shipping = checkoutData?.shipping ?? contextShipping;
-  const tax = checkoutData?.tax ?? contextTax;
   const total = checkoutData?.total ?? contextTotal;
   const promoCode = checkoutData?.promoCode ?? contextPromoCode;
   const formData = checkoutData?.formData || {
@@ -199,7 +197,6 @@ const ModernCheckoutTemplate: React.FC<ModernCheckoutTemplateProps> = ({
         items: items as CheckoutItem[],
         subtotal: subtotal,
         shipping: shipping,
-        tax: tax,
         discount: discount,
         total: total,
         status: "pending",
@@ -411,12 +408,6 @@ const ModernCheckoutTemplate: React.FC<ModernCheckoutTemplateProps> = ({
                           </span>
                           <span className='font-light'>
                             EGP {localOrderDetails.shipping.toFixed(2)}
-                          </span>
-                        </div>
-                        <div className='flex justify-between text-lg'>
-                          <span className='text-gray-600 font-light'>Tax:</span>
-                          <span className='font-light'>
-                            EGP {localOrderDetails.tax.toFixed(2)}
                           </span>
                         </div>
                         <Separator className='my-4' />
@@ -728,7 +719,6 @@ const ModernCheckoutTemplate: React.FC<ModernCheckoutTemplateProps> = ({
               items={items as CheckoutItem[]}
               subtotal={subtotal}
               shipping={shipping}
-              tax={tax}
               discount={discount}
               total={total}
               promoCode={promoCode}
@@ -744,7 +734,6 @@ function ModernOrderSummary({
   items,
   subtotal,
   shipping,
-  tax,
   discount = 0,
   total,
   promoCode,
@@ -752,7 +741,6 @@ function ModernOrderSummary({
   items: CheckoutItem[];
   subtotal: number;
   shipping: number;
-  tax: number;
   discount?: number;
   total: number;
   promoCode?: {
@@ -880,10 +868,6 @@ function ModernOrderSummary({
           <div className='flex justify-between text-lg'>
             <span className='text-gray-600 font-light'>Shipping:</span>
             <span className='font-light'>EGP {shipping.toFixed(2)}</span>
-          </div>
-          <div className='flex justify-between text-lg'>
-            <span className='text-gray-600 font-light'>Tax:</span>
-            <span className='font-light'>EGP {tax.toFixed(2)}</span>
           </div>
 
           <div className='bg-gray-50 border  rounded-none p-4 border-t border-gray-200'>

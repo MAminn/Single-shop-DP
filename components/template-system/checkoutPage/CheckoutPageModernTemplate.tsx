@@ -62,7 +62,6 @@ export interface CheckoutTotals {
   subtotal: number;
   discount?: number;
   shipping?: number;
-  tax?: number;
   grandTotal: number;
 }
 
@@ -150,7 +149,8 @@ export function CheckoutPageModernTemplate({
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       errors.email = "Please enter a valid email address";
     }
-    if (!form.phoneNumber.trim()) errors.phoneNumber = "Phone number is required";
+    if (!form.phoneNumber.trim())
+      errors.phoneNumber = "Phone number is required";
     if (!form.address.trim()) errors.address = "Shipping address is required";
     if (!form.city.trim()) errors.city = "City is required";
 
@@ -198,10 +198,14 @@ export function CheckoutPageModernTemplate({
                       placeholder='John Doe'
                       value={form.fullName}
                       onChange={(e) => updateField("fullName", e.target.value)}
-                      className={fieldErrors.fullName ? "border-destructive" : ""}
+                      className={
+                        fieldErrors.fullName ? "border-destructive" : ""
+                      }
                     />
                     {fieldErrors.fullName && (
-                      <p className='text-sm text-destructive'>{fieldErrors.fullName}</p>
+                      <p className='text-sm text-destructive'>
+                        {fieldErrors.fullName}
+                      </p>
                     )}
                   </div>
                   <div className='space-y-2'>
@@ -217,7 +221,9 @@ export function CheckoutPageModernTemplate({
                       className={fieldErrors.email ? "border-destructive" : ""}
                     />
                     {fieldErrors.email && (
-                      <p className='text-sm text-destructive'>{fieldErrors.email}</p>
+                      <p className='text-sm text-destructive'>
+                        {fieldErrors.email}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -231,10 +237,14 @@ export function CheckoutPageModernTemplate({
                     placeholder='+20 1XX XXX XXXX'
                     value={form.phoneNumber}
                     onChange={(e) => updateField("phoneNumber", e.target.value)}
-                    className={fieldErrors.phoneNumber ? "border-destructive" : ""}
+                    className={
+                      fieldErrors.phoneNumber ? "border-destructive" : ""
+                    }
                   />
                   {fieldErrors.phoneNumber && (
-                    <p className='text-sm text-destructive'>{fieldErrors.phoneNumber}</p>
+                    <p className='text-sm text-destructive'>
+                      {fieldErrors.phoneNumber}
+                    </p>
                   )}
                 </div>
               </CardContent>
@@ -261,7 +271,9 @@ export function CheckoutPageModernTemplate({
                     className={fieldErrors.address ? "border-destructive" : ""}
                   />
                   {fieldErrors.address && (
-                    <p className='text-sm text-destructive'>{fieldErrors.address}</p>
+                    <p className='text-sm text-destructive'>
+                      {fieldErrors.address}
+                    </p>
                   )}
                 </div>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
@@ -277,7 +289,9 @@ export function CheckoutPageModernTemplate({
                       className={fieldErrors.city ? "border-destructive" : ""}
                     />
                     {fieldErrors.city && (
-                      <p className='text-sm text-destructive'>{fieldErrors.city}</p>
+                      <p className='text-sm text-destructive'>
+                        {fieldErrors.city}
+                      </p>
                     )}
                   </div>
                   <div className='space-y-2'>
@@ -297,7 +311,9 @@ export function CheckoutPageModernTemplate({
                       id='postalCode'
                       placeholder='11511'
                       value={form.postalCode}
-                      onChange={(e) => updateField("postalCode", e.target.value)}
+                      onChange={(e) =>
+                        updateField("postalCode", e.target.value)
+                      }
                     />
                   </div>
                   <div className='space-y-2'>
@@ -330,37 +346,48 @@ export function CheckoutPageModernTemplate({
 
             {/* Payment Method */}
             {(() => {
-              const methods = paymentMethods && paymentMethods.length > 0
-                ? paymentMethods
-                : [{ id: "cod", label: "Cash on Delivery", description: "Pay when your order is delivered to your doorstep" }];
+              const methods =
+                paymentMethods && paymentMethods.length > 0
+                  ? paymentMethods
+                  : [
+                      {
+                        id: "cod",
+                        label: "Cash on Delivery",
+                        description:
+                          "Pay when your order is delivered to your doorstep",
+                      },
+                    ];
               const showPaymentSection = methods.length > 1;
 
               if (!showPaymentSection) return null;
 
               const getPaymentIcon = (id: string) => {
                 switch (id) {
-                  case "stripe": return <CreditCard className="w-5 h-5" />;
-                  case "paymob": return <Wallet className="w-5 h-5" />;
-                  default: return <Banknote className="w-5 h-5" />;
+                  case "stripe":
+                    return <CreditCard className='w-5 h-5' />;
+                  case "paymob":
+                    return <Wallet className='w-5 h-5' />;
+                  default:
+                    return <Banknote className='w-5 h-5' />;
                 }
               };
 
               return (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <CreditCard className="w-5 h-5 text-primary" />
+                    <CardTitle className='flex items-center gap-2'>
+                      <CreditCard className='w-5 h-5 text-primary' />
                       Payment Method
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {paymentMethodsLoading ? (
-                      <div className="flex items-center justify-center py-4 gap-2 text-muted-foreground">
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                      <div className='flex items-center justify-center py-4 gap-2 text-muted-foreground'>
+                        <Loader2 className='w-4 h-4 animate-spin' />
                         Loading payment options...
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className='space-y-3'>
                         {methods.map((method) => (
                           <label
                             key={method.id}
@@ -368,28 +395,32 @@ export function CheckoutPageModernTemplate({
                               form.paymentMethod === method.id
                                 ? "border-primary bg-primary/5"
                                 : "border-border hover:border-muted-foreground/30"
-                            }`}
-                          >
+                            }`}>
                             <input
-                              type="radio"
-                              name="paymentMethod"
+                              type='radio'
+                              name='paymentMethod'
                               value={method.id}
                               checked={form.paymentMethod === method.id}
-                              onChange={(e) => updateField("paymentMethod", e.target.value)}
-                              className="mt-1 accent-primary"
+                              onChange={(e) =>
+                                updateField("paymentMethod", e.target.value)
+                              }
+                              className='mt-1 accent-primary'
                             />
-                            <div className="flex items-start gap-3 flex-1">
-                              <div className={`mt-0.5 ${form.paymentMethod === method.id ? "text-primary" : "text-muted-foreground"}`}>
+                            <div className='flex items-start gap-3 flex-1'>
+                              <div
+                                className={`mt-0.5 ${form.paymentMethod === method.id ? "text-primary" : "text-muted-foreground"}`}>
                                 {getPaymentIcon(method.id)}
                               </div>
-                              <div className="flex-1">
-                                <p className="font-medium">{method.label}</p>
-                                <p className="text-sm text-muted-foreground">{method.description}</p>
+                              <div className='flex-1'>
+                                <p className='font-medium'>{method.label}</p>
+                                <p className='text-sm text-muted-foreground'>
+                                  {method.description}
+                                </p>
                               </div>
                             </div>
                             {method.id !== "cod" && (
-                              <div className="flex items-center gap-1 text-xs text-green-600 mt-1">
-                                <Shield className="w-3 h-3" />
+                              <div className='flex items-center gap-1 text-xs text-green-600 mt-1'>
+                                <Shield className='w-3 h-3' />
                                 Secure
                               </div>
                             )}
@@ -484,15 +515,6 @@ export function CheckoutPageModernTemplate({
                       </span>
                     </div>
                   )}
-                  {totals.tax !== undefined && totals.tax > 0 && (
-                    <div className='flex justify-between'>
-                      <span>Tax</span>
-                      <span>
-                        {currency}
-                        {totals.tax.toFixed(2)}
-                      </span>
-                    </div>
-                  )}
                 </div>
 
                 <Separator />
@@ -518,8 +540,8 @@ export function CheckoutPageModernTemplate({
                   ) : form.paymentMethod === "cod" ? (
                     "Place Order"
                   ) : (
-                    <span className="flex items-center gap-2">
-                      <CreditCard className="w-4 h-4" />
+                    <span className='flex items-center gap-2'>
+                      <CreditCard className='w-4 h-4' />
                       Place Order & Pay
                     </span>
                   )}
