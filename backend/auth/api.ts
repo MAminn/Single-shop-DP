@@ -1,6 +1,4 @@
 import { Effect } from "effect";
-import { Hono } from "hono";
-import { deleteCookie, setCookie } from "hono/cookie";
 import { z } from "zod";
 import { validateSessionToken } from "./session";
 import {
@@ -60,12 +58,23 @@ export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
       console.error("[Auth] Admin bootstrap error:", err);
     });
 
-  // Determine if cookies should be secure (only over HTTPS)
-  const isSecure =
-    process.env.NODE_ENV === "production" &&
-    (process.env.BASE_URL?.startsWith("https://") ||
-      process.env.PUBLIC_ORIGIN?.startsWith("https://"));
+  /**
+   * Helper: build cookie options based on the actual request protocol.
+   * With `trustProxy: true`, `req.protocol` correctly reports "https"
+   * even behind a TLS-terminating reverse proxy (Traefik / Coolify).
+   */
+  function cookieOpts(req: import("fastify").FastifyRequest, maxAge?: number) {
+    const secure = req.protocol === "https";
+    return {
+      httpOnly: true,
+      secure,
+      sameSite: "lax" as const,
+      path: "/",
+      ...(maxAge != null ? { maxAge } : {}),
+    };
+  }
 
+  // ── POST /token — set session cookie after login ──────────────────
   app.post("/token", async (req, res) => {
     const validation = saveTokenSchema.safeParse(req.body);
 
@@ -87,15 +96,18 @@ export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
 
     const clientSession = getClientSession.result;
 
-    res.setCookie("session", token, {
-      httpOnly: true,
-      secure: isSecure,
-      sameSite: "lax",
-      path: "/",
-      maxAge: Math.ceil(
-        (clientSession.expiresAt.getTime() - Date.now()) / 1000,
-      ),
-    });
+    // Ensure expiresAt is a Date so getTime() works reliably
+    const expiresAt =
+      clientSession.expiresAt instanceof Date
+        ? clientSession.expiresAt
+        : new Date(clientSession.expiresAt);
+    const maxAge = Math.ceil((expiresAt.getTime() - Date.now()) / 1000);
+
+    res.setCookie(
+      "session",
+      token,
+      cookieOpts(req, maxAge > 0 ? maxAge : 60 * 60 * 24 * 30),
+    );
 
     return res.status(200).send({
       success: true,
@@ -103,13 +115,24 @@ export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
     });
   });
 
-  app.delete("/token", async (req, res) => {
-    res.clearCookie("session", {
-      path: "/",
-      httpOnly: true,
-      secure: isSecure,
-      sameSite: "lax",
+  // ── GET /me — return current session from cookie (client-side restore) ─
+  app.get("/me", async (req, res) => {
+    // The auth middleware already validated the cookie and set clientSession
+    if (!req.clientSession) {
+      return res
+        .status(401)
+        .send({ success: false, error: "Not authenticated" });
+    }
+
+    return res.status(200).send({
+      success: true,
+      result: req.clientSession,
     });
+  });
+
+  // ── DELETE /token — clear session cookie on logout ────────────────
+  app.delete("/token", async (req, res) => {
+    res.clearCookie("session", cookieOpts(req));
 
     return res.status(200).send({
       success: true,

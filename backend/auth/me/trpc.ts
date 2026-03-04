@@ -1,15 +1,10 @@
-import { provideDatabase, protectedProcedure } from "#root/shared/trpc/server.js";
+import { protectedProcedure } from "#root/shared/trpc/server.js";
 import { z } from "zod";
-import { me } from "./me";
-import {
-  runBackendEffect,
-  serializeBackendEffectResult,
-} from "#root/shared/backend/effect.js";
 
 export const meProcedure = protectedProcedure
   .input(z.object({ token: z.string() }))
-  .mutation(async ({ ctx, input }) => {
-    return runBackendEffect(me(input.token).pipe(provideDatabase(ctx))).then(
-      serializeBackendEffectResult
-    );
+  .mutation(async ({ ctx }) => {
+    // ctx.clientSession is already validated by the auth middleware.
+    // No need to re-validate the token (which would double-hash it).
+    return { success: true as const, result: ctx.clientSession };
   });

@@ -24,11 +24,46 @@ const Content = memo(({ children }: { children: React.ReactNode }) => {
     pageContext.clientSession ?? null,
   );
 
+  // PRIMARY: Sync session from SSR page context on navigation
   useEffect(() => {
     if (pageContext.clientSession) {
       setSession(pageContext.clientSession);
     }
   }, [pageContext]);
+
+  // FALLBACK: If SSR didn't provide a session (proxy hiccup, CDN cache, etc.),
+  // ask the server directly — the httpOnly cookie is still sent with fetch.
+  useEffect(() => {
+    if (session) return; // already have a session, skip
+    let cancelled = false;
+
+    fetch("/api/auth/me", { credentials: "same-origin" })
+      .then((r) => {
+        if (!r.ok) return null;
+        return r.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        if (data?.success && data.result) {
+          // Ensure expiresAt is a Date object on the client
+          const restored: ClientSession = {
+            ...data.result,
+            expiresAt:
+              data.result.expiresAt instanceof Date
+                ? data.result.expiresAt
+                : new Date(data.result.expiresAt),
+          };
+          setSession(restored);
+        }
+      })
+      .catch(() => {
+        /* silent — user is simply not logged in */
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []); // runs once on mount
 
   const logout = async () => {
     if (!session) return;
@@ -62,10 +97,9 @@ const Content = memo(({ children }: { children: React.ReactNode }) => {
           <NavbarModeContext.Provider value={navbarMode}>
             <TrackingProvider>
               <main
-                id="page-content"
-                className="bg-background h-full text-foreground w-full font-poppins"
-              >
-                {!isDashboardRoute && <Navbar lang="en" />}
+                id='page-content'
+                className='bg-background h-full text-foreground w-full font-poppins'>
+                {!isDashboardRoute && <Navbar lang='en' />}
                 {children}
                 {!isDashboardRoute && <Footer />}
                 <Toaster />
