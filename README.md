@@ -7,7 +7,7 @@ A production-ready, fully-featured single-shop e-commerce template built with **
 ## Features
 
 ### Storefront
-- **22 swappable templates** across 8 categories — homepage, product pages, category pages, cart, checkout, search results, and more
+- **26 swappable templates** across 8 categories — homepage, product pages, category pages, cart, checkout, search results, sorting, and landing pages
 - **Full product catalog** with images, descriptions, pricing, discounts, and stock management
 - **Hierarchical categories** — main categories with subcategories, Men/Women collections
 - **Shopping cart** with promo code support (percentage & fixed discounts)
@@ -15,6 +15,7 @@ A production-ready, fully-featured single-shop e-commerce template built with **
 - **Customer order history** at `/orders`
 - **Product search** — navbar search bar + dedicated search results page with sorting & pagination
 - **Mobile responsive** — sheet-based mobile menu, responsive layouts throughout
+- **Page transitions** — smooth CSS-overlay page transitions via Vike hooks (SSR-safe, reduced-motion aware)
 
 ### Admin Dashboard
 - **Product CRUD** — create, edit, delete products with multi-image uploads
@@ -33,8 +34,12 @@ A production-ready, fully-featured single-shop e-commerce template built with **
 - **Effect-TS** — functional error handling in backend services
 - **Auth** — login, register, email verification, JWT sessions, admin-only dashboard guard
 - **Email** — order confirmation + admin notification emails via SMTP (React Email templates)
+- **Payment gateways** — Stripe and Paymob (optional, auto-activates when keys are set); falls back to COD-only mode
 - **Shipping integration** — Fincart API with webhook status updates
 - **Pixel tracking** — client-side + server-side event tracking with consent management (GDPR)
+- **Motion toolkit** — scroll-triggered `Reveal`, `Stagger`, `ParallaxImage` components (Framer Motion 12, reduced-motion safe)
+- **Editorial Chrome** — custom `EditorialNavbar` + `EditorialFooter` with transparent-to-solid scroll effect, used across all editorial templates
+- **Skeleton shimmer** — premium gradient shimmer animations on all loading skeletons
 - **Docker** — PostgreSQL compose file for local development
 
 ---
@@ -65,17 +70,28 @@ Edit `.env` with your values:
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `PUBLIC_ORIGIN` | Yes | Public-facing origin URL (e.g. `http://localhost:5173`) |
+| `BASE_URL` | Yes | Internal server base URL (e.g. `http://127.0.0.1:3000`) |
 | `SINGLE_SHOP_MODE` | Yes | Set to `true` |
 | `ADMIN_EMAIL` | Yes | Admin account email |
 | `ADMIN_PASSWORD` | Yes | Admin account password |
-| `JWT_SECRET` | Yes | 64-character hex string for JWT signing |
+| `JWT_SECRET` | Yes | Secret string for JWT signing (at least 32 characters recommended) |
 | `SMTP_HOST` | Yes | SMTP server (e.g. `smtp.gmail.com`) |
-| `SMTP_PORT` | Yes | SMTP port (e.g. `587`) |
+| `SMTP_PORT` | Yes | SMTP port (e.g. `465`) |
 | `SMTP_USER` | Yes | SMTP username |
 | `SMTP_PASSWORD` | Yes | SMTP password or app password |
+| `FINCART_API_URL` | Optional | Fincart API base URL |
 | `FINCART_API_KEY` | Optional | Fincart shipping API key |
 | `FINCART_WEBHOOK_SECRET` | Optional | Fincart webhook verification secret |
 | `FINCART_PICKUP_ID` | Optional | Fincart pickup location ID |
+| `FINCART_MERCHANT_LOCATION` | Optional | Fincart merchant location identifier |
+| `STRIPE_SECRET_KEY` | Optional | Stripe secret key — enables Stripe payments |
+| `STRIPE_WEBHOOK_SECRET` | Optional | Stripe webhook signing secret |
+| `VITE_STRIPE_PUBLIC_KEY` | Optional | Stripe publishable key (client-side) |
+| `PAYMOB_API_KEY` | Optional | Paymob API key — enables Paymob payments |
+| `PAYMOB_INTEGRATION_ID` | Optional | Paymob integration ID |
+| `PAYMOB_IFRAME_ID` | Optional | Paymob iframe ID |
+| `PAYMOB_HMAC_SECRET` | Optional | Paymob HMAC verification secret |
 
 ### 3. Start the database
 
@@ -107,6 +123,7 @@ Visit **http://localhost:3000**. An admin account is auto-seeded using `ADMIN_EM
 │   ├── auth/          # Login, register, verify email, sessions
 │   ├── categories/    # Category CRUD & content management
 │   ├── orders/        # Order CRUD, email templates, Fincart webhook
+│   ├── payments/      # Stripe & Paymob gateway services and webhooks
 │   ├── pixel-tracking/ # Multi-platform pixel tracking
 │   ├── products/      # Product CRUD, search
 │   └── promo-codes/   # Promo code CRUD & validation
@@ -114,7 +131,9 @@ Visit **http://localhost:3000**. An admin account is auto-seeded using `ADMIN_EM
 │   ├── dashboard/     # Admin dashboard components
 │   ├── globals/       # Navbar, Footer
 │   ├── shop/          # Product cards, category strips
-│   ├── template-system/ # 22 swappable templates
+│   ├── template-system/ # 26 swappable templates
+│   │   ├── editorial/ # EditorialChrome, EditorialNavbar, EditorialFooter
+│   │   └── motion/    # Reveal, Stagger, ParallaxImage motion toolkit
 │   └── ui/            # shadcn/ui primitives
 ├── frontend/          # Client-side contexts, pixel adapters, tracking
 ├── pages/             # Vike file-system routes
@@ -139,12 +158,24 @@ The template system is the core selling point. Admins can switch templates per c
 |----------|-----------|-------------|
 | Landing | 4 | modern, editorial, classic, minimal |
 | Home | 2 | featured products, modern v2 |
-| Product Page | 5 | perce, classic, editorial, technical, minimal |
-| Category Page | 4 | grid-classic, hero-split, minimal, showcase |
-| Cart | 1 | modern |
-| Checkout | 1 | modern |
-| Search Results | 2 | grid, minimal |
-| Sorting/Collection | 1 | minimal |
+| Product Page | 6 | percé, classic, editorial, technical, minimal, modern-split |
+| Category Page | 5 | grid-classic, hero-split, minimal, showcase, grid-with-filters |
+| Cart | 2 | modern, editorial |
+| Checkout | 2 | modern, editorial |
+| Search Results | 3 | grid, minimal, editorial |
+| Sorting/Collection | 2 | minimal, editorial |
+
+### Motion Toolkit
+
+All editorial templates use a shared animation toolkit (`components/template-system/motion/`):
+
+| Component | Description |
+|-----------|-------------|
+| `Reveal` | Scroll-triggered reveal with `fadeUp`, `fadeIn`, or `clipReveal` variants |
+| `StaggerContainer` / `StaggerItem` | Cascading entrance animations for grids and lists |
+| `ParallaxImage` | GPU-accelerated parallax scroll effect for hero images |
+
+All animations respect `prefers-reduced-motion` and are SSR-safe.
 
 ---
 
@@ -155,13 +186,16 @@ The template system is the core selling point. Admins can switch templates per c
 | `pnpm dev` | Start dev server with hot reload |
 | `pnpm build` | Production build (unbuild + Vike build) |
 | `pnpm start` | Start production server |
+| `pnpm preview` | Preview production build locally |
 | `pnpm test` | Run tests with Vitest |
+| `pnpm test:watch` | Run tests in watch mode |
 | `pnpm typecheck` | TypeScript type checking |
 | `pnpm lint` | Lint with Biome |
 | `pnpm format` | Format with Biome |
 | `pnpm drizzle:generate` | Generate database migrations |
 | `pnpm drizzle:migrate` | Apply database migrations |
 | `pnpm drizzle:studio` | Open Drizzle Studio (DB GUI) |
+| `pnpm seed` | Seed the database with sample data |
 
 ---
 
@@ -172,6 +206,13 @@ The template system is the core selling point. Admins can switch templates per c
 - **`SINGLE_SHOP_MODE=true`** — Required. Ensures the store runs in single-shop mode.
 - **`STORE_OWNER_ID`** — Optional. Auto-generated store owner UUID for DB foreign key constraints.
 - **`VITE_SINGLE_SHOP_MODE=true`** — Client-side flag for conditional UI rendering.
+
+### Payment Gateways
+
+Payment gateways are **auto-activating** — add the relevant keys to `.env` and the gateway becomes available at checkout. Omit all gateway keys to run in **COD-only** mode.
+
+- **Stripe** — set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `VITE_STRIPE_PUBLIC_KEY`
+- **Paymob** — set `PAYMOB_API_KEY`, `PAYMOB_INTEGRATION_ID`, `PAYMOB_IFRAME_ID`, and `PAYMOB_HMAC_SECRET`
 
 ### Customization
 
@@ -186,7 +227,7 @@ The template system is the core selling point. Admins can switch templates per c
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 19, Tailwind CSS 4, shadcn/ui, Framer Motion |
+| Frontend | React 19, Tailwind CSS 4, shadcn/ui, Framer Motion 12 |
 | SSR Framework | Vike 0.4 |
 | API | tRPC v10 with SuperJSON |
 | Server | Fastify 5 |
@@ -194,6 +235,7 @@ The template system is the core selling point. Admins can switch templates per c
 | Backend Logic | Effect-TS |
 | Auth | JWT sessions + cookie-based auth |
 | Email | React Email + SMTP |
+| Payments | Stripe, Paymob (optional; COD mode when keys are absent) |
 | Shipping | Fincart API |
 | Analytics | Custom pixel tracking (Meta, GA4, TikTok, Snapchat, Pinterest) |
 | Build | Vite 6, unbuild, tsx |
