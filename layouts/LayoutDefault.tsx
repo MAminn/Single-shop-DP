@@ -99,11 +99,17 @@ const Content = memo(({ children }: { children: React.ReactNode }) => {
               <main
                 id='page-content'
                 className='bg-background h-full text-foreground w-full font-poppins'>
-                {!isDashboardRoute && <Navbar lang='en' />}
+                {!isDashboardRoute && <div id="global-navbar"><Navbar lang='en' /></div>}
                 {children}
-                {!isDashboardRoute && <Footer />}
+                {!isDashboardRoute && <div id="global-footer"><Footer /></div>}
                 <Toaster />
                 <ShadcnToaster />
+                {/* Phase 3 — page-transition overlay (CSS-only, SSR-inert) */}
+                <div
+                  id='page-transition-overlay'
+                  aria-hidden='true'
+                  className='page-transition-overlay'
+                />
               </main>
             </TrackingProvider>
           </NavbarModeContext.Provider>

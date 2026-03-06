@@ -43,6 +43,14 @@ import { SearchResultsGrid } from "./searchResults/SearchResultsGrid";
 import type { SearchResultsGridProps } from "./searchResults/SearchResultsGrid";
 import { SearchResultsMinimal } from "./searchResults/SearchResultsMinimal";
 import type { SearchResultsMinimalProps } from "./searchResults/SearchResultsMinimal";
+import { SortingEditorialTemplate } from "./sorting/SortingEditorialTemplate";
+import type { SortingEditorialTemplateProps } from "./sorting/SortingEditorialTemplate";
+import { CartPageEditorialTemplate } from "./cartPage/CartPageEditorialTemplate";
+import type { CartPageEditorialTemplateProps } from "./cartPage/CartPageEditorialTemplate";
+import { CheckoutPageEditorialTemplate } from "./checkoutPage/CheckoutPageEditorialTemplate";
+import type { CheckoutPageEditorialTemplateProps } from "./checkoutPage/CheckoutPageEditorialTemplate";
+import { SearchResultsEditorial } from "./searchResults/SearchResultsEditorial";
+import type { SearchResultsEditorialProps } from "./searchResults/SearchResultsEditorial";
 
 // Import preview components
 import {
@@ -75,6 +83,12 @@ import {
   CartPageModernPreview,
   CheckoutPageModernPreview,
 } from "./previews/OtherPreviews";
+import {
+  SortingEditorialPreview,
+  CartPageEditorialPreview,
+  CheckoutPageEditorialPreview,
+  SearchResultsEditorialPreview,
+} from "./previews/EditorialPreviews";
 
 /**
  * Template System Configuration
@@ -174,6 +188,13 @@ export const templateConfig: TemplateConfig = {
         SortingMinimalTemplate as React.FC<SortingMinimalTemplateProps>,
       previewComponent: SortingMinimalPreview,
     },
+    {
+      id: "sorting-editorial",
+      label: "Editorial Collection",
+      component:
+        SortingEditorialTemplate as React.FC<SortingEditorialTemplateProps>,
+      previewComponent: SortingEditorialPreview,
+    },
   ],
 
   productPage: [
@@ -258,6 +279,13 @@ export const templateConfig: TemplateConfig = {
         CartPageModernTemplate as React.FC<CartPageModernTemplateProps>,
       previewComponent: CartPageModernPreview,
     },
+    {
+      id: "cart-editorial",
+      label: "Editorial Cart Page",
+      component:
+        CartPageEditorialTemplate as React.FC<CartPageEditorialTemplateProps>,
+      previewComponent: CartPageEditorialPreview,
+    },
   ],
 
   checkoutPage: [
@@ -267,6 +295,13 @@ export const templateConfig: TemplateConfig = {
       component:
         CheckoutPageModernTemplate as React.FC<CheckoutPageModernTemplateProps>,
       previewComponent: CheckoutPageModernPreview,
+    },
+    {
+      id: "checkout-editorial",
+      label: "Editorial Checkout Page",
+      component:
+        CheckoutPageEditorialTemplate as React.FC<CheckoutPageEditorialTemplateProps>,
+      previewComponent: CheckoutPageEditorialPreview,
     },
   ],
 
@@ -282,6 +317,12 @@ export const templateConfig: TemplateConfig = {
       label: "Minimal Layout (Clean)",
       component: SearchResultsMinimal as React.FC<SearchResultsMinimalProps>,
       previewComponent: SearchResultsMinimalPreview,
+    },
+    {
+      id: "search-results-editorial",
+      label: "Editorial Layout",
+      component: SearchResultsEditorial as React.FC<SearchResultsEditorialProps>,
+      previewComponent: SearchResultsEditorialPreview,
     },
   ],
 };
