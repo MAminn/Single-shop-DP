@@ -1187,3 +1187,26 @@ export const storeSettings = pgTable("store_settings", {
     .defaultNow()
     .notNull(),
 });
+
+// ─── Layout Settings (Header / Footer CMS) ─────────────────────────────────
+// Stores CMS-driven header and footer configuration.
+// Uses the same merchant-scoped pattern as homepageContent.
+export const layoutSettings = pgTable("layout_settings", {
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => v7()),
+  merchantId: uuid("merchant_id").notNull().unique(),
+  content: jsonb("content").notNull(),
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+    mode: "date",
+  })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", {
+    withTimezone: true,
+    mode: "date",
+  })
+    .defaultNow()
+    .notNull(),
+});

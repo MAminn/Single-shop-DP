@@ -11,6 +11,7 @@ import {
   Palette,
   Home,
   Radio,
+  PanelTop,
 } from "lucide-react";
 
 import {
@@ -77,6 +78,11 @@ export function DashboardSidebar() {
       label: "Homepage",
       href: "/dashboard/admin/homepage",
       icon: Home,
+    },
+    {
+      label: "Layout",
+      href: "/dashboard/admin/layout-settings",
+      icon: PanelTop,
     },
     {
       label: "Templates",

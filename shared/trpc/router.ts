@@ -14,6 +14,7 @@ import { orderRouter } from "#root/backend/orders/trpc";
 import { productRouter } from "#root/backend/products/trpc";
 import { promoCodesRouter } from "#root/backend/promo-codes/trpc";
 import { homepageRouter } from "#root/backend/homepage/trpc";
+import { layoutRouter } from "#root/backend/layout/trpc";
 import { pixelTrackingRouter } from "#root/backend/pixel-tracking/trpc";
 import { paymentRouter } from "#root/backend/payments/trpc";
 import { settingsRouter } from "#root/backend/settings/trpc";
@@ -41,6 +42,7 @@ export const appRouter = router({
   file: fileRouter,
   promoCode: promoCodesRouter,
   homepage: homepageRouter,
+  layout: layoutRouter,
   pixelTracking: pixelTrackingRouter,
   payment: paymentRouter,
   settings: settingsRouter,

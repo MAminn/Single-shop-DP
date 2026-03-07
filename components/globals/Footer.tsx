@@ -2,6 +2,8 @@ import { useState, type FC } from "react";
 import { Link } from "#root/components/utils/Link";
 import { ArrowRight } from "lucide-react";
 import { STORE_NAME } from "#root/shared/config/branding";
+import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext";
+import type { SocialPlatform } from "#root/shared/types/layout-settings";
 
 // ─── Social Icons ────────────────────────────────────────────────────────────
 
@@ -61,6 +63,90 @@ const TikTokIcon = () => (
   </svg>
 );
 
+// ─── Social icon map by platform ─────────────────────────────────────────────
+
+const TwitterIcon = () => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    width='20'
+    height='20'
+    viewBox='0 0 24 24'
+    fill='none'
+    stroke='currentColor'
+    strokeWidth='1.2'
+    strokeLinecap='round'
+    strokeLinejoin='round'
+    aria-labelledby='twitter-title'>
+    <title id='twitter-title'>Twitter</title>
+    <path d='M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z' />
+  </svg>
+);
+
+const YouTubeIcon = () => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    width='20'
+    height='20'
+    viewBox='0 0 24 24'
+    fill='none'
+    stroke='currentColor'
+    strokeWidth='1.2'
+    strokeLinecap='round'
+    strokeLinejoin='round'
+    aria-labelledby='youtube-title'>
+    <title id='youtube-title'>YouTube</title>
+    <path d='M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17' />
+    <path d='m10 15 5-3-5-3z' />
+  </svg>
+);
+
+const PinterestIcon = () => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    width='20'
+    height='20'
+    viewBox='0 0 24 24'
+    fill='none'
+    stroke='currentColor'
+    strokeWidth='1.2'
+    strokeLinecap='round'
+    strokeLinejoin='round'
+    aria-labelledby='pinterest-title'>
+    <title id='pinterest-title'>Pinterest</title>
+    <line x1='12' y1='17' x2='12' y2='22' />
+    <path d='M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24z' />
+  </svg>
+);
+
+const LinkedInIcon = () => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    width='20'
+    height='20'
+    viewBox='0 0 24 24'
+    fill='none'
+    stroke='currentColor'
+    strokeWidth='1.2'
+    strokeLinecap='round'
+    strokeLinejoin='round'
+    aria-labelledby='linkedin-title'>
+    <title id='linkedin-title'>LinkedIn</title>
+    <path d='M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z' />
+    <rect width='4' height='12' x='2' y='9' />
+    <circle cx='4' cy='4' r='2' />
+  </svg>
+);
+
+const socialIconMap: Record<SocialPlatform, FC> = {
+  facebook: FacebookIcon,
+  instagram: InstagramIcon,
+  tiktok: TikTokIcon,
+  twitter: TwitterIcon,
+  youtube: YouTubeIcon,
+  pinterest: PinterestIcon,
+  linkedin: LinkedInIcon,
+};
+
 // ─── Default Data ────────────────────────────────────────────────────────────
 
 const defaultSocialLinks = [
@@ -114,13 +200,42 @@ interface FooterProps {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export const Footer: FC<FooterProps> = ({
-  brandName = STORE_NAME,
-  description = "Sculptural piercings & curated jewelry — crafted with intention.",
-  socialLinks = defaultSocialLinks,
-  footerLinks = defaultFooterLinks,
-  showNewsletter = true,
+  brandName,
+  description,
+  socialLinks,
+  footerLinks,
+  showNewsletter,
 }) => {
+  const layoutSettings = useLayoutSettings();
   const [email, setEmail] = useState("");
+
+  // CMS values take precedence, then props, then defaults
+  const effectiveBrandName = brandName ?? STORE_NAME;
+  const effectiveDescription = description ?? layoutSettings.footer.description;
+  const effectiveShowNewsletter =
+    showNewsletter ?? layoutSettings.footer.showNewsletter;
+  const effectiveCopyright =
+    layoutSettings.footer.copyright || effectiveBrandName;
+  const footerLogoUrl = layoutSettings.footer.logoUrl;
+
+  // Build social links from CMS if no prop override
+  const effectiveSocialLinks =
+    socialLinks ??
+    layoutSettings.footer.socialLinks.map((sl) => ({
+      id: sl.id,
+      name: sl.platform.charAt(0).toUpperCase() + sl.platform.slice(1),
+      url: sl.url,
+      icon: socialIconMap[sl.platform] ?? FacebookIcon,
+    }));
+
+  // Build footer link groups from CMS if no prop override
+  const effectiveFooterLinks =
+    footerLinks ??
+    layoutSettings.footer.footerLinkGroups.map((g) => ({
+      id: g.id,
+      title: g.title,
+      links: g.links.map((l) => ({ id: l.id, name: l.label, url: l.url })),
+    }));
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,7 +246,7 @@ export const Footer: FC<FooterProps> = ({
   return (
     <footer className='bg-[#0F100E] text-[#A19887] selection:bg-[#8F7666]/20'>
       {/* ── Newsletter block — full-width, centered, editorial ── */}
-      {showNewsletter && (
+      {effectiveShowNewsletter && (
         <div className='border-b border-[#1E1B17]'>
           <div className='container mx-auto px-6 md:px-12 lg:px-20 py-20 md:py-24'>
             <div className='max-w-xl mx-auto text-center space-y-8'>
@@ -174,22 +289,34 @@ export const Footer: FC<FooterProps> = ({
         <div className='grid grid-cols-1 md:grid-cols-12 gap-14 md:gap-8 lg:gap-12'>
           {/* Brand column — dominant */}
           <div className='md:col-span-5 lg:col-span-5 space-y-7'>
-            <Link
-              href='/'
-              className='inline-block text-[26px] md:text-[28px] font-extralight tracking-[0.18em] text-[#DDD8C2] uppercase hover:opacity-70 transition-opacity duration-700'>
-              {brandName}
-            </Link>
+            {footerLogoUrl ? (
+              <Link
+                href='/'
+                className='inline-block hover:opacity-70 transition-opacity duration-700'>
+                <img
+                  src={footerLogoUrl}
+                  alt={effectiveBrandName}
+                  className='max-h-10 object-contain brightness-0 invert opacity-80'
+                />
+              </Link>
+            ) : (
+              <Link
+                href='/'
+                className='inline-block text-[26px] md:text-[28px] font-extralight tracking-[0.18em] text-[#DDD8C2] uppercase hover:opacity-70 transition-opacity duration-700'>
+                {effectiveBrandName}
+              </Link>
+            )}
 
             {/* Subtle brand accent line */}
             <div className='w-10 h-px bg-[#2F261B]' />
 
             <p className='text-[12px] md:text-[13px] text-[#6B5F52] font-light leading-[1.9] tracking-[0.01em] max-w-[280px]'>
-              {description}
+              {effectiveDescription}
             </p>
 
             {/* Social icons — larger, more spaced, opacity hover */}
             <div className='flex items-center gap-7 pt-3'>
-              {socialLinks.map((social) => (
+              {effectiveSocialLinks.map((social) => (
                 <a
                   key={social.id}
                   href={social.url}
@@ -207,7 +334,7 @@ export const Footer: FC<FooterProps> = ({
           <div className='hidden lg:block lg:col-span-1' />
 
           {/* Nav columns */}
-          {footerLinks.map((column) => (
+          {effectiveFooterLinks.map((column) => (
             <div key={column.id} className='md:col-span-3 lg:col-span-2'>
               <h4 className='text-[9px] md:text-[10px] uppercase tracking-[0.22em] text-[#8F7666] font-normal mb-7 md:mb-8'>
                 {column.title}
@@ -232,7 +359,7 @@ export const Footer: FC<FooterProps> = ({
       <div className='border-t border-[#1E1B17]'>
         <div className='container mx-auto px-6 md:px-12 lg:px-20 py-7 flex flex-col md:flex-row items-center justify-between gap-4'>
           <p className='text-[10px] text-[#3A3028] font-light tracking-[0.08em]'>
-            &copy; {new Date().getFullYear()} {brandName}
+            &copy; {new Date().getFullYear()} {effectiveCopyright}
           </p>
           <div className='flex items-center gap-8'>
             <Link

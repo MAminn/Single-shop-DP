@@ -1,5 +1,4 @@
 import { useEffect, type ReactNode } from "react";
-import { EditorialNavbar } from "./EditorialNavbar";
 import { EditorialFooter } from "./EditorialFooter";
 
 /* ------------------------------------------------------------------ */
@@ -18,10 +17,10 @@ interface EditorialChromeProps {
  * EditorialChrome — wraps editorial template pages.
  *
  * 1. Sets `data-editorial-chrome="true"` on `<html>` (mount/unmount).
- *    Global CSS rule hides `#global-navbar` and `#global-footer` when set.
- * 2. Renders `<EditorialNavbar />` above content.
- * 3. Renders `<EditorialFooter />` below content.
+ *    Global CSS rule hides `#global-footer` when set.
+ * 2. Renders `<EditorialFooter />` below content.
  *
+ * The navbar is now controlled globally via layout settings (navbarStyle).
  * SSR-safe — attribute is set only in a `useEffect` (client-only).
  */
 export function EditorialChrome({ children }: EditorialChromeProps) {
@@ -34,7 +33,6 @@ export function EditorialChrome({ children }: EditorialChromeProps) {
 
   return (
     <>
-      <EditorialNavbar />
       {children}
       <EditorialFooter />
     </>

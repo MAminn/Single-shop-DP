@@ -1,4 +1,5 @@
 import Navbar from "#root/components/globals/Navbar.jsx";
+import { EditorialNavbar } from "#root/components/template-system/editorial/EditorialNavbar";
 import { Footer } from "#root/components/globals/Footer";
 import { useEffect, useState, memo } from "react";
 import "./style.css";
@@ -16,6 +17,10 @@ import {
   NavbarModeContext,
   getNavbarMode,
 } from "#root/components/globals/NavbarContext";
+import { LayoutSettingsContext } from "#root/frontend/contexts/LayoutSettingsContext";
+import type { LayoutSettings } from "#root/shared/types/layout-settings";
+import { DEFAULT_LAYOUT_SETTINGS } from "#root/shared/types/layout-settings";
+import { getStoreOwnerId } from "#root/shared/config/store";
 
 // Memoized Content component to prevent unnecessary re-renders
 const Content = memo(({ children }: { children: React.ReactNode }) => {
@@ -23,6 +28,23 @@ const Content = memo(({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<ClientSession | null>(
     pageContext.clientSession ?? null,
   );
+  const [layoutSettings, setLayoutSettings] = useState<LayoutSettings>(
+    DEFAULT_LAYOUT_SETTINGS,
+  );
+
+  // Fetch CMS layout settings once on mount
+  useEffect(() => {
+    trpc.layout.getSettings
+      .query({ merchantId: getStoreOwnerId() })
+      .then((res) => {
+        if (res.success && res.result) {
+          setLayoutSettings(res.result);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch layout settings:", err);
+      });
+  }, []);
 
   // PRIMARY: Sync session from SSR page context on navigation
   useEffect(() => {
@@ -94,25 +116,39 @@ const Content = memo(({ children }: { children: React.ReactNode }) => {
     <AuthContext.Provider value={{ session, logout }}>
       <CartProvider>
         <TemplateProvider>
-          <NavbarModeContext.Provider value={navbarMode}>
-            <TrackingProvider>
-              <main
-                id='page-content'
-                className='bg-background h-full text-foreground w-full font-poppins'>
-                {!isDashboardRoute && <div id="global-navbar"><Navbar lang='en' /></div>}
-                {children}
-                {!isDashboardRoute && <div id="global-footer"><Footer /></div>}
-                <Toaster />
-                <ShadcnToaster />
-                {/* Phase 3 — page-transition overlay (CSS-only, SSR-inert) */}
-                <div
-                  id='page-transition-overlay'
-                  aria-hidden='true'
-                  className='page-transition-overlay'
-                />
-              </main>
-            </TrackingProvider>
-          </NavbarModeContext.Provider>
+          <LayoutSettingsContext.Provider value={layoutSettings}>
+            <NavbarModeContext.Provider value={navbarMode}>
+              <TrackingProvider>
+                <main
+                  id='page-content'
+                  className='bg-background h-full text-foreground w-full font-poppins'>
+                  {!isDashboardRoute && (
+                    <div id='global-navbar'>
+                      {layoutSettings.header.navbarStyle === "editorial" ? (
+                        <EditorialNavbar />
+                      ) : (
+                        <Navbar lang='en' />
+                      )}
+                    </div>
+                  )}
+                  {children}
+                  {!isDashboardRoute && (
+                    <div id='global-footer'>
+                      <Footer />
+                    </div>
+                  )}
+                  <Toaster />
+                  <ShadcnToaster />
+                  {/* Phase 3 — page-transition overlay (CSS-only, SSR-inert) */}
+                  <div
+                    id='page-transition-overlay'
+                    aria-hidden='true'
+                    className='page-transition-overlay'
+                  />
+                </main>
+              </TrackingProvider>
+            </NavbarModeContext.Provider>
+          </LayoutSettingsContext.Provider>
         </TemplateProvider>
       </CartProvider>
     </AuthContext.Provider>

@@ -262,8 +262,7 @@ input[type="number"] {
   }
 }
 
-/* Editorial chrome toggle — hide global navbar/footer when editorial chrome is active */
-html[data-editorial-chrome="true"] #global-navbar,
+/* Editorial chrome toggle — hide global footer when editorial chrome is active */
 html[data-editorial-chrome="true"] #global-footer {
   display: none !important;
 }
