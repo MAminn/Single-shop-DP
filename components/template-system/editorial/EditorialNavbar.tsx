@@ -98,12 +98,12 @@ export function EditorialNavbar() {
 
   /* ---- Link styles ---- */
   const linkCls = isScrolled
-    ? "text-stone-900 hover:text-stone-600"
-    : "text-white hover:text-white/70";
+    ? "!text-stone-900 hover:!text-stone-600"
+    : "!text-white hover:!text-white/70";
 
   const iconCls = isScrolled
-    ? "text-stone-900 hover:bg-stone-100"
-    : "text-white hover:bg-white/10";
+    ? "!text-stone-900 hover:bg-stone-100"
+    : "!text-white hover:bg-white/10";
 
   return (
     <>
@@ -231,7 +231,7 @@ export function EditorialNavbar() {
           <div className='flex justify-center'>
             <HeaderLogo
               variant='desktop'
-              textClassName={`text-xl lg:text-2xl font-extralight tracking-[0.18em] uppercase transition-colors duration-200 ${linkCls}`}
+              textClassName={`text-xl lg:text-2xl font-extralight tracking-[0.18em] uppercase transition-colors duration-200 ${isScrolled ? "!text-stone-900 hover:!text-stone-600" : "!text-white hover:!text-white/70"}`}
             />
           </div>
 

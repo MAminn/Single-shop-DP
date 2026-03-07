@@ -45,6 +45,10 @@ export interface FooterLinkGroup {
 
 export type NavbarStyle = "default" | "editorial";
 
+// ─── Footer Style ────────────────────────────────────────────────────────────
+
+export type FooterStyle = "default" | "editorial";
+
 // ─── Header Settings ────────────────────────────────────────────────────────
 
 // ─── Logo Size Settings ─────────────────────────────────────────────────────
@@ -59,6 +63,13 @@ export interface LogoSizeSettings {
 export const DEFAULT_LOGO_SIZE: LogoSizeSettings = {
   desktopWidth: 140,
   desktopMaxHeight: 48,
+  mobileWidth: 100,
+  mobileMaxHeight: 36,
+};
+
+export const DEFAULT_FOOTER_LOGO_SIZE: LogoSizeSettings = {
+  desktopWidth: 120,
+  desktopMaxHeight: 40,
   mobileWidth: 100,
   mobileMaxHeight: 36,
 };
@@ -80,9 +91,12 @@ export interface HeaderSettings {
 
 export interface FooterSettings {
   logoUrl: string;
+  logoText: string;
+  logoSize: LogoSizeSettings;
   description: string;
   copyright: string;
   showNewsletter: boolean;
+  footerStyle: FooterStyle;
   footerLinkGroups: FooterLinkGroup[];
   socialLinks: SocialLink[];
 }
@@ -111,10 +125,13 @@ export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
   },
   footer: {
     logoUrl: "",
+    logoText: "",
+    logoSize: { ...DEFAULT_FOOTER_LOGO_SIZE },
     description:
       "Sculptural piercings & curated jewelry — crafted with intention.",
     copyright: "",
     showNewsletter: true,
+    footerStyle: "default",
     footerLinkGroups: [
       {
         id: "shop",

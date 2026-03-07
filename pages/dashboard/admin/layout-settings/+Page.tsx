@@ -24,6 +24,7 @@ import {
 import {
   DEFAULT_LAYOUT_SETTINGS,
   DEFAULT_LOGO_SIZE,
+  DEFAULT_FOOTER_LOGO_SIZE,
   type LayoutSettings,
   type NavigationLink,
   type FooterLinkGroup,
@@ -782,6 +783,139 @@ export default function LayoutSettingsPage() {
                   </p>
                 )}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Footer Logo Size */}
+          <Card>
+            <CardHeader>
+              <CardTitle className='text-base'>Footer Logo Size</CardTitle>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <p className='text-sm text-muted-foreground'>
+                Control the footer logo dimensions. Values are in pixels.
+              </p>
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <Label htmlFor='footer-logo-desktop-width'>
+                    Desktop width (px)
+                  </Label>
+                  <Input
+                    id='footer-logo-desktop-width'
+                    type='number'
+                    min={20}
+                    max={400}
+                    value={
+                      settings.footer.logoSize?.desktopWidth ??
+                      DEFAULT_FOOTER_LOGO_SIZE.desktopWidth
+                    }
+                    onChange={(e) =>
+                      updateFooter("logoSize", {
+                        ...(settings.footer.logoSize ??
+                          DEFAULT_FOOTER_LOGO_SIZE),
+                        desktopWidth:
+                          Number(e.target.value) ||
+                          DEFAULT_FOOTER_LOGO_SIZE.desktopWidth,
+                      })
+                    }
+                    className='mt-1'
+                  />
+                </div>
+                <div>
+                  <Label htmlFor='footer-logo-desktop-height'>
+                    Desktop max height (px)
+                  </Label>
+                  <Input
+                    id='footer-logo-desktop-height'
+                    type='number'
+                    min={16}
+                    max={200}
+                    value={
+                      settings.footer.logoSize?.desktopMaxHeight ??
+                      DEFAULT_FOOTER_LOGO_SIZE.desktopMaxHeight
+                    }
+                    onChange={(e) =>
+                      updateFooter("logoSize", {
+                        ...(settings.footer.logoSize ??
+                          DEFAULT_FOOTER_LOGO_SIZE),
+                        desktopMaxHeight:
+                          Number(e.target.value) ||
+                          DEFAULT_FOOTER_LOGO_SIZE.desktopMaxHeight,
+                      })
+                    }
+                    className='mt-1'
+                  />
+                </div>
+                <div>
+                  <Label htmlFor='footer-logo-mobile-width'>
+                    Mobile width (px)
+                  </Label>
+                  <Input
+                    id='footer-logo-mobile-width'
+                    type='number'
+                    min={20}
+                    max={300}
+                    value={
+                      settings.footer.logoSize?.mobileWidth ??
+                      DEFAULT_FOOTER_LOGO_SIZE.mobileWidth
+                    }
+                    onChange={(e) =>
+                      updateFooter("logoSize", {
+                        ...(settings.footer.logoSize ??
+                          DEFAULT_FOOTER_LOGO_SIZE),
+                        mobileWidth:
+                          Number(e.target.value) ||
+                          DEFAULT_FOOTER_LOGO_SIZE.mobileWidth,
+                      })
+                    }
+                    className='mt-1'
+                  />
+                </div>
+                <div>
+                  <Label htmlFor='footer-logo-mobile-height'>
+                    Mobile max height (px)
+                  </Label>
+                  <Input
+                    id='footer-logo-mobile-height'
+                    type='number'
+                    min={16}
+                    max={120}
+                    value={
+                      settings.footer.logoSize?.mobileMaxHeight ??
+                      DEFAULT_FOOTER_LOGO_SIZE.mobileMaxHeight
+                    }
+                    onChange={(e) =>
+                      updateFooter("logoSize", {
+                        ...(settings.footer.logoSize ??
+                          DEFAULT_FOOTER_LOGO_SIZE),
+                        mobileMaxHeight:
+                          Number(e.target.value) ||
+                          DEFAULT_FOOTER_LOGO_SIZE.mobileMaxHeight,
+                      })
+                    }
+                    className='mt-1'
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Footer Text Logo */}
+          <Card>
+            <CardHeader>
+              <CardTitle className='text-base'>Text Logo</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Label htmlFor='footer-logo-text'>
+                Text shown when no footer logo image is uploaded
+              </Label>
+              <Input
+                id='footer-logo-text'
+                value={settings.footer.logoText ?? ""}
+                onChange={(e) => updateFooter("logoText", e.target.value)}
+                placeholder='e.g. LEBSY'
+                className='mt-1'
+              />
             </CardContent>
           </Card>
 

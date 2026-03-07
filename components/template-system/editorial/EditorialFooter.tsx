@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { STORE_NAME } from "#root/shared/config/branding";
 import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext";
 import type { SocialPlatform } from "#root/shared/types/layout-settings";
+import { FooterLogo } from "#root/components/globals/FooterLogo";
 
 /* ------------------------------------------------------------------ */
 /*  Social Icons                                                      */
@@ -138,7 +139,6 @@ export function EditorialFooter() {
     "Curated fashion, quiet confidence. Crafted with intention for the modern individual.";
   const effectiveCopyright = layoutSettings.footer.copyright || STORE_NAME;
   const effectiveShowNewsletter = layoutSettings.footer.showNewsletter;
-  const footerLogoUrl = layoutSettings.footer.logoUrl;
 
   // Build social links from CMS if available
   const SOCIAL_LINKS =
@@ -211,23 +211,7 @@ export function EditorialFooter() {
         <div className='grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8 lg:gap-10'>
           {/* Brand column */}
           <div className='md:col-span-4 lg:col-span-4 space-y-5'>
-            {footerLogoUrl ? (
-              <Link
-                href='/'
-                className='inline-block hover:opacity-70 transition-opacity duration-500'>
-                <img
-                  src={footerLogoUrl}
-                  alt={STORE_NAME}
-                  className='max-h-10 object-contain brightness-0 invert opacity-80'
-                />
-              </Link>
-            ) : (
-              <Link
-                href='/'
-                className='inline-block text-xl md:text-2xl font-extralight tracking-[0.18em] text-white/90 uppercase hover:text-white transition-colors duration-500'>
-                {STORE_NAME}
-              </Link>
-            )}
+            <FooterLogo textClassName='inline-block text-xl md:text-2xl font-extralight tracking-[0.18em] text-white/90 uppercase hover:text-white transition-colors duration-500' />
             <div className='w-8 h-px bg-white/10' />
             <p className='text-xs text-white/35 font-light leading-relaxed max-w-[260px]'>
               {effectiveDescription}

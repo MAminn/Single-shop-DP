@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { STORE_NAME } from "#root/shared/config/branding";
 import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext";
 import type { SocialPlatform } from "#root/shared/types/layout-settings";
+import { FooterLogo } from "#root/components/globals/FooterLogo";
 
 // ─── Social Icons ────────────────────────────────────────────────────────────
 
@@ -216,7 +217,6 @@ export const Footer: FC<FooterProps> = ({
     showNewsletter ?? layoutSettings.footer.showNewsletter;
   const effectiveCopyright =
     layoutSettings.footer.copyright || effectiveBrandName;
-  const footerLogoUrl = layoutSettings.footer.logoUrl;
 
   // Build social links from CMS if no prop override
   const effectiveSocialLinks =
@@ -289,23 +289,7 @@ export const Footer: FC<FooterProps> = ({
         <div className='grid grid-cols-1 md:grid-cols-12 gap-14 md:gap-8 lg:gap-12'>
           {/* Brand column — dominant */}
           <div className='md:col-span-5 lg:col-span-5 space-y-7'>
-            {footerLogoUrl ? (
-              <Link
-                href='/'
-                className='inline-block hover:opacity-70 transition-opacity duration-700'>
-                <img
-                  src={footerLogoUrl}
-                  alt={effectiveBrandName}
-                  className='max-h-10 object-contain brightness-0 invert opacity-80'
-                />
-              </Link>
-            ) : (
-              <Link
-                href='/'
-                className='inline-block text-[26px] md:text-[28px] font-extralight tracking-[0.18em] text-[#DDD8C2] uppercase hover:opacity-70 transition-opacity duration-700'>
-                {effectiveBrandName}
-              </Link>
-            )}
+            <FooterLogo textClassName='inline-block text-[26px] md:text-[28px] font-extralight tracking-[0.18em] text-[#DDD8C2] uppercase hover:opacity-70 transition-opacity duration-700' />
 
             {/* Subtle brand accent line */}
             <div className='w-10 h-px bg-[#2F261B]' />

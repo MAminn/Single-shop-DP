@@ -5,6 +5,7 @@ import type { LayoutSettings } from "#root/shared/types/layout-settings";
 import {
   DEFAULT_LAYOUT_SETTINGS,
   DEFAULT_LOGO_SIZE,
+  DEFAULT_FOOTER_LOGO_SIZE,
 } from "#root/shared/types/layout-settings";
 
 /**
@@ -54,6 +55,10 @@ function mergeWithDefaults(stored: Partial<LayoutSettings>): LayoutSettings {
     footer: {
       ...DEFAULT_LAYOUT_SETTINGS.footer,
       ...stored.footer,
+      logoSize: {
+        ...DEFAULT_FOOTER_LOGO_SIZE,
+        ...stored.footer?.logoSize,
+      },
       footerLinkGroups:
         stored.footer?.footerLinkGroups ??
         DEFAULT_LAYOUT_SETTINGS.footer.footerLinkGroups,

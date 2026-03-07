@@ -64,9 +64,12 @@ const LayoutSettingsSchema = z.object({
   }),
   footer: z.object({
     logoUrl: z.string(),
+    logoText: z.string(),
+    logoSize: LogoSizeSchema,
     description: z.string(),
     copyright: z.string(),
     showNewsletter: z.boolean(),
+    footerStyle: z.enum(["default", "editorial"]),
     footerLinkGroups: z.array(FooterLinkGroupSchema),
     socialLinks: z.array(SocialLinkSchema),
   }),
