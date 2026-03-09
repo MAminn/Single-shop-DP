@@ -30,14 +30,14 @@ import { Save, RotateCcw, AlertCircle, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription } from "#root/components/ui/alert";
 
 export default function CategoryContentAdminPage() {
-const MERCHANT_ID = getStoreOwnerId();
+  const MERCHANT_ID = getStoreOwnerId();
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [content, setContent] = useState<CategoryContent>(
-    DEFAULT_CATEGORY_CONTENT
+    DEFAULT_CATEGORY_CONTENT,
   );
   const [originalContent, setOriginalContent] = useState<CategoryContent>(
-    DEFAULT_CATEGORY_CONTENT
+    DEFAULT_CATEGORY_CONTENT,
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -95,7 +95,7 @@ const MERCHANT_ID = getStoreOwnerId();
   };
 
   const updateDescription = (
-    updates: Partial<CategoryContent["description"]>
+    updates: Partial<CategoryContent["description"]>,
   ) => {
     setContent({
       ...content,
@@ -143,7 +143,7 @@ const MERCHANT_ID = getStoreOwnerId();
   const handleReset = () => {
     if (
       confirm(
-        "Are you sure you want to reset to defaults? This cannot be undone."
+        "Are you sure you want to reset to defaults? This cannot be undone.",
       )
     ) {
       setContent(DEFAULT_CATEGORY_CONTENT);
@@ -371,8 +371,8 @@ const MERCHANT_ID = getStoreOwnerId();
                     size='sm'
                     onClick={() => {
                       window.open(
-                        `/featured/men/categories/${selectedCategoryId}`,
-                        "_blank"
+                        `/shop?category=${selectedCategoryId}`,
+                        "_blank",
                       );
                     }}>
                     <ExternalLink className='w-4 h-4 mr-2' />

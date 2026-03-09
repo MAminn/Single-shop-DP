@@ -10,9 +10,9 @@ import {
 const defaultFaqData = [
   {
     id: "how-it-works",
-    question: "How does Lebsey work?",
+    question: "How does our store work?",
     answer:
-      "Lebsey brings together fashion vendors and brands into one marketplace, making it easy for you to shop from multiple sellers without having to visit different websites. Browse collections, add items to your cart, and checkout seamlessly.",
+      "Browse our curated collections, add items to your cart, and checkout seamlessly. We offer a wide range of products with secure payments and fast shipping.",
   },
   {
     id: "payment-methods",
@@ -24,13 +24,13 @@ const defaultFaqData = [
     id: "shipping-time",
     question: "How long does shipping take?",
     answer:
-      "Shipping times depend on your location and the seller. Typically, domestic orders are delivered within 3-5 business days, while international shipping can take 7-14 business days. You can view the estimated shipping time for each product on its page.",
+      "Shipping times depend on your location. Typically, domestic orders are delivered within 3-5 business days, while international shipping can take 7-14 business days. You can view the estimated shipping time for each product on its page.",
   },
   {
     id: "return-policy",
     question: "What is your return policy?",
     answer:
-      "We offer a 30-day return policy for most items. Products must be unworn, unwashed, and in their original packaging with tags attached. Some sellers may have specific return policies, which will be noted on their product pages.",
+      "We offer a 30-day return policy for most items. Products must be unworn, unwashed, and in their original packaging with tags attached. Specific return details for each product will be noted on their product pages.",
   },
   {
     id: "track-order",
@@ -59,30 +59,29 @@ interface FAQProps {
 
 export const FAQ: React.FC<FAQProps> = ({
   title = "Frequently Asked Questions",
-  description = "Find answers to common questions about shopping with Lebsey",
+  description = "Find answers to common questions about shopping with us",
   faqs = defaultFaqData,
   backgroundColor = "bg-white",
 }) => {
   return (
-    <section id="faq" className={`py-20 ${backgroundColor}`}>
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">{title}</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">{description}</p>
+    <section id='faq' className={`py-20 ${backgroundColor}`}>
+      <div className='container mx-auto px-4'>
+        <div className='text-center mb-12'>
+          <h2 className='text-3xl font-bold mb-4'>{title}</h2>
+          <p className='text-gray-600 max-w-2xl mx-auto'>{description}</p>
         </div>
 
-        <div className="max-w-3xl mx-auto">
-          <Accordion type="single" collapsible className="w-full space-y-6">
+        <div className='max-w-3xl mx-auto'>
+          <Accordion type='single' collapsible className='w-full space-y-6'>
             {faqs.map((faq) => (
               <AccordionItem
                 key={faq.id}
                 value={faq.id}
-                className="border border-gray-200 rounded-lg p-2 shadow-sm"
-              >
-                <AccordionTrigger className="text-lg font-medium px-4 py-3 hover:no-underline">
+                className='border border-gray-200 rounded-lg p-2 shadow-sm'>
+                <AccordionTrigger className='text-lg font-medium px-4 py-3 hover:no-underline'>
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-gray-600 px-4">
+                <AccordionContent className='text-gray-600 px-4'>
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>

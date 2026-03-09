@@ -24,8 +24,7 @@ import { HeaderLogo } from "#root/components/globals/HeaderLogo";
 
 const DEFAULT_NAV_LINKS = [
   { label: "Shop", href: "/shop" },
-  { label: "New In", href: "/featured/new" },
-  { label: "Collections", href: "/featured/women" },
+  { label: "New Arrivals", href: "/shop" },
   { label: "About", href: "#" },
 ] as const;
 

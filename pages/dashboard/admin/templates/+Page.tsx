@@ -182,8 +182,8 @@ export default function AdminTemplatesPage() {
     },
     {
       value: "brands",
-      label: "Brands",
-      description: "Brand showcase page templates",
+      label: "Shop (All Products)",
+      description: "Product listing page templates",
     },
     {
       value: "products",

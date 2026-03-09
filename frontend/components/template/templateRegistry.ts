@@ -56,7 +56,7 @@ interface FeaturedProduct {
 interface Category {
   id: string;
   name: string;
-  type?: "men" | "women";
+  type?: string;
   displayName?: string;
   slug?: string;
   imageId?: string | null;
@@ -313,7 +313,7 @@ export interface SortingTemplateData {
     slug?: string;
     imageId?: string | null;
     filename?: string | null;
-    type?: "men" | "women";
+    type?: string;
     productCount?: number;
   }[];
 }
@@ -495,8 +495,8 @@ const templates: Record<TemplateCategory, TemplateInfo[]> = {
   brands: [
     {
       id: "default-brands",
-      name: "Default Brands",
-      description: "The original brands page design",
+      name: "Default Shop",
+      description: "The original shop page design",
       category: "brands",
       component: DefaultBrandsTemplate as React.ComponentType<{
         data?: TemplateData;
@@ -505,8 +505,8 @@ const templates: Record<TemplateCategory, TemplateInfo[]> = {
     },
     {
       id: "modern-brands",
-      name: "Modern Brands",
-      description: "A sleek brands page with gradient design",
+      name: "Modern Shop",
+      description: "A sleek shop page with gradient design",
       category: "brands",
       component: ModernBrandsTemplate as React.ComponentType<{
         data?: TemplateData;

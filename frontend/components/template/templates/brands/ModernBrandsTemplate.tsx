@@ -99,16 +99,15 @@ const ModernBrandsTemplate: React.FC<ModernBrandsTemplateProps> = ({
             </div>
 
             <h1 className='text-5xl md:text-7xl font-light text-gray-900 leading-none tracking-tight mb-6'>
-              Our Brands
+              Our Collection
               <span className='block text-3xl md:text-4xl font-normal text-gray-600 mt-2'>
                 Curated Excellence
               </span>
             </h1>
 
             <p className='text-gray-600 text-lg leading-relaxed max-w-2xl mx-auto mb-12'>
-              Discover exceptional fashion from our carefully selected partners.
-              Each brand represents quality, authenticity, and innovative
-              design.
+              Discover exceptional products in our carefully curated collection.
+              Each item represents quality, authenticity, and thoughtful design.
             </p>
 
             {/* Trust indicators */}
@@ -120,7 +119,7 @@ const ModernBrandsTemplate: React.FC<ModernBrandsTemplateProps> = ({
                 <div className='text-2xl font-light text-gray-900 mb-1'>
                   500+
                 </div>
-                <div className='text-sm text-gray-600'>Verified Brands</div>
+                <div className='text-sm text-gray-600'>Quality Products</div>
               </div>
               <div className='text-center'>
                 <div className='w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-3'>
@@ -154,10 +153,11 @@ const ModernBrandsTemplate: React.FC<ModernBrandsTemplateProps> = ({
                 <Store className='h-10 w-10 text-gray-600' />
               </div>
               <h3 className='text-3xl font-light text-gray-900 mb-4'>
-                No brands found
+                No products found
               </h3>
               <p className='text-gray-600 mb-8 max-w-md mx-auto leading-relaxed'>
-                We're working hard to bring you amazing brands. Check back soon!
+                We're working hard to bring you amazing products. Check back
+                soon!
               </p>
               <Button className='bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 transition-all duration-300 hover:shadow-lg'>
                 <Link href='/products' className='text-white flex items-center'>

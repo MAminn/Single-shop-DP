@@ -23,7 +23,7 @@ import Sorting from "#root/components/shop/Sorting";
 interface Category {
   id: string;
   name: string;
-  type?: "men" | "women";
+  type?: string;
   displayName?: string;
   slug?: string;
   imageId?: string | null;

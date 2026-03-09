@@ -62,9 +62,9 @@ interface ModernHomeTemplateProps {
 const faqData = [
   {
     id: "how-lebsey-works",
-    question: "How does Lebsey work?",
+    question: "How does our store work?",
     answer:
-      "Lebsey brings together fashion vendors and brands into one marketplace, making it easy for you to shop from multiple sellers without having to visit different websites. Browse collections, add items to your cart, and checkout seamlessly.",
+      "Browse our curated collections, add items to your cart, and checkout seamlessly. We offer a wide range of products with secure payments and fast shipping.",
   },
   {
     id: "shipping-time",
@@ -146,7 +146,7 @@ export default function ModernHomeTemplate({ data }: ModernHomeTemplateProps) {
               <div className='inline-flex items-center bg-gray-50 px-4 py-2 rounded-full border border-gray-100'>
                 <div className='w-2 h-2 bg-gray-900 rounded-full mr-3 animate-pulse'></div>
                 <span className='text-gray-700 text-sm font-medium tracking-wide'>
-                  PREMIUM FASHION MARKETPLACE
+                  PREMIUM FASHION STORE
                 </span>
               </div>
 
@@ -180,7 +180,7 @@ export default function ModernHomeTemplate({ data }: ModernHomeTemplateProps) {
                   variant='outline'
                   size='lg'
                   className='border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-4 text-base font-medium transition-all duration-300 hover:shadow-md'>
-                  <Link href='/featured/brands'>View Brands</Link>
+                  <Link href='/shop'>View All Products</Link>
                 </Button>
               </div>
             </div>
@@ -247,7 +247,9 @@ export default function ModernHomeTemplate({ data }: ModernHomeTemplateProps) {
                 <Shield className='w-6 h-6 text-gray-600 group-hover:text-white transition-colors duration-300' />
               </div>
               <div className='text-2xl font-light text-gray-900 mb-2'>500+</div>
-              <div className='text-gray-600 font-medium'>Verified Brands</div>
+              <div className='text-gray-600 font-medium'>
+                Products Available
+              </div>
               <div className='text-sm text-gray-500 mt-1'>
                 Authenticated quality
               </div>
@@ -328,13 +330,14 @@ export default function ModernHomeTemplate({ data }: ModernHomeTemplateProps) {
               <div className='space-y-6 text-gray-600 leading-relaxed'>
                 <p className='text-lg'>
                   We believe fashion is more than clothing—it's self-expression,
-                  creativity, and connection. Our platform bridges the gap
-                  between exceptional designers and discerning customers.
+                  creativity, and connection. Our store is designed to bring you
+                  exceptional products for discerning customers.
                 </p>
                 <p>
-                  Every brand we partner with shares our commitment to quality,
-                  authenticity, and sustainable practices. Together, we're
-                  building a marketplace that values both style and substance.
+                  Every product in our collection reflects our commitment to
+                  quality, authenticity, and sustainable practices. We're
+                  building a shopping experience that values both style and
+                  substance.
                 </p>
               </div>
 
@@ -342,8 +345,8 @@ export default function ModernHomeTemplate({ data }: ModernHomeTemplateProps) {
                 <Button
                   asChild
                   className='bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 transition-all duration-300 hover:shadow-lg'>
-                  <Link href='/featured/brands'>
-                    Meet Our Partners
+                  <Link href='/shop'>
+                    Browse Collection
                     <ArrowRight className='ml-2 h-4 w-4' />
                   </Link>
                 </Button>
@@ -373,13 +376,13 @@ export default function ModernHomeTemplate({ data }: ModernHomeTemplateProps) {
           </div>
 
           <div className='grid grid-cols-1 md:grid-cols-3 gap-8'>
-            {/* Men's Category */}
+            {/* New Arrivals */}
             <div className='group relative bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-500 hover:-translate-y-2'>
-              <Link href='/featured/men' className='block'>
+              <Link href='/shop' className='block'>
                 <div className='aspect-[4/5] overflow-hidden'>
                   <img
-                    src='/assets/men-section.webp'
-                    alt="Men's fashion category"
+                    src='/assets/hero-placeholder.webp'
+                    alt='New arrivals collection'
                     className='w-full h-full object-cover transition-transform duration-700 group-hover:scale-105'
                     width='400'
                     height='500'
@@ -389,26 +392,26 @@ export default function ModernHomeTemplate({ data }: ModernHomeTemplateProps) {
                 </div>
                 <div className='p-8'>
                   <h3 className='text-2xl font-light text-gray-900 mb-2'>
-                    Men's Collection
+                    New Arrivals
                   </h3>
                   <p className='text-gray-600 mb-4'>
-                    Contemporary styles for the modern gentleman
+                    Discover the latest additions to our collection
                   </p>
                   <div className='flex items-center text-gray-900 font-medium group-hover:translate-x-2 transition-transform duration-300'>
-                    <span>Explore Styles</span>
+                    <span>Explore New</span>
                     <ArrowRight className='h-4 w-4 ml-2' />
                   </div>
                 </div>
               </Link>
             </div>
 
-            {/* Women's Category */}
+            {/* Best Sellers */}
             <div className='group relative bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-500 hover:-translate-y-2'>
-              <Link href='/featured/women' className='block'>
+              <Link href='/shop' className='block'>
                 <div className='aspect-[4/5] overflow-hidden'>
                   <img
-                    src='/assets/women-section.webp'
-                    alt="Women's fashion category"
+                    src='/assets/hero-placeholder.webp'
+                    alt='Best sellers collection'
                     className='w-full h-full object-cover transition-transform duration-700 group-hover:scale-105'
                     width='400'
                     height='500'
@@ -418,26 +421,26 @@ export default function ModernHomeTemplate({ data }: ModernHomeTemplateProps) {
                 </div>
                 <div className='p-8'>
                   <h3 className='text-2xl font-light text-gray-900 mb-2'>
-                    Women's Collection
+                    Best Sellers
                   </h3>
                   <p className='text-gray-600 mb-4'>
-                    Elegant designs that celebrate individuality
+                    Our most popular products loved by customers
                   </p>
                   <div className='flex items-center text-gray-900 font-medium group-hover:translate-x-2 transition-transform duration-300'>
-                    <span>Discover Trends</span>
+                    <span>Shop Popular</span>
                     <ArrowRight className='h-4 w-4 ml-2' />
                   </div>
                 </div>
               </Link>
             </div>
 
-            {/* Brands Category */}
+            {/* All Products */}
             <div className='group relative bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-500 hover:-translate-y-2'>
-              <Link href='/featured/brands' className='block'>
+              <Link href='/shop' className='block'>
                 <div className='aspect-[4/5] overflow-hidden'>
                   <img
-                    src='/assets/brands.webp'
-                    alt='Fashion brands category'
+                    src='/assets/hero-placeholder.webp'
+                    alt='Browse all products'
                     className='w-full h-full object-cover transition-transform duration-700 group-hover:scale-105'
                     width='400'
                     height='500'
@@ -447,13 +450,13 @@ export default function ModernHomeTemplate({ data }: ModernHomeTemplateProps) {
                 </div>
                 <div className='p-8'>
                   <h3 className='text-2xl font-light text-gray-900 mb-2'>
-                    Premium Brands
+                    All Products
                   </h3>
                   <p className='text-gray-600 mb-4'>
-                    Exclusive partnerships with leading designers
+                    Browse our complete collection
                   </p>
                   <div className='flex items-center text-gray-900 font-medium group-hover:translate-x-2 transition-transform duration-300'>
-                    <span>Browse Partners</span>
+                    <span>Browse All</span>
                     <ArrowRight className='h-4 w-4 ml-2' />
                   </div>
                 </div>
@@ -483,7 +486,7 @@ export default function ModernHomeTemplate({ data }: ModernHomeTemplateProps) {
         <section id='faq' className='py-20 bg-white'>
           <FAQ
             title='Frequently Asked Questions'
-            description='Everything you need to know about shopping with Lebsey'
+            description='Everything you need to know about shopping with us'
             faqs={faqData}
           />
         </section>
@@ -627,30 +630,23 @@ export default function ModernHomeTemplate({ data }: ModernHomeTemplateProps) {
               <ul className='space-y-4'>
                 <li>
                   <Link
-                    href='/products'
+                    href='/shop'
                     className='text-gray-600 hover:text-gray-900 transition-colors text-sm'>
                     All Products
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href='/featured/men'
+                    href='/shop'
                     className='text-gray-600 hover:text-gray-900 transition-colors text-sm'>
-                    Men's
+                    New Arrivals
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href='/featured/women'
+                    href='/shop'
                     className='text-gray-600 hover:text-gray-900 transition-colors text-sm'>
-                    Women's
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href='/featured/brands'
-                    className='text-gray-600 hover:text-gray-900 transition-colors text-sm'>
-                    Premium Brands
+                    Best Sellers
                   </Link>
                 </li>
                 <li>

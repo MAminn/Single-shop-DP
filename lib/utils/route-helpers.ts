@@ -10,13 +10,6 @@ export function getProductUrl(productId: string): string {
 }
 
 /**
- * Creates a properly formatted URL for a vendor/brand page
- */
-export function getVendorUrl(vendorId: string): string {
-  return `/featured/brands/@${encodeURIComponent(vendorId)}`;
-}
-
-/**
  * Creates a properly formatted URL for a category page
  */
 export function getCategoryUrl(categoryId: string): string {

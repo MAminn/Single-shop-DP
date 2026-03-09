@@ -53,7 +53,7 @@ const Navbar: React.FC<NavbarProps> = ({
       name: string;
       slug: string;
       filename: string | null;
-      type: "men" | "women";
+      type: string;
     }[]
   >([]);
 

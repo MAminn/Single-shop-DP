@@ -4,11 +4,14 @@ import React, {
   type ReactNode,
   useEffect,
   useState,
+  useCallback,
+  useRef,
 } from "react";
 import {
   templateConfig,
   type TemplateCategory,
 } from "#root/components/template-system/templateConfig";
+import { trpc } from "#root/shared/trpc/client";
 
 // Re-export TemplateCategory for convenience
 export type { TemplateCategory } from "#root/components/template-system/templateConfig";
@@ -26,6 +29,8 @@ interface TemplateContextType {
   selection: TemplateSelection;
   getTemplateId: (category: TemplateCategory) => string | null;
   setTemplate: (category: TemplateCategory, templateId: string) => void;
+  /** True while the initial DB fetch is in progress */
+  isLoading: boolean;
 }
 
 // Create context
@@ -33,9 +38,11 @@ const TemplateContext = createContext<TemplateContextType | undefined>(
   undefined,
 );
 
-// Local storage key for template selection
+// localStorage key — used only as a fast hydration cache, NOT source of truth
+const TEMPLATE_CACHE_KEY = "template-selection-cache";
+
+// Legacy V1 localStorage keys (kept for backward compat of legacy panel)
 const TEMPLATE_STORAGE_KEY = "selected-templates";
-const TEMPLATE_SELECTION_KEY = "template-selection";
 
 // Build default selection from templateConfig
 function getDefaultSelection(): TemplateSelection {
@@ -63,37 +70,57 @@ function validateSelection(saved: TemplateSelection): TemplateSelection {
       if (exists) {
         validated[category] = id;
       }
-      // If the saved ID doesn't exist, keep the default (already set above)
     }
   });
 
   return validated;
 }
 
+// Read localStorage cache (fast hydration before DB response)
+function readCache(): TemplateSelection | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(TEMPLATE_CACHE_KEY);
+    if (raw) return JSON.parse(raw) as TemplateSelection;
+  } catch {
+    // Corrupt cache — ignore
+  }
+  return null;
+}
+
+// Write localStorage cache
+function writeCache(selection: TemplateSelection) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(TEMPLATE_CACHE_KEY, JSON.stringify(selection));
+  } catch {
+    // localStorage full or unavailable — harmless
+  }
+}
+
 // Template provider component
 export function TemplateProvider({ children }: { children: ReactNode }) {
-  // Initialize selection state from localStorage or defaults
+  // Initialize: defaults → override with cache if available
   const [selection, setSelection] = useState<TemplateSelection>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(TEMPLATE_SELECTION_KEY);
-      if (saved) {
-        try {
-          return validateSelection(JSON.parse(saved));
-        } catch (error) {
-          console.error("Failed to parse saved template selection:", error);
-        }
-      }
-    }
+    const cached = readCache();
+    if (cached) return validateSelection(cached);
     return getDefaultSelection();
   });
 
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Legacy V1 active templates (kept for backward compat)
   const [activeTemplates, setActiveTemplates] = useState<
-    Record<TemplateCategory, string>
+    Record<string, string>
   >(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("activeTemplates");
+      const saved = localStorage.getItem(TEMPLATE_STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        try {
+          return JSON.parse(saved);
+        } catch {
+          // ignore
+        }
       }
     }
     return {
@@ -108,60 +135,116 @@ export function TemplateProvider({ children }: { children: ReactNode }) {
     };
   });
 
-  // Persist selection to localStorage whenever it changes
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(TEMPLATE_SELECTION_KEY, JSON.stringify(selection));
-    }
-  }, [selection]);
+  // Track whether DB fetch completed to avoid writing stale cache
+  const dbLoaded = useRef(false);
 
-  // Load templates from localStorage on mount
+  // ───────────────────────────────────────────────────
+  // Fetch template selection from DB on mount (source of truth)
+  // ───────────────────────────────────────────────────
   useEffect(() => {
-    const savedTemplates = localStorage.getItem(TEMPLATE_STORAGE_KEY);
-    if (savedTemplates) {
-      try {
-        const parsed = JSON.parse(savedTemplates);
-        setActiveTemplates((prev) => ({ ...prev, ...parsed }));
-      } catch (error) {
-        console.error("Failed to parse saved templates:", error);
-      }
-    }
+    let cancelled = false;
+
+    trpc.settings.getTemplateSelection
+      .query()
+      .then((res) => {
+        if (cancelled) return;
+        if (res.success && res.result) {
+          const dbSelection = res.result as Record<string, string>;
+          // Only apply if DB has any saved selection
+          if (Object.keys(dbSelection).length > 0) {
+            const validated = validateSelection(
+              dbSelection as TemplateSelection,
+            );
+            setSelection(validated);
+            writeCache(validated);
+          }
+          // else: no DB selection yet → keep defaults (will be written on first admin save)
+        }
+        dbLoaded.current = true;
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error("Failed to fetch template selection from DB:", err);
+        // Keep cached/default selection on error — storefront still works
+        dbLoaded.current = true;
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const switchTemplate = (category: string, templateId: string) => {
-    const newTemplates = { ...activeTemplates, [category]: templateId };
-    setActiveTemplates(newTemplates);
-    localStorage.setItem(TEMPLATE_STORAGE_KEY, JSON.stringify(newTemplates));
-  };
+  // ───────────────────────────────────────────────────
+  // V2 setTemplate: write to DB, then update state + cache
+  // ───────────────────────────────────────────────────
+  const setTemplate = useCallback(
+    (category: TemplateCategory, templateId: string) => {
+      // Optimistic local update
+      setSelection((prev) => {
+        const next = { ...prev, [category]: templateId };
+        writeCache(next);
 
-  const getActiveTemplate = (category: string) => {
-    return activeTemplates[category as TemplateCategory] || "default";
-  };
+        // Persist to DB (fire-and-forget with error handling)
+        // Build the full selection to send to the server
+        const fullSelection: Record<string, string> = {};
+        for (const [k, v] of Object.entries(next)) {
+          if (v) fullSelection[k] = v;
+        }
 
-  const getTemplateId = (category: TemplateCategory): string | null => {
-    // Check for preview override via query param
-    if (typeof window !== "undefined") {
-      const urlParams = new URLSearchParams(window.location.search);
-      const previewTemplate = urlParams.get("templatePreview");
+        trpc.settings.updateTemplateSelection
+          .mutate({ selection: fullSelection })
+          .catch((err) => {
+            console.error("Failed to save template selection to DB:", err);
+          });
 
-      if (previewTemplate) {
-        // Verify the preview template exists in the config for this category
-        const templates = templateConfig[category];
-        if (templates && templates.some((t) => t.id === previewTemplate)) {
-          return previewTemplate;
+        return next;
+      });
+    },
+    [],
+  );
+
+  // ───────────────────────────────────────────────────
+  // V1 legacy switchTemplate (localStorage-only, backward compat)
+  // ───────────────────────────────────────────────────
+  const switchTemplate = useCallback((category: string, templateId: string) => {
+    setActiveTemplates((prev) => {
+      const next = { ...prev, [category]: templateId };
+      if (typeof window !== "undefined") {
+        localStorage.setItem(TEMPLATE_STORAGE_KEY, JSON.stringify(next));
+      }
+      return next;
+    });
+  }, []);
+
+  const getActiveTemplate = useCallback(
+    (category: string) => {
+      return activeTemplates[category] || "default";
+    },
+    [activeTemplates],
+  );
+
+  const getTemplateId = useCallback(
+    (category: TemplateCategory): string | null => {
+      // Check for preview override via query param
+      if (typeof window !== "undefined") {
+        const urlParams = new URLSearchParams(window.location.search);
+        const previewTemplate = urlParams.get("templatePreview");
+
+        if (previewTemplate) {
+          const templates = templateConfig[category];
+          if (templates && templates.some((t) => t.id === previewTemplate)) {
+            return previewTemplate;
+          }
         }
       }
-    }
 
-    return selection[category] || null;
-  };
-
-  const setTemplate = (category: TemplateCategory, templateId: string) => {
-    setSelection((prev) => ({
-      ...prev,
-      [category]: templateId,
-    }));
-  };
+      return selection[category] || null;
+    },
+    [selection],
+  );
 
   return (
     <TemplateContext.Provider
@@ -172,6 +255,7 @@ export function TemplateProvider({ children }: { children: ReactNode }) {
         selection,
         getTemplateId,
         setTemplate,
+        isLoading,
       }}>
       {children}
     </TemplateContext.Provider>

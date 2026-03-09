@@ -22,7 +22,7 @@ export function AppSidebar() {
     {
       label: string;
       to: string;
-      type: "men" | "women";
+      type: string;
     }[]
   >([]);
 
@@ -37,7 +37,7 @@ export function AppSidebar() {
         res.result.map((c) => ({
           label: c.name,
           to: `/featured/${c.type}/categories/${c.id}`,
-          type: c.type as "men" | "women",
+          type: c.type as string,
         })),
       );
     });

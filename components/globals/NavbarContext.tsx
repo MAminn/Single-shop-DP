@@ -31,9 +31,8 @@ const OVERLAY_ROUTES: ((path: string) => boolean)[] = [
   (p) => p === "/",
   // Shop collection (has dark hero banner)
   (p) => p === "/shop",
-  // Gender landing pages (use SortingMinimalTemplate with dark hero)
-  (p) => p === "/featured/men",
-  (p) => p === "/featured/women",
+  // Dynamic category pages (use SortingMinimalTemplate with dark hero)
+  (p) => p.startsWith("/categories/"),
 ];
 
 /**

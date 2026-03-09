@@ -81,9 +81,7 @@ const DEFAULT_FOOTER_COLUMNS = [
     title: "Shop",
     links: [
       { label: "All Products", href: "/shop" },
-      { label: "New Arrivals", href: "/featured/new" },
-      { label: "Women", href: "/featured/women" },
-      { label: "Men", href: "/featured/men" },
+      { label: "New Arrivals", href: "/shop" },
     ],
   },
   {

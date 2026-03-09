@@ -53,13 +53,13 @@ interface Category {
   slug?: string;
   imageId?: string | null;
   filename?: string | null;
-  type?: "men" | "women";
+  type?: string;
   productCount?: number;
 }
 
 interface SortingProps {
   categoryId?: string;
-  categoryType?: "men" | "women";
+  categoryType?: string;
   categories?: Category[];
 }
 
@@ -104,7 +104,7 @@ const Sorting: React.FC<SortingProps> = ({
           if (res.success && res.result) {
             console.log(
               `${categoryType} products with description:`,
-              res.result
+              res.result,
             );
             setProducts(
               res.result.items.map((item) => ({
@@ -121,19 +121,19 @@ const Sorting: React.FC<SortingProps> = ({
                   ? item.imageUrl.startsWith("http")
                     ? item.imageUrl
                     : item.imageUrl.startsWith("/uploads/")
-                    ? item.imageUrl
-                    : `/uploads/${item.imageUrl}`
+                      ? item.imageUrl
+                      : `/uploads/${item.imageUrl}`
                   : undefined,
                 images: item.images,
                 categoryName: item.categoryName,
                 categories: item.categories,
                 available: item.stock > 0,
-              }))
+              })),
             );
           } else if (!res.success) {
             console.error(
               `Failed to fetch ${categoryType} products:`,
-              res.error
+              res.error,
             );
             toast({
               title: "Error",
@@ -146,7 +146,7 @@ const Sorting: React.FC<SortingProps> = ({
         .catch((err) => {
           console.error(
             `Exception while fetching ${categoryType} products:`,
-            err
+            err,
           );
           setIsLoading(false);
         });
@@ -179,14 +179,14 @@ const Sorting: React.FC<SortingProps> = ({
                   ? item.imageUrl.startsWith("http")
                     ? item.imageUrl
                     : item.imageUrl.startsWith("/uploads/")
-                    ? item.imageUrl
-                    : `/uploads/${item.imageUrl}`
+                      ? item.imageUrl
+                      : `/uploads/${item.imageUrl}`
                   : undefined,
                 images: item.images,
                 categoryName: item.categoryName,
                 categories: item.categories,
                 available: item.stock > 0,
-              }))
+              })),
             );
           } else if (!res.success) {
             console.error("Failed to fetch category products:", res.error);
@@ -230,14 +230,14 @@ const Sorting: React.FC<SortingProps> = ({
                 ? item.imageUrl.startsWith("http")
                   ? item.imageUrl
                   : item.imageUrl.startsWith("/uploads/")
-                  ? item.imageUrl
-                  : `/uploads/${item.imageUrl}`
+                    ? item.imageUrl
+                    : `/uploads/${item.imageUrl}`
                 : undefined,
               images: item.images,
               categoryName: item.categoryName,
               categories: item.categories,
               available: item.stock > 0,
-            }))
+            })),
           );
         } else if (!res.success) {
           console.error("Failed to fetch all products:", res.error);
@@ -278,7 +278,7 @@ const Sorting: React.FC<SortingProps> = ({
         // Check if the product belongs to any of the selected categories
         if (product.categories && product.categories.length > 0) {
           return product.categories.some((cat) =>
-            selectedCategories.includes(cat.id)
+            selectedCategories.includes(cat.id),
           );
         }
         return false;
@@ -300,8 +300,8 @@ const Sorting: React.FC<SortingProps> = ({
                 ? product.discountPrice
                 : Number(product.discountPrice)
               : typeof product.price === "number"
-              ? product.price
-              : Number(product.price);
+                ? product.price
+                : Number(product.price);
           return price >= min && price <= max;
         });
       }
@@ -325,16 +325,16 @@ const Sorting: React.FC<SortingProps> = ({
                 ? a.discountPrice
                 : Number(a.discountPrice) || 0
               : typeof a.price === "number"
-              ? a.price
-              : Number(a.price) || 0;
+                ? a.price
+                : Number(a.price) || 0;
           const priceB =
             b.discountPrice !== undefined && b.discountPrice !== null
               ? typeof b.discountPrice === "number"
                 ? b.discountPrice
                 : Number(b.discountPrice) || 0
               : typeof b.price === "number"
-              ? b.price
-              : Number(b.price) || 0;
+                ? b.price
+                : Number(b.price) || 0;
           return priceA - priceB;
         });
         break;
@@ -346,16 +346,16 @@ const Sorting: React.FC<SortingProps> = ({
                 ? a.discountPrice
                 : Number(a.discountPrice) || 0
               : typeof a.price === "number"
-              ? a.price
-              : Number(a.price) || 0;
+                ? a.price
+                : Number(a.price) || 0;
           const priceB =
             b.discountPrice !== undefined && b.discountPrice !== null
               ? typeof b.discountPrice === "number"
                 ? b.discountPrice
                 : Number(b.discountPrice) || 0
               : typeof b.price === "number"
-              ? b.price
-              : Number(b.price) || 0;
+                ? b.price
+                : Number(b.price) || 0;
           return priceB - priceA;
         });
         break;

@@ -162,9 +162,7 @@ const defaultFooterLinks = [
     title: "Shop",
     links: [
       { id: "all-products", name: "All Products", url: "/shop" },
-      { id: "new-arrivals", name: "New Arrivals", url: "/featured/new" },
-      { id: "women", name: "Women", url: "/featured/women" },
-      { id: "men", name: "Men", url: "/featured/men" },
+      { id: "new-arrivals", name: "New Arrivals", url: "/shop" },
     ],
   },
   {

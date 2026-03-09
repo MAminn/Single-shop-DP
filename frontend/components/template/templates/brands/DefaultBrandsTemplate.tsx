@@ -67,20 +67,20 @@ const DefaultBrandsTemplate: React.FC<DefaultBrandsTemplateProps> = ({
       reverse={false}>
       <div className='container mx-auto py-12 px-4'>
         <div className='mb-12'>
-          <h2 className='text-3xl font-bold text-center'>Partner Brands</h2>
+          <h2 className='text-3xl font-bold text-center'>Shop Collection</h2>
           <div className='w-20 h-1 bg-accent-lb mx-auto mt-4 mb-6'></div>
           <p className='text-gray-600 max-w-3xl mx-auto text-center'>
-            Browse our collection of carefully selected partner brands, each
-            offering unique products with exceptional quality.
+            Browse our carefully curated selection of products, each offering
+            exceptional quality.
           </p>
         </div>
 
         {templateData.vendors.length === 0 ? (
           <div className='text-center py-12 bg-gray-50 rounded-xl'>
             <Store className='mx-auto h-16 w-16 text-gray-400 mb-4' />
-            <h3 className='text-xl font-semibold mb-2'>No brands found</h3>
+            <h3 className='text-xl font-semibold mb-2'>No products found</h3>
             <p className='text-gray-500 mb-6'>
-              We'll be adding brands to our collection soon.
+              We'll be adding products to our collection soon.
             </p>
             <Button>
               <Link href='/products' className='text-white'>

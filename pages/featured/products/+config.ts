@@ -1,10 +1,9 @@
 /**
- * This configuration ensures that all product pages
- * follow the same base layout and rendering approach.
+ * Category-filtered product listing page.
+ * The canonical all-products page is now at /shop (pages/shop/).
  */
 export default {
-  route: "/shop",
-  title: "All Products | Percé",
+  title: "Products | Lebsy",
   description:
     "Explore our complete collection of products from various categories and brands.",
 };

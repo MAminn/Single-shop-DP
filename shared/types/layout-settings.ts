@@ -138,9 +138,7 @@ export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
         title: "Shop",
         links: [
           { id: "all-products", label: "All Products", url: "/shop" },
-          { id: "new-arrivals", label: "New Arrivals", url: "/featured/new" },
-          { id: "women", label: "Women", url: "/featured/women" },
-          { id: "men", label: "Men", url: "/featured/men" },
+          { id: "new-arrivals", label: "New Arrivals", url: "/shop" },
         ],
       },
       {

@@ -46,9 +46,6 @@ import { Alert, AlertDescription } from "#root/components/ui/alert";
 // Predefined route options for hero CTA
 const PREDEFINED_ROUTES = [
   { label: "Shop - All Products", value: "/shop" },
-  { label: "Men - Men's Section", value: "/featured/men" },
-  { label: "Women - Women's Section", value: "/featured/women" },
-  { label: "Brands - All Brands", value: "/featured/brands" },
   { label: "Cart - Shopping Cart", value: "/cart" },
   { label: "Checkout - Checkout Page", value: "/checkout" },
   { label: "Custom URL...", value: "custom" },

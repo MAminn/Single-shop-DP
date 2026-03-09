@@ -41,8 +41,8 @@ export function ProductCardTemplatePreview({
     reviewCount: 42,
     // Required fields for ProductCardTemplateData
     available: true,
-    vendorId: "fashion-brand",
-    vendorName: "Fashion Brand",
+    vendorId: "store",
+    vendorName: "Our Store",
     categoryName: "Clothing",
     // Additional fields
     isNew: true,

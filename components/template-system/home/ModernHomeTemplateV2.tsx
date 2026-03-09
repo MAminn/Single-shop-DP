@@ -118,36 +118,36 @@ export interface ModernHomeTemplateV2Props {
 // Default categories
 const DEFAULT_CATEGORIES: CategoryItem[] = [
   {
-    id: "men",
-    name: "Men's Fashion",
+    id: "new-arrivals",
+    name: "New Arrivals",
     imageUrl:
       "https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=400",
-    link: "/featured/men",
-    productCount: 245,
+    link: "/shop",
+    productCount: 0,
   },
   {
-    id: "women",
-    name: "Women's Fashion",
+    id: "best-sellers",
+    name: "Best Sellers",
     imageUrl:
       "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400",
-    link: "/featured/women",
-    productCount: 312,
+    link: "/shop",
+    productCount: 0,
   },
   {
-    id: "electronics",
-    name: "Electronics",
+    id: "featured",
+    name: "Featured",
     imageUrl:
       "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400",
-    link: "/shop?category=electronics",
-    productCount: 189,
+    link: "/shop",
+    productCount: 0,
   },
   {
-    id: "accessories",
-    name: "Accessories",
+    id: "on-sale",
+    name: "On Sale",
     imageUrl:
       "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400",
-    link: "/shop?category=accessories",
-    productCount: 156,
+    link: "/shop",
+    productCount: 0,
   },
 ];
 

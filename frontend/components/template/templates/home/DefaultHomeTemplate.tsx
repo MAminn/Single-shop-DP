@@ -52,9 +52,9 @@ interface DefaultHomeTemplateProps {
 const faqData = [
   {
     id: "how-lebsey-works",
-    question: "How does Lebsey work?",
+    question: "How does our store work?",
     answer:
-      "Lebsey brings together fashion vendors and brands into one marketplace, making it easy for you to shop from multiple sellers without having to visit different websites. Browse collections, add items to your cart, and checkout seamlessly.",
+      "Browse our curated collections, add items to your cart, and checkout seamlessly. We offer a wide range of products with secure payments and fast shipping.",
   },
   {
     id: "shipping-time",
@@ -130,9 +130,9 @@ export default function DefaultHomeTemplate({
               variant='outline'
               size='lg'
               className='border-white text-foreground hover:bg-white hover:text-accent-lb'>
-              <Link href='/featured/brands'>
+              <Link href='/shop'>
                 <Store className='mr-2 h-5 w-5' />
-                Browse Brands
+                Browse All Products
               </Link>
             </Button>
           </div>
@@ -175,24 +175,23 @@ export default function DefaultHomeTemplate({
             <div className='max-w-xl'>
               <h2 className='text-3xl font-bold mb-6'>Our Story</h2>
               <p className='text-gray-600 mb-6'>
-                We started Lebsy because shopping for clothes online was
-                frustrating, with too many websites and too much hassle. So, we
-                built one place where all clothing sellers come together, making
-                fashion shopping easier for everyone.
+                We started with a simple idea: to make online shopping
+                effortless. From our carefully curated product selection to our
+                seamless checkout experience, everything is designed with you in
+                mind.
               </p>
               <p className='text-gray-600 mb-8'>
-                Our platform offers a diverse selection of clothing and
-                accessories from various brands and independent designers, all
-                in one convenient place. We prioritize quality, style, and
-                customer satisfaction.
+                Our store offers a diverse selection of clothing and
+                accessories, all in one convenient place. We prioritize quality,
+                style, and customer satisfaction.
               </p>
               <Button
                 asChild
                 variant='outline'
                 className='border-accent-lb text-accent-lb hover:bg-accent-lb hover:text-white'>
-                <Link href='/featured/brands'>
+                <Link href='/shop'>
                   <Users className='mr-2 h-5 w-5' />
-                  Meet Our Brands
+                  Browse Collection
                 </Link>
               </Button>
             </div>
@@ -211,13 +210,13 @@ export default function DefaultHomeTemplate({
           </div>
 
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-            {/* Men's Category */}
+            {/* New Arrivals */}
             <div className='relative rounded-xl overflow-hidden group h-80 cursor-pointer'>
-              <Link href='/featured/men' className='block h-full'>
+              <Link href='/shop' className='block h-full'>
                 <div className='absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-[9]'></div>
                 <img
-                  src='/assets/men-section.webp'
-                  alt="Men's fashion category"
+                  src='/assets/hero-placeholder.webp'
+                  alt='New arrivals collection'
                   className='absolute inset-0 w-full h-full object-cover'
                   width='400'
                   height='533'
@@ -225,7 +224,9 @@ export default function DefaultHomeTemplate({
                   decoding='async'
                 />
                 <div className='absolute bottom-0 left-0 right-0 p-6 z-[9]'>
-                  <h3 className='text-2xl font-bold text-white mb-2'>Men</h3>
+                  <h3 className='text-2xl font-bold text-white mb-2'>
+                    New Arrivals
+                  </h3>
                   <div className='flex items-center text-white'>
                     <span className='text-sm'>Shop Collection</span>
                     <ChevronRight className='h-4 w-4 ml-1' />
@@ -234,13 +235,13 @@ export default function DefaultHomeTemplate({
               </Link>
             </div>
 
-            {/* Women's Category */}
+            {/* Best Sellers */}
             <div className='relative rounded-xl overflow-hidden group h-80 cursor-pointer'>
-              <Link href='/featured/women' className='block h-full'>
+              <Link href='/shop' className='block h-full'>
                 <div className='absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-[9]'></div>
                 <img
-                  src='/assets/women-section.webp'
-                  alt="Women's fashion category"
+                  src='/assets/hero-placeholder.webp'
+                  alt='Best sellers collection'
                   className='absolute inset-0 w-full h-full object-cover'
                   width='400'
                   height='533'
@@ -248,7 +249,9 @@ export default function DefaultHomeTemplate({
                   decoding='async'
                 />
                 <div className='absolute bottom-0 left-0 right-0 p-6 z-[9]'>
-                  <h3 className='text-2xl font-bold text-white mb-2'>Women</h3>
+                  <h3 className='text-2xl font-bold text-white mb-2'>
+                    Best Sellers
+                  </h3>
                   <div className='flex items-center text-white'>
                     <span className='text-sm'>Shop Collection</span>
                     <ChevronRight className='h-4 w-4 ml-1' />
@@ -257,13 +260,13 @@ export default function DefaultHomeTemplate({
               </Link>
             </div>
 
-            {/* Brands Category */}
+            {/* All Products */}
             <div className='relative rounded-xl overflow-hidden group h-80 cursor-pointer'>
-              <Link href='/featured/brands' className='block h-full'>
+              <Link href='/shop' className='block h-full'>
                 <div className='absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-[9]'></div>
                 <img
-                  src='/assets/brands.webp'
-                  alt='Fashion brands category'
+                  src='/assets/hero-placeholder.webp'
+                  alt='Browse all products'
                   className='absolute inset-0 w-full h-full object-cover'
                   width='400'
                   height='533'
@@ -271,9 +274,11 @@ export default function DefaultHomeTemplate({
                   decoding='async'
                 />
                 <div className='absolute bottom-0 left-0 right-0 p-6 z-[9]'>
-                  <h3 className='text-2xl font-bold text-white mb-2'>Brands</h3>
+                  <h3 className='text-2xl font-bold text-white mb-2'>
+                    All Products
+                  </h3>
                   <div className='flex items-center text-white'>
-                    <span className='text-sm'>Discover Brands</span>
+                    <span className='text-sm'>Browse All</span>
                     <ChevronRight className='h-4 w-4 ml-1' />
                   </div>
                 </div>

@@ -24,7 +24,7 @@ import { z } from "zod";
 
 export const searchProductsSchema = z.object({
   categoryIds: z.array(z.string().uuid()).optional(),
-  categoryType: z.enum(["men", "women"]).optional(),
+  categoryType: z.string().trim().max(100).optional(),
   search: z.string().trim().max(255).optional(),
   sortBy: z.enum(["newest", "price-asc", "price-desc"]).optional(),
   limit: z.number().min(1).max(100).optional().default(12),
