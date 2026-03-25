@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { usePageContext } from "vike-react/usePageContext";
 import { trpc } from "#root/shared/trpc/client";
 import { getTemplateComponent } from "#root/components/template-system/templateConfig";
 import { useTemplate } from "#root/frontend/contexts/TemplateContext";
 import { useCart } from "#root/lib/context/CartContext";
+import { useTracking } from "#root/frontend/contexts/TrackingContext";
+import { TrackingEventName } from "#root/shared/types/pixel-tracking";
+import { STORE_CURRENCY } from "#root/shared/config/branding";
 import type { ProductPageProduct } from "#root/components/template-system/productPage/ProductPageModernSplit";
 import type { FeaturedProduct } from "#root/components/template-system/home/HomeFeaturedProducts";
 
@@ -14,6 +17,8 @@ export default function ProductDetailPage() {
   const productId = pageContext.routeParams?.productId as string;
   const { getTemplateId } = useTemplate();
   const { addItem, items } = useCart();
+  const { trackEvent } = useTracking();
+  const hasTrackedView = useRef<string | null>(null);
 
   const [productData, setProductData] = useState<ProductPageProduct | null>(
     null,
@@ -115,12 +120,31 @@ export default function ProductDetailPage() {
       setRelatedProducts(mappedRelatedProducts);
       setIsLoading(false);
       setError(null);
+
+      // Fire product_viewed event once per product
+      if (hasTrackedView.current !== productId) {
+        hasTrackedView.current = productId;
+        trackEvent(TrackingEventName.PRODUCT_VIEWED, {
+          ecommerce: {
+            currency: STORE_CURRENCY,
+            value: Number(mappedProduct.discountPrice ?? mappedProduct.price),
+            items: [
+              {
+                itemId: mappedProduct.id,
+                itemName: mappedProduct.name,
+                price: Number(mappedProduct.discountPrice ?? mappedProduct.price),
+                category: mappedProduct.categoryName ?? undefined,
+              },
+            ],
+          },
+        });
+      }
     } catch (err) {
       console.error("Error fetching product data:", err);
       setError("Failed to load product data");
       setIsLoading(false);
     }
-  }, [productId]);
+  }, [productId, trackEvent]);
 
   useEffect(() => {
     fetchProductData();
@@ -152,9 +176,6 @@ export default function ProductDetailPage() {
       relatedProducts={relatedProducts}
       isLoading={isLoading}
       onAddToCart={(product: ProductPageProduct) => {
-        console.log("[Add to Cart] Before addItem - Cart items:", items.length);
-        console.log("[Add to Cart] Adding product:", product.id, product.name);
-
         const success = addItem(
           {
             id: product.id,
@@ -169,14 +190,22 @@ export default function ProductDetailPage() {
           {}, // selectedOptions
         );
 
-        console.log("[Add to Cart] Success:", success);
-        console.log(
-          "[Add to Cart] After addItem - Cart items:",
-          items.length + (success ? 1 : 0),
-        );
-
-        if (!success) {
-          console.error("[Add to Cart] Failed - possibly out of stock");
+        if (success) {
+          trackEvent(TrackingEventName.PRODUCT_ADDED_TO_CART, {
+            ecommerce: {
+              currency: STORE_CURRENCY,
+              value: Number(product.discountPrice ?? product.price),
+              items: [
+                {
+                  itemId: product.id,
+                  itemName: product.name,
+                  price: Number(product.discountPrice ?? product.price),
+                  quantity: 1,
+                  category: product.categoryName ?? undefined,
+                },
+              ],
+            },
+          });
         }
       }}
       onAddToWishlist={(product: ProductPageProduct) =>

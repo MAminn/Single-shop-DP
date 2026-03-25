@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   useCart,
   type CartItem as ContextCartItem,
@@ -18,6 +18,8 @@ import type {
 } from "#root/components/template-system";
 import { STORE_CURRENCY } from "#root/shared/config/branding";
 import { navigate } from "vike/client/router";
+import { useTracking } from "#root/frontend/contexts/TrackingContext";
+import { TrackingEventName } from "#root/shared/types/pixel-tracking";
 
 /** Parse a Zod validation error (JSON array) into a friendly message */
 function parseOrderError(error: unknown): string {
@@ -67,6 +69,8 @@ export default function CheckoutPage() {
     clearCart,
   } = useCart();
   const { getTemplateId } = useTemplate();
+  const { trackEvent } = useTracking();
+  const hasTrackedCheckoutStart = useRef(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | undefined>(
@@ -110,6 +114,49 @@ export default function CheckoutPage() {
       cancelled = true;
     };
   }, []);
+
+  // ─── Fire checkout_started once per cart state per session ────────────────
+  // Uses sessionStorage with a cart fingerprint to avoid re-firing on refresh
+  // while still firing if the user returns with a meaningfully different cart.
+  useEffect(() => {
+    if (hasTrackedCheckoutStart.current || items.length === 0) return;
+
+    // Build a simple fingerprint: sorted item IDs + quantities
+    const fingerprint = items
+      .map((item) => `${item.id}:${item.quantity}`)
+      .sort()
+      .join(",");
+    const storageKey = "tracked_checkout_started";
+
+    try {
+      if (sessionStorage.getItem(storageKey) === fingerprint) return;
+    } catch {
+      /* SSR or private browsing — fall through to ref guard */
+    }
+
+    hasTrackedCheckoutStart.current = true;
+
+    try {
+      sessionStorage.setItem(storageKey, fingerprint);
+    } catch {
+      /* best-effort */
+    }
+
+    trackEvent(TrackingEventName.CHECKOUT_STARTED, {
+      ecommerce: {
+        currency: STORE_CURRENCY,
+        value: total,
+        items: items.map((item) => ({
+          itemId: item.id,
+          itemName: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          category: item.categoryName ?? undefined,
+        })),
+        coupon: promoCode?.code ?? undefined,
+      },
+    });
+  }, [items, total, promoCode, trackEvent]);
 
   // Convert cart items to checkout order summary items
   const orderItems: CheckoutOrderSummaryItem[] = useMemo(() => {
@@ -179,6 +226,24 @@ export default function CheckoutPage() {
       const orderId = result.result?.id ?? "";
       const orderTotal = result.result?.total ?? "";
       const email = encodeURIComponent(formValues.email || "");
+
+      // Persist cart items for the Purchase tracking event on confirmation page
+      try {
+        sessionStorage.setItem(
+          `checkout_items:${orderId}`,
+          JSON.stringify(
+            items.map((item) => ({
+              itemId: item.id,
+              itemName: item.name,
+              price: item.price,
+              quantity: item.quantity,
+              category: item.categoryName ?? undefined,
+            })),
+          ),
+        );
+      } catch {
+        /* best-effort — tracking still works with value/transactionId */
+      }
 
       // ─── Online payment: create payment session & redirect ──────────
       if (isOnlinePayment && orderId) {

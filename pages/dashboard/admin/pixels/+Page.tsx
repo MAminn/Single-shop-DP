@@ -39,6 +39,12 @@ import {
   EyeOff,
   Activity,
   MousePointerClick,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Info,
+  Server,
+  Monitor,
 } from "lucide-react";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -105,6 +111,23 @@ function maskPixelId(pixelId: string): string {
   return `${pixelId.slice(0, 4)}${"•".repeat(pixelId.length - 6)}${pixelId.slice(-2)}`;
 }
 
+// ─── Readiness Status Types ─────────────────────────────────────────────────
+
+interface PlatformHealthRow {
+  platform: string;
+  enabled: boolean;
+  successRate: number;
+  successCount: number;
+  failedCount: number;
+  lastEventAt: string | null;
+  status: "healthy" | "degraded" | "down" | "no_data";
+}
+
+interface CommerceEventSeen {
+  eventName: string;
+  total: number;
+}
+
 // ─── Page Component ─────────────────────────────────────────────────────────
 
 export default function AdminPixelsPage() {
@@ -115,6 +138,13 @@ export default function AdminPixelsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<PixelFormState>(EMPTY_FORM);
   const [testingId, setTestingId] = useState<string | null>(null);
+
+  // ── Readiness status state ──────────────────────────────────────────────
+  const [platformHealth, setPlatformHealth] = useState<PlatformHealthRow[]>([]);
+  const [commerceEventsSeen, setCommerceEventsSeen] = useState<
+    CommerceEventSeen[]
+  >([]);
+  const [readinessLoading, setReadinessLoading] = useState(true);
 
   // ── Load configs ────────────────────────────────────────────────────────
 
@@ -131,8 +161,45 @@ export default function AdminPixelsPage() {
     }
   };
 
+  // ── Load readiness data ─────────────────────────────────────────────────
+
+  const fetchReadinessData = async () => {
+    try {
+      const [healthResult, breakdownResult] = await Promise.all([
+        trpc.analytics.platformHealth.query(),
+        trpc.analytics.eventBreakdown.query(),
+      ]);
+      if (healthResult.success) {
+        setPlatformHealth(healthResult.result as PlatformHealthRow[]);
+      }
+      if (breakdownResult.success) {
+        const breakdown = breakdownResult.result as {
+          events: CommerceEventSeen[];
+        };
+        // Filter to commerce-critical events only
+        const commerceEvents = [
+          "page_viewed",
+          "product_viewed",
+          "product_added_to_cart",
+          "checkout_started",
+          "checkout_completed",
+        ];
+        setCommerceEventsSeen(
+          (breakdown.events ?? []).filter((e) =>
+            commerceEvents.includes(e.eventName),
+          ),
+        );
+      }
+    } catch {
+      // Non-critical — readiness panel gracefully degrades
+    } finally {
+      setReadinessLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchConfigs();
+    fetchReadinessData();
   }, []);
 
   // ── Open add/edit dialog ────────────────────────────────────────────────
@@ -242,9 +309,8 @@ export default function AdminPixelsPage() {
     setTestingId(config.id);
     try {
       const { v7 } = await import("uuid");
-      const { trackingEventBus } = await import(
-        "#root/shared/utils/tracking-event-bus"
-      );
+      const { trackingEventBus } =
+        await import("#root/shared/utils/tracking-event-bus");
 
       const testEvent = {
         eventId: v7(),
@@ -269,54 +335,230 @@ export default function AdminPixelsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-12">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <div className='flex items-center justify-center p-12'>
+        <Loader2 className='w-6 h-6 animate-spin text-muted-foreground' />
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+    <div className='p-6 space-y-6 max-w-4xl mx-auto'>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-2xl font-bold">Pixels & Tracking</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Connect your ad platform pixels to track conversions and build audiences.
+          <h1 className='text-2xl font-bold'>Pixels & Tracking</h1>
+          <p className='text-muted-foreground text-sm mt-1'>
+            Connect your ad platform pixels to track conversions and build
+            audiences.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <a href="/dashboard/admin/pixels/custom-events">
-            <Button variant="outline" size="sm">
-              <MousePointerClick className="w-4 h-4 mr-2" />
+        <div className='flex items-center gap-2'>
+          <a href='/dashboard/admin/pixels/custom-events'>
+            <Button variant='outline' size='sm'>
+              <MousePointerClick className='w-4 h-4 mr-2' />
               Custom Events
             </Button>
           </a>
-          <a href="/dashboard/admin/pixels/events">
-            <Button variant="outline" size="sm">
-              <Activity className="w-4 h-4 mr-2" />
+          <a href='/dashboard/admin/pixels/events'>
+            <Button variant='outline' size='sm'>
+              <Activity className='w-4 h-4 mr-2' />
               Event Log
             </Button>
           </a>
           <Button onClick={openAddDialog}>
-            <PlusCircle className="w-4 h-4 mr-2" />
+            <PlusCircle className='w-4 h-4 mr-2' />
             Add Pixel
           </Button>
         </div>
       </div>
 
-      {/* Empty state */}
-      {configs.length === 0 && (
+      {/* ── Pixel Readiness Status ────────────────────────────────────── */}
+      {configs.length > 0 && (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Radio className="w-12 h-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No pixels connected</h3>
-            <p className="text-muted-foreground text-sm mb-4 text-center max-w-md">
-              Connect your Meta Pixel, Google Analytics, TikTok, or other ad platforms
-              to start tracking conversions.
+          <CardHeader className='pb-3'>
+            <CardTitle className='text-base flex items-center gap-2'>
+              <Info className='w-4 h-4' />
+              Pixel Readiness
+            </CardTitle>
+            <CardDescription className='text-xs'>
+              Quick overview of your tracking setup. Commerce events flow
+              automatically — client-side pixels fire instantly, server-side
+              Conversions API delivery happens when an access token is
+              configured and server-side is enabled.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            {readinessLoading ? (
+              <div className='flex items-center justify-center py-4'>
+                <Loader2 className='w-4 h-4 animate-spin text-muted-foreground' />
+              </div>
+            ) : (
+              <>
+                {/* Platform Status */}
+                <div>
+                  <p className='text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider'>
+                    Platform Delivery
+                  </p>
+                  <div className='grid gap-2'>
+                    {configs.map((cfg) => {
+                      const health = platformHealth.find(
+                        (h) => h.platform === cfg.platform,
+                      );
+                      const hasToken = !!cfg.accessToken;
+                      const hasServerSide = cfg.enableServerSide;
+                      const hasClientSide = cfg.enableClientSide;
+                      const totalDelivered =
+                        (health?.successCount ?? 0) +
+                        (health?.failedCount ?? 0);
+
+                      return (
+                        <div
+                          key={cfg.id}
+                          className='flex items-center justify-between text-sm border rounded-md px-3 py-2'>
+                          <div className='flex items-center gap-2'>
+                            <span className='font-medium'>
+                              {PLATFORM_LABELS[cfg.platform] ?? cfg.platform}
+                            </span>
+                            {!cfg.enabled && (
+                              <Badge
+                                variant='secondary'
+                                className='text-[10px] px-1.5'>
+                                Disabled
+                              </Badge>
+                            )}
+                          </div>
+                          <div className='flex items-center gap-3 text-xs text-muted-foreground'>
+                            {/* Client-side status */}
+                            <span
+                              className='flex items-center gap-1'
+                              title='Client-side pixel (browser)'>
+                              <Monitor className='w-3 h-3' />
+                              {hasClientSide && cfg.enabled ? (
+                                <CheckCircle2 className='w-3 h-3 text-green-600' />
+                              ) : (
+                                <XCircle className='w-3 h-3 text-muted-foreground/40' />
+                              )}
+                            </span>
+                            {/* Server-side status */}
+                            <span
+                              className='flex items-center gap-1'
+                              title={
+                                hasServerSide && hasToken
+                                  ? "Server-side Conversions API active"
+                                  : hasServerSide && !hasToken
+                                    ? "Server-side enabled but no access token — delivery will fail"
+                                    : "Server-side not enabled"
+                              }>
+                              <Server className='w-3 h-3' />
+                              {hasServerSide && hasToken && cfg.enabled ? (
+                                <CheckCircle2 className='w-3 h-3 text-green-600' />
+                              ) : hasServerSide && !hasToken ? (
+                                <AlertTriangle className='w-3 h-3 text-amber-500' />
+                              ) : (
+                                <XCircle className='w-3 h-3 text-muted-foreground/40' />
+                              )}
+                            </span>
+                            {/* Delivery count */}
+                            {totalDelivered > 0 ? (
+                              <Badge
+                                variant='outline'
+                                className={`text-[10px] px-1.5 ${
+                                  health?.status === "healthy"
+                                    ? "border-green-300 text-green-700"
+                                    : health?.status === "degraded"
+                                      ? "border-amber-300 text-amber-700"
+                                      : "border-red-300 text-red-700"
+                                }`}>
+                                {health?.successCount ?? 0} delivered (7d)
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant='outline'
+                                className='text-[10px] px-1.5 border-muted text-muted-foreground'>
+                                No deliveries yet
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Commerce Events Seen */}
+                <div>
+                  <p className='text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider'>
+                    Commerce Events (last 30 days)
+                  </p>
+                  <div className='flex flex-wrap gap-2'>
+                    {[
+                      { key: "page_viewed", label: "PageView" },
+                      { key: "product_viewed", label: "ViewContent" },
+                      { key: "product_added_to_cart", label: "AddToCart" },
+                      { key: "checkout_started", label: "InitiateCheckout" },
+                      { key: "checkout_completed", label: "Purchase" },
+                    ].map(({ key, label }) => {
+                      const seen = commerceEventsSeen.find(
+                        (e) => e.eventName === key,
+                      );
+                      return (
+                        <Badge
+                          key={key}
+                          variant='outline'
+                          className={`text-xs ${
+                            seen && seen.total > 0
+                              ? "border-green-300 text-green-700 bg-green-50"
+                              : "border-muted text-muted-foreground"
+                          }`}>
+                          {seen && seen.total > 0 ? (
+                            <CheckCircle2 className='w-3 h-3 mr-1' />
+                          ) : (
+                            <XCircle className='w-3 h-3 mr-1 opacity-40' />
+                          )}
+                          {label}
+                          {seen && seen.total > 0 ? ` (${seen.total})` : ""}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                  {commerceEventsSeen.length === 0 && (
+                    <p className='text-xs text-muted-foreground mt-2'>
+                      No commerce events recorded yet. Events will appear here
+                      once customers browse and buy from your store.
+                    </p>
+                  )}
+                </div>
+
+                {/* Honesty note about server-side delivery */}
+                {configs.some((c) => c.enableServerSide && !c.accessToken) && (
+                  <div className='flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2'>
+                    <AlertTriangle className='w-3.5 h-3.5 mt-0.5 shrink-0' />
+                    <span>
+                      Some platforms have server-side enabled but no access
+                      token configured. Server-side delivery (Conversions API)
+                      requires a valid access token to actually send events to
+                      the platform. Client-side tracking still works.
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Empty state */}
+      {configs.length === 0 && !loading && (
+        <Card>
+          <CardContent className='flex flex-col items-center justify-center py-12'>
+            <Radio className='w-12 h-12 text-muted-foreground mb-4' />
+            <h3 className='text-lg font-medium mb-2'>No pixels connected</h3>
+            <p className='text-muted-foreground text-sm mb-4 text-center max-w-md'>
+              Connect your Meta Pixel, Google Analytics, TikTok, or other ad
+              platforms to start tracking conversions.
             </p>
             <Button onClick={openAddDialog}>
-              <PlusCircle className="w-4 h-4 mr-2" />
+              <PlusCircle className='w-4 h-4 mr-2' />
               Connect Your First Pixel
             </Button>
           </CardContent>
@@ -324,71 +566,68 @@ export default function AdminPixelsPage() {
       )}
 
       {/* Pixel config cards */}
-      <div className="grid gap-4">
+      <div className='grid gap-4'>
         {configs.map((config) => (
           <Card key={config.id}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="space-y-1">
-                <CardTitle className="text-lg flex items-center gap-2">
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <div className='space-y-1'>
+                <CardTitle className='text-lg flex items-center gap-2'>
                   {PLATFORM_LABELS[config.platform] ?? config.platform}
                   <Badge variant={config.enabled ? "default" : "secondary"}>
                     {config.enabled ? "Active" : "Disabled"}
                   </Badge>
                 </CardTitle>
-                <CardDescription className="font-mono text-sm">
+                <CardDescription className='font-mono text-sm'>
                   {maskPixelId(config.pixelId)}
                 </CardDescription>
               </div>
-              <div className="flex gap-2">
+              <div className='flex gap-2'>
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant='outline'
+                  size='sm'
                   onClick={() => handleTestPixel(config)}
-                  disabled={!config.enabled || testingId === config.id}
-                >
+                  disabled={!config.enabled || testingId === config.id}>
                   {testingId === config.id ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className='w-4 h-4 animate-spin' />
                   ) : (
-                    <TestTube className="w-4 h-4" />
+                    <TestTube className='w-4 h-4' />
                   )}
-                  <span className="ml-1">Test</span>
+                  <span className='ml-1'>Test</span>
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => openEditDialog(config)}
-                >
-                  <Edit className="w-4 h-4" />
+                  variant='outline'
+                  size='sm'
+                  onClick={() => openEditDialog(config)}>
+                  <Edit className='w-4 h-4' />
                 </Button>
                 <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDelete(config.id)}
-                >
-                  <Trash2 className="w-4 h-4" />
+                  variant='destructive'
+                  size='sm'
+                  onClick={() => handleDelete(config.id)}>
+                  <Trash2 className='w-4 h-4' />
                 </Button>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
+              <div className='flex gap-4 text-sm text-muted-foreground'>
+                <span className='flex items-center gap-1'>
                   {config.enableClientSide ? (
-                    <Eye className="w-3 h-3" />
+                    <Eye className='w-3 h-3' />
                   ) : (
-                    <EyeOff className="w-3 h-3" />
+                    <EyeOff className='w-3 h-3' />
                   )}
                   Client-side: {config.enableClientSide ? "On" : "Off"}
                 </span>
-                <span className="flex items-center gap-1">
+                <span className='flex items-center gap-1'>
                   {config.enableServerSide ? (
-                    <Eye className="w-3 h-3" />
+                    <Eye className='w-3 h-3' />
                   ) : (
-                    <EyeOff className="w-3 h-3" />
+                    <EyeOff className='w-3 h-3' />
                   )}
                   Server-side: {config.enableServerSide ? "On" : "Off"}
                 </span>
                 {config.consentRequired && (
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant='outline' className='text-xs'>
                     Consent: {config.consentCategory ?? "required"}
                   </Badge>
                 )}
@@ -400,22 +639,21 @@ export default function AdminPixelsPage() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className='sm:max-w-[500px]'>
           <DialogHeader>
             <DialogTitle>
               {editingId ? "Edit Pixel Configuration" : "Add New Pixel"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
+          <div className='space-y-4 py-2'>
             {/* Platform */}
-            <div className="space-y-2">
-              <Label htmlFor="platform">Platform</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='platform'>Platform</Label>
               <Select
                 value={form.platform}
                 onValueChange={(v) => setForm((f) => ({ ...f, platform: v }))}
-                disabled={!!editingId}
-              >
+                disabled={!!editingId}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -430,10 +668,10 @@ export default function AdminPixelsPage() {
             </div>
 
             {/* Pixel ID */}
-            <div className="space-y-2">
-              <Label htmlFor="pixelId">Pixel / Measurement ID</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='pixelId'>Pixel / Measurement ID</Label>
               <Input
-                id="pixelId"
+                id='pixelId'
                 value={form.pixelId}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, pixelId: e.target.value }))
@@ -443,30 +681,30 @@ export default function AdminPixelsPage() {
             </div>
 
             {/* Access Token (optional, for server-side) */}
-            <div className="space-y-2">
-              <Label htmlFor="accessToken">
+            <div className='space-y-2'>
+              <Label htmlFor='accessToken'>
                 Access Token{" "}
-                <span className="text-muted-foreground text-xs">
+                <span className='text-muted-foreground text-xs'>
                   (optional — for server-side Conversions API)
                 </span>
               </Label>
               <Input
-                id="accessToken"
-                type="password"
+                id='accessToken'
+                type='password'
                 value={form.accessToken}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, accessToken: e.target.value }))
                 }
-                placeholder="Paste your access token here"
+                placeholder='Paste your access token here'
               />
             </div>
 
             {/* Toggles */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="enabled">Enabled</Label>
+            <div className='space-y-3'>
+              <div className='flex items-center justify-between'>
+                <Label htmlFor='enabled'>Enabled</Label>
                 <Switch
-                  id="enabled"
+                  id='enabled'
                   checked={form.enabled}
                   onCheckedChange={(v) =>
                     setForm((f) => ({ ...f, enabled: v }))
@@ -474,10 +712,10 @@ export default function AdminPixelsPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <Label htmlFor="enableClientSide">Client-Side Tracking</Label>
+              <div className='flex items-center justify-between'>
+                <Label htmlFor='enableClientSide'>Client-Side Tracking</Label>
                 <Switch
-                  id="enableClientSide"
+                  id='enableClientSide'
                   checked={form.enableClientSide}
                   onCheckedChange={(v) =>
                     setForm((f) => ({ ...f, enableClientSide: v }))
@@ -485,10 +723,10 @@ export default function AdminPixelsPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <Label htmlFor="enableServerSide">Server-Side Tracking</Label>
+              <div className='flex items-center justify-between'>
+                <Label htmlFor='enableServerSide'>Server-Side Tracking</Label>
                 <Switch
-                  id="enableServerSide"
+                  id='enableServerSide'
                   checked={form.enableServerSide}
                   onCheckedChange={(v) =>
                     setForm((f) => ({ ...f, enableServerSide: v }))
@@ -496,10 +734,10 @@ export default function AdminPixelsPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <Label htmlFor="consentRequired">Require Consent</Label>
+              <div className='flex items-center justify-between'>
+                <Label htmlFor='consentRequired'>Require Consent</Label>
                 <Switch
-                  id="consentRequired"
+                  id='consentRequired'
                   checked={form.consentRequired}
                   onCheckedChange={(v) =>
                     setForm((f) => ({ ...f, consentRequired: v }))
@@ -510,21 +748,20 @@ export default function AdminPixelsPage() {
 
             {/* Consent category */}
             {form.consentRequired && (
-              <div className="space-y-2">
-                <Label htmlFor="consentCategory">Consent Category</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='consentCategory'>Consent Category</Label>
                 <Select
                   value={form.consentCategory}
                   onValueChange={(v) =>
                     setForm((f) => ({ ...f, consentCategory: v }))
-                  }
-                >
+                  }>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder='Select category' />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="analytics">Analytics</SelectItem>
-                    <SelectItem value="marketing">Marketing</SelectItem>
-                    <SelectItem value="custom">Custom</SelectItem>
+                    <SelectItem value='analytics'>Analytics</SelectItem>
+                    <SelectItem value='marketing'>Marketing</SelectItem>
+                    <SelectItem value='custom'>Custom</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -532,16 +769,15 @@ export default function AdminPixelsPage() {
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-2 pt-2">
+          <div className='flex justify-end gap-2 pt-2'>
             <Button
-              variant="outline"
+              variant='outline'
               onClick={() => setDialogOpen(false)}
-              disabled={saving}
-            >
+              disabled={saving}>
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={saving}>
-              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {saving && <Loader2 className='w-4 h-4 mr-2 animate-spin' />}
               {editingId ? "Save Changes" : "Add Pixel"}
             </Button>
           </div>

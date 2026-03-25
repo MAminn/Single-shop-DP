@@ -1017,7 +1017,7 @@ export const trackingEvent = pgTable("tracking_event", {
     onUpdate: "cascade",
   }),
   eventName: text("event_name").notNull(),
-  eventId: text("event_id").notNull(),
+  eventId: text("event_id").notNull().unique(),
   eventData: jsonb("event_data").notNull(),
   pageUrl: text("page_url"),
   referrer: text("referrer"),

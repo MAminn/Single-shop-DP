@@ -28,7 +28,7 @@ const DEFAULT_NAV_LINKS = [
   { label: "About", href: "#" },
 ] as const;
 
-const SCROLL_THRESHOLD = 24;
+const SCROLL_THRESHOLD = 16;
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                         */
@@ -37,10 +37,12 @@ const SCROLL_THRESHOLD = 24;
 /**
  * Editorial Navbar — transparent at top, solid on scroll.
  *
+ * Premium fashion-editorial header:
  * - Desktop: left nav links · center logo · right icons
  * - Mobile: hamburger → Sheet drawer with editorial links
- * - text-xs tracking-[0.28em] uppercase for links
- * - Smooth bg/text transitions using Framer Motion
+ * - Quiet-luxury typography: 11px tracking-[0.2em] uppercase
+ * - Smooth bg/text transitions via Framer Motion
+ * - Clean icon-only right side (Search · Account · Bag)
  */
 export function EditorialNavbar() {
   const prefersReduced = useReducedMotion() ?? false;
@@ -97,84 +99,83 @@ export function EditorialNavbar() {
 
   /* ---- Link styles ---- */
   const linkCls = isScrolled
-    ? "!text-stone-900 hover:!text-stone-600"
-    : "!text-white hover:!text-white/70";
+    ? "!text-stone-700 hover:!text-stone-950"
+    : "!text-white/85 hover:!text-white";
 
   const iconCls = isScrolled
-    ? "!text-stone-900 hover:bg-stone-100"
-    : "!text-white hover:bg-white/10";
+    ? "!text-stone-700 hover:!text-stone-950 hover:bg-transparent"
+    : "!text-white/85 hover:!text-white hover:bg-transparent";
 
   return (
     <>
-      {/* Announcement bar */}
+      {/* Announcement bar — refined, restrained */}
       {announcementEnabled && announcementText && (
-        <div className='w-full bg-black text-white text-center py-2 px-4 text-xs tracking-wider z-[10001] relative'>
+        <div className='w-full bg-stone-900 text-white/70 text-center py-2 px-6 text-[10px] tracking-[0.28em] uppercase font-light z-10001 relative select-none'>
           {announcementText}
         </div>
       )}
       <motion.nav
         aria-label='Editorial navigation'
-        className={`${
+        className={`transition-[backdrop-filter] duration-500 ${isScrolled ? "backdrop-blur-2xl" : "backdrop-blur-0"} ${
           isSolid
-            ? "sticky top-0 z-[10000] py-4 lg:py-5"
-            : `fixed inset-x-0 z-[10000] py-4 lg:py-5 ${announcementEnabled && announcementText ? "top-[32px]" : "top-0"}`
+            ? "sticky top-0 z-10000 py-5 lg:py-7"
+            : `fixed inset-x-0 z-10000 py-5 lg:py-7 ${announcementEnabled && announcementText ? "top-8.5" : "top-0"}`
         }`}
         animate={{
           backgroundColor: isScrolled
-            ? "rgba(255,255,255,1)"
+            ? "rgba(255,255,255,0.96)"
             : "rgba(255,255,255,0)",
-          borderBottomColor: isScrolled ? "rgba(0,0,0,0.08)" : "rgba(0,0,0,0)",
+          borderBottomColor: isScrolled ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0)",
         }}
         transition={
-          prefersReduced ? { duration: 0 } : { duration: 0.35, ease: EASE_OUT }
+          prefersReduced ? { duration: 0 } : { duration: 0.5, ease: EASE_OUT }
         }
         style={{ borderBottomWidth: 1, borderBottomStyle: "solid" }}>
-        <div className='px-6 lg:px-8 grid grid-cols-3 items-center min-h-12 max-w-7xl mx-auto'>
+        <div className='px-6 lg:px-12 xl:px-16 grid grid-cols-3 items-center min-h-14 max-w-480 mx-auto'>
           {/* ─── Left: Navigation ─── */}
-          <div className='flex items-center gap-6 justify-start'>
+          <div className='flex items-center gap-10 justify-start'>
             {/* Mobile hamburger */}
             <div className='lg:hidden'>
               <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                 <SheetTrigger asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className={`transition-colors duration-200 ${iconCls}`}
+                  <button
+                    type='button'
+                    className={`p-1 transition-colors duration-300 ${iconCls}`}
                     aria-label='Open menu'>
-                    <Menu size={22} />
-                  </Button>
+                    <Menu size={20} strokeWidth={1.3} />
+                  </button>
                 </SheetTrigger>
-                <SheetContent side='left' className='w-64 bg-stone-50 p-0'>
+                <SheetContent side='left' className='w-75 bg-stone-50 p-0'>
                   <div className='flex flex-col h-full'>
-                    <div className='p-6 border-b border-stone-200 w-full flex justify-center'>
+                    <div className='px-8 py-8 border-b border-stone-200/60 w-full flex justify-center'>
                       <HeaderLogo
                         variant='mobile'
                         onClick={handleCloseSheet}
-                        textClassName='text-xl font-light tracking-[0.14em] text-stone-900 uppercase'
+                        textClassName='text-lg font-light tracking-[0.18em] text-stone-900 uppercase'
                       />
                     </div>
 
-                    <div className='p-6 flex-1'>
+                    <div className='px-8 py-10 flex-1'>
                       {/* Mobile search */}
-                      <form onSubmit={handleSearchSubmit} className='mb-6'>
+                      <form onSubmit={handleSearchSubmit} className='mb-10'>
                         <div className='relative'>
-                          <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400' />
+                          <Search className='absolute left-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-400' />
                           <input
                             type='text'
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder='Search products...'
-                            className='w-full pl-9 pr-4 py-2.5 text-sm rounded-lg border border-stone-200 bg-white text-stone-900 placeholder-stone-400 outline-none focus:border-stone-400'
+                            placeholder='Search…'
+                            className='w-full pl-7 pr-4 py-2.5 text-[13px] tracking-wide border-b border-stone-200 bg-transparent text-stone-900 placeholder-stone-400 outline-none focus:border-stone-400 transition-colors'
                           />
                         </div>
                       </form>
 
-                      <div className='flex flex-col gap-5 mb-8'>
+                      <div className='flex flex-col gap-7 mb-10'>
                         {NAV_LINKS.map((link) => (
                           <Link
                             key={link.href}
                             href={link.href}
-                            className='text-xs tracking-[0.28em] uppercase text-stone-800 hover:text-stone-500 transition-colors'
+                            className='text-[11px] tracking-[0.22em] uppercase text-stone-600 hover:text-stone-900 transition-colors font-normal'
                             onClick={handleCloseSheet}>
                             {link.label}
                           </Link>
@@ -182,29 +183,37 @@ export function EditorialNavbar() {
                       </div>
 
                       {session && (
-                        <div className='border-t border-stone-200 pt-5 mb-6'>
+                        <div className='border-t border-stone-200/60 pt-7 mb-6'>
                           <Link
-                            href='/dashboard'
-                            className='text-xs tracking-[0.2em] uppercase text-stone-600 hover:text-stone-800 block mb-4'
+                            href='/account'
+                            className='text-[11px] tracking-[0.2em] uppercase text-stone-500 hover:text-stone-800 block mb-5 transition-colors'
                             onClick={handleCloseSheet}>
-                            Dashboard
+                            Account
                           </Link>
+                          {session.role === "admin" && (
+                            <Link
+                              href='/dashboard'
+                              className='text-[11px] tracking-[0.2em] uppercase text-stone-500 hover:text-stone-800 block mb-5 transition-colors'
+                              onClick={handleCloseSheet}>
+                              Dashboard
+                            </Link>
+                          )}
                           <button
                             onClick={() => {
                               logout();
                               handleCloseSheet();
                             }}
-                            className='text-xs tracking-[0.2em] uppercase text-stone-800 hover:text-stone-500'
+                            className='text-[11px] tracking-[0.2em] uppercase text-stone-500 hover:text-stone-800 transition-colors'
                             type='button'>
-                            Logout
+                            Sign Out
                           </button>
                         </div>
                       )}
                     </div>
 
                     <SheetTitle className='sr-only'>Navigation menu</SheetTitle>
-                    <div className='mt-auto border-t border-stone-200 p-6'>
-                      <p className='text-[10px] text-stone-400 tracking-[0.18em] uppercase'>
+                    <div className='mt-auto border-t border-stone-200/40 px-8 py-6'>
+                      <p className='text-[9px] text-stone-400 tracking-[0.22em] uppercase font-light'>
                         {STORE_NAME}
                       </p>
                     </div>
@@ -214,67 +223,33 @@ export function EditorialNavbar() {
             </div>
 
             {/* Desktop nav links */}
-            <div className='hidden lg:flex gap-6'>
+            <nav className='hidden lg:flex gap-10'>
               {NAV_LINKS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-xs tracking-[0.28em] uppercase font-light transition-colors duration-200 ${linkCls} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900/25 focus-visible:ring-offset-2 rounded-sm`}>
+                  className={`text-[11px] tracking-[0.2em] uppercase font-normal transition-colors duration-300 ${linkCls} focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-stone-900/20 focus-visible:ring-offset-4 rounded-sm`}>
                   {link.label}
                 </Link>
               ))}
-            </div>
+            </nav>
           </div>
 
           {/* ─── Center: Logo ─── */}
           <div className='flex justify-center'>
             <HeaderLogo
               variant='desktop'
-              textClassName={`text-xl lg:text-2xl font-extralight tracking-[0.18em] uppercase transition-colors duration-200 ${isScrolled ? "!text-stone-900 hover:!text-stone-600" : "!text-white hover:!text-white/70"}`}
+              textClassName={`text-[22px] lg:text-[26px] font-extralight tracking-[0.22em] uppercase transition-colors duration-400 ${isScrolled ? "!text-stone-900" : "!text-white"}`}
             />
           </div>
 
-          {/* ─── Right: Icons ─── */}
-          <div className='flex items-center gap-2 justify-end'>
-            {/* Desktop auth links */}
-            <div className='hidden lg:flex items-center gap-4'>
-              {!session ? (
-                <>
-                  <Link
-                    href='/login'
-                    className={`text-xs tracking-[0.2em] uppercase font-light transition-colors duration-200 ${linkCls}`}>
-                    Login
-                  </Link>
-                  <Link
-                    href='/register'
-                    className={`text-xs tracking-[0.2em] uppercase font-light transition-colors duration-200 ${linkCls}`}>
-                    Register
-                  </Link>
-                </>
-              ) : (
-                <>
-                  {session.role === "admin" && (
-                    <Link
-                      href='/dashboard'
-                      className={`text-xs tracking-[0.2em] uppercase font-light transition-colors duration-200 ${linkCls}`}>
-                      Dashboard
-                    </Link>
-                  )}
-                  <button
-                    onClick={logout}
-                    type='button'
-                    className={`text-xs tracking-[0.2em] uppercase font-light transition-colors duration-200 ${linkCls}`}>
-                    Logout
-                  </button>
-                </>
-              )}
-            </div>
-
+          {/* ─── Right: Icons (Search · Account · Bag) ─── */}
+          <div className='flex items-center gap-4 justify-end'>
             {/* Search */}
             {isSearchOpen ? (
               <form
                 onSubmit={handleSearchSubmit}
-                className='flex items-center gap-1'>
+                className='flex items-center gap-2'>
                 <input
                   ref={searchInputRef}
                   type='text'
@@ -282,72 +257,75 @@ export function EditorialNavbar() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder='Search…'
                   autoFocus
-                  className={`w-32 lg:w-44 px-3 py-1.5 text-sm rounded-full border bg-transparent outline-none transition-colors ${
+                  className={`w-36 lg:w-44 px-4 py-1.5 text-[12px] tracking-wider border-b bg-transparent outline-none transition-all duration-300 ${
                     isScrolled
-                      ? "border-stone-300 text-stone-900 placeholder-stone-400 focus:border-stone-900"
-                      : "border-white/30 text-white placeholder-white/60 focus:border-white"
+                      ? "border-stone-300 text-stone-900 placeholder-stone-400 focus:border-stone-500"
+                      : "border-white/30 text-white placeholder-white/50 focus:border-white/60"
                   }`}
                 />
-                <Button
+                <button
                   type='button'
-                  variant='ghost'
-                  size='icon'
                   onClick={() => {
                     setIsSearchOpen(false);
                     setSearchQuery("");
                   }}
-                  className={`transition-colors ${iconCls}`}
+                  className={`p-1 transition-colors duration-300 ${iconCls}`}
                   aria-label='Close search'>
-                  <X size={18} />
-                </Button>
+                  <X size={16} strokeWidth={1.3} />
+                </button>
               </form>
             ) : (
-              <Button
-                variant='ghost'
-                size='icon'
+              <button
+                type='button'
                 onClick={() => {
                   setIsSearchOpen(true);
                   setTimeout(() => searchInputRef.current?.focus(), 100);
                 }}
-                className={`transition-colors duration-200 ${iconCls}`}
-                aria-label='Search products'>
-                <Search size={18} />
-              </Button>
+                className={`p-1 transition-colors duration-300 ${iconCls}`}
+                aria-label='Search'>
+                <Search size={18} strokeWidth={1.3} />
+              </button>
             )}
 
+            {/* Account icon — replaces Login/Register text links */}
+            <Link
+              href={
+                session
+                  ? session.role === "admin"
+                    ? "/dashboard"
+                    : "/account"
+                  : "/login"
+              }
+              className={`p-1 transition-colors duration-300 hidden lg:block ${iconCls}`}
+              aria-label={session ? "Account" : "Sign in"}>
+              <User size={18} strokeWidth={1.3} />
+            </Link>
+
             {/* Cart */}
-            <Button
-              variant='ghost'
-              size='icon'
-              className={`transition-colors duration-200 ${iconCls}`}
-              asChild>
-              <Link href='/cart' className='relative' aria-label='Shopping bag'>
-                <ShoppingBag size={18} />
-                {totalItems > 0 && (
-                  <span
-                    className={`absolute top-0 right-0 inline-flex items-center justify-center px-1 py-0.5 text-[9px] font-medium leading-none transform translate-x-1/2 -translate-y-1/2 rounded-full transition-colors duration-200 ${
-                      isScrolled
-                        ? "bg-stone-900 text-white"
-                        : "bg-white text-stone-900"
-                    }`}>
-                    {totalItems}
-                  </span>
-                )}
-              </Link>
-            </Button>
+            <Link
+              href='/cart'
+              className={`p-1 relative transition-colors duration-300 ${iconCls}`}
+              aria-label='Shopping bag'>
+              <ShoppingBag size={18} strokeWidth={1.3} />
+              {totalItems > 0 && (
+                <span
+                  className={`absolute -top-0.5 -right-1 inline-flex items-center justify-center w-4 h-4 text-[8px] font-medium leading-none rounded-full transition-colors duration-300 ${
+                    isScrolled
+                      ? "bg-stone-900 text-white"
+                      : "bg-white text-stone-900"
+                  }`}>
+                  {totalItems}
+                </span>
+              )}
+            </Link>
 
             {/* Mobile user icon */}
-            <Button
-              variant='ghost'
-              size='icon'
-              className={`lg:hidden transition-colors duration-200 ${iconCls}`}
-              asChild>
-              <Link
-                href={session ? "/dashboard" : "/login"}
-                aria-label={session ? "Dashboard" : "Login"}>
-                <User size={18} />
-              </Link>
-            </Button>
+            <Link
+              href={session ? "/account" : "/login"}
+              className={`p-1 lg:hidden transition-colors duration-300 ${iconCls}`}
+              aria-label={session ? "Account" : "Sign in"}>
+              <User size={18} strokeWidth={1.3} />
+            </Link>
           </div>
         </div>
       </motion.nav>

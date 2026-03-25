@@ -1,11 +1,19 @@
 import type { ServerContext } from "#root/server/routes/track";
-import type { TrackingEvent, PixelConfig, PixelPlatform } from "#root/shared/types/pixel-tracking";
+import type {
+  TrackingEvent,
+  PixelConfig,
+  PixelPlatform,
+} from "#root/shared/types/pixel-tracking";
 import type { DatabaseClient } from "#root/shared/database/drizzle/db";
 import {
   enrichEvents,
   type EnrichedTrackingEvent,
 } from "#root/backend/pixel-tracking/event-logger";
-import { pixelConfig, trackingEvent, trackingEventDelivery } from "#root/shared/database/drizzle/schema";
+import {
+  pixelConfig,
+  trackingEvent,
+  trackingEventDelivery,
+} from "#root/shared/database/drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import { v7 } from "uuid";
 
@@ -15,7 +23,10 @@ import { googleMPAdapter } from "#root/backend/pixel-tracking/server-adapters/go
 import { tiktokEventsAdapter } from "#root/backend/pixel-tracking/server-adapters/tiktok-events-adapter";
 import { snapchatCapiAdapter } from "#root/backend/pixel-tracking/server-adapters/snapchat-capi-adapter";
 import { pinterestCapiAdapter } from "#root/backend/pixel-tracking/server-adapters/pinterest-capi-adapter";
-import type { ServerPixelAdapter, AdapterDeliveryResult } from "#root/backend/pixel-tracking/server-adapters/types";
+import type {
+  ServerPixelAdapter,
+  AdapterDeliveryResult,
+} from "#root/backend/pixel-tracking/server-adapters/types";
 
 /**
  * Map of platform → server-side adapter.
@@ -58,6 +69,7 @@ async function persistEvents(
   const result = await db
     .insert(trackingEvent)
     .values(rows)
+    .onConflictDoNothing({ target: trackingEvent.eventId })
     .returning({ id: trackingEvent.id, eventId: trackingEvent.eventId });
 
   return result;
@@ -73,7 +85,10 @@ async function getEnabledServerConfigs(
     .select()
     .from(pixelConfig)
     .where(
-      and(eq(pixelConfig.enabled, true), eq(pixelConfig.enableServerSide, true)),
+      and(
+        eq(pixelConfig.enabled, true),
+        eq(pixelConfig.enableServerSide, true),
+      ),
     )
     .execute();
 
@@ -88,17 +103,16 @@ async function logDeliveryResult(
   trackingEventDbId: string,
   result: AdapterDeliveryResult,
 ): Promise<void> {
-  await db
-    .insert(trackingEventDelivery)
-    .values({
-      id: v7(),
-      trackingEventId: trackingEventDbId,
-      platform: result.platform as typeof pixelConfig.platform.enumValues[number],
-      sent: result.success,
-      sentAt: result.success ? new Date() : null,
-      platformEventId: null,
-      error: result.error ?? null,
-    });
+  await db.insert(trackingEventDelivery).values({
+    id: v7(),
+    trackingEventId: trackingEventDbId,
+    platform:
+      result.platform as (typeof pixelConfig.platform.enumValues)[number],
+    sent: result.success,
+    sentAt: result.success ? new Date() : null,
+    platformEventId: null,
+    error: result.error ?? null,
+  });
 }
 
 /**
@@ -176,10 +190,7 @@ export async function processTrackingBeacon(
   try {
     serverConfigs = await getEnabledServerConfigs(db);
   } catch (err) {
-    console.error(
-      "[Delivery Pipeline] Failed to fetch server configs:",
-      err,
-    );
+    console.error("[Delivery Pipeline] Failed to fetch server configs:", err);
     return;
   }
 
