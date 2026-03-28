@@ -1,8 +1,12 @@
 # Lebsy Shop — Copilot Context Prompt
 
+> Last updated: 2026-03-28 (post-audit corrections applied)
+
+---
+
 ## Project Identity
 
-**Lebsy** is a single-shop e-commerce template I'm building to sell on marketplaces (CodeCanyon, Gumroad, etc.). It's NOT a live store — it's a product that developers/entrepreneurs buy and deploy as their own shop.
+**Lebsy** is a single-shop e-commerce template I'm building to sell on marketplaces (CodeCanyon, Gumroad, etc.). It's NOT a live store — it's a product that developers/entrepreneurs buy and deploy as their own shop. A brand called **Percé** is currently using this template in production.
 
 **Stack:** React 19 + Vike (SSR) + Tailwind + shadcn/ui | Fastify + tRPC + Drizzle ORM + PostgreSQL
 
@@ -21,24 +25,32 @@
 - `shared/types/pixel-tracking.ts` → Pixel platforms, events, tracking types
 
 ### Database
-- `shared/database/drizzle/schema.ts` → 25+ tables (product, order, category, promoCode, layoutSettings, homepageContent, categoryContent, pixelConfig, storeSettings, template, templateAssignment, etc.)
+- `shared/database/drizzle/schema.ts` → ~30 tables: product (with variants/images/categories), order (with items + Fincart tracking fields), category, promoCode, user, vendor (legacy, full schema still present). CMS: layoutSettings, homepageContent, categoryContent (all JSONB). Tracking: pixelConfig, trackingEvent, attributionTouchpoint. Config: storeSettings (shipping fee + templateSelection JSONB). Unused tables: template, templateAssignment, templateAnalytics.
+- **Note:** Products have dual category relationships — `product.categoryId` (direct FK, primary category) + `productCategory` junction table (many-to-many, additional categories). This is intentional.
 
 ### Router (ONLY use this one)
-- `shared/trpc/router.ts` → PRIMARY router (11 sub-routers: auth, product, order, category, promoCode, homepage, layout, pixelTracking, payment, settings, analytics)
+- `shared/trpc/router.ts` → PRIMARY router with 13 sub-routers: auth (8 procedures), category, product, order, file, promoCode, homepage, layout, pixelTracking, payment, settings (includes getTemplateSelection + updateTemplateSelection), analytics
 - ⚠️ `backend/router/router.ts` is a DEAD FILE — never import or reference it
 
 ### Layout Wrapper
 - `layouts/LayoutDefault.tsx` → Root layout: AuthContext → CartProvider → TemplateProvider → LayoutSettingsContext → NavbarModeContext → TrackingProvider → Navbar/EditorialNavbar → {children} → Footer
+- Editorial templates use `EditorialChrome` wrapper which hides global navbar/footer via CSS data-attribute and renders its own
 
 ## Template System
 
 Two systems coexist — ONLY work with V2:
-- **V2 (active):** `components/template-system/templateConfig.ts` — ~30 templates across 8 page types
-- **V1 (legacy/dead):** `frontend/components/template/templateRegistry.ts` — do not extend
+- **V2 (active):** `components/template-system/templateConfig.ts` — 30 templates across 8 page types
+- **V1 (legacy/dead):** `frontend/components/template/templateRegistry.ts` — do not extend. V1 backward-compat code (activeTemplates / switchTemplate / getActiveTemplate) still exists in TemplateContext — ignore it.
 
-Template selection flow: Admin selects → localStorage stores → TemplateContext reads → page renders selected component.
+### Template Selection Flow (fully wired to DB)
+```
+Admin selects template → optimistic localStorage cache update → DB mutation via trpc.settings.updateTemplateSelection.mutate()
+                                                                    ↓
+Page load → TemplateContext initializes from localStorage (fast hydration) → fetches from DB via trpc.settings.getTemplateSelection.query() (source of truth) → renders selected component
+```
+Persistence uses `storeSettings.templateSelection` JSONB column. The old `template`, `templateAssignment`, `templateAnalytics` tables are unused.
 
-**V2 Template inventory:**
+### V2 Template inventory
 - Landing (homepage): 4 — Modern, Classic, Editorial, Minimal
 - Home: 2 — Featured Products, Modern V2
 - Product Page: 6 — Percé, Classic, Editorial, Technical, Minimal, Modern Split
@@ -53,7 +65,7 @@ Template selection flow: Admin selects → localStorage stores → TemplateConte
 ```
 shared/          → Config, DB schema, tRPC router, types, email templates, utils
 backend/         → Route handlers: analytics, auth, categories, dashboard, file, homepage, layout, orders, payments, pixel-tracking, products, promo-codes, settings
-pages/           → Vike page routes (index, featured/brands|men|women|products, cart, checkout, orders, order-confirmation, search, dashboard/*, login, register, etc.)
+pages/           → Vike page routes (index, shop, featured/brands|men|women|products, categories/@slug, cart, checkout, orders, order-confirmation, search, dashboard/*, login, register, etc.)
 components/      → globals (Navbar, Footer), template-system (V2 templates), dashboard, shop, ui (shadcn), template (admin), home
 frontend/        → contexts (TemplateContext, LayoutSettingsContext, TrackingContext), pixel-adapters, tracking, V1 legacy templates
 layouts/         → LayoutDefault.tsx
@@ -66,25 +78,36 @@ layouts/         → LayoutDefault.tsx
 | `/dashboard/admin/layout-settings` | Header/footer config (logo, nav, announcement, footer links, social) | layoutSettings table (JSONB) |
 | `/dashboard/admin/homepage` | Homepage sections (hero, promo, value props, categories, featured, newsletter, CTA, brand statement) | homepageContent table (JSONB) |
 | `/dashboard/admin/category-content` | Per-category hero & description | categoryContent table (JSONB) |
-| `/dashboard/admin/templates` | Template switcher per page type | ⚠️ localStorage only (DB tables exist but unused) |
+| `/dashboard/admin/templates` | Template switcher per page type | storeSettings.templateSelection (JSONB) + localStorage cache |
 | `/dashboard/admin/pixels` | Pixel/tracking config (Meta, GA4, TikTok, Snapchat, Pinterest, Custom) | pixelConfig + tracking tables |
 | `/dashboard/admin/analytics` | Real analytics (overview, funnel, events, platform health, top products) | Real DB queries |
 | `/dashboard/products` | Product CRUD | product + variants + images tables |
 | `/dashboard/categories` | Category CRUD | category table |
-| `/dashboard/orders` | Order management | order + orderItem tables |
+| `/dashboard/orders` | Order management (includes Fincart integration fields) | order + orderItem tables |
 | `/dashboard/promo-codes` | Promo code CRUD | promoCode tables |
-| `/dashboard/settings` | Store settings (only shipping fee currently) | storeSettings table |
+| `/dashboard/settings` | Store settings (shipping fee + template selection) | storeSettings table |
 
-## Known Issues to Be Aware Of
+## Route Status
 
-1. **`/shop` route** — may or may not exist yet. Was missing (all CMS defaults linked to it). Check if `pages/shop/` exists now.
-2. **Hardcoded category routes** — `/featured/men/` and `/featured/women/` may have been replaced with dynamic `/categories/@slug`. Verify.
-3. **`footerStyle` field** — exists in `shared/types/layout-settings.ts` Zod schema but is NOT read by any render component. Footer variant is controlled by EditorialChrome wrapper per-template, not by this CMS field.
-4. **Template persistence** — localStorage-only. DB tables `template`, `templateAssignment`, `templateAnalytics` exist but are unused.
+### Working Routes
+- `/shop` — ✅ EXISTS and works. Renders sorting template with optional `?category=<slug>` filtering. CMS default links are valid.
+- `/categories/@slug` — ✅ Dynamic category route exists and works.
+
+### Routes to Remove (pre-launch cleanup)
+- `/featured/men/` and `/featured/women/` — ⚠️ STILL EXIST. Hardcoded gendered category pages that filter by `categoryType: "men"/"women"`. Redundant with the dynamic `/categories/@slug` route. Inappropriate for a generic template product — must be removed before marketplace submission.
+
+## Known Issues to Fix
+
+1. **Hardcoded gendered routes** — `/featured/men/` and `/featured/women/` must be deleted. They limit the template's audience.
+2. **`footerStyle` field** — exists in `shared/types/layout-settings.ts` Zod schema but is NOT read by any render component. Footer variant is controlled by EditorialChrome wrapper per-template, not by this CMS field. Either wire it or remove it.
+3. **`getCategoryUrl()` in route-helpers.ts** — points to stale `/featured/categories/:id`. Should point to `/categories/:slug` or be deleted.
+4. **Dead `categoryType` enum** — `category.type` was changed from enum to text (default "general") but the old `categoryType` enum is still declared in schema. Remove it.
 5. **Newsletter** — UI renders but no subscription backend exists.
 6. **V1 template system** — still in codebase at `frontend/components/template/`. Should be removed or clearly deprecated.
-7. **Dead files to delete:** `backend/router/router.ts`, `lib/utils/route-helpers.ts` (getVendorUrl), temp files, internal reports.
-8. **Vendor remnants:** `showVendor` prop in TopSellingProductsCard, vendor code in `useAnalytics` hook, `getVendorUrl()` helper.
+7. **Dead files to delete:** `backend/router/router.ts` (stale router copy), internal audit files.
+8. **Vendor remnants:** `showVendor` prop in TopSellingProductsCard, vendor code in `useAnalytics` hook. Vendor table has full schema beyond the FK workaround — clean up or document.
+9. **Unused DB tables:** `template`, `templateAssignment`, `templateAnalytics` — template persistence now uses `storeSettings.templateSelection`. These tables can be dropped.
+10. **EDITORIAL-DESIGN-DIRECTION.md** — review for useful design guidelines before deletion.
 
 ## UX/UI Priority
 
@@ -94,12 +117,15 @@ The templates need visual polish to compete on marketplaces. When working on tem
 - The "Editorial" variants should feel magazine-quality
 - The "Modern" variants should feel clean and conversion-optimized
 - Mobile responsiveness is critical — marketplace reviewers test this
+- Currently the Modern, Classic, and Minimal landing pages look nearly identical — they need significant visual differentiation
 
 ## Development Rules
 
 1. Always use the V2 template system (`components/template-system/`)
 2. Never import from `backend/router/router.ts` — use `shared/trpc/router.ts`
 3. All CMS data flows: Admin UI → tRPC mutation → DB (JSONB) → tRPC query → Context/Props → Component render
-4. Use Tailwind + shadcn/ui for all UI work
-5. Keep `SINGLE_SHOP_MODE` assumptions — no multi-vendor logic
-6. When adding routes, follow Vike conventions: `pages/[route-name]/+Page.tsx`
+4. Template selection flows through: `storeSettings.templateSelection` (DB, source of truth) + localStorage (cache for fast hydration)
+5. Use Tailwind + shadcn/ui for all UI work
+6. Keep `SINGLE_SHOP_MODE` assumptions — no multi-vendor logic
+7. When adding routes, follow Vike conventions: `pages/[route-name]/+Page.tsx`
+8. Do not modify or extend the V1 template system or its backward-compat layer in TemplateContext
