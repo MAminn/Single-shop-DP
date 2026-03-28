@@ -1,6 +1,6 @@
 # Lebsy Single-Shop Template — Current State Audit
 
-> Generated: 2026-03-07 | Version: 1.0  
+> Generated: 2026-03-07 | Updated: 2026-03-25 | Version: 1.1  
 > Auditor: Automated code audit  
 > Scope: Full codebase, CMS inventory, runtime verification, product readiness
 
@@ -20,7 +20,9 @@
 - Layout CMS (header logo, nav links, announcement bar, navbar style switching)
 - Footer CMS (logo, description, link groups, social links, newsletter toggle)
 - Template switcher (~30 templates across 8 page types)
-- Pixel & tracking system (Meta, GA4, TikTok, Snapchat, Pinterest)
+- Pixel & tracking system (Meta, GA4, TikTok, Snapchat, Pinterest) with server-side delivery pipeline
+- Analytics dashboard with real backend data (overview, funnel, event breakdown, platform health)
+- Conversion tracking across full commerce funnel (page view → product view → add to cart → checkout → purchase)
 - Auth system (register, login, email verification, password reset, admin guard)
 - Category CRUD + per-category CMS content
 
@@ -31,7 +33,6 @@
 - Hardcoded `/featured/men/` and `/featured/women/` routes (not generic for a template)
 - "Brands" page is misleading — it's just "All Products" (vendor-era naming)
 - Template selection is localStorage-only — not persisted to DB
-- Analytics dashboard shows 100% fake/demo data
 - Newsletter UI exists but no subscription backend
 - Two coexisting template systems (V1 legacy + V2 new)
 - Dead `backend/router/router.ts` file (stale copy, confuses auditors)
@@ -53,13 +54,13 @@ See [audit/codebase-map.md](codebase-map.md) for full architecture documentation
 | Backend  | Fastify + tRPC + PostgreSQL + Drizzle ORM                                                |
 | Auth     | Custom (session tokens, httpOnly cookies)                                                |
 | State    | Server: tRPC queries. Client: CartContext (localStorage), TemplateContext (localStorage) |
-| Router   | `shared/trpc/router.ts` — 10 sub-routers registered                                      |
+| Router   | `shared/trpc/router.ts` — 11 sub-routers registered                                      |
 | Schema   | 25+ tables in `shared/database/drizzle/schema.ts`                                        |
 | Config   | `SINGLE_SHOP_MODE`, `DEFAULT_STORE_ID`, `STORE_NAME` (env vars)                          |
 
 ### Primary Router (shared/trpc/router.ts)
 
-✅ auth, ✅ product, ✅ order, ✅ category, ✅ promoCode, ✅ homepage, ✅ layout, ✅ pixelTracking, ✅ payment, ✅ settings
+✅ auth, ✅ product, ✅ order, ✅ category, ✅ promoCode, ✅ homepage, ✅ layout, ✅ pixelTracking, ✅ payment, ✅ settings, ✅ analytics
 
 ⚠️ `backend/router/router.ts` is a **dead file** (only 6 routers, not imported anywhere). Should be deleted.
 
@@ -166,23 +167,28 @@ See [audit/cms-inventory.json](cms-inventory.json) for machine-readable format.
 
 ### 3.8 Pixels & Tracking (`/dashboard/admin/pixels`)
 
-| Feature                                                      | Status                                 |
-| ------------------------------------------------------------ | -------------------------------------- |
-| Add/edit/delete pixel configs                                | ✅ Fully working                       |
-| 6 platforms (Meta, GA4, TikTok, Snapchat, Pinterest, Custom) | ✅ Fully working                       |
-| Event log viewer                                             | ✅ Working                             |
-| Custom event definitions                                     | ✅ Working                             |
-| Client-side event bus                                        | ✅ Working                             |
-| Server-side delivery                                         | ⚠️ Adapters exist but wiring uncertain |
+| Feature                                                      | Status                                          |
+| ------------------------------------------------------------ | ----------------------------------------------- |
+| Add/edit/delete pixel configs                                | ✅ Fully working                                |
+| 6 platforms (Meta, GA4, TikTok, Snapchat, Pinterest, Custom) | ✅ Fully working                                |
+| Event log viewer                                             | ✅ Working                                      |
+| Custom event definitions                                     | ✅ Working                                      |
+| Client-side event bus                                        | ✅ Working                                      |
+| Server-side delivery pipeline                                | ✅ Implemented (5 CAPI adapters + delivery log) |
+| Pixel readiness panel                                        | ✅ Live platform health + commerce event badges |
+| Delivery logging                                             | ✅ Per-event per-platform audit trail           |
 
 ### 3.9 Analytics (`/dashboard/admin/analytics`)
 
-| Feature             | Status                                 |
-| ------------------- | -------------------------------------- |
-| Conversion funnel   | 🔴 **Demo data only** — all hard-coded |
-| Channel performance | 🔴 **Demo data only**                  |
-| Platform health     | 🔴 **Demo data only**                  |
-| No tRPC queries     | 🔴 No backend implementation           |
+| Feature                   | Status                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------- |
+| Overview metrics          | ✅ Real data (orders, revenue, AOV, products, 7-day)                                         |
+| Conversion funnel         | ✅ Real data (5-stage from tracking events)                                                  |
+| Best selling products     | ✅ Real data (by revenue)                                                                    |
+| Most viewed products      | ✅ Real data (from tracking events, 30 days)                                                 |
+| Event breakdown           | ✅ Real data (all event types with session counts)                                           |
+| Platform health           | ✅ Real data (delivery rates, status per platform)                                           |
+| Backend: analytics router | ✅ 5 admin procedures (overview, funnel, eventBreakdown, platformHealth, topTrackedProducts) |
 
 ### 3.10 Settings (`/dashboard/settings`)
 
@@ -323,34 +329,35 @@ Browser screenshots were **not captured** — the app requires Docker/PostgreSQL
 | Template system (visual variety)            | High       | 30+ templates, 8 page types                        |
 | Auth system                                 | High       | Register, login, verify, reset, admin guard        |
 | Admin dashboard                             | High       | KPIs, stats, attention alerts                      |
-| Pixel tracking config                       | Medium     | UI complete; server-side delivery untested         |
+| Pixel tracking config                       | High       | UI complete; server-side delivery pipeline wired   |
+| Analytics dashboard                         | High       | Real data — overview, funnel, events, health       |
 
 ### ⚠️ PARTIALLY READY (Needs Fix Before Release)
 
-| Issue                                                  | Severity    | Impact                                                                      | Fix Effort                                                                |
-| ------------------------------------------------------ | ----------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `/shop` route missing                                  | **BLOCKER** | Default nav link, footer links, hero CTA all broken on first load           | Create `/shop` as all-products page OR change defaults                    |
-| Hardcoded `/featured/men/` + `/featured/women/` routes | **BLOCKER** | Template buyers with non-fashion stores can't use these. Not generic.       | Generalize to dynamic category routes                                     |
-| "Brands" page naming                                   | SHOULD-FIX  | Misleading — it's just "All Products"                                       | Rename to "Shop" or "All Products"                                        |
-| Template persistence is localStorage-only              | SHOULD-FIX  | Admin selects template but customers don't see it on other devices/browsers | Wire to DB (`templateAssignment` table already exists)                    |
-| `footerStyle` field is dead                            | SHOULD-FIX  | Schema exists, would confuse template customizers                           | Either wire it or remove from schema                                      |
-| Analytics page is 100% fake                            | SHOULD-FIX  | Customer would expect real data. Misleading.                                | Either implement or remove from sidebar. Add "Coming Soon" badge if kept. |
-| Newsletter has no backend                              | OPTIONAL    | UI renders but form does nothing                                            | Add simple email collection or remove                                     |
-| Category hero has no image upload                      | OPTIONAL    | Must paste URL manually                                                     | Add upload handler                                                        |
-| Settings page has only shipping fee                    | OPTIONAL    | Store name/currency only via env vars                                       | Add more settings or document clearly                                     |
+| Issue                                                  | Severity       | Impact                                                                      | Fix Effort                                                        |
+| ------------------------------------------------------ | -------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `/shop` route missing                                  | **BLOCKER**    | Default nav link, footer links, hero CTA all broken on first load           | Create `/shop` as all-products page OR change defaults            |
+| Hardcoded `/featured/men/` + `/featured/women/` routes | **BLOCKER**    | Template buyers with non-fashion stores can't use these. Not generic.       | Generalize to dynamic category routes                             |
+| "Brands" page naming                                   | SHOULD-FIX     | Misleading — it's just "All Products"                                       | Rename to "Shop" or "All Products"                                |
+| Template persistence is localStorage-only              | SHOULD-FIX     | Admin selects template but customers don't see it on other devices/browsers | Wire to DB (`templateAssignment` table already exists)            |
+| `footerStyle` field is dead                            | SHOULD-FIX     | Schema exists, would confuse template customizers                           | Either wire it or remove from schema                              |
+| Analytics page is 100% fake                            | ~~SHOULD-FIX~~ | ~~Customer would expect real data. Misleading.~~                            | ✅ **RESOLVED** — Now uses real backend data via analytics router |
+| Newsletter has no backend                              | OPTIONAL       | UI renders but form does nothing                                            | Add simple email collection or remove                             |
+| Category hero has no image upload                      | OPTIONAL       | Must paste URL manually                                                     | Add upload handler                                                |
+| Settings page has only shipping fee                    | OPTIONAL       | Store name/currency only via env vars                                       | Add more settings or document clearly                             |
 
 ### 🔴 MISLEADING / FAKE (Remove or Fix Before Selling)
 
-| Issue                                       | Risk                                       | Action                                         |
-| ------------------------------------------- | ------------------------------------------ | ---------------------------------------------- |
-| `footerStyle` field in schema               | Developers will expect it to work          | Wire to render logic OR remove from types      |
-| Analytics dashboard with hard-coded data    | Customer will think analytics is a feature | Add "Demo Data" banner OR remove page          |
-| Two template systems (V1 + V2) confusing    | Developers won't know which to extend      | Remove V1 or clearly document as deprecated    |
-| Dead `backend/router/router.ts`             | Confuses anyone reading the codebase       | Delete it                                      |
-| `categoryType` enum ("men"/"women") in DB   | Not generic                                | Remove enum; category routes should be dynamic |
-| `getVendorUrl()` helper function            | Vendor remnant                             | Delete                                         |
-| `showVendor` prop in TopSellingProductsCard | Vendor remnant                             | Remove                                         |
-| `useAnalytics` vendor data/functions        | Vendor remnant                             | Clean up                                       |
+| Issue                                       | Risk                                  | Action                                         |
+| ------------------------------------------- | ------------------------------------- | ---------------------------------------------- |
+| `footerStyle` field in schema               | Developers will expect it to work     | Wire to render logic OR remove from types      |
+| Analytics dashboard with hard-coded data    | ~~Was demo data~~ → ✅ Fixed          | Now uses real DB queries via analytics router  |
+| Two template systems (V1 + V2) confusing    | Developers won't know which to extend | Remove V1 or clearly document as deprecated    |
+| Dead `backend/router/router.ts`             | Confuses anyone reading the codebase  | Delete it                                      |
+| `categoryType` enum ("men"/"women") in DB   | Not generic                           | Remove enum; category routes should be dynamic |
+| `getVendorUrl()` helper function            | Vendor remnant                        | Delete                                         |
+| `showVendor` prop in TopSellingProductsCard | Vendor remnant                        | Remove                                         |
+| `useAnalytics` vendor data/functions        | Vendor remnant                        | Clean up                                       |
 
 ### 📦 What's MISSING for a True Sellable Template
 

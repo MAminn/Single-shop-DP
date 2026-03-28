@@ -1,6 +1,6 @@
 # Lebsy Single-Shop Template — Codebase Map
 
-> Generated: 2026-03-07 | Audit version: 1.0
+> Generated: 2026-03-07 | Updated: 2026-03-25 | Audit version: 1.1
 
 ## Architecture Overview
 
@@ -23,7 +23,7 @@ React 19 + Vike (SSR) + Tailwind + shadcn/ui
 ```
 Fastify + tRPC + Drizzle ORM + PostgreSQL
          │
-    shared/trpc/router.ts  ← PRIMARY router (10 sub-routers)
+    shared/trpc/router.ts  ← PRIMARY router (11 sub-routers)
     shared/trpc/server.ts  ← tRPC init, context, middleware
     shared/trpc/client.ts  ← client proxy
 ```
@@ -56,10 +56,10 @@ Fastify + tRPC + Drizzle ORM + PostgreSQL
 
 ### Router (PRIMARY — the one actually used)
 
-| File                       | Status                                                                                                                             |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `shared/trpc/router.ts`    | ✅ PRIMARY — 10 routers registered (auth, product, order, category, promoCode, homepage, layout, pixelTracking, payment, settings) |
-| `backend/router/router.ts` | ⚠️ DEAD FILE — stale copy with only 6 routers, NOT imported anywhere                                                               |
+| File                       | Status                                                                                                                                        |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shared/trpc/router.ts`    | ✅ PRIMARY — 11 routers registered (auth, product, order, category, promoCode, homepage, layout, pixelTracking, payment, settings, analytics) |
+| `backend/router/router.ts` | ⚠️ DEAD FILE — stale copy with only 6 routers, NOT imported anywhere                                                                          |
 
 ## Folder Responsibilities
 
@@ -74,6 +74,7 @@ shared/
 └── utils/           → Shared utilities
 
 backend/
+├── analytics/       → Analytics engine (overview, funnel, events, platform health, top products)
 ├── auth/            → Login, register, logout, me, verify-email, password-reset, update-profile
 ├── categories/      → CRUD + CMS content
 ├── dashboard/       → Admin overview stats
@@ -82,7 +83,7 @@ backend/
 ├── layout/          → Layout settings CMS (header/footer)
 ├── orders/          → Order CRUD + status + fincart webhook
 ├── payments/        → Stripe/Paymob webhook handlers + payment session creation
-├── pixel-tracking/  → Event tracking, delivery, attribution, consent
+├── pixel-tracking/  → Event tracking, server-side delivery pipeline (5 CAPI adapters), attribution, consent
 ├── products/        → Product CRUD + search + reviews + stats
 ├── promo-codes/     → Promo code CRUD + validation
 ├── settings/        → Store settings (shipping fee)
@@ -96,9 +97,9 @@ pages/
 │   ├── women/       → Women's category page (hardcoded)
 │   └── products/    → Dynamic product listing + detail
 ├── cart/            → Cart page (template-driven)
-├── checkout/        → Checkout page (template-driven)
+├── checkout/        → Checkout page (template-driven, fires CHECKOUT_STARTED tracking event)
 ├── orders/          → Order history
-├── order-confirmation/ → Post-checkout confirmation
+├── order-confirmation/ → Post-checkout confirmation (fires CHECKOUT_COMPLETED/Purchase tracking event)
 ├── search/          → Search results (template-driven)
 ├── dashboard/       → Admin CMS + CRUD pages
 ├── login/           → Auth

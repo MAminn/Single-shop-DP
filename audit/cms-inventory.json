@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-03-07",
-  "version": "1.0",
+  "generatedAt": "2026-03-25",
+  "version": "1.1",
   "sections": [
     {
       "id": "layout-settings",
@@ -541,17 +541,25 @@
         "/pixels/custom-events (Custom Events)"
       ],
       "status": "fully-working",
-      "notes": "Supports Meta, GA4, TikTok, Snapchat, Pinterest, Custom. Server-side adapters exist but may not be fully wired to delivery pipeline."
+      "notes": "Supports Meta, GA4, TikTok, Snapchat, Pinterest, Custom. Server-side delivery pipeline fully wired with 5 CAPI adapters (Meta, Google MP, TikTok, Snapchat, Pinterest). Delivery logged per-event per-platform to trackingEventDelivery table. Pixel readiness panel shows live platform health and commerce event badges."
     },
     {
       "id": "analytics",
       "name": "Analytics Dashboard",
       "route": "/dashboard/admin/analytics",
       "purpose": "Traffic, conversion, and attribution analytics",
-      "tRPC": "none",
-      "storage": "none",
-      "status": "demo-only",
-      "notes": "All data is hard-coded constants. No backend queries. Shows conversion funnel, channel performance, platform health — all fake data."
+      "tRPC": {
+        "query": [
+          "analytics.overview",
+          "analytics.funnel",
+          "analytics.eventBreakdown",
+          "analytics.platformHealth",
+          "analytics.topTrackedProducts"
+        ]
+      },
+      "storage": "trackingEvent + trackingEventDelivery + pixelConfig + order tables (real DB queries)",
+      "status": "fully-working",
+      "notes": "Replaced hard-coded demo data with real backend queries. Overview shows orders/revenue/AOV/products with 7-day breakdown. Conversion funnel tracks 5 stages from tracking events. Event breakdown lists all event types with session counts. Platform health shows delivery success rates per pixel platform. Top tracked products shows most viewed and most carted (30 days). Best selling products by revenue also displayed."
     },
     {
       "id": "settings",
