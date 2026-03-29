@@ -24,6 +24,8 @@ export interface NewArrivalsProps {
   title?: string;
   maxProducts?: number;
   className?: string;
+  /** When false, hides the built-in header row (title + nav arrows). Defaults to true. */
+  showHeader?: boolean;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -206,6 +208,7 @@ export function NewArrivals({
   title = "NEW IN",
   maxProducts = 8,
   className,
+  showHeader = true,
 }: NewArrivalsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -251,44 +254,46 @@ export function NewArrivals({
   }
 
   return (
-    <section className={cn("py-14 sm:py-18 lg:py-24 bg-white", className)}>
+    <section className={cn("bg-white", className)}>
       <div className='container mx-auto px-6 sm:px-8 lg:px-12'>
         {/* Section header */}
-        <div className='flex items-center justify-between mb-8 sm:mb-10'>
-          <h2 className='text-base sm:text-lg font-medium text-stone-900 tracking-wide uppercase'>
-            {title}
-          </h2>
+        {showHeader && (
+          <div className='flex items-center justify-between mb-8 sm:mb-10'>
+            <h2 className='text-base sm:text-lg font-medium text-stone-900 tracking-wide uppercase'>
+              {title}
+            </h2>
 
-          {/* Navigation arrows */}
-          <div className='flex items-center gap-1'>
-            <button
-              type='button'
-              aria-label='Scroll left'
-              disabled={!canScrollLeft}
-              onClick={() => scroll("left")}
-              className={cn(
-                "w-8 h-8 flex items-center justify-center transition-colors duration-200",
-                canScrollLeft
-                  ? "text-stone-600 hover:text-stone-900"
-                  : "text-stone-200 cursor-default",
-              )}>
-              <ChevronLeft className='w-4 h-4' strokeWidth={1.5} />
-            </button>
-            <button
-              type='button'
-              aria-label='Scroll right'
-              disabled={!canScrollRight}
-              onClick={() => scroll("right")}
-              className={cn(
-                "w-8 h-8 flex items-center justify-center transition-colors duration-200",
-                canScrollRight
-                  ? "text-stone-600 hover:text-stone-900"
-                  : "text-stone-200 cursor-default",
-              )}>
-              <ChevronRight className='w-4 h-4' strokeWidth={1.5} />
-            </button>
+            {/* Navigation arrows */}
+            <div className='flex items-center gap-1'>
+              <button
+                type='button'
+                aria-label='Scroll left'
+                disabled={!canScrollLeft}
+                onClick={() => scroll("left")}
+                className={cn(
+                  "w-8 h-8 flex items-center justify-center transition-colors duration-200",
+                  canScrollLeft
+                    ? "text-stone-600 hover:text-stone-900"
+                    : "text-stone-200 cursor-default",
+                )}>
+                <ChevronLeft className='w-4 h-4' strokeWidth={1.5} />
+              </button>
+              <button
+                type='button'
+                aria-label='Scroll right'
+                disabled={!canScrollRight}
+                onClick={() => scroll("right")}
+                className={cn(
+                  "w-8 h-8 flex items-center justify-center transition-colors duration-200",
+                  canScrollRight
+                    ? "text-stone-600 hover:text-stone-900"
+                    : "text-stone-200 cursor-default",
+                )}>
+                <ChevronRight className='w-4 h-4' strokeWidth={1.5} />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Scrollable product strip — full-bleed */}

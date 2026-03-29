@@ -245,7 +245,7 @@ export const Footer: FC<FooterProps> = ({
     <footer className='bg-[#0F100E] text-[#A19887] selection:bg-[#8F7666]/20'>
       {/* ── Newsletter block — full-width, centered, editorial ── */}
       {effectiveShowNewsletter && (
-        <div className='border-b border-[#1E1B17]'>
+        <div data-footer-newsletter className='border-b border-[#1E1B17]'>
           <div className='container mx-auto px-6 md:px-12 lg:px-20 py-20 md:py-24'>
             <div className='max-w-xl mx-auto text-center space-y-8'>
               {/* Decorative micro-line */}

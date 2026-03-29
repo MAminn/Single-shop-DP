@@ -267,6 +267,11 @@ html[data-editorial-chrome="true"] #global-footer {
   display: none !important;
 }
 
+/* Hide footer newsletter when the active template already renders its own */
+html[data-has-template-newsletter] [data-footer-newsletter] {
+  display: none !important;
+}
+
 /*
  * Hero section height — in @layer components so it's never tree-shaken.
  * Uses dvh (dynamic viewport height) with vh fallback so mobile browsers
