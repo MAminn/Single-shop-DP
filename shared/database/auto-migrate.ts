@@ -94,15 +94,20 @@ export async function runMigrations(): Promise<void> {
           const msg = String(error.message || "").toLowerCase();
           const code = error.code;
 
-          // PostgreSQL error codes for "already exists" scenarios:
+          // PostgreSQL error codes for idempotent DDL scenarios:
           // 42P07 = duplicate_table (relation already exists)
           // 42701 = duplicate_column (column already exists)
           // 42710 = duplicate_object (type/constraint/index already exists)
+          // 42704 = undefined_object (constraint/type does not exist — safe to skip for DROP)
+          // 42P01 = undefined_table (relation does not exist — safe to skip for DROP)
           const isIgnorable =
             code === "42P07" ||
             code === "42701" ||
             code === "42710" ||
+            code === "42704" ||
+            code === "42P01" ||
             msg.includes("already exists") ||
+            msg.includes("does not exist") ||
             msg.includes("duplicate key value");
 
           if (isIgnorable) {
