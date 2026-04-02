@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { trpc } from "#root/shared/trpc/client";
 import { getStoreOwnerId } from "#root/shared/config/store";
 import { getTemplateComponent } from "#root/components/template-system";
 import { useTemplate } from "#root/frontend/contexts/TemplateContext";
 import type { LandingTemplateModernProps } from "#root/components/template-system";
-import { DEFAULT_HOMEPAGE_CONTENT } from "#root/shared/types/homepage-content";
 import type { HomepageContent } from "#root/shared/types/homepage-content";
 import type { CategoryStripItem } from "#root/components/shop/CategoryStrip";
 import type { NewArrivalProduct } from "#root/components/shop/NewArrivals";
+import { useData } from "vike-react/useData";
+import type { Data } from "./+data";
 
 export { Page };
 
@@ -25,11 +26,14 @@ interface FeaturedProduct {
 }
 
 function Page() {
+  // SSR-provided CMS content — no flash of defaults
+  const ssrData = useData<Data>();
+
   const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>(
     [],
   );
   const [homepageContent, setHomepageContent] = useState<HomepageContent>(
-    DEFAULT_HOMEPAGE_CONTENT,
+    ssrData.homepageContent,
   );
   const [categories, setCategories] = useState<CategoryStripItem[]>([]);
   const [newArrivals, setNewArrivals] = useState<NewArrivalProduct[]>([]);
@@ -37,14 +41,23 @@ function Page() {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [newArrivalsLoading, setNewArrivalsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { getTemplateId } = useTemplate();
+  const { getTemplateId, isLoading: isTemplateLoading } = useTemplate();
 
+  // Resolve the active landing template ID early so we can use it for content fetching
+  const activeLandingTemplateId = getTemplateId("landing") ?? "landing-modern";
+
+  // Track which template ID the CMS content was fetched for.
+  // Starts with the SSR template so we skip the redundant initial fetch.
+  const lastFetchedTemplateRef = useRef(ssrData.ssrTemplateId);
+
+  // ───────────────────────────────────────────────────
+  // Fetch featured products (always client-side — dynamic data)
+  // ───────────────────────────────────────────────────
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchProducts = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        // Fetch featured products
         const productsResult = await trpc.product.search.query({
           limit: 8,
           includeOutOfStock: false,
@@ -72,21 +85,6 @@ function Page() {
             })),
           );
         }
-
-        // Fetch homepage content
-        const merchantId = getStoreOwnerId();
-        try {
-          const contentResult = await trpc.homepage.getContent.query({
-            merchantId,
-          });
-
-          if (contentResult.success && contentResult.result) {
-            setHomepageContent(contentResult.result);
-          }
-        } catch (err) {
-          console.warn("Using default homepage content:", err);
-          // Continue with default content
-        }
       } catch (err) {
         setError("Error loading homepage data");
         console.error("Error loading homepage data:", err);
@@ -95,8 +93,38 @@ function Page() {
       }
     };
 
-    fetchData();
+    fetchProducts();
   }, []);
+
+  // ───────────────────────────────────────────────────
+  // Re-fetch CMS content only when the active template changes
+  // client-side (e.g. admin switches template). SSR already
+  // provided the initial content so we skip the first fetch.
+  // ───────────────────────────────────────────────────
+  useEffect(() => {
+    // Skip if the active template matches what SSR (or our last fetch) provided
+    if (activeLandingTemplateId === lastFetchedTemplateRef.current) return;
+
+    let cancelled = false;
+    const merchantId = getStoreOwnerId();
+
+    trpc.homepage.getContent
+      .query({ merchantId, templateId: activeLandingTemplateId })
+      .then((contentResult) => {
+        if (cancelled) return;
+        if (contentResult.success && contentResult.result) {
+          setHomepageContent(contentResult.result);
+        }
+        lastFetchedTemplateRef.current = activeLandingTemplateId;
+      })
+      .catch((err) => {
+        if (!cancelled) console.warn("Using default homepage content:", err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeLandingTemplateId]);
 
   // Fetch categories separately (parallel loading)
   useEffect(() => {
@@ -171,9 +199,14 @@ function Page() {
     fetchNewArrivals();
   }, []);
 
-  // Get the selected landing template (default to landing-modern)
-  const selectedId = getTemplateId("landing") ?? "landing-modern";
-  const templateEntry = getTemplateComponent("landing", selectedId);
+  // Get the selected landing template
+  const templateEntry = getTemplateComponent("landing", activeLandingTemplateId);
+
+  // Wait for template selection to resolve from DB before rendering
+  // This prevents flickering between the default and active template
+  if (isTemplateLoading) {
+    return null;
+  }
 
   if (!templateEntry) {
     return <div>Error: Landing page template not found.</div>;

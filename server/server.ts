@@ -15,6 +15,7 @@ import { stripeWebhookPlugin } from "#root/backend/payments/stripe-webhook.js";
 import { paymobWebhookPlugin } from "#root/backend/payments/paymob-webhook.js";
 import { ensureDefaultStoreVendor } from "#root/shared/database/bootstrap.js";
 import { listActiveClientConfigsRaw } from "#root/backend/pixel-tracking/pixel-config/ssr.js";
+import { getTemplateSelectionRaw } from "#root/backend/settings/get-template-selection-raw.js";
 import { trackBeaconPlugin } from "#root/server/routes/track.js";
 
 // Normalize env vars — Coolify sometimes injects a leading '=' into values
@@ -266,6 +267,8 @@ async function buildServer() {
     async (request, reply) => {
       // Fetch active pixel configs for SSR script injection (best-effort)
       const pixelConfigs = await listActiveClientConfigsRaw(request.db);
+      // Fetch template selection for SSR to prevent hydration flicker
+      const templateSelection = await getTemplateSelectionRaw(request.db);
 
       const pageContextInit = {
         urlOriginal: request.raw.url || "",
@@ -273,6 +276,7 @@ async function buildServer() {
         db: request.db,
         clientSession: request.clientSession,
         pixelConfigs,
+        templateSelection,
       };
 
       let pageContext: Awaited<ReturnType<typeof renderPage>>;

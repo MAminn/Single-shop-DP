@@ -12,6 +12,7 @@ import {
   type TemplateCategory,
 } from "#root/components/template-system/templateConfig";
 import { trpc } from "#root/shared/trpc/client";
+import { usePageContext } from "vike-react/usePageContext";
 
 // Re-export TemplateCategory for convenience
 export type { TemplateCategory } from "#root/components/template-system/templateConfig";
@@ -100,14 +101,29 @@ function writeCache(selection: TemplateSelection) {
 
 // Template provider component
 export function TemplateProvider({ children }: { children: ReactNode }) {
-  // Initialize: defaults → override with cache if available
+  // Read SSR-injected template selection from page context (available on both server & client)
+  const pageContext = usePageContext();
+  const ssrSelection = pageContext.templateSelection as
+    | Record<string, string>
+    | undefined;
+  const hasSSR =
+    !!ssrSelection && Object.keys(ssrSelection).length > 0;
+
+  // Initialize: SSR data (highest priority) → cache → defaults
   const [selection, setSelection] = useState<TemplateSelection>(() => {
+    if (hasSSR) {
+      const validated = validateSelection(ssrSelection as TemplateSelection);
+      // Eagerly write SSR data to cache for subsequent navigations
+      writeCache(validated);
+      return validated;
+    }
     const cached = readCache();
     if (cached) return validateSelection(cached);
     return getDefaultSelection();
   });
 
-  const [isLoading, setIsLoading] = useState(true);
+  // If SSR provided the selection, we already have the truth — no loading flicker
+  const [isLoading, setIsLoading] = useState(!hasSSR);
 
   // Legacy V1 active templates (kept for backward compat)
   const [activeTemplates, setActiveTemplates] = useState<
@@ -140,8 +156,15 @@ export function TemplateProvider({ children }: { children: ReactNode }) {
 
   // ───────────────────────────────────────────────────
   // Fetch template selection from DB on mount (source of truth)
+  // Skip if SSR already provided accurate data
   // ───────────────────────────────────────────────────
   useEffect(() => {
+    // SSR already gave us the DB selection — no need to re-fetch
+    if (hasSSR) {
+      dbLoaded.current = true;
+      return;
+    }
+
     let cancelled = false;
 
     trpc.settings.getTemplateSelection

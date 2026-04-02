@@ -912,26 +912,38 @@ export const webhookLog = pgTable("webhook_log", {
 /**
  * Homepage Content table
  * Stores customizable content for merchant homepages
+ * Content is stored per merchant per template (templateId)
+ * templateId "default" is used for backward compatibility (pre-template-scoped CMS)
  */
-export const homepageContent = pgTable("homepage_content", {
-  id: uuid("id")
-    .primaryKey()
-    .$defaultFn(() => v7()),
-  merchantId: uuid("merchant_id").notNull().unique(),
-  content: jsonb("content").notNull(),
-  createdAt: timestamp("created_at", {
-    withTimezone: true,
-    mode: "date",
-  })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updated_at", {
-    withTimezone: true,
-    mode: "date",
-  })
-    .defaultNow()
-    .notNull(),
-});
+export const homepageContent = pgTable(
+  "homepage_content",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .$defaultFn(() => v7()),
+    merchantId: uuid("merchant_id").notNull(),
+    templateId: text("template_id").notNull().default("default"),
+    content: jsonb("content").notNull(),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+      mode: "date",
+    })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", {
+      withTimezone: true,
+      mode: "date",
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("homepage_content_merchant_template_idx").on(
+      table.merchantId,
+      table.templateId,
+    ),
+  ],
+);
 
 /**
  * Category Content table

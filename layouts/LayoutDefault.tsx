@@ -10,7 +10,7 @@ import { usePageContext } from "vike-react/usePageContext";
 import { TRPCClientError } from "@trpc/client";
 import { AuthContext } from "#root/context/AuthContext.js";
 import { CartProvider } from "#root/lib/context/CartContext";
-import { TemplateProvider } from "#root/frontend/contexts/TemplateContext";
+import { TemplateProvider, useTemplate } from "#root/frontend/contexts/TemplateContext";
 import { TrackingProvider } from "#root/frontend/contexts/TrackingContext";
 import { Toaster as ShadcnToaster } from "#root/components/ui/toaster";
 import {
@@ -21,6 +21,25 @@ import { LayoutSettingsContext } from "#root/frontend/contexts/LayoutSettingsCon
 import type { LayoutSettings } from "#root/shared/types/layout-settings";
 import { DEFAULT_LAYOUT_SETTINGS } from "#root/shared/types/layout-settings";
 import { getStoreOwnerId } from "#root/shared/config/store";
+
+/**
+ * Conditionally render the global footer.
+ * When the editorial landing template is active on the homepage,
+ * EditorialChrome provides its own footer — skip the global one so
+ * there's no double-footer flash during SSR/hydration.
+ */
+function GlobalFooter() {
+  const { getTemplateId } = useTemplate();
+  const { urlPathname } = usePageContext();
+  const isEditorialLandingPage =
+    urlPathname === "/" && getTemplateId("landing") === "landing-editorial";
+  if (isEditorialLandingPage) return null;
+  return (
+    <div id='global-footer'>
+      <Footer />
+    </div>
+  );
+}
 
 // Memoized Content component to prevent unnecessary re-renders
 const Content = memo(({ children }: { children: React.ReactNode }) => {
@@ -132,11 +151,7 @@ const Content = memo(({ children }: { children: React.ReactNode }) => {
                     </div>
                   )}
                   {children}
-                  {!isDashboardRoute && (
-                    <div id='global-footer'>
-                      <Footer />
-                    </div>
-                  )}
+                  {!isDashboardRoute && <GlobalFooter />}
                   <Toaster />
                   <ShadcnToaster />
                   {/* Phase 3 — page-transition overlay (CSS-only, SSR-inert) */}

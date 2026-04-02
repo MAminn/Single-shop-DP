@@ -1,23 +1,23 @@
-import { db } from "#root/shared/database/drizzle/db";
 import { homepageContent } from "#root/shared/database/drizzle/schema";
 import { eq, and } from "drizzle-orm";
+import type { DatabaseClient } from "#root/shared/database/drizzle/db";
 import type { HomepageContent } from "#root/shared/types/homepage-content";
 import { DEFAULT_HOMEPAGE_CONTENT } from "#root/shared/types/homepage-content";
 
 /**
- * Fetches homepage content for a specific merchant and template
- * Falls back to hardcoded defaults if no content found for the template
+ * Direct database query for SSR homepage content injection.
+ * Accepts a DatabaseClient so it can be used in both Fastify and Hono SSR handlers
+ * without relying on the global db() singleton.
  *
- * @param merchantId - The unique identifier for the merchant
- * @param templateId - The template ID to fetch content for
- * @returns Promise resolving to the homepage content
+ * Same fallback chain as getHomepageContent:
+ *   template-specific → legacy "default" row → hardcoded defaults
  */
-export async function getHomepageContent(
+export async function getHomepageContentRaw(
+  database: DatabaseClient,
   merchantId: string,
   templateId?: string,
 ): Promise<HomepageContent> {
   try {
-    const database = db();
     const resolvedTemplateId = templateId || "default";
 
     // Find content for the specific template
@@ -30,7 +30,8 @@ export async function getHomepageContent(
           eq(homepageContent.templateId, resolvedTemplateId),
         ),
       )
-      .limit(1);
+      .limit(1)
+      .execute();
 
     if (result.length > 0 && result[0]?.content) {
       const storedContent = result[0].content as unknown as HomepageContent;
@@ -38,7 +39,7 @@ export async function getHomepageContent(
     }
 
     // If no template-specific content and this isn't already "default",
-    // try the legacy "default" row for backward compatibility with existing data
+    // try the legacy "default" row for backward compatibility
     if (resolvedTemplateId !== "default") {
       const fallback = await database
         .select()
@@ -49,7 +50,8 @@ export async function getHomepageContent(
             eq(homepageContent.templateId, "default"),
           ),
         )
-        .limit(1);
+        .limit(1)
+        .execute();
 
       if (fallback.length > 0 && fallback[0]?.content) {
         const storedContent = fallback[0].content as unknown as HomepageContent;
@@ -57,18 +59,13 @@ export async function getHomepageContent(
       }
     }
 
-    // Return hardcoded default content if nothing found
     return DEFAULT_HOMEPAGE_CONTENT;
-  } catch (error) {
-    console.error("Error fetching homepage content:", error);
+  } catch {
+    // SSR CMS injection is an enhancement — failures must not break page rendering
     return DEFAULT_HOMEPAGE_CONTENT;
   }
 }
 
-/**
- * Merges stored content with defaults to ensure all required fields exist
- * This prevents errors if the schema changes or data is incomplete
- */
 function mergeWithDefaults(
   storedContent: Partial<HomepageContent>,
 ): HomepageContent {

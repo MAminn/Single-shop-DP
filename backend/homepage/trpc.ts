@@ -84,10 +84,14 @@ export const homepageRouter = router({
     .input(
       z.object({
         merchantId: z.string().uuid(),
+        templateId: z.string().optional(),
       }),
     )
     .query(async ({ input }) => {
-      const content = await getHomepageContent(input.merchantId);
+      const content = await getHomepageContent(
+        input.merchantId,
+        input.templateId,
+      );
       return {
         success: true,
         result: content,
@@ -98,6 +102,7 @@ export const homepageRouter = router({
     .input(
       z.object({
         merchantId: z.string().uuid(),
+        templateId: z.string().optional(),
         content: HomepageContentSchema,
       }),
     )
@@ -105,6 +110,7 @@ export const homepageRouter = router({
       const content = await updateHomepageContent(
         input.merchantId,
         input.content,
+        input.templateId,
       );
       return {
         success: true,

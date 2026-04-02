@@ -42,6 +42,11 @@ import {
 } from "lucide-react";
 import { usePageContext } from "vike-react/usePageContext";
 import { Alert, AlertDescription } from "#root/components/ui/alert";
+import {
+  templateConfig,
+  type TemplateCategory,
+} from "#root/components/template-system/templateConfig";
+import { useTemplate } from "#root/frontend/contexts/TemplateContext";
 
 // Predefined route options for hero CTA
 const PREDEFINED_ROUTES = [
@@ -54,8 +59,12 @@ const PREDEFINED_ROUTES = [
 export default function HomepageAdminPage() {
   const pageContext = usePageContext();
   const session = pageContext.clientSession;
+  const { getTemplateId } = useTemplate();
 
   const MERCHANT_ID = getStoreOwnerId();
+
+  // Auto-select the currently active landing template
+  const activeLandingTemplate = getTemplateId("landing") ?? templateConfig.landing[0]?.id ?? "landing-modern";
 
   const [content, setContent] = useState<HomepageContent>(
     DEFAULT_HOMEPAGE_CONTENT,
@@ -70,6 +79,7 @@ export default function HomepageAdminPage() {
   const [isUploadingMobileImage, setIsUploadingMobileImage] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [imageUrlCopied, setImageUrlCopied] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(activeLandingTemplate);
 
   // Hero CTA dropdown state
   const [heroCTAMode, setHeroCTAMode] = useState<"predefined" | "custom">(
@@ -84,16 +94,24 @@ export default function HomepageAdminPage() {
     setHasUnsavedChanges(contentChanged);
   }, [content, originalContent]);
 
+  // Sync selected template when active template resolves from DB
+  useEffect(() => {
+    if (!hasUnsavedChanges) {
+      setSelectedTemplateId(activeLandingTemplate);
+    }
+  }, [activeLandingTemplate]);
+
   // Load existing content
   useEffect(() => {
     loadContent();
-  }, []);
+  }, [selectedTemplateId]);
 
   const loadContent = async () => {
     setIsLoading(true);
     try {
       const result = await trpc.homepage.getContent.query({
         merchantId: MERCHANT_ID,
+        templateId: selectedTemplateId,
       });
 
       if (result.success && result.result) {
@@ -178,6 +196,7 @@ export default function HomepageAdminPage() {
 
       const result = await trpc.homepage.updateContent.mutate({
         merchantId: MERCHANT_ID,
+        templateId: selectedTemplateId,
         content: trimmedContent,
       });
 
@@ -274,6 +293,7 @@ export default function HomepageAdminPage() {
 
             const result = await trpc.homepage.updateContent.mutate({
               merchantId: MERCHANT_ID,
+              templateId: selectedTemplateId,
               content: trimmedContent,
             });
 
@@ -723,6 +743,47 @@ export default function HomepageAdminPage() {
           </Button>
         </div>
       </div>
+
+      {/* Template Selector */}
+      <Card className='mb-6 border-blue-200 bg-blue-50/50'>
+        <CardContent className='pt-6'>
+          <div className='flex items-center gap-4'>
+            <div className='flex-1'>
+              <Label htmlFor='template-selector' className='text-sm font-semibold text-blue-900'>
+                Editing Content For Template
+              </Label>
+              <p className='text-xs text-blue-700 mt-0.5'>
+                Each landing template has its own CMS content. Select which template's content you want to edit.
+              </p>
+            </div>
+            <Select
+              value={selectedTemplateId}
+              onValueChange={(value) => {
+                if (hasUnsavedChanges) {
+                  const confirmed = confirm(
+                    "You have unsaved changes. Switching templates will discard them. Continue?",
+                  );
+                  if (!confirmed) return;
+                }
+                setSelectedTemplateId(value);
+                setHasUnsavedChanges(false);
+                setLastSavedAt(null);
+              }}>
+              <SelectTrigger id='template-selector' className='w-[320px] bg-white'>
+                <SelectValue placeholder='Select a template' />
+              </SelectTrigger>
+              <SelectContent>
+                {templateConfig.landing.map((template) => (
+                  <SelectItem key={template.id} value={template.id}>
+                    {template.label}
+                    {template.id === activeLandingTemplate ? " (Active)" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
       {!session && (
         <Alert className='mb-6'>

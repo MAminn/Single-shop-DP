@@ -21,6 +21,6 @@ export default {
   clientRouting: true,
   hydrationCanBeAborted: true,
 
-  // Pass client session and pixel configs to the client side
-  passToClient: ["clientSession", "pixelConfigs"],
+  // Pass client session, pixel configs, and template selection to the client side
+  passToClient: ["clientSession", "pixelConfigs", "templateSelection"],
 } satisfies Config;

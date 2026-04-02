@@ -13,6 +13,7 @@ declare global {
       db: DatabaseClient;
       clientSession?: ClientSession;
       pixelConfigs?: SsrPixelConfig[];
+      templateSelection?: Record<string, string>;
     }
   }
 }
