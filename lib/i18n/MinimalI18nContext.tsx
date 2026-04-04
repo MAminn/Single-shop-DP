@@ -17,7 +17,7 @@ const LOCALE_COOKIE_NAME = "minimal-locale";
 const MinimalI18nContext = createContext<MinimalI18nContextType>({
   locale: "en",
   dir: "ltr",
-  t: (key) => key,
+  t: (key) => (translations.en as Record<string, string>)[key] ?? key,
   toggleLocale: () => {},
   setLocale: () => {},
 });
