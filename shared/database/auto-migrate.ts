@@ -58,6 +58,7 @@ export async function runMigrations(): Promise<void> {
 
     let applied = 0;
     let skipped = 0;
+    let failed = 0;
 
     for (const file of migrationFiles) {
       // Check if migration was already applied
@@ -78,14 +79,21 @@ export async function runMigrations(): Promise<void> {
       );
 
       // Drizzle uses `--> statement-breakpoint` as delimiter between statements
+      // Filter out pure SQL comment lines but keep DO blocks intact
       const statements = migrationSQL
         .split("--> statement-breakpoint")
         .map((s) => s.trim())
         .filter((s) => s.length > 0)
         .map((s) => {
-          return s.endsWith(";") ? s.slice(0, -1).trim() : s;
+          // Only strip trailing semicolons for simple statements, not DO blocks
+          if (s.endsWith(";") && !s.includes("$$")) {
+            return s.slice(0, -1).trim();
+          }
+          return s;
         })
         .filter((s) => s.length > 0 && !s.startsWith("--"));
+
+      let migrationFailed = false;
 
       for (const statement of statements) {
         try {
@@ -117,8 +125,18 @@ export async function runMigrations(): Promise<void> {
             continue;
           }
 
-          throw error;
+          // Log but don't throw — continue to next migrations
+          console.error(
+            `❌ [Auto-Migrate] Statement failed in ${file} (${code || "unknown"}): ${msg.slice(0, 200)}`,
+          );
+          migrationFailed = true;
+          break;
         }
+      }
+
+      if (migrationFailed) {
+        failed++;
+        continue; // Skip marking as applied, but continue with next migration
       }
 
       // Mark migration as applied
@@ -130,9 +148,15 @@ export async function runMigrations(): Promise<void> {
       console.log(`✅ [Auto-Migrate] Applied: ${file}`);
     }
 
-    console.log(
-      `✅ [Auto-Migrate] Done — ${applied} applied, ${skipped} already up-to-date`,
-    );
+    if (failed > 0) {
+      console.warn(
+        `⚠️  [Auto-Migrate] Done — ${applied} applied, ${skipped} up-to-date, ${failed} FAILED (will retry next restart)`,
+      );
+    } else {
+      console.log(
+        `✅ [Auto-Migrate] Done — ${applied} applied, ${skipped} already up-to-date`,
+      );
+    }
     await client.end();
   } catch (error: any) {
     console.error("❌ [Auto-Migrate] Migration failed:", error.message);
