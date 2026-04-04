@@ -8,6 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
 import { Link } from "#root/components/utils/Link";
+import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext";
+import { MinimalForgotPasswordPage } from "#root/components/template-system/minimal/MinimalForgotPasswordPage";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -16,6 +18,13 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function Page() {
+  const layoutSettings = useLayoutSettings();
+  const isMinimal = layoutSettings.header.navbarStyle === "minimal";
+
+  if (isMinimal) {
+    return <MinimalForgotPasswordPage />;
+  }
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 

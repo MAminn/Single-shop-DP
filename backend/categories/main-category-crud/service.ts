@@ -270,7 +270,7 @@ export const deleteMainCategory = (
           const productCount = await tx
             .select({ count: count() })
             .from(product)
-            .where(eq(product.categoryId, input.id))
+            .where(and(eq(product.categoryId, input.id), eq(product.deleted, false)))
             .then((data) => data[0]?.count || 0);
 
           if (Number(productCount) > 0) {

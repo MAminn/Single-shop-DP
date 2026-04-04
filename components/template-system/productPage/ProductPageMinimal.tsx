@@ -7,7 +7,19 @@ import type {
   ProductImage,
 } from "./ProductPageModernSplit";
 import type { FeaturedProduct } from "../home/HomeFeaturedProducts";
-import { ShoppingCart, Heart, Star, ArrowRight } from "lucide-react";
+import {
+  ShoppingCart,
+  Heart,
+  Star,
+  ArrowRight,
+  Plus,
+  Minus,
+  Share2,
+  Facebook,
+  Twitter,
+  Link as LinkIcon,
+  Mail,
+} from "lucide-react";
 
 /**
  * Props for ProductPageMinimal
@@ -83,6 +95,12 @@ export function ProductPageMinimal({
   className = "",
 }: ProductPageMinimalProps) {
   const [selectedImage, setSelectedImage] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+
+  const maxQty = Math.min(product.stock || 99, 99);
+  const incrementQty = () => setQuantity((q) => Math.min(q + 1, maxQty));
+  const decrementQty = () => setQuantity((q) => Math.max(q - 1, 1));
 
   const images = product.images || [
     { url: product.imageUrl || "", isPrimary: true },
@@ -248,7 +266,33 @@ export function ProductPageMinimal({
               </p>
             )}
 
-            {/* Actions - Minimal Buttons */}
+            {/* Quantity Selector */}
+            {product.available && (
+              <div className='flex items-center gap-6'>
+                <span className='text-sm text-gray-500 font-light'>Quantity</span>
+                <div className='flex items-center border border-gray-200'>
+                  <button
+                    onClick={decrementQty}
+                    disabled={quantity <= 1}
+                    className='w-10 h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors'
+                    aria-label='Decrease quantity'>
+                    <Minus className='w-4 h-4' />
+                  </button>
+                  <span className='w-12 h-10 flex items-center justify-center text-sm font-light border-x border-gray-200 tabular-nums'>
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={incrementQty}
+                    disabled={quantity >= maxQty}
+                    className='w-10 h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors'
+                    aria-label='Increase quantity'>
+                    <Plus className='w-4 h-4' />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
             <div className='flex flex-col sm:flex-row gap-4'>
               <Button
                 size='lg'
@@ -267,6 +311,56 @@ export function ProductPageMinimal({
                   <Heart className='mr-2 w-5 h-5 group-hover:fill-gray-900 transition-all' />
                   Save
                 </Button>
+              )}
+            </div>
+
+            {/* Social Sharing */}
+            <div className='relative'>
+              <button
+                onClick={() => setShowShareMenu(!showShareMenu)}
+                className='flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 font-light transition-colors'>
+                <Share2 className='w-4 h-4' />
+                Share
+              </button>
+              {showShareMenu && (
+                <div className='flex items-center gap-3 mt-3'>
+                  <a
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
+                    aria-label='Share on Facebook'>
+                    <Facebook className='w-4 h-4' />
+                  </a>
+                  <a
+                    href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}&text=${encodeURIComponent(product.name)}`}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
+                    aria-label='Share on Twitter'>
+                    <Twitter className='w-4 h-4' />
+                  </a>
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(product.name + " " + (typeof window !== "undefined" ? window.location.href : ""))}`}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
+                    aria-label='Share on WhatsApp'>
+                    <svg className='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'><path d='M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z'/></svg>
+                  </a>
+                  <a
+                    href={`mailto:?subject=${encodeURIComponent(product.name)}&body=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
+                    className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
+                    aria-label='Share via Email'>
+                    <Mail className='w-4 h-4' />
+                  </a>
+                  <button
+                    onClick={() => { if (typeof navigator !== "undefined") navigator.clipboard.writeText(window.location.href); }}
+                    className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
+                    aria-label='Copy link'>
+                    <LinkIcon className='w-4 h-4' />
+                  </button>
+                </div>
               )}
             </div>
 

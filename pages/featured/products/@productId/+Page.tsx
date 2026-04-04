@@ -5,6 +5,7 @@ import { usePageContext } from "vike-react/usePageContext";
 import { trpc } from "#root/shared/trpc/client";
 import { getTemplateComponent } from "#root/components/template-system/templateConfig";
 import { useTemplate } from "#root/frontend/contexts/TemplateContext";
+import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext";
 import { useCart } from "#root/lib/context/CartContext";
 import { useTracking } from "#root/frontend/contexts/TrackingContext";
 import { TrackingEventName } from "#root/shared/types/pixel-tracking";
@@ -16,6 +17,7 @@ export default function ProductDetailPage() {
   const pageContext = usePageContext();
   const productId = pageContext.routeParams?.productId as string;
   const { getTemplateId } = useTemplate();
+  const layoutSettings = useLayoutSettings();
   const { addItem, items } = useCart();
   const { trackEvent } = useTracking();
   const hasTrackedView = useRef<string | null>(null);
@@ -150,7 +152,10 @@ export default function ProductDetailPage() {
     fetchProductData();
   }, [fetchProductData]);
 
-  const activeTemplateId = getTemplateId("productPage") ?? "product-perce";
+  const isMinimal = layoutSettings.header.navbarStyle === "minimal";
+  const activeTemplateId = isMinimal
+    ? "product-minimal"
+    : getTemplateId("productPage") ?? "product-perce";
   const TemplateEntry = getTemplateComponent("productPage", activeTemplateId);
 
   if (!TemplateEntry) {

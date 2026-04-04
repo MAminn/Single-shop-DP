@@ -18,6 +18,8 @@ import {
   gt,
   exists,
   sql,
+  isNotNull,
+  lt,
 } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
@@ -30,6 +32,7 @@ export const searchProductsSchema = z.object({
   limit: z.number().min(1).max(100).optional().default(12),
   offset: z.number().min(0).optional().default(0),
   includeOutOfStock: z.boolean().optional().default(false),
+  discountedOnly: z.boolean().optional(),
 });
 
 export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
@@ -39,16 +42,21 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
         // Prepare category filter condition
         let categoryCondition = undefined;
         if (input.categoryIds && input.categoryIds.length > 0) {
-          categoryCondition = exists(
-            db
-              .select({ productId: productCategory.productId })
-              .from(productCategory)
-              .where(
-                and(
-                  eq(productCategory.productId, product.id),
-                  inArray(productCategory.categoryId, input.categoryIds),
+          categoryCondition = or(
+            // Match via junction table (productCategory)
+            exists(
+              db
+                .select({ productId: productCategory.productId })
+                .from(productCategory)
+                .where(
+                  and(
+                    eq(productCategory.productId, product.id),
+                    inArray(productCategory.categoryId, input.categoryIds),
+                  ),
                 ),
-              ),
+            ),
+            // Match via direct FK (product.categoryId)
+            inArray(product.categoryId, input.categoryIds),
           );
         } else if (input.categoryType) {
           // If categoryType is specified but no categoryIds, fetch categories of that type
@@ -86,6 +94,8 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
           .from(product)
           .where(
             and(
+              // Exclude soft-deleted products
+              eq(product.deleted, false),
               // Filter by categories (using junction table)
               categoryCondition,
               // Filter by search term if specified
@@ -97,6 +107,13 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
                 : undefined,
               // Include out of stock items if specified
               !input.includeOutOfStock ? gt(product.stock, 0) : undefined,
+              // Only discounted products
+              input.discountedOnly
+                ? and(
+                    isNotNull(product.discountPrice),
+                    lt(product.discountPrice, product.price),
+                  )
+                : undefined,
             ),
           );
 
@@ -118,6 +135,8 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
           .leftJoin(category, eq(product.categoryId, category.id))
           .where(
             and(
+              // Exclude soft-deleted products
+              eq(product.deleted, false),
               // Filter by categories (using junction table)
               categoryCondition,
               // Filter by search term if specified
@@ -129,6 +148,13 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
                 : undefined,
               // Include out of stock items if specified
               !input.includeOutOfStock ? gt(product.stock, 0) : undefined,
+              // Only discounted products
+              input.discountedOnly
+                ? and(
+                    isNotNull(product.discountPrice),
+                    lt(product.discountPrice, product.price),
+                  )
+                : undefined,
             ),
           )
           .limit(input.limit)

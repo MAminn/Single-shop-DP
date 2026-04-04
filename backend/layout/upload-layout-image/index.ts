@@ -35,6 +35,8 @@ export const uploadLayoutImage = ({
       "image/png",
       "image/webp",
       "image/svg+xml",
+      "image/x-icon",
+      "image/vnd.microsoft.icon",
     ];
     if (!allowedTypes.includes(mimeType.toLowerCase())) {
       yield* Effect.fail(
@@ -59,7 +61,7 @@ export const uploadLayoutImage = ({
 
     const fileId = v7();
 
-    // SVG files are stored as-is
+    // SVG and ICO files are stored as-is
     if (mimeType === "image/svg+xml") {
       const filename = `${prefix}-${fileId}.svg`;
       const filePath = `${uploadsDir}/${filename}`;
@@ -67,6 +69,18 @@ export const uploadLayoutImage = ({
       yield* Effect.tryPromise({
         try: () => writeFile(filePath, Buffer.from(buffer)),
         catch: (err) => new Error(`Failed to save SVG: ${err}`),
+      });
+
+      return { url: `/uploads/layout/${filename}`, filename };
+    }
+
+    if (mimeType === "image/x-icon" || mimeType === "image/vnd.microsoft.icon") {
+      const filename = `${prefix}-${fileId}.ico`;
+      const filePath = `${uploadsDir}/${filename}`;
+
+      yield* Effect.tryPromise({
+        try: () => writeFile(filePath, Buffer.from(buffer)),
+        catch: (err) => new Error(`Failed to save ICO: ${err}`),
       });
 
       return { url: `/uploads/layout/${filename}`, filename };

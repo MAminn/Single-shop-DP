@@ -39,6 +39,7 @@ import {
   Copy,
   X,
   Check,
+  Languages,
 } from "lucide-react";
 import { usePageContext } from "vike-react/usePageContext";
 import { Alert, AlertDescription } from "#root/components/ui/alert";
@@ -47,6 +48,8 @@ import {
   type TemplateCategory,
 } from "#root/components/template-system/templateConfig";
 import { useTemplate } from "#root/frontend/contexts/TemplateContext";
+import { translations as staticTranslations } from "#root/lib/i18n/translations";
+import type { TranslationOverrides } from "#root/shared/types/layout-settings";
 
 // Predefined route options for hero CTA
 const PREDEFINED_ROUTES = [
@@ -54,6 +57,62 @@ const PREDEFINED_ROUTES = [
   { label: "Cart - Shopping Cart", value: "/cart" },
   { label: "Checkout - Checkout Page", value: "/checkout" },
   { label: "Custom URL...", value: "custom" },
+] as const;
+
+// Translation key groups for the CMS editor (used for keys not covered by section-level inputs)
+const TRANSLATION_GROUPS = [
+  {
+    label: "Navigation",
+    keys: [
+      { key: "nav.search", label: "Search Placeholder" },
+      { key: "nav.login", label: "Login Button" },
+      { key: "nav.dashboard", label: "Dashboard Link" },
+      { key: "nav.logout", label: "Logout Button" },
+      { key: "nav.cart", label: "Cart Icon Label" },
+      { key: "nav.menu", label: "Menu Button" },
+    ],
+  },
+  {
+    label: "Product & Shop",
+    keys: [
+      { key: "shop_now", label: "Shop Now Button" },
+      { key: "add_to_cart", label: "Add to Cart Button" },
+      { key: "quick_view", label: "Quick View Button" },
+      { key: "new", label: "\"New\" Badge" },
+      { key: "sale", label: "\"Sale\" Badge" },
+      { key: "exclusive", label: "\"Exclusive\" Badge" },
+      { key: "best_seller", label: "\"Best Seller\" Badge" },
+      { key: "in_stock", label: "In Stock Label" },
+      { key: "out_of_stock", label: "Out of Stock Label" },
+      { key: "price_includes_tax", label: "Price Includes Tax" },
+      { key: "more", label: "More Button" },
+      { key: "close", label: "Close Button" },
+      { key: "weight", label: "Weight Label" },
+      { key: "model_number", label: "Model Number Label" },
+      { key: "description", label: "Description Label" },
+    ],
+  },
+  {
+    label: "Footer",
+    keys: [
+      { key: "footer.copyright", label: "Copyright Text" },
+      { key: "footer.contact", label: "Contact Heading" },
+      { key: "footer.links", label: "Links Heading" },
+    ],
+  },
+  {
+    label: "Wishlist",
+    keys: [
+      { key: "added_to_wishlist", label: "Added to Wishlist" },
+      { key: "removed_from_wishlist", label: "Removed from Wishlist" },
+    ],
+  },
+  {
+    label: "Currency",
+    keys: [
+      { key: "currency", label: "Currency Symbol" },
+    ],
+  },
 ] as const;
 
 export default function HomepageAdminPage() {
@@ -87,12 +146,25 @@ export default function HomepageAdminPage() {
   );
   const [heroCTACustomValue, setHeroCTACustomValue] = useState("");
 
+  // ─── i18n Translation Overrides (stored in layout settings) ──────────────
+  const [translationOverrides, setTranslationOverrides] = useState<TranslationOverrides>({ en: {}, ar: {} });
+  const [originalTranslationOverrides, setOriginalTranslationOverrides] = useState<TranslationOverrides>({ en: {}, ar: {} });
+  const [isSavingTranslations, setIsSavingTranslations] = useState(false);
+  const [hasUnsavedTranslations, setHasUnsavedTranslations] = useState(false);
+
+  // Check for unsaved translation overrides
+  useEffect(() => {
+    setHasUnsavedTranslations(
+      JSON.stringify(translationOverrides) !== JSON.stringify(originalTranslationOverrides),
+    );
+  }, [translationOverrides, originalTranslationOverrides]);
+
   // Check for unsaved changes whenever content changes
   useEffect(() => {
     const contentChanged =
       JSON.stringify(content) !== JSON.stringify(originalContent);
-    setHasUnsavedChanges(contentChanged);
-  }, [content, originalContent]);
+    setHasUnsavedChanges(contentChanged || hasUnsavedTranslations);
+  }, [content, originalContent, hasUnsavedTranslations]);
 
   // Sync selected template when active template resolves from DB
   useEffect(() => {
@@ -104,6 +176,7 @@ export default function HomepageAdminPage() {
   // Load existing content
   useEffect(() => {
     loadContent();
+    loadTranslations();
   }, [selectedTemplateId]);
 
   const loadContent = async () => {
@@ -139,6 +212,74 @@ export default function HomepageAdminPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // ── Load translation overrides from layout settings ──────────────────────
+  const loadTranslations = async () => {
+    try {
+      const res = await trpc.layout.getSettings.query({
+        merchantId: MERCHANT_ID,
+        templateId: selectedTemplateId,
+      });
+      if (res.success && res.result?.translationOverrides) {
+        setTranslationOverrides(res.result.translationOverrides);
+        setOriginalTranslationOverrides(res.result.translationOverrides);
+      }
+    } catch (err) {
+      console.error("Error loading translations:", err);
+    }
+  };
+
+  // ── Save translation overrides to layout settings ────────────────────────
+  const handleSaveTranslations = async () => {
+    if (session && session.role !== "admin") {
+      toast.error("Only administrators can update translations");
+      return;
+    }
+    setIsSavingTranslations(true);
+    try {
+      // Load current layout settings so we preserve everything else
+      const current = await trpc.layout.getSettings.query({
+        merchantId: MERCHANT_ID,
+        templateId: selectedTemplateId,
+      });
+      if (!current.success || !current.result) {
+        toast.error("Failed to load layout settings");
+        return;
+      }
+      await trpc.layout.updateSettings.mutate({
+        merchantId: MERCHANT_ID,
+        templateId: selectedTemplateId,
+        content: { ...current.result, translationOverrides },
+      });
+      setOriginalTranslationOverrides(translationOverrides);
+      setHasUnsavedTranslations(false);
+      toast.success("Translations saved!");
+    } catch (err) {
+      console.error("Error saving translations:", err);
+      toast.error("Error saving translations");
+    } finally {
+      setIsSavingTranslations(false);
+    }
+  };
+
+  // ── Update a single translation override ─────────────────────────────────
+  const updateTranslation = (locale: "en" | "ar", key: string, value: string) => {
+    setTranslationOverrides((prev) => {
+      const localeOverrides = { ...prev[locale] };
+      if (value === staticTranslations[locale][key]) {
+        // Value matches default → remove override
+        delete localeOverrides[key];
+      } else {
+        localeOverrides[key] = value;
+      }
+      return { ...prev, [locale]: localeOverrides };
+    });
+  };
+
+  // Get the effective value for a translation key (override → static)
+  const getTranslationValue = (locale: "en" | "ar", key: string): string => {
+    return translationOverrides[locale]?.[key] ?? staticTranslations[locale][key] ?? key;
   };
 
   const handleSave = async () => {
@@ -203,10 +344,43 @@ export default function HomepageAdminPage() {
       if (result.success) {
         const savedAt = new Date();
         setLastSavedAt(savedAt);
-        toast.success("Homepage content saved successfully!");
         setContent(trimmedContent);
         setOriginalContent(trimmedContent);
         setHasUnsavedChanges(false);
+
+        // Also save translation overrides and marquee to layout settings for minimal template
+        if (isMinimal) {
+          try {
+            const current = await trpc.layout.getSettings.query({
+              merchantId: MERCHANT_ID,
+              templateId: selectedTemplateId,
+            });
+            if (current.success && current.result) {
+              await trpc.layout.updateSettings.mutate({
+                merchantId: MERCHANT_ID,
+                templateId: selectedTemplateId,
+                content: {
+                  ...current.result,
+                  translationOverrides,
+                  header: {
+                    ...current.result.header,
+                    marqueeEnabled: trimmedContent.marquee?.enabled ?? false,
+                    marqueeText: trimmedContent.marquee?.text ?? "",
+                    marqueeTextAr: trimmedContent.marquee?.textAr ?? "",
+                  },
+                },
+              });
+              setOriginalTranslationOverrides(translationOverrides);
+              setHasUnsavedTranslations(false);
+            }
+          } catch (err) {
+            console.error("Error saving layout settings:", err);
+            toast.error("Content saved but layout settings failed to save");
+            return;
+          }
+        }
+
+        toast.success("Homepage content saved successfully!");
       } else {
         toast.error("Failed to save homepage content");
       }
@@ -689,6 +863,47 @@ export default function HomepageAdminPage() {
     return null;
   };
 
+  const isMinimal = selectedTemplateId === "landing-minimal";
+
+  // Helper: render an Arabic translation input below an English field
+  // Only renders when the minimal template is selected
+  const ArabicInput = ({ translationKey, type = "input" }: { translationKey: string; type?: "input" | "textarea" }) => {
+    if (!isMinimal) return null;
+    const value = getTranslationValue("ar", translationKey);
+    const placeholder = staticTranslations.ar[translationKey] || "Arabic translation";
+    if (type === "textarea") {
+      return (
+        <div className='mt-1'>
+          <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+            <Languages className='w-3 h-3' /> Arabic
+          </Label>
+          <Textarea
+            dir='rtl'
+            value={value}
+            onChange={(e) => updateTranslation("ar", translationKey, e.target.value)}
+            placeholder={placeholder}
+            rows={2}
+            className='text-sm mt-0.5'
+          />
+        </div>
+      );
+    }
+    return (
+      <div className='mt-1'>
+        <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+          <Languages className='w-3 h-3' /> Arabic
+        </Label>
+        <Input
+          dir='rtl'
+          value={value}
+          onChange={(e) => updateTranslation("ar", translationKey, e.target.value)}
+          placeholder={placeholder}
+          className='text-sm mt-0.5'
+        />
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <div className='container mx-auto py-8'>
@@ -806,7 +1021,8 @@ export default function HomepageAdminPage() {
       )}
 
       <div className='space-y-6'>
-        {/* Hero Section */}
+        {/* Hero Section — only for non-minimal templates */}
+        {!isMinimal && (
         <Card>
           <CardHeader>
             <div className='flex items-center justify-between'>
@@ -1160,8 +1376,239 @@ export default function HomepageAdminPage() {
             </div>
           </CardContent>
         </Card>
+        )}
 
-        {/* Brand Statement Section */}
+        {/* Hero Carousel Slides */}
+        <Card>
+          <CardHeader>
+            <div className='flex items-center justify-between'>
+              <CardTitle className='text-base'>Hero Carousel Slides</CardTitle>
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                disabled={!content.hero.enabled}
+                onClick={() => {
+                  const newSlide = {
+                    id: crypto.randomUUID(),
+                    imageUrl: "",
+                    mobileImageUrl: undefined as string | undefined,
+                    linkUrl: undefined as string | undefined,
+                    alt: undefined as string | undefined,
+                  };
+                  setContent((prev) => ({
+                    ...prev,
+                    hero: {
+                      ...prev.hero,
+                      heroSlides: [...(prev.hero.heroSlides || []), newSlide],
+                    },
+                  }));
+                }}>
+                <Plus className='w-4 h-4 mr-1' />
+                Add Slide
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <p className='text-sm text-muted-foreground'>
+              Add multiple images for the hero carousel. When slides are added here, they take priority over the single background image above.
+              For templates like Minimal, this is the primary way to manage hero images.
+            </p>
+
+            {(content.hero.heroSlides || []).length === 0 ? (
+              <div className='text-center py-8 text-sm text-muted-foreground border border-dashed border-gray-200 rounded-lg'>
+                <ImageIcon className='w-8 h-8 mx-auto mb-2 text-gray-300' />
+                <p>No carousel slides yet. Add slides to create an image carousel.</p>
+                <p className='text-xs mt-1'>Falls back to the single background image above.</p>
+              </div>
+            ) : (
+              <div className='space-y-4'>
+                {(content.hero.heroSlides || []).map((slide, index) => (
+                  <div key={slide.id} className='border border-gray-200 rounded-lg p-4 space-y-3'>
+                    <div className='flex items-center justify-between'>
+                      <span className='text-sm font-medium text-gray-700'>Slide {index + 1}</span>
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='icon'
+                        className='h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50'
+                        onClick={() => {
+                          setContent((prev) => ({
+                            ...prev,
+                            hero: {
+                              ...prev.hero,
+                              heroSlides: (prev.hero.heroSlides || []).filter((s) => s.id !== slide.id),
+                            },
+                          }));
+                        }}>
+                        <Trash2 className='w-4 h-4' />
+                      </Button>
+                    </div>
+
+                    {/* Desktop image */}
+                    <div>
+                      <Label className='text-xs'>Desktop Image</Label>
+                      <div className='flex gap-2 mt-1'>
+                        <Input
+                          value={slide.imageUrl}
+                          onChange={(e) => {
+                            setContent((prev) => ({
+                              ...prev,
+                              hero: {
+                                ...prev.hero,
+                                heroSlides: (prev.hero.heroSlides || []).map((s) =>
+                                  s.id === slide.id ? { ...s, imageUrl: e.target.value } : s,
+                                ),
+                              },
+                            }));
+                          }}
+                          placeholder='/uploads/homepage/slide.webp'
+                          className='text-sm'
+                        />
+                        <input
+                          type='file'
+                          id={`hero-slide-upload-${slide.id}`}
+                          accept='image/jpeg,image/jpg,image/png,image/webp'
+                          className='hidden'
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (file.size > 5 * 1024 * 1024) {
+                              toast.error("File too large. Max 5MB.");
+                              return;
+                            }
+                            try {
+                              const buffer = new Uint8Array(await file.arrayBuffer());
+                              const result = await trpc.homepage.uploadHeroImage.mutate({
+                                file: { name: file.name, type: file.type, buffer },
+                              });
+                              if (result.success && result.data) {
+                                setContent((prev) => ({
+                                  ...prev,
+                                  hero: {
+                                    ...prev.hero,
+                                    heroSlides: (prev.hero.heroSlides || []).map((s) =>
+                                      s.id === slide.id ? { ...s, imageUrl: result.data.url } : s,
+                                    ),
+                                  },
+                                }));
+                                toast.success("Slide image uploaded!");
+                              }
+                            } catch {
+                              toast.error("Upload failed");
+                            }
+                            e.target.value = "";
+                          }}
+                        />
+                        <Button
+                          type='button'
+                          variant='outline'
+                          size='sm'
+                          onClick={() => document.getElementById(`hero-slide-upload-${slide.id}`)?.click()}>
+                          <Upload className='w-4 h-4' />
+                        </Button>
+                      </div>
+                      {slide.imageUrl && (
+                        <div className='mt-2 h-20 rounded overflow-hidden border bg-muted'>
+                          <img src={slide.imageUrl} alt={`Slide ${index + 1}`} className='w-full h-full object-cover' />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Mobile image */}
+                    <div>
+                      <Label className='text-xs'>Mobile Image (optional)</Label>
+                      <div className='flex gap-2 mt-1'>
+                        <Input
+                          value={slide.mobileImageUrl || ""}
+                          onChange={(e) => {
+                            setContent((prev) => ({
+                              ...prev,
+                              hero: {
+                                ...prev.hero,
+                                heroSlides: (prev.hero.heroSlides || []).map((s) =>
+                                  s.id === slide.id ? { ...s, mobileImageUrl: e.target.value || undefined } : s,
+                                ),
+                              },
+                            }));
+                          }}
+                          placeholder='Optional mobile-specific image'
+                          className='text-sm'
+                        />
+                        <input
+                          type='file'
+                          id={`hero-slide-mobile-upload-${slide.id}`}
+                          accept='image/jpeg,image/jpg,image/png,image/webp'
+                          className='hidden'
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (file.size > 5 * 1024 * 1024) {
+                              toast.error("File too large. Max 5MB.");
+                              return;
+                            }
+                            try {
+                              const buffer = new Uint8Array(await file.arrayBuffer());
+                              const result = await trpc.homepage.uploadMobileHeroImage.mutate({
+                                file: { name: file.name, type: file.type, buffer },
+                              });
+                              if (result.success && result.data) {
+                                setContent((prev) => ({
+                                  ...prev,
+                                  hero: {
+                                    ...prev.hero,
+                                    heroSlides: (prev.hero.heroSlides || []).map((s) =>
+                                      s.id === slide.id ? { ...s, mobileImageUrl: result.data.url } : s,
+                                    ),
+                                  },
+                                }));
+                                toast.success("Mobile slide image uploaded!");
+                              }
+                            } catch {
+                              toast.error("Upload failed");
+                            }
+                            e.target.value = "";
+                          }}
+                        />
+                        <Button
+                          type='button'
+                          variant='outline'
+                          size='sm'
+                          onClick={() => document.getElementById(`hero-slide-mobile-upload-${slide.id}`)?.click()}>
+                          <Upload className='w-4 h-4' />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Link URL */}
+                    <div>
+                      <Label className='text-xs'>Link URL (optional)</Label>
+                      <Input
+                        value={slide.linkUrl || ""}
+                        onChange={(e) => {
+                          setContent((prev) => ({
+                            ...prev,
+                            hero: {
+                              ...prev.hero,
+                              heroSlides: (prev.hero.heroSlides || []).map((s) =>
+                                s.id === slide.id ? { ...s, linkUrl: e.target.value || undefined } : s,
+                              ),
+                            },
+                          }));
+                        }}
+                        placeholder='/shop or https://...'
+                        className='text-sm mt-1'
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Brand Statement Section — only for non-minimal templates */}
+        {!isMinimal && (
         <Card>
           <CardHeader>
             <div className='flex items-center justify-between'>
@@ -1304,8 +1751,10 @@ export default function HomepageAdminPage() {
             </div>
           </CardContent>
         </Card>
+        )}
 
-        {/* Promo Banner Section */}
+        {/* Promo Banner Section — only for non-minimal templates */}
+        {!isMinimal && (
         <Card>
           <CardHeader>
             <div className='flex items-center justify-between'>
@@ -1386,8 +1835,10 @@ export default function HomepageAdminPage() {
             </div>
           </CardContent>
         </Card>
+        )}
 
-        {/* Value Propositions Section */}
+        {/* Value Propositions Section — only for non-minimal templates */}
+        {!isMinimal && (
         <Card>
           <CardHeader>
             <div className='flex items-center justify-between'>
@@ -1502,6 +1953,266 @@ export default function HomepageAdminPage() {
             )}
           </CardContent>
         </Card>
+        )}
+
+        {/* ══════════════════════════════════════════════════
+            MINIMAL TEMPLATE — Specific sections
+            ══════════════════════════════════════════════════ */}
+
+        {/* Marquee Announcement Bar — minimal only */}
+        {isMinimal && (
+        <Card>
+          <CardHeader>
+            <div className='flex items-center justify-between'>
+              <CardTitle>Scrolling Marquee</CardTitle>
+              <div className='flex items-center gap-2'>
+                <Label htmlFor='marquee-enabled'>Enabled</Label>
+                <Switch
+                  id='marquee-enabled'
+                  checked={content.marquee?.enabled ?? false}
+                  onCheckedChange={(checked) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      marquee: { ...prev.marquee, enabled: checked, text: prev.marquee?.text ?? "" },
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <div>
+              <Label htmlFor='marquee-text'>Marquee Text (English)</Label>
+              <Input
+                id='marquee-text'
+                value={content.marquee?.text ?? ""}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    marquee: { enabled: prev.marquee?.enabled ?? false, text: e.target.value },
+                  }))
+                }
+                placeholder='Free shipping on orders over $50 ✦ New arrivals every week'
+                disabled={!content.marquee?.enabled}
+              />
+            </div>
+            <div>
+              <Label htmlFor='marquee-text-ar'>Marquee Text (Arabic)</Label>
+              <Input
+                id='marquee-text-ar'
+                dir='rtl'
+                value={content.marquee?.textAr ?? ""}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    marquee: { enabled: prev.marquee?.enabled ?? false, text: prev.marquee?.text ?? "", textAr: e.target.value },
+                  }))
+                }
+                placeholder='شحن مجاني للطلبات فوق 50 دولار'
+                disabled={!content.marquee?.enabled}
+              />
+            </div>
+            <div className='bg-muted p-3 rounded-md'>
+              <p className='text-sm text-muted-foreground'>
+                This text scrolls across the top of the page above the navigation bar.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        )}
+
+        {/* Categories Section — minimal only */}
+        {isMinimal && (
+        <Card>
+          <CardHeader>
+            <div className='flex items-center justify-between'>
+              <CardTitle>Categories Section</CardTitle>
+              <div className='flex items-center gap-2'>
+                <Label htmlFor='categories-enabled'>Enabled</Label>
+                <Switch
+                  id='categories-enabled'
+                  checked={content.categories.enabled}
+                  onCheckedChange={(checked) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      categories: { ...prev.categories, enabled: checked },
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <div>
+              <Label htmlFor='categories-title'>Section Title (English)</Label>
+              <Input
+                id='categories-title'
+                value={content.categories.title}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    categories: { ...prev.categories, title: e.target.value },
+                  }))
+                }
+                placeholder='Shop by Category'
+                disabled={!content.categories.enabled}
+              />
+              <div className='mt-1'>
+                <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+                  <Languages className='w-3 h-3' /> Arabic
+                </Label>
+                <Input
+                  dir='rtl'
+                  value={content.categories.titleAr ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      categories: { ...prev.categories, titleAr: e.target.value },
+                    }))
+                  }
+                  placeholder='تسوق حسب الفئة'
+                  className='text-sm mt-0.5'
+                  disabled={!content.categories.enabled}
+                />
+              </div>
+            </div>
+            <div className='bg-muted p-3 rounded-md'>
+              <p className='text-sm text-muted-foreground'>
+                <strong>Note:</strong> Categories are automatically fetched from your catalog.
+                This section controls the heading and whether the carousel is visible.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        )}
+
+        {/* Discounted Products Section — minimal only */}
+        {isMinimal && (
+        <Card>
+          <CardHeader>
+            <div className='flex items-center justify-between'>
+              <CardTitle>Discounted Products (Offers)</CardTitle>
+              <div className='flex items-center gap-2'>
+                <Label htmlFor='discounted-enabled'>Enabled</Label>
+                <Switch
+                  id='discounted-enabled'
+                  checked={content.discountedProducts?.enabled ?? true}
+                  onCheckedChange={(checked) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      discountedProducts: {
+                        enabled: checked,
+                        title: prev.discountedProducts?.title ?? "Offers",
+                        viewAllText: prev.discountedProducts?.viewAllText ?? "View All",
+                        viewAllLink: prev.discountedProducts?.viewAllLink ?? "/shop",
+                      },
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <div>
+              <Label htmlFor='discounted-title'>Section Title (English)</Label>
+              <Input
+                id='discounted-title'
+                value={content.discountedProducts?.title ?? "Offers"}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    discountedProducts: {
+                      ...prev.discountedProducts!,
+                      enabled: prev.discountedProducts?.enabled ?? true,
+                      title: e.target.value,
+                      viewAllText: prev.discountedProducts?.viewAllText ?? "View All",
+                      viewAllLink: prev.discountedProducts?.viewAllLink ?? "/shop",
+                    },
+                  }))
+                }
+                placeholder='Offers'
+                disabled={!(content.discountedProducts?.enabled ?? true)}
+              />
+              <div className='mt-1'>
+                <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+                  <Languages className='w-3 h-3' /> Arabic
+                </Label>
+                <Input
+                  dir='rtl'
+                  value={content.discountedProducts?.titleAr ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      discountedProducts: {
+                        ...prev.discountedProducts!,
+                        enabled: prev.discountedProducts?.enabled ?? true,
+                        title: prev.discountedProducts?.title ?? "Offers",
+                        titleAr: e.target.value,
+                        viewAllText: prev.discountedProducts?.viewAllText ?? "View All",
+                        viewAllLink: prev.discountedProducts?.viewAllLink ?? "/shop",
+                      },
+                    }))
+                  }
+                  placeholder='عروض'
+                  className='text-sm mt-0.5'
+                  disabled={!(content.discountedProducts?.enabled ?? true)}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor='discounted-view-all'>View All Text (English)</Label>
+              <Input
+                id='discounted-view-all'
+                value={content.discountedProducts?.viewAllText ?? "View All"}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    discountedProducts: {
+                      ...prev.discountedProducts!,
+                      enabled: prev.discountedProducts?.enabled ?? true,
+                      title: prev.discountedProducts?.title ?? "Offers",
+                      viewAllText: e.target.value,
+                      viewAllLink: prev.discountedProducts?.viewAllLink ?? "/shop",
+                    },
+                  }))
+                }
+                placeholder='View All'
+                disabled={!(content.discountedProducts?.enabled ?? true)}
+              />
+              <div className='mt-1'>
+                <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+                  <Languages className='w-3 h-3' /> Arabic
+                </Label>
+                <Input
+                  dir='rtl'
+                  value={content.discountedProducts?.viewAllTextAr ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      discountedProducts: {
+                        ...prev.discountedProducts!,
+                        enabled: prev.discountedProducts?.enabled ?? true,
+                        title: prev.discountedProducts?.title ?? "Offers",
+                        viewAllText: prev.discountedProducts?.viewAllText ?? "View All",
+                        viewAllTextAr: e.target.value,
+                        viewAllLink: prev.discountedProducts?.viewAllLink ?? "/shop",
+                      },
+                    }))
+                  }
+                  placeholder='عرض الكل'
+                  className='text-sm mt-0.5'
+                  disabled={!(content.discountedProducts?.enabled ?? true)}
+                />
+              </div>
+            </div>
+            <div className='bg-muted p-3 rounded-md'>
+              <p className='text-sm text-muted-foreground'>
+                <strong>Note:</strong> Products are automatically fetched — only items with a discount price are shown.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        )}
 
         {/* Featured Products Section */}
         <Card>
@@ -1528,7 +2239,7 @@ export default function HomepageAdminPage() {
           </CardHeader>
           <CardContent className='space-y-4'>
             <div>
-              <Label htmlFor='featured-title'>Section Title</Label>
+              <Label htmlFor='featured-title'>Section Title{isMinimal ? " (English)" : ""}</Label>
               <Input
                 id='featured-title'
                 value={content.featuredProducts.title}
@@ -1544,6 +2255,29 @@ export default function HomepageAdminPage() {
                 placeholder='Featured Products'
                 disabled={!content.featuredProducts.enabled}
               />
+              {isMinimal && (
+              <div className='mt-1'>
+                <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+                  <Languages className='w-3 h-3' /> Arabic
+                </Label>
+                <Input
+                  dir='rtl'
+                  value={content.featuredProducts.titleAr ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      featuredProducts: {
+                        ...prev.featuredProducts,
+                        titleAr: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='منتجات مميزة'
+                  className='text-sm mt-0.5'
+                  disabled={!content.featuredProducts.enabled}
+                />
+              </div>
+              )}
             </div>
 
             <div>
@@ -1566,6 +2300,48 @@ export default function HomepageAdminPage() {
               />
             </div>
 
+            {isMinimal && (
+            <div>
+              <Label htmlFor='featured-view-all'>View All Text (English)</Label>
+              <Input
+                id='featured-view-all'
+                value={content.featuredProducts.viewAllText}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    featuredProducts: {
+                      ...prev.featuredProducts,
+                      viewAllText: e.target.value,
+                    },
+                  }))
+                }
+                placeholder='View All Products'
+                disabled={!content.featuredProducts.enabled}
+              />
+              <div className='mt-1'>
+                <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+                  <Languages className='w-3 h-3' /> Arabic
+                </Label>
+                <Input
+                  dir='rtl'
+                  value={content.featuredProducts.viewAllTextAr ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      featuredProducts: {
+                        ...prev.featuredProducts,
+                        viewAllTextAr: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='عرض الكل'
+                  className='text-sm mt-0.5'
+                  disabled={!content.featuredProducts.enabled}
+                />
+              </div>
+            </div>
+            )}
+
             <div className='bg-muted p-3 rounded-md'>
               <p className='text-sm text-muted-foreground'>
                 <strong>Note:</strong> Products are automatically fetched from
@@ -1575,6 +2351,197 @@ export default function HomepageAdminPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* New Arrivals Section — minimal only */}
+        {isMinimal && (
+        <Card>
+          <CardHeader>
+            <div className='flex items-center justify-between'>
+              <CardTitle>New Arrivals</CardTitle>
+              <div className='flex items-center gap-2'>
+                <Label htmlFor='newarrivals-enabled'>Enabled</Label>
+                <Switch
+                  id='newarrivals-enabled'
+                  checked={content.newArrivals?.enabled ?? true}
+                  onCheckedChange={(checked) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      newArrivals: {
+                        enabled: checked,
+                        title: prev.newArrivals?.title ?? "New Arrivals",
+                        viewAllText: prev.newArrivals?.viewAllText ?? "View All",
+                        viewAllLink: prev.newArrivals?.viewAllLink ?? "/shop",
+                      },
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <div>
+              <Label htmlFor='newarrivals-title'>Section Title (English)</Label>
+              <Input
+                id='newarrivals-title'
+                value={content.newArrivals?.title ?? "New Arrivals"}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    newArrivals: {
+                      ...prev.newArrivals!,
+                      enabled: prev.newArrivals?.enabled ?? true,
+                      title: e.target.value,
+                      viewAllText: prev.newArrivals?.viewAllText ?? "View All",
+                      viewAllLink: prev.newArrivals?.viewAllLink ?? "/shop",
+                    },
+                  }))
+                }
+                placeholder='New Arrivals'
+                disabled={!(content.newArrivals?.enabled ?? true)}
+              />
+              <div className='mt-1'>
+                <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+                  <Languages className='w-3 h-3' /> Arabic
+                </Label>
+                <Input
+                  dir='rtl'
+                  value={content.newArrivals?.titleAr ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      newArrivals: {
+                        ...prev.newArrivals!,
+                        enabled: prev.newArrivals?.enabled ?? true,
+                        title: prev.newArrivals?.title ?? "New Arrivals",
+                        titleAr: e.target.value,
+                        viewAllText: prev.newArrivals?.viewAllText ?? "View All",
+                        viewAllLink: prev.newArrivals?.viewAllLink ?? "/shop",
+                      },
+                    }))
+                  }
+                  placeholder='وصل حديثاً'
+                  className='text-sm mt-0.5'
+                  disabled={!(content.newArrivals?.enabled ?? true)}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor='newarrivals-view-all'>View All Text (English)</Label>
+              <Input
+                id='newarrivals-view-all'
+                value={content.newArrivals?.viewAllText ?? "View All"}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    newArrivals: {
+                      ...prev.newArrivals!,
+                      enabled: prev.newArrivals?.enabled ?? true,
+                      title: prev.newArrivals?.title ?? "New Arrivals",
+                      viewAllText: e.target.value,
+                      viewAllLink: prev.newArrivals?.viewAllLink ?? "/shop",
+                    },
+                  }))
+                }
+                placeholder='View All'
+                disabled={!(content.newArrivals?.enabled ?? true)}
+              />
+              <div className='mt-1'>
+                <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+                  <Languages className='w-3 h-3' /> Arabic
+                </Label>
+                <Input
+                  dir='rtl'
+                  value={content.newArrivals?.viewAllTextAr ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      newArrivals: {
+                        ...prev.newArrivals!,
+                        enabled: prev.newArrivals?.enabled ?? true,
+                        title: prev.newArrivals?.title ?? "New Arrivals",
+                        viewAllText: prev.newArrivals?.viewAllText ?? "View All",
+                        viewAllTextAr: e.target.value,
+                        viewAllLink: prev.newArrivals?.viewAllLink ?? "/shop",
+                      },
+                    }))
+                  }
+                  placeholder='عرض الكل'
+                  className='text-sm mt-0.5'
+                  disabled={!(content.newArrivals?.enabled ?? true)}
+                />
+              </div>
+            </div>
+            <div className='bg-muted p-3 rounded-md'>
+              <p className='text-sm text-muted-foreground'>
+                <strong>Note:</strong> Products are automatically fetched — only recently added items are shown.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        )}
+
+        {/* ── i18n Translation Overrides — Other UI Labels ──────────── */}
+        {isMinimal && (
+          <Card>
+            <CardHeader>
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center gap-2'>
+                  <Languages className='w-5 h-5' />
+                  <CardTitle>Other UI Labels (English / Arabic)</CardTitle>
+                </div>
+                <div className='flex items-center gap-2'>
+                  {hasUnsavedTranslations && (
+                    <span className='text-sm text-amber-600 font-medium'>
+                      Unsaved
+                    </span>
+                  )}
+                  <Button
+                    size='sm'
+                    onClick={handleSaveTranslations}
+                    disabled={isSavingTranslations || !hasUnsavedTranslations}>
+                    <Save className='w-4 h-4 mr-1' />
+                    {isSavingTranslations ? "Saving…" : "Save Translations"}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className='space-y-6'>
+              <div className='bg-muted p-3 rounded-md'>
+                <p className='text-sm text-muted-foreground'>
+                  Edit the English and Arabic UI labels used across the minimal template
+                  (buttons, navigation, product badges, etc.).
+                  These are saved separately from homepage content.
+                </p>
+              </div>
+
+              {TRANSLATION_GROUPS.map((group) => (
+                <div key={group.label} className='space-y-3'>
+                  <h4 className='font-semibold text-sm border-b pb-1'>{group.label}</h4>
+                  {group.keys.map((item) => (
+                    <div key={item.key} className='grid grid-cols-[180px_1fr_1fr] gap-3 items-center'>
+                      <Label className='text-xs text-muted-foreground truncate' title={item.key}>
+                        {item.label}
+                      </Label>
+                      <Input
+                        value={getTranslationValue("en", item.key)}
+                        onChange={(e) => updateTranslation("en", item.key, e.target.value)}
+                        placeholder={staticTranslations.en[item.key]}
+                        className='text-sm'
+                      />
+                      <Input
+                        dir='rtl'
+                        value={getTranslationValue("ar", item.key)}
+                        onChange={(e) => updateTranslation("ar", item.key, e.target.value)}
+                        placeholder={staticTranslations.ar[item.key]}
+                        className='text-sm'
+                      />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Save/Reset buttons at bottom */}
         <div className='flex items-center justify-between pt-6 border-t'>

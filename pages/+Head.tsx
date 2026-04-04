@@ -1,6 +1,7 @@
-import faviconUrl from "../assets/favicon.svg";
+import defaultFaviconUrl from "../assets/favicon.svg";
 import { useEffect } from "react";
 import { usePageContext } from "vike-react/usePageContext";
+import type { LayoutSettings } from "#root/shared/types/layout-settings";
 
 // Define types for Google Analytics
 declare global {
@@ -39,6 +40,23 @@ function getPinterestTagScript(tagId: string): string {
 export default function HeadDefault() {
   const pageContext = usePageContext();
   const pixelConfigs = pageContext.pixelConfigs ?? [];
+  const layoutSettings = pageContext.layoutSettingsData as LayoutSettings | undefined;
+
+  // Dynamic favicon from layout settings
+  const faviconUrl = layoutSettings?.faviconUrl || defaultFaviconUrl;
+  const faviconType = layoutSettings?.faviconUrl
+    ? (layoutSettings.faviconUrl.endsWith(".svg") ? "image/svg+xml"
+      : layoutSettings.faviconUrl.endsWith(".png") ? "image/png"
+      : layoutSettings.faviconUrl.endsWith(".ico") ? "image/x-icon"
+      : "image/png")
+    : "image/svg+xml";
+
+  // Dynamic document title from layout settings (client-side only)
+  useEffect(() => {
+    if (layoutSettings?.siteTitle) {
+      document.title = layoutSettings.siteTitle;
+    }
+  }, [layoutSettings?.siteTitle]);
 
   // Font loading script to replace the onLoad attribute
   useEffect(() => {
@@ -58,7 +76,14 @@ export default function HeadDefault() {
   return (
     <>
       {/* Basic favicon */}
-      <link rel='icon' href={faviconUrl} type='image/svg+xml' />
+      <link rel='icon' href={faviconUrl} type={faviconType} />
+
+      {/* Blocking locale/dir sync — runs before first paint to prevent LTR→RTL flicker */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `(function(){try{var l=localStorage.getItem("minimal-template-locale");if(l==="ar"){document.documentElement.setAttribute("dir","rtl");document.documentElement.setAttribute("lang","ar")}if(l&&document.cookie.indexOf("minimal-locale=")===-1){document.cookie="minimal-locale="+l+";path=/;max-age=31536000;SameSite=Lax"}}catch(e){}})();`,
+        }}
+      />
 
       {/* Preconnect to critical domains */}
       <link rel='preconnect' href='https://fonts.googleapis.com' />

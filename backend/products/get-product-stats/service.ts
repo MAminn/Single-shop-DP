@@ -44,17 +44,18 @@ export const getProductStats = (
 
     return yield* $(
       query(async (db) => {
-        // Get total products count
+        // Get total products count (exclude soft-deleted)
         const totalCount = await db
           .select({ count: count() })
           .from(product)
+          .where(eq(product.deleted, false))
           .then(normalizeCount);
 
         // Get out of stock products count
         const outOfStockCount = await db
           .select({ count: count() })
           .from(product)
-          .where(eq(product.stock, 0))
+          .where(and(eq(product.stock, 0), eq(product.deleted, false)))
           .then(normalizeCount);
 
         // Get low stock products count
@@ -65,6 +66,7 @@ export const getProductStats = (
             and(
               gt(product.stock, 0),
               lte(product.stock, input.lowStockThreshold),
+              eq(product.deleted, false),
             ),
           )
           .then(normalizeCount);
@@ -73,7 +75,7 @@ export const getProductStats = (
         const newProductsCount = await db
           .select({ count: count() })
           .from(product)
-          .where(gt(product.createdAt, oneWeekAgo))
+          .where(and(gt(product.createdAt, oneWeekAgo), eq(product.deleted, false)))
           .then(normalizeCount);
 
         // Return product stats

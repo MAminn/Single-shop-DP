@@ -71,10 +71,11 @@ export const getOverviewMetrics = () =>
       const avgOrderValue =
         nonCancelledCount > 0 ? totalRevenue / nonCancelledCount : 0;
 
-      // Total products
+      // Total products (exclude soft-deleted)
       const [productCount] = await db
         .select({ total: count() })
         .from(product)
+        .where(eq(product.deleted, false))
         .execute();
 
       return {

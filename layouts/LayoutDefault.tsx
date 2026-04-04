@@ -1,5 +1,8 @@
 import Navbar from "#root/components/globals/Navbar.jsx";
 import { EditorialNavbar } from "#root/components/template-system/editorial/EditorialNavbar";
+import { MinimalNavbar } from "#root/components/template-system/minimal/MinimalNavbar";
+import { MinimalFooter } from "#root/components/template-system/minimal/MinimalFooter";
+import { MinimalI18nProvider } from "#root/lib/i18n/MinimalI18nContext";
 import { Footer } from "#root/components/globals/Footer";
 import { useEffect, useState, memo } from "react";
 import "./style.css";
@@ -34,6 +37,16 @@ function GlobalFooter() {
   const isEditorialLandingPage =
     urlPathname === "/" && getTemplateId("landing") === "landing-editorial";
   if (isEditorialLandingPage) return null;
+
+  const landingTemplate = getTemplateId("landing");
+  if (landingTemplate === "landing-minimal") {
+    return (
+      <div id='global-footer'>
+        <MinimalFooter />
+      </div>
+    );
+  }
+
   return (
     <div id='global-footer'>
       <Footer />
@@ -47,23 +60,6 @@ const Content = memo(({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<ClientSession | null>(
     pageContext.clientSession ?? null,
   );
-  const [layoutSettings, setLayoutSettings] = useState<LayoutSettings>(
-    DEFAULT_LAYOUT_SETTINGS,
-  );
-
-  // Fetch CMS layout settings once on mount
-  useEffect(() => {
-    trpc.layout.getSettings
-      .query({ merchantId: getStoreOwnerId() })
-      .then((res) => {
-        if (res.success && res.result) {
-          setLayoutSettings(res.result);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to fetch layout settings:", err);
-      });
-  }, []);
 
   // PRIMARY: Sync session from SSR page context on navigation
   useEffect(() => {
@@ -135,40 +131,105 @@ const Content = memo(({ children }: { children: React.ReactNode }) => {
     <AuthContext.Provider value={{ session, logout }}>
       <CartProvider>
         <TemplateProvider>
-          <LayoutSettingsContext.Provider value={layoutSettings}>
-            <NavbarModeContext.Provider value={navbarMode}>
-              <TrackingProvider>
-                <main
-                  id='page-content'
-                  className='bg-background h-full text-foreground w-full font-poppins'>
-                  {!isDashboardRoute && (
-                    <div id='global-navbar'>
-                      {layoutSettings.header.navbarStyle === "editorial" ? (
-                        <EditorialNavbar />
-                      ) : (
-                        <Navbar lang='en' />
-                      )}
-                    </div>
-                  )}
-                  {children}
-                  {!isDashboardRoute && <GlobalFooter />}
-                  <Toaster />
-                  <ShadcnToaster />
-                  {/* Phase 3 — page-transition overlay (CSS-only, SSR-inert) */}
-                  <div
-                    id='page-transition-overlay'
-                    aria-hidden='true'
-                    className='page-transition-overlay'
-                  />
-                </main>
-              </TrackingProvider>
-            </NavbarModeContext.Provider>
-          </LayoutSettingsContext.Provider>
+          <LayoutShell isDashboardRoute={isDashboardRoute} navbarMode={navbarMode}>
+            {children}
+          </LayoutShell>
         </TemplateProvider>
       </CartProvider>
     </AuthContext.Provider>
   );
 });
+
+/**
+ * Inner shell that lives inside TemplateProvider so it can
+ * use useTemplate() to fetch template-scoped layout settings.
+ */
+function LayoutShell({
+  children,
+  isDashboardRoute,
+  navbarMode,
+}: {
+  children: React.ReactNode;
+  isDashboardRoute: boolean;
+  navbarMode: ReturnType<typeof getNavbarMode>;
+}) {
+  const { getTemplateId } = useTemplate();
+  const pageContext = usePageContext();
+  const ssrLayoutSettings = pageContext.layoutSettingsData as LayoutSettings | undefined;
+
+  // Initialise from SSR data if available — prevents flicker
+  const [layoutSettings, setLayoutSettings] = useState<LayoutSettings>(
+    ssrLayoutSettings ?? DEFAULT_LAYOUT_SETTINGS,
+  );
+
+  // Fetch CMS layout settings (template-scoped) — only if SSR didn't provide them
+  useEffect(() => {
+    if (ssrLayoutSettings) return; // SSR already provided, skip client fetch
+    const activeLandingTemplate = getTemplateId("landing") ?? undefined;
+    trpc.layout.getSettings
+      .query({ merchantId: getStoreOwnerId(), templateId: activeLandingTemplate })
+      .then((res) => {
+        if (res.success && res.result) {
+          setLayoutSettings(res.result);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch layout settings:", err);
+      });
+  }, [getTemplateId, ssrLayoutSettings]);
+
+  const isMinimal = layoutSettings.header.navbarStyle === "minimal";
+
+  const renderNavbar = () => {
+    switch (layoutSettings.header.navbarStyle) {
+      case "editorial":
+        return <EditorialNavbar />;
+      case "minimal":
+        return <MinimalNavbar />;
+      default:
+        return <Navbar lang='en' />;
+    }
+  };
+
+  const inner = (
+    <LayoutSettingsContext.Provider value={layoutSettings}>
+      <NavbarModeContext.Provider value={navbarMode}>
+        <TrackingProvider>
+          <main
+            id='page-content'
+            className='bg-background h-full text-foreground w-full font-poppins'>
+            {!isDashboardRoute && (
+              <div id='global-navbar'>{renderNavbar()}</div>
+            )}
+            {isDashboardRoute ? (
+              <div dir='ltr' style={{ direction: "ltr" }}>{children}</div>
+            ) : (
+              children
+            )}
+            {!isDashboardRoute && <GlobalFooter />}
+            <Toaster />
+            <ShadcnToaster />
+            {/* Phase 3 — page-transition overlay (CSS-only, SSR-inert) */}
+            <div
+              id='page-transition-overlay'
+              aria-hidden='true'
+              className='page-transition-overlay'
+            />
+          </main>
+        </TrackingProvider>
+      </NavbarModeContext.Provider>
+    </LayoutSettingsContext.Provider>
+  );
+
+  // Read SSR locale from pageContext to prevent EN→AR flicker
+  const ssrLocale = pageContext.ssrLocale as "en" | "ar" | undefined;
+
+  // Wrap in MinimalI18nProvider only when the minimal navbar/template is active
+  if (isMinimal) {
+    return <MinimalI18nProvider overrides={layoutSettings.translationOverrides} ssrLocale={ssrLocale}>{inner}</MinimalI18nProvider>;
+  }
+  return inner;
+}
 
 // Display name for the memoized component
 Content.displayName = "Content";

@@ -8,6 +8,8 @@ import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { Link } from "#root/components/utils/Link";
+import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext";
+import { MinimalRegisterPage } from "#root/components/template-system/minimal/MinimalRegisterPage";
 
 const formSchema = z
   .object({
@@ -27,6 +29,13 @@ const formSchema = z
 type FormValues = z.infer<typeof formSchema>;
 
 export default function Page() {
+  const layoutSettings = useLayoutSettings();
+  const isMinimal = layoutSettings.header.navbarStyle === "minimal";
+
+  if (isMinimal) {
+    return <MinimalRegisterPage />;
+  }
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [showPassword, setShowPassword] = useState(false);

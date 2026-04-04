@@ -282,6 +282,7 @@ export const product = pgTable("product", {
     })
     .notNull(),
   stock: integer("stock").notNull().default(0),
+  deleted: boolean("deleted").notNull().default(false),
 });
 
 export const productVariant = pgTable("product_variant", {
@@ -1204,22 +1205,32 @@ export const storeSettings = pgTable("store_settings", {
 // ─── Layout Settings (Header / Footer CMS) ─────────────────────────────────
 // Stores CMS-driven header and footer configuration.
 // Uses the same merchant-scoped pattern as homepageContent.
-export const layoutSettings = pgTable("layout_settings", {
-  id: uuid("id")
-    .primaryKey()
-    .$defaultFn(() => v7()),
-  merchantId: uuid("merchant_id").notNull().unique(),
-  content: jsonb("content").notNull(),
-  createdAt: timestamp("created_at", {
-    withTimezone: true,
-    mode: "date",
-  })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updated_at", {
-    withTimezone: true,
-    mode: "date",
-  })
-    .defaultNow()
-    .notNull(),
-});
+export const layoutSettings = pgTable(
+  "layout_settings",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .$defaultFn(() => v7()),
+    merchantId: uuid("merchant_id").notNull(),
+    templateId: text("template_id").notNull().default("default"),
+    content: jsonb("content").notNull(),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+      mode: "date",
+    })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", {
+      withTimezone: true,
+      mode: "date",
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("layout_settings_merchant_template_idx").on(
+      table.merchantId,
+      table.templateId,
+    ),
+  ],
+);

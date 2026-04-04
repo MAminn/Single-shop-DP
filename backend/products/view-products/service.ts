@@ -26,6 +26,7 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
         return await db.transaction(async (tx) => {
           const baseQueryConditions = [];
           baseQueryConditions.push(eq(category.deleted, false));
+          baseQueryConditions.push(eq(product.deleted, false));
 
           if (input.search) {
             baseQueryConditions.push(

@@ -8,6 +8,7 @@
 export interface NavigationLink {
   id: string;
   label: string;
+  labelAr?: string;
   url: string;
   openInNewTab?: boolean;
 }
@@ -34,16 +35,18 @@ export interface SocialLink {
 export interface FooterLinkGroup {
   id: string;
   title: string;
+  titleAr?: string;
   links: Array<{
     id: string;
     label: string;
+    labelAr?: string;
     url: string;
   }>;
 }
 
 // ─── Navbar Style ────────────────────────────────────────────────────────────
 
-export type NavbarStyle = "default" | "editorial";
+export type NavbarStyle = "default" | "editorial" | "minimal";
 
 // ─── Footer Style ────────────────────────────────────────────────────────────
 
@@ -85,6 +88,10 @@ export interface HeaderSettings {
   announcementBarText: string;
   navigationLinks: NavigationLink[];
   navbarStyle: NavbarStyle;
+  /** Scrolling marquee for minimal template */
+  marqueeEnabled?: boolean;
+  marqueeText?: string;
+  marqueeTextAr?: string;
 }
 
 // ─── Footer Settings ────────────────────────────────────────────────────────
@@ -92,9 +99,12 @@ export interface HeaderSettings {
 export interface FooterSettings {
   logoUrl: string;
   logoText: string;
+  logoTextAr?: string;
   logoSize: LogoSizeSettings;
   description: string;
+  descriptionAr?: string;
   copyright: string;
+  copyrightAr?: string;
   showNewsletter: boolean;
   footerStyle: FooterStyle;
   footerLinkGroups: FooterLinkGroup[];
@@ -103,14 +113,29 @@ export interface FooterSettings {
 
 // ─── Combined Layout Settings ───────────────────────────────────────────────
 
+/**
+ * Per-locale translation overrides set by the admin via CMS.
+ * Keys match the static `translations.ts` dictionary.
+ */
+export interface TranslationOverrides {
+  en?: Record<string, string>;
+  ar?: Record<string, string>;
+}
+
 export interface LayoutSettings {
   header: HeaderSettings;
   footer: FooterSettings;
+  siteTitle?: string;
+  faviconUrl?: string;
+  translationOverrides?: TranslationOverrides;
 }
 
 // ─── Defaults ───────────────────────────────────────────────────────────────
 
 export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
+  siteTitle: "",
+  faviconUrl: "",
+  translationOverrides: { en: {}, ar: {} },
   header: {
     logoUrl: "",
     logoSize: { ...DEFAULT_LOGO_SIZE },
@@ -122,6 +147,9 @@ export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
       { id: "nav-collection", label: "Collection", url: "/shop" },
     ],
     navbarStyle: "default",
+    marqueeEnabled: false,
+    marqueeText: "",
+    marqueeTextAr: "",
   },
   footer: {
     logoUrl: "",

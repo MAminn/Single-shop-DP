@@ -112,5 +112,8 @@ function mergeWithDefaults(
       ...DEFAULT_HOMEPAGE_CONTENT.footerCta,
       ...storedContent.footerCta,
     },
+    discountedProducts: storedContent.discountedProducts ?? DEFAULT_HOMEPAGE_CONTENT.discountedProducts,
+    newArrivals: storedContent.newArrivals ?? DEFAULT_HOMEPAGE_CONTENT.newArrivals,
+    marquee: storedContent.marquee ?? DEFAULT_HOMEPAGE_CONTENT.marquee,
   };
 }

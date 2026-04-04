@@ -26,9 +26,10 @@ export const getShippingFee = () =>
 /**
  * Raw (non-Effect) version for use in contexts that don't use Effect,
  * such as tRPC procedures that just need a quick read.
+ * Accepts both a full DB client and a transaction.
  */
 export async function getShippingFeeRaw(
-  db: Parameters<Parameters<typeof query>[0]>[0],
+  db: Pick<Parameters<Parameters<typeof query>[0]>[0], "select">,
 ): Promise<number> {
   const rows = await db
     .select({ shippingFee: storeSettings.shippingFee })

@@ -16,6 +16,8 @@ import { paymobWebhookPlugin } from "#root/backend/payments/paymob-webhook.js";
 import { ensureDefaultStoreVendor } from "#root/shared/database/bootstrap.js";
 import { listActiveClientConfigsRaw } from "#root/backend/pixel-tracking/pixel-config/ssr.js";
 import { getTemplateSelectionRaw } from "#root/backend/settings/get-template-selection-raw.js";
+import { getLayoutSettingsRaw } from "#root/backend/layout/get-layout-settings-raw.js";
+import { getStoreOwnerId } from "#root/shared/config/store.js";
 import { trackBeaconPlugin } from "#root/server/routes/track.js";
 
 // Normalize env vars — Coolify sometimes injects a leading '=' into values
@@ -269,6 +271,18 @@ async function buildServer() {
       const pixelConfigs = await listActiveClientConfigsRaw(request.db);
       // Fetch template selection for SSR to prevent hydration flicker
       const templateSelection = await getTemplateSelectionRaw(request.db);
+      // Fetch layout settings for SSR to prevent navbar/footer flicker
+      const activeLandingTemplate = templateSelection?.landing;
+      const layoutSettingsData = await getLayoutSettingsRaw(
+        request.db,
+        getStoreOwnerId(),
+        activeLandingTemplate,
+      );
+
+      // Read locale from cookie for SSR (prevents EN→AR flicker)
+      const cookieHeader = request.headers.cookie ?? "";
+      const localeMatch = cookieHeader.match(/(?:^|;\s*)minimal-locale=(en|ar)/);
+      const ssrLocale = (localeMatch?.[1] as "en" | "ar") ?? "en";
 
       const pageContextInit = {
         urlOriginal: request.raw.url || "",
@@ -277,6 +291,8 @@ async function buildServer() {
         clientSession: request.clientSession,
         pixelConfigs,
         templateSelection,
+        layoutSettingsData,
+        ssrLocale,
       };
 
       let pageContext: Awaited<ReturnType<typeof renderPage>>;

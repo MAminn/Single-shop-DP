@@ -23,6 +23,7 @@ import {
   Wallet,
   Shield,
 } from "lucide-react";
+import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 
 /**
  * Customer information interface
@@ -113,6 +114,7 @@ export function CheckoutPageModernTemplate({
   paymentMethods,
   paymentMethodsLoading = false,
 }: CheckoutPageModernTemplateProps) {
+  const { t } = useMinimalI18n();
   const [form, setForm] = useState({
     fullName: customer?.name ?? "",
     email: customer?.email ?? "",
@@ -143,16 +145,16 @@ export function CheckoutPageModernTemplate({
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
-    if (!form.fullName.trim()) errors.fullName = "Full name is required";
+    if (!form.fullName.trim()) errors.fullName = t("validation.name_required");
     if (!form.email.trim()) {
-      errors.email = "Email is required";
+      errors.email = t("validation.email_required");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      errors.email = "Please enter a valid email address";
+      errors.email = t("validation.email_invalid");
     }
     if (!form.phoneNumber.trim())
-      errors.phoneNumber = "Phone number is required";
-    if (!form.address.trim()) errors.address = "Shipping address is required";
-    if (!form.city.trim()) errors.city = "City is required";
+      errors.phoneNumber = t("validation.phone_required");
+    if (!form.address.trim()) errors.address = t("validation.address_required");
+    if (!form.city.trim()) errors.city = t("validation.city_required");
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -166,7 +168,7 @@ export function CheckoutPageModernTemplate({
 
   return (
     <div className='container mx-auto px-4 py-8'>
-      <h1 className='text-3xl font-bold mb-8'>Checkout</h1>
+      <h1 className='text-3xl font-bold mb-8'>{t("checkout.title")}</h1>
 
       {errorMessage && (
         <Alert variant='destructive' className='mb-6'>
@@ -184,14 +186,14 @@ export function CheckoutPageModernTemplate({
               <CardHeader>
                 <CardTitle className='flex items-center gap-2'>
                   <User className='w-5 h-5 text-primary' />
-                  Customer Information
+                  {t("checkout.customer_info")}
                 </CardTitle>
               </CardHeader>
               <CardContent className='space-y-4'>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div className='space-y-2'>
                     <Label htmlFor='fullName'>
-                      Full Name <span className='text-destructive'>*</span>
+                      {t("checkout.full_name")} <span className='text-destructive'>{t("checkout.required")}</span>
                     </Label>
                     <Input
                       id='fullName'
@@ -210,7 +212,7 @@ export function CheckoutPageModernTemplate({
                   </div>
                   <div className='space-y-2'>
                     <Label htmlFor='email'>
-                      Email <span className='text-destructive'>*</span>
+                      {t("checkout.email")} <span className='text-destructive'>{t("checkout.required")}</span>
                     </Label>
                     <Input
                       id='email'
@@ -229,7 +231,7 @@ export function CheckoutPageModernTemplate({
                 </div>
                 <div className='space-y-2'>
                   <Label htmlFor='phoneNumber'>
-                    Phone Number <span className='text-destructive'>*</span>
+                    {t("checkout.phone")} <span className='text-destructive'>{t("checkout.required")}</span>
                   </Label>
                   <Input
                     id='phoneNumber'
@@ -255,13 +257,13 @@ export function CheckoutPageModernTemplate({
               <CardHeader>
                 <CardTitle className='flex items-center gap-2'>
                   <MapPin className='w-5 h-5 text-primary' />
-                  Shipping Address
+                  {t("checkout.shipping_address")}
                 </CardTitle>
               </CardHeader>
               <CardContent className='space-y-4'>
                 <div className='space-y-2'>
                   <Label htmlFor='address'>
-                    Street Address <span className='text-destructive'>*</span>
+                    {t("checkout.street")} <span className='text-destructive'>{t("checkout.required")}</span>
                   </Label>
                   <Input
                     id='address'
@@ -279,7 +281,7 @@ export function CheckoutPageModernTemplate({
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div className='space-y-2'>
                     <Label htmlFor='city'>
-                      City <span className='text-destructive'>*</span>
+                      {t("checkout.city")} <span className='text-destructive'>{t("checkout.required")}</span>
                     </Label>
                     <Input
                       id='city'
@@ -295,7 +297,7 @@ export function CheckoutPageModernTemplate({
                     )}
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='state'>State / Governorate</Label>
+                    <Label htmlFor='state'>{t("checkout.state")}</Label>
                     <Input
                       id='state'
                       placeholder='Cairo Governorate'
@@ -306,7 +308,7 @@ export function CheckoutPageModernTemplate({
                 </div>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div className='space-y-2'>
-                    <Label htmlFor='postalCode'>Postal Code</Label>
+                    <Label htmlFor='postalCode'>{t("checkout.postal_code")}</Label>
                     <Input
                       id='postalCode'
                       placeholder='11511'
@@ -317,7 +319,7 @@ export function CheckoutPageModernTemplate({
                     />
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='country'>Country</Label>
+                    <Label htmlFor='country'>{t("checkout.country")}</Label>
                     <Input
                       id='country'
                       placeholder='Egypt'
@@ -332,11 +334,11 @@ export function CheckoutPageModernTemplate({
             {/* Order Notes */}
             <Card>
               <CardHeader>
-                <CardTitle>Order Notes</CardTitle>
+                <CardTitle>{t("checkout.order_notes")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Textarea
-                  placeholder='Any special instructions for your order? (optional)'
+                  placeholder={t("checkout.notes_placeholder")}
                   value={form.notes}
                   onChange={(e) => updateField("notes", e.target.value)}
                   rows={3}
@@ -377,14 +379,14 @@ export function CheckoutPageModernTemplate({
                   <CardHeader>
                     <CardTitle className='flex items-center gap-2'>
                       <CreditCard className='w-5 h-5 text-primary' />
-                      Payment Method
+                      {t("checkout.payment_method")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {paymentMethodsLoading ? (
                       <div className='flex items-center justify-center py-4 gap-2 text-muted-foreground'>
                         <Loader2 className='w-4 h-4 animate-spin' />
-                        Loading payment options...
+                        {t("checkout.loading_payment")}
                       </div>
                     ) : (
                       <div className='space-y-3'>
@@ -421,7 +423,7 @@ export function CheckoutPageModernTemplate({
                             {method.id !== "cod" && (
                               <div className='flex items-center gap-1 text-xs text-green-600 mt-1'>
                                 <Shield className='w-3 h-3' />
-                                Secure
+                                {t("checkout.secure")}
                               </div>
                             )}
                           </label>
@@ -439,7 +441,7 @@ export function CheckoutPageModernTemplate({
                 <div className='flex items-center justify-between'>
                   <CardTitle className='flex items-center gap-2'>
                     <ShoppingCart className='w-5 h-5' />
-                    Order Items ({items.length})
+                    {t("checkout.order_items")} ({items.length})
                   </CardTitle>
                   {onEditCart && (
                     <Button
@@ -447,7 +449,7 @@ export function CheckoutPageModernTemplate({
                       variant='outline'
                       size='sm'
                       onClick={onEditCart}>
-                      Edit Cart
+                      {t("checkout.edit_cart")}
                     </Button>
                   )}
                 </div>
@@ -460,7 +462,7 @@ export function CheckoutPageModernTemplate({
                     <div className='flex-1'>
                       <p className='font-medium'>{item.name}</p>
                       <p className='text-sm text-muted-foreground'>
-                        Quantity: {item.quantity}
+                        {t("checkout.quantity")}: {item.quantity}
                       </p>
                     </div>
                     <div className='text-right'>
@@ -470,7 +472,7 @@ export function CheckoutPageModernTemplate({
                       </p>
                       <p className='text-sm text-muted-foreground'>
                         {currency}
-                        {item.price.toFixed(2)} each
+                        {item.price.toFixed(2)} {t("checkout.each")}
                       </p>
                     </div>
                   </div>
@@ -483,12 +485,12 @@ export function CheckoutPageModernTemplate({
           <div className='lg:col-span-1'>
             <Card className='sticky top-4'>
               <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
+                <CardTitle>{t("checkout.order_summary")}</CardTitle>
               </CardHeader>
               <CardContent className='space-y-4'>
                 <div className='space-y-2'>
                   <div className='flex justify-between'>
-                    <span>Subtotal</span>
+                    <span>{t("cart.subtotal")}</span>
                     <span>
                       {currency}
                       {totals.subtotal.toFixed(2)}
@@ -496,7 +498,7 @@ export function CheckoutPageModernTemplate({
                   </div>
                   {totals.discount !== undefined && totals.discount > 0 && (
                     <div className='flex justify-between text-green-600'>
-                      <span>Discount</span>
+                      <span>{t("cart.discount")}</span>
                       <span>
                         -{currency}
                         {totals.discount.toFixed(2)}
@@ -505,10 +507,10 @@ export function CheckoutPageModernTemplate({
                   )}
                   {totals.shipping !== undefined && (
                     <div className='flex justify-between'>
-                      <span>Shipping</span>
+                      <span>{t("cart.shipping")}</span>
                       <span>
                         {totals.shipping === 0 ? (
-                          <Badge variant='secondary'>Free</Badge>
+                          <Badge variant='secondary'>{t("cart.free")}</Badge>
                         ) : (
                           `${currency} ${totals.shipping.toFixed(2)}`
                         )}
@@ -520,7 +522,7 @@ export function CheckoutPageModernTemplate({
                 <Separator />
 
                 <div className='flex justify-between text-lg font-bold'>
-                  <span>Total</span>
+                  <span>{t("cart.total")}</span>
                   <span>
                     {currency}
                     {totals.grandTotal.toFixed(2)}
@@ -535,20 +537,20 @@ export function CheckoutPageModernTemplate({
                   {isSubmitting ? (
                     <span className='flex items-center gap-2'>
                       <Loader2 className='w-4 h-4 animate-spin' />
-                      Processing...
+                      {t("checkout.processing")}
                     </span>
                   ) : form.paymentMethod === "cod" ? (
-                    "Place Order"
+                    t("checkout.place_order")
                   ) : (
                     <span className='flex items-center gap-2'>
                       <CreditCard className='w-4 h-4' />
-                      Place Order & Pay
+                      {t("checkout.place_order_pay")}
                     </span>
                   )}
                 </Button>
 
                 <p className='text-xs text-center text-muted-foreground'>
-                  By placing your order, you agree to our terms and conditions
+                  {t("checkout.terms")}
                 </p>
               </CardContent>
             </Card>

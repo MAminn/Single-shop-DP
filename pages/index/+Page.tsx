@@ -32,6 +32,9 @@ function Page() {
   const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>(
     [],
   );
+  const [discountedProducts, setDiscountedProducts] = useState<FeaturedProduct[]>(
+    [],
+  );
   const [homepageContent, setHomepageContent] = useState<HomepageContent>(
     ssrData.homepageContent,
   );
@@ -199,6 +202,46 @@ function Page() {
     fetchNewArrivals();
   }, []);
 
+  // Fetch discounted products (products with discountPrice < price)
+  useEffect(() => {
+    const fetchDiscounted = async () => {
+      try {
+        const result = await trpc.product.search.query({
+          limit: 8,
+          discountedOnly: true,
+          includeOutOfStock: false,
+        });
+
+        if (result.success && result.result) {
+          setDiscountedProducts(
+            result.result.items.map((item) => ({
+              id: item.id,
+              name: item.name,
+              price: Number(item.price),
+              discountPrice: item.discountPrice
+                ? Number(item.discountPrice)
+                : null,
+              stock: item.stock,
+              imageUrl: item.imageUrl
+                ? item.imageUrl.startsWith("http")
+                  ? item.imageUrl
+                  : `/uploads/${item.imageUrl}`
+                : undefined,
+              images: item.images,
+              categoryName: item.categoryName || "",
+              categories: item.categories,
+              available: item.stock > 0,
+            })),
+          );
+        }
+      } catch (err) {
+        console.error("Error loading discounted products:", err);
+      }
+    };
+
+    fetchDiscounted();
+  }, []);
+
   // Get the selected landing template
   const templateEntry = getTemplateComponent("landing", activeLandingTemplateId);
 
@@ -218,6 +261,7 @@ function Page() {
   const templateProps: LandingTemplateModernProps = {
     content: homepageContent,
     featuredProducts,
+    discountedProducts,
     categories,
     categoriesLoading,
     newArrivals,

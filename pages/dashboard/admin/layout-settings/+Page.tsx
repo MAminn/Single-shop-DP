@@ -40,9 +40,14 @@ import {
   Upload,
   Image as ImageIcon,
   GripVertical,
+  Languages,
 } from "lucide-react";
 import { usePageContext } from "vike-react/usePageContext";
 import { v7 as uuidv7 } from "uuid";
+import {
+  templateConfig,
+} from "#root/components/template-system/templateConfig";
+import { useTemplate } from "#root/frontend/contexts/TemplateContext";
 
 const SOCIAL_PLATFORMS: { value: SocialPlatform; label: string }[] = [
   { value: "facebook", label: "Facebook" },
@@ -58,6 +63,10 @@ export default function LayoutSettingsPage() {
   const pageContext = usePageContext();
   const session = pageContext.clientSession;
   const MERCHANT_ID = getStoreOwnerId();
+  const { getTemplateId } = useTemplate();
+
+  // Auto-select the currently active landing template
+  const activeLandingTemplate = getTemplateId("landing") ?? templateConfig.landing[0]?.id ?? "landing-modern";
 
   const [settings, setSettings] = useState<LayoutSettings>(
     DEFAULT_LAYOUT_SETTINGS,
@@ -70,7 +79,9 @@ export default function LayoutSettingsPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isUploadingHeaderLogo, setIsUploadingHeaderLogo] = useState(false);
   const [isUploadingFooterLogo, setIsUploadingFooterLogo] = useState(false);
+  const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
   const [activeTab, setActiveTab] = useState<"header" | "footer">("header");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(activeLandingTemplate);
 
   useEffect(() => {
     setHasUnsavedChanges(
@@ -78,15 +89,23 @@ export default function LayoutSettingsPage() {
     );
   }, [settings, originalSettings]);
 
+  // Sync selected template when active template resolves from DB
+  useEffect(() => {
+    if (!hasUnsavedChanges) {
+      setSelectedTemplateId(activeLandingTemplate);
+    }
+  }, [activeLandingTemplate]);
+
   useEffect(() => {
     loadSettings();
-  }, []);
+  }, [selectedTemplateId]);
 
   const loadSettings = async () => {
     setIsLoading(true);
     try {
       const result = await trpc.layout.getSettings.query({
         merchantId: MERCHANT_ID,
+        templateId: selectedTemplateId,
       });
       if (result.success && result.result) {
         setSettings(result.result);
@@ -110,6 +129,7 @@ export default function LayoutSettingsPage() {
     try {
       const result = await trpc.layout.updateSettings.mutate({
         merchantId: MERCHANT_ID,
+        templateId: selectedTemplateId,
         content: settings,
       });
       if (result.success) {
@@ -173,6 +193,35 @@ export default function LayoutSettingsPage() {
       toast.error("Failed to upload logo");
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleFaviconUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 1 * 1024 * 1024) {
+      toast.error("File too large. Maximum size is 1MB.");
+      return;
+    }
+    setIsUploadingFavicon(true);
+    try {
+      const buffer = new Uint8Array(await file.arrayBuffer());
+      const result = await trpc.layout.uploadImage.mutate({
+        file: { name: file.name, type: file.type, buffer },
+        prefix: "favicon",
+      });
+      if (result.success && result.data) {
+        setSettings((prev) => ({ ...prev, faviconUrl: result.data!.url }));
+        toast.success("Favicon uploaded");
+      } else {
+        toast.error(result.success ? "Upload failed" : result.error);
+      }
+    } catch {
+      toast.error("Failed to upload favicon");
+    } finally {
+      setIsUploadingFavicon(false);
     }
   };
 
@@ -266,6 +315,15 @@ export default function LayoutSettingsPage() {
     );
   };
 
+  const updateLinkGroupField = (id: string, field: string, value: string) => {
+    updateFooter(
+      "footerLinkGroups",
+      settings.footer.footerLinkGroups.map((g) =>
+        g.id === id ? { ...g, [field]: value } : g,
+      ),
+    );
+  };
+
   const addLinkToGroup = (groupId: string) => {
     updateFooter(
       "footerLinkGroups",
@@ -297,7 +355,7 @@ export default function LayoutSettingsPage() {
   const updateLinkInGroup = (
     groupId: string,
     linkId: string,
-    field: "label" | "url",
+    field: "label" | "url" | "labelAr",
     value: string,
   ) => {
     updateFooter(
@@ -388,6 +446,119 @@ export default function LayoutSettingsPage() {
         </div>
       </div>
 
+      {/* Template Selector */}
+      <Card className='mb-6 border-blue-200 bg-blue-50/50'>
+        <CardContent className='pt-6'>
+          <div className='flex items-center gap-4'>
+            <div className='flex-1'>
+              <Label htmlFor='template-selector' className='text-sm font-semibold text-blue-900'>
+                Editing Layout For Template
+              </Label>
+              <p className='text-xs text-blue-700 mt-0.5'>
+                Each landing template can have its own navbar and footer settings. Select which template's layout you want to edit.
+              </p>
+            </div>
+            <Select
+              value={selectedTemplateId}
+              onValueChange={(value) => {
+                if (hasUnsavedChanges) {
+                  const confirmed = confirm(
+                    "You have unsaved changes. Switching templates will discard them. Continue?",
+                  );
+                  if (!confirmed) return;
+                }
+                setSelectedTemplateId(value);
+                setHasUnsavedChanges(false);
+              }}>
+              <SelectTrigger id='template-selector' className='w-[320px] bg-white'>
+                <SelectValue placeholder='Select a template' />
+              </SelectTrigger>
+              <SelectContent>
+                {templateConfig.landing.map((template) => (
+                  <SelectItem key={template.id} value={template.id}>
+                    {template.label}
+                    {template.id === activeLandingTemplate ? " (Active)" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Site Identity — Tab title & Favicon */}
+      <Card>
+        <CardHeader>
+          <CardTitle className='text-base'>Site Identity</CardTitle>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          <p className='text-sm text-muted-foreground'>
+            Set the browser tab title and favicon for this template.
+          </p>
+          <div>
+            <Label htmlFor='site-title'>Browser Tab Title</Label>
+            <Input
+              id='site-title'
+              value={settings.siteTitle ?? ""}
+              onChange={(e) =>
+                setSettings((prev) => ({ ...prev, siteTitle: e.target.value }))
+              }
+              placeholder='e.g. MATCH Perfumes — Official Store'
+              className='mt-1'
+            />
+            <p className='text-xs text-muted-foreground mt-1'>
+              Leave empty to use the default store name.
+            </p>
+          </div>
+          <Separator />
+          <div>
+            <Label>Favicon</Label>
+            {settings.faviconUrl ? (
+              <div className='flex items-center gap-4 mt-2'>
+                <div className='h-10 w-10 bg-muted rounded flex items-center justify-center'>
+                  <img
+                    src={settings.faviconUrl}
+                    alt='Favicon'
+                    className='max-h-8 max-w-8 object-contain'
+                  />
+                </div>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() =>
+                    setSettings((prev) => ({ ...prev, faviconUrl: "" }))
+                  }>
+                  Remove
+                </Button>
+              </div>
+            ) : (
+              <div className='flex items-center gap-2 text-sm text-muted-foreground mt-2'>
+                <ImageIcon className='w-4 h-4' />
+                No favicon uploaded — default icon will be used
+              </div>
+            )}
+            <div className='mt-2'>
+              <Label htmlFor='favicon-upload' className='text-sm'>
+                Upload favicon (PNG, SVG, or ICO — max 1MB)
+              </Label>
+              <Input
+                id='favicon-upload'
+                type='file'
+                accept='image/png,image/svg+xml,image/x-icon,image/vnd.microsoft.icon'
+                disabled={isUploadingFavicon}
+                onChange={handleFaviconUpload}
+                className='mt-1'
+              />
+              {isUploadingFavicon && (
+                <p className='text-xs text-muted-foreground mt-1'>
+                  Uploading…
+                </p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Tab switcher */}
       <div className='flex gap-1 bg-muted p-1 rounded-lg w-fit'>
         <button
@@ -422,10 +593,9 @@ export default function LayoutSettingsPage() {
             </CardHeader>
             <CardContent className='space-y-4'>
               <p className='text-sm text-muted-foreground'>
-                Choose the navigation bar style used across all pages and
-                templates.
+                Choose the navigation bar style for this template.
               </p>
-              <div className='grid grid-cols-2 gap-3'>
+              <div className='grid grid-cols-3 gap-3'>
                 {(
                   [
                     {
@@ -437,6 +607,11 @@ export default function LayoutSettingsPage() {
                       value: "editorial" as NavbarStyle,
                       label: "Editorial (Luxury)",
                       desc: "Uppercase tracking, Framer Motion transitions",
+                    },
+                    {
+                      value: "minimal" as NavbarStyle,
+                      label: "Minimal (Clean)",
+                      desc: "Centered logo, icon-based actions, wide tracking",
                     },
                   ] as const
                 ).map((option) => (
@@ -649,7 +824,8 @@ export default function LayoutSettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Announcement bar */}
+          {/* Announcement bar (not used in minimal template — marquee is controlled from homepage) */}
+          {settings.header.navbarStyle !== "minimal" && (
           <Card>
             <CardHeader>
               <CardTitle className='text-base'>Announcement Bar</CardTitle>
@@ -683,6 +859,7 @@ export default function LayoutSettingsPage() {
               )}
             </CardContent>
           </Card>
+          )}
 
           {/* Navigation links */}
           <Card>
@@ -702,31 +879,47 @@ export default function LayoutSettingsPage() {
               {settings.header.navigationLinks.map((link) => (
                 <div
                   key={link.id}
-                  className='flex items-center gap-2 p-3 rounded-lg border bg-muted/30'>
-                  <GripVertical className='w-4 h-4 text-muted-foreground shrink-0' />
-                  <Input
-                    value={link.label}
-                    onChange={(e) =>
-                      updateNavLink(link.id, "label", e.target.value)
-                    }
-                    placeholder='Label'
-                    className='flex-1'
-                  />
-                  <Input
-                    value={link.url}
-                    onChange={(e) =>
-                      updateNavLink(link.id, "url", e.target.value)
-                    }
-                    placeholder='/path'
-                    className='flex-1'
-                  />
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='shrink-0 text-destructive hover:text-destructive'
-                    onClick={() => removeNavLink(link.id)}>
-                    <Trash2 className='w-4 h-4' />
-                  </Button>
+                  className='flex flex-col gap-2 p-3 rounded-lg border bg-muted/30'>
+                  <div className='flex items-center gap-2'>
+                    <GripVertical className='w-4 h-4 text-muted-foreground shrink-0' />
+                    <Input
+                      value={link.label}
+                      onChange={(e) =>
+                        updateNavLink(link.id, "label", e.target.value)
+                      }
+                      placeholder='Label'
+                      className='flex-1'
+                    />
+                    <Input
+                      value={link.url}
+                      onChange={(e) =>
+                        updateNavLink(link.id, "url", e.target.value)
+                      }
+                      placeholder='/path'
+                      className='flex-1'
+                    />
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='shrink-0 text-destructive hover:text-destructive'
+                      onClick={() => removeNavLink(link.id)}>
+                      <Trash2 className='w-4 h-4' />
+                    </Button>
+                  </div>
+                  {settings.header.navbarStyle === "minimal" && (
+                    <div className='flex items-center gap-2 pl-6'>
+                      <Languages className='w-3.5 h-3.5 text-muted-foreground shrink-0' />
+                      <Input
+                        dir='rtl'
+                        value={link.labelAr ?? ""}
+                        onChange={(e) =>
+                          updateNavLink(link.id, "labelAr", e.target.value)
+                        }
+                        placeholder='Arabic label'
+                        className='flex-1'
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </CardContent>
@@ -916,6 +1109,20 @@ export default function LayoutSettingsPage() {
                 placeholder='e.g. LEBSY'
                 className='mt-1'
               />
+              {settings.header.navbarStyle === "minimal" && (
+                <div className='mt-2'>
+                  <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+                    <Languages className='w-3 h-3' /> Arabic
+                  </Label>
+                  <Input
+                    dir='rtl'
+                    value={settings.footer.logoTextAr ?? ""}
+                    onChange={(e) => updateFooter("logoTextAr", e.target.value)}
+                    placeholder='Arabic text logo'
+                    className='mt-0.5'
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -936,6 +1143,21 @@ export default function LayoutSettingsPage() {
                 rows={3}
                 className='mt-1'
               />
+              {settings.header.navbarStyle === "minimal" && (
+                <div className='mt-2'>
+                  <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+                    <Languages className='w-3 h-3' /> Arabic
+                  </Label>
+                  <Textarea
+                    dir='rtl'
+                    value={settings.footer.descriptionAr ?? ""}
+                    onChange={(e) => updateFooter("descriptionAr", e.target.value)}
+                    placeholder='الوصف بالعربية'
+                    rows={3}
+                    className='mt-0.5'
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -955,6 +1177,20 @@ export default function LayoutSettingsPage() {
                 placeholder='e.g. My Brand Inc.'
                 className='mt-1'
               />
+              {settings.header.navbarStyle === "minimal" && (
+                <div className='mt-2'>
+                  <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+                    <Languages className='w-3 h-3' /> Arabic
+                  </Label>
+                  <Input
+                    dir='rtl'
+                    value={settings.footer.copyrightAr ?? ""}
+                    onChange={(e) => updateFooter("copyrightAr", e.target.value)}
+                    placeholder='حقوق النشر بالعربية'
+                    className='mt-0.5'
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -1011,42 +1247,77 @@ export default function LayoutSettingsPage() {
                       <Trash2 className='w-4 h-4' />
                     </Button>
                   </div>
+                  {settings.header.navbarStyle === "minimal" && (
+                    <div className='flex items-center gap-2'>
+                      <Languages className='w-3.5 h-3.5 text-muted-foreground shrink-0' />
+                      <Input
+                        dir='rtl'
+                        value={group.titleAr ?? ""}
+                        onChange={(e) =>
+                          updateLinkGroupField(group.id, "titleAr", e.target.value)
+                        }
+                        placeholder='Arabic group title'
+                        className='flex-1'
+                      />
+                    </div>
+                  )}
                   <Separator />
                   {group.links.map((link) => (
-                    <div key={link.id} className='flex items-center gap-2 pl-4'>
-                      <Input
-                        value={link.label}
-                        onChange={(e) =>
-                          updateLinkInGroup(
-                            group.id,
-                            link.id,
-                            "label",
-                            e.target.value,
-                          )
-                        }
-                        placeholder='Link label'
-                        className='flex-1'
-                      />
-                      <Input
-                        value={link.url}
-                        onChange={(e) =>
-                          updateLinkInGroup(
-                            group.id,
-                            link.id,
-                            "url",
-                            e.target.value,
-                          )
-                        }
-                        placeholder='/path'
-                        className='flex-1'
-                      />
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='shrink-0 text-destructive hover:text-destructive'
-                        onClick={() => removeLinkFromGroup(group.id, link.id)}>
-                        <Trash2 className='w-4 h-4' />
-                      </Button>
+                    <div key={link.id} className='flex flex-col gap-2 pl-4'>
+                      <div className='flex items-center gap-2'>
+                        <Input
+                          value={link.label}
+                          onChange={(e) =>
+                            updateLinkInGroup(
+                              group.id,
+                              link.id,
+                              "label",
+                              e.target.value,
+                            )
+                          }
+                          placeholder='Link label'
+                          className='flex-1'
+                        />
+                        <Input
+                          value={link.url}
+                          onChange={(e) =>
+                            updateLinkInGroup(
+                              group.id,
+                              link.id,
+                              "url",
+                              e.target.value,
+                            )
+                          }
+                          placeholder='/path'
+                          className='flex-1'
+                        />
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          className='shrink-0 text-destructive hover:text-destructive'
+                          onClick={() => removeLinkFromGroup(group.id, link.id)}>
+                          <Trash2 className='w-4 h-4' />
+                        </Button>
+                      </div>
+                      {settings.header.navbarStyle === "minimal" && (
+                        <div className='flex items-center gap-2 pl-2'>
+                          <Languages className='w-3 h-3 text-muted-foreground shrink-0' />
+                          <Input
+                            dir='rtl'
+                            value={link.labelAr ?? ""}
+                            onChange={(e) =>
+                              updateLinkInGroup(
+                                group.id,
+                                link.id,
+                                "labelAr",
+                                e.target.value,
+                              )
+                            }
+                            placeholder='Arabic link label'
+                            className='flex-1'
+                          />
+                        </div>
+                      )}
                     </div>
                   ))}
                   <Button

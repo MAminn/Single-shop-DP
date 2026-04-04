@@ -1,22 +1,33 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { trpc } from "#root/shared/trpc/client";
 import { getTemplateComponent } from "#root/components/template-system/templateConfig";
 import { useTemplate } from "#root/frontend/contexts/TemplateContext";
+import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext";
 import type { SortingPageProduct } from "#root/components/template-system/sorting/SortingMinimalTemplate";
 import { useSearchParams } from "#root/hooks/useSearchParams";
+import {
+  MinimalCategoryPage,
+  PRODUCTS_PER_PAGE,
+  type MinimalCategoryProduct,
+} from "#root/components/template-system/minimal/MinimalCategoryPage";
 
 /**
  * /shop – Canonical all-products collection page.
  *
  * Supports optional `?category=<slug|id>` filtering via URL query param
  * (used by CategoryStrip and breadcrumb links).
+ * When the store uses the minimal navbar, renders the MinimalCategoryPage
+ * with paginated grid, search, sort, and breadcrumbs (same UI as category pages).
  */
 export default function ShopPage() {
   const [products, setProducts] = useState<SortingPageProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [sortOption, setSortOption] = useState("featured");
   const { getTemplateId } = useTemplate();
+  const layoutSettings = useLayoutSettings();
   const searchParams = useSearchParams();
+
+  const isMinimal = layoutSettings.header.navbarStyle === "minimal";
 
   // Optional category filter from query string
   const categoryParam = searchParams.get("category");
@@ -24,6 +35,12 @@ export default function ShopPage() {
   const [categoryName, setCategoryName] = useState<string | undefined>(
     undefined,
   );
+
+  // Minimal-specific state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [currentSort, setCurrentSort] = useState("featured");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [totalProducts, setTotalProducts] = useState(0);
 
   // Resolve category slug/id when present
   useEffect(() => {
@@ -60,6 +77,14 @@ export default function ShopPage() {
     };
   }, [categoryParam]);
 
+  // Map sort value → server-side sortBy param
+  const serverSort = useMemo(() => {
+    if (currentSort === "price-asc") return "price-asc" as const;
+    if (currentSort === "price-desc") return "price-desc" as const;
+    if (currentSort === "newest") return "newest" as const;
+    return undefined;
+  }, [currentSort]);
+
   // Fetch products (all or filtered by category)
   useEffect(() => {
     // Wait for category resolution if param is present
@@ -71,9 +96,12 @@ export default function ShopPage() {
       setIsLoading(true);
       try {
         const result = await trpc.product.search.query({
-          limit: 100,
+          limit: isMinimal ? PRODUCTS_PER_PAGE : 100,
+          offset: isMinimal ? (currentPage - 1) * PRODUCTS_PER_PAGE : 0,
           includeOutOfStock: true,
           categoryIds: categoryId ? [categoryId] : undefined,
+          search: isMinimal && searchQuery ? searchQuery : undefined,
+          sortBy: isMinimal ? serverSort : undefined,
         });
 
         if (cancelled) return;
@@ -91,6 +119,7 @@ export default function ShopPage() {
             available: p.stock > 0,
           }));
           setProducts(mapped);
+          setTotalProducts(result.result.total ?? mapped.length);
         }
       } catch (err) {
         console.error("Error fetching products:", err);
@@ -103,8 +132,49 @@ export default function ShopPage() {
     return () => {
       cancelled = true;
     };
-  }, [categoryParam, categoryId]);
+  }, [categoryParam, categoryId, isMinimal, currentPage, serverSort, searchQuery]);
 
+  // Debounced search for minimal template
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(debouncedSearch);
+      setCurrentPage(1);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [debouncedSearch]);
+
+  const handleSortChange = useCallback((sort: string) => {
+    setCurrentSort(sort);
+    setCurrentPage(1);
+  }, []);
+
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  /* ── Minimal template path ────────────────────────────────────────── */
+  if (isMinimal) {
+    const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
+    return (
+      <MinimalCategoryPage
+        products={products as MinimalCategoryProduct[]}
+        categoryName={categoryName}
+        isLoading={isLoading}
+        totalProducts={totalProducts}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        onSortChange={handleSortChange}
+        onSearchChange={setDebouncedSearch}
+        currentSort={currentSort}
+        currentSearch={debouncedSearch}
+      />
+    );
+  }
+
+  /* ── Default / other template path ────────────────────────────────── */
   const activeTemplateId = getTemplateId("sorting") ?? "sorting-minimal";
   const TemplateEntry = getTemplateComponent("sorting", activeTemplateId);
 

@@ -7,9 +7,12 @@
 @custom-variant dark (&:is(.dark *));
 
 /* Links */
-a {
+a:where(:not([class*="text-"])) {
   text-decoration: none;
   color: inherit;
+}
+a:where([class*="text-"]) {
+  text-decoration: none;
 }
 #sidebar a {
   padding: 2px 10px;
@@ -26,6 +29,19 @@ body {
 }
 * {
   box-sizing: border-box;
+}
+
+/* Ensure all interactive elements use pointer cursor */
+a,
+button,
+[role="button"],
+[type="button"],
+[type="submit"],
+[type="reset"],
+select,
+summary,
+label[for] {
+  cursor: pointer;
 }
 
 /* ── Phase 3 — CSS-overlay page transitions ─────────────────────── */
@@ -67,7 +83,7 @@ html[data-page-transition="out"] body {
 
 :root {
   --accent-lb: oklch(41.95% 0.0862 232.96);
-  --background: oklch(97.69% 0.0105 106.59);
+  --background: oklch(100% 0.00011 271.152);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -288,4 +304,30 @@ html[data-has-template-newsletter] [data-footer-newsletter] {
       height: 100dvh;
     }
   }
+}
+
+/* ── Marquee infinite scroll ── */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+.animate-marquee {
+  animation: marquee var(--marquee-duration, 30s) linear infinite;
+}
+
+/* ── Hero carousel fade ── */
+@keyframes hero-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-hero-fade {
+  animation: hero-fade-in 700ms ease-out forwards;
 }

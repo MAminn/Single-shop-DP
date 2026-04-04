@@ -251,7 +251,7 @@ export default function OrderConfirmationPage() {
           </Button>
           <Button
             asChild
-            className='gap-2 bg-black text-white hover:bg-gray-800'>
+            className='gap-2 text-white'>
             <Link href='/shop'>
               <ShoppingBag className='w-4 h-4' />
               Continue Shopping

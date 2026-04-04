@@ -9,6 +9,7 @@ import {
 import { Input } from "#root/components/ui/input";
 import { Separator } from "#root/components/ui/separator";
 import { Trash2, Plus, Minus, ShoppingCart, ArrowRight } from "lucide-react";
+import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 
 /**
  * Cart item interface
@@ -66,6 +67,7 @@ export function CartPageModernTemplate({
   onProceedToCheckout,
 }: CartPageModernTemplateProps) {
   const [couponCode, setCouponCode] = React.useState("");
+  const { t } = useMinimalI18n();
 
   const handleApplyCoupon = () => {
     if (couponCode.trim() && onApplyCoupon) {
@@ -80,7 +82,7 @@ export function CartPageModernTemplate({
         <div className='flex items-center justify-center min-h-[400px]'>
           <div className='text-center'>
             <ShoppingCart className='w-16 h-16 mx-auto mb-4 text-muted-foreground animate-pulse' />
-            <p className='text-muted-foreground'>Loading cart...</p>
+            <p className='text-muted-foreground'>{t("cart.loading")}</p>
           </div>
         </div>
       </div>
@@ -93,12 +95,12 @@ export function CartPageModernTemplate({
         <div className='flex items-center justify-center min-h-[400px]'>
           <div className='text-center'>
             <ShoppingCart className='w-16 h-16 mx-auto mb-4 text-muted-foreground' />
-            <h2 className='text-2xl font-bold mb-2'>Your cart is empty</h2>
+            <h2 className='text-2xl font-bold mb-2'>{t("cart.empty")}</h2>
             <p className='text-muted-foreground mb-6'>
-              Add some items to get started!
+              {t("cart.empty_cta")}
             </p>
             <Button onClick={() => (window.location.href = "/shop")}>
-              Continue Shopping
+              {t("cart.continue_shopping")}
             </Button>
           </div>
         </div>
@@ -108,7 +110,7 @@ export function CartPageModernTemplate({
 
   return (
     <div className='container mx-auto px-4 py-8'>
-      <h1 className='text-3xl font-bold mb-8'>Shopping Cart</h1>
+      <h1 className='text-3xl font-bold mb-8'>{t("cart.title")}</h1>
 
       <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
         {/* Cart Items */}
@@ -145,8 +147,8 @@ export function CartPageModernTemplate({
                     {item.stock !== null && item.stock !== undefined && (
                       <p className='text-sm text-muted-foreground mt-1'>
                         {item.stock > 0
-                          ? `${item.stock} in stock`
-                          : "Out of stock"}
+                          ? t("cart.in_stock").replace("{count}", String(item.stock))
+                          : t("cart.out_of_stock")}
                       </p>
                     )}
                   </div>
@@ -206,12 +208,12 @@ export function CartPageModernTemplate({
         <div className='lg:col-span-1'>
           <Card className='sticky top-4'>
             <CardHeader>
-              <CardTitle>Order Summary</CardTitle>
+              <CardTitle>{t("cart.order_summary")}</CardTitle>
             </CardHeader>
             <CardContent className='space-y-4'>
               <div className='space-y-2'>
                 <div className='flex justify-between'>
-                  <span>Subtotal</span>
+                  <span>{t("cart.subtotal")}</span>
                   <span>
                     {currency}
                     {totals.subtotal.toFixed(2)}
@@ -219,7 +221,7 @@ export function CartPageModernTemplate({
                 </div>
                 {totals.discount !== undefined && totals.discount > 0 && (
                   <div className='flex justify-between text-green-600'>
-                    <span>Discount</span>
+                    <span>{t("cart.discount")}</span>
                     <span>
                       -{currency}
                       {totals.discount.toFixed(2)}
@@ -228,10 +230,10 @@ export function CartPageModernTemplate({
                 )}
                 {totals.shipping !== undefined && (
                   <div className='flex justify-between'>
-                    <span>Shipping</span>
+                    <span>{t("cart.shipping")}</span>
                     <span>
                       {totals.shipping === 0
-                        ? "Free"
+                        ? t("cart.free")
                         : `${currency} ${totals.shipping.toFixed(2)}`}
                     </span>
                   </div>
@@ -241,7 +243,7 @@ export function CartPageModernTemplate({
               <Separator />
 
               <div className='flex justify-between text-lg font-bold'>
-                <span>Total</span>
+                <span>{t("cart.total")}</span>
                 <span>
                   {currency}
                   {totals.grandTotal.toFixed(2)}
@@ -250,10 +252,10 @@ export function CartPageModernTemplate({
 
               {/* Coupon Code */}
               <div className='space-y-2'>
-                <label className='text-sm font-medium'>Coupon Code</label>
+                <label className='text-sm font-medium'>{t("cart.coupon_code")}</label>
                 <div className='flex gap-2'>
                   <Input
-                    placeholder='Enter code'
+                    placeholder={t("cart.enter_code")}
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
                     disabled={isUpdating}
@@ -262,7 +264,7 @@ export function CartPageModernTemplate({
                     variant='outline'
                     onClick={handleApplyCoupon}
                     disabled={isUpdating || !couponCode.trim()}>
-                    Apply
+                    {t("cart.apply")}
                   </Button>
                 </div>
               </div>
@@ -272,15 +274,15 @@ export function CartPageModernTemplate({
                 size='lg'
                 onClick={onProceedToCheckout}
                 disabled={isUpdating || items.length === 0}>
-                Proceed to Checkout
-                <ArrowRight className='w-4 h-4 ml-2' />
+                {t("cart.proceed_to_checkout")}
+                <ArrowRight className='w-4 h-4 ms-2' />
               </Button>
 
               <Button
                 variant='outline'
                 className='w-full'
                 onClick={() => (window.location.href = "/shop")}>
-                Continue Shopping
+                {t("cart.continue_shopping")}
               </Button>
             </CardContent>
           </Card>

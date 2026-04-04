@@ -1,5 +1,6 @@
 import type { ClientSession } from "./backend/auth/shared/entities";
 import type { DatabaseClient } from "./shared/database/drizzle/db";
+import type { LayoutSettings } from "./shared/types/layout-settings";
 
 interface SsrPixelConfig {
   id: string;
@@ -14,6 +15,8 @@ declare global {
       clientSession?: ClientSession;
       pixelConfigs?: SsrPixelConfig[];
       templateSelection?: Record<string, string>;
+      layoutSettingsData?: LayoutSettings;
+      ssrLocale?: "en" | "ar";
     }
   }
 }

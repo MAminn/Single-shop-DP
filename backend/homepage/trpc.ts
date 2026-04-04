@@ -25,6 +25,13 @@ const HomepageContentSchema = z.object({
     ctaLink: z.string(),
     backgroundImage: z.string().optional(),
     mobileBackgroundImage: z.string().optional(),
+    heroSlides: z.array(z.object({
+      id: z.string(),
+      imageUrl: z.string(),
+      mobileImageUrl: z.string().optional(),
+      linkUrl: z.string().optional(),
+      alt: z.string().optional(),
+    })).optional(),
   }),
   brandStatement: z.object({
     enabled: z.boolean(),
@@ -41,6 +48,7 @@ const HomepageContentSchema = z.object({
   categories: z.object({
     enabled: z.boolean(),
     title: z.string(),
+    titleAr: z.string().optional(),
     subtitle: z.string(),
     ctaText: z.string(),
     ctaLink: z.string(),
@@ -48,8 +56,10 @@ const HomepageContentSchema = z.object({
   featuredProducts: z.object({
     enabled: z.boolean(),
     title: z.string(),
+    titleAr: z.string().optional(),
     subtitle: z.string(),
     viewAllText: z.string(),
+    viewAllTextAr: z.string().optional(),
     viewAllLink: z.string(),
   }),
   valueProps: z.object({
@@ -77,6 +87,27 @@ const HomepageContentSchema = z.object({
     ctaText: z.string(),
     ctaLink: z.string(),
   }),
+  discountedProducts: z.object({
+    enabled: z.boolean(),
+    title: z.string(),
+    titleAr: z.string().optional(),
+    viewAllText: z.string(),
+    viewAllTextAr: z.string().optional(),
+    viewAllLink: z.string(),
+  }).optional(),
+  newArrivals: z.object({
+    enabled: z.boolean(),
+    title: z.string(),
+    titleAr: z.string().optional(),
+    viewAllText: z.string(),
+    viewAllTextAr: z.string().optional(),
+    viewAllLink: z.string(),
+  }).optional(),
+  marquee: z.object({
+    enabled: z.boolean(),
+    text: z.string(),
+    textAr: z.string().optional(),
+  }).optional(),
 });
 
 export const homepageRouter = router({

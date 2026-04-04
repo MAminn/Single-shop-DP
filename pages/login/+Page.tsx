@@ -10,6 +10,8 @@ import z from "zod";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { Input } from "#root/components/ui/input";
 import { Link } from "#root/components/utils/Link";
+import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext";
+import { MinimalLoginPage } from "#root/components/template-system/minimal/MinimalLoginPage";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -19,6 +21,13 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function Page() {
+  const layoutSettings = useLayoutSettings();
+  const isMinimal = layoutSettings.header.navbarStyle === "minimal";
+
+  if (isMinimal) {
+    return <MinimalLoginPage />;
+  }
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 

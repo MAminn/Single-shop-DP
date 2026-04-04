@@ -14,6 +14,7 @@ import { Effect } from "effect";
 const NavigationLinkSchema = z.object({
   id: z.string(),
   label: z.string(),
+  labelAr: z.string().optional(),
   url: z.string(),
   openInNewTab: z.boolean().optional(),
 });
@@ -35,10 +36,12 @@ const SocialLinkSchema = z.object({
 const FooterLinkGroupSchema = z.object({
   id: z.string(),
   title: z.string(),
+  titleAr: z.string().optional(),
   links: z.array(
     z.object({
       id: z.string(),
       label: z.string(),
+      labelAr: z.string().optional(),
       url: z.string(),
     }),
   ),
@@ -52,6 +55,12 @@ const LogoSizeSchema = z.object({
 });
 
 const LayoutSettingsSchema = z.object({
+  siteTitle: z.string().optional(),
+  faviconUrl: z.string().optional(),
+  translationOverrides: z.object({
+    en: z.record(z.string(), z.string()).optional(),
+    ar: z.record(z.string(), z.string()).optional(),
+  }).optional(),
   header: z.object({
     logoUrl: z.string(),
     logoSize: LogoSizeSchema,
@@ -59,15 +68,21 @@ const LayoutSettingsSchema = z.object({
     tagline: z.string(),
     announcementBarEnabled: z.boolean(),
     announcementBarText: z.string(),
+    marqueeEnabled: z.boolean().optional(),
+    marqueeText: z.string().optional(),
+    marqueeTextAr: z.string().optional(),
     navigationLinks: z.array(NavigationLinkSchema),
-    navbarStyle: z.enum(["default", "editorial"]),
+    navbarStyle: z.enum(["default", "editorial", "minimal"]),
   }),
   footer: z.object({
     logoUrl: z.string(),
     logoText: z.string(),
+    logoTextAr: z.string().optional(),
     logoSize: LogoSizeSchema,
     description: z.string(),
+    descriptionAr: z.string().optional(),
     copyright: z.string(),
+    copyrightAr: z.string().optional(),
     showNewsletter: z.boolean(),
     footerStyle: z.enum(["default", "editorial"]),
     footerLinkGroups: z.array(FooterLinkGroupSchema),
@@ -79,9 +94,9 @@ const LayoutSettingsSchema = z.object({
 
 export const layoutRouter = router({
   getSettings: publicProcedure
-    .input(z.object({ merchantId: z.string().uuid() }))
+    .input(z.object({ merchantId: z.string().uuid(), templateId: z.string().optional() }))
     .query(async ({ input }) => {
-      const settings = await getLayoutSettings(input.merchantId);
+      const settings = await getLayoutSettings(input.merchantId, input.templateId);
       return { success: true, result: settings };
     }),
 
@@ -89,6 +104,7 @@ export const layoutRouter = router({
     .input(
       z.object({
         merchantId: z.string().uuid(),
+        templateId: z.string().optional(),
         content: LayoutSettingsSchema,
       }),
     )
@@ -96,6 +112,7 @@ export const layoutRouter = router({
       const settings = await updateLayoutSettings(
         input.merchantId,
         input.content,
+        input.templateId,
       );
       return { success: true, result: settings };
     }),
@@ -108,7 +125,7 @@ export const layoutRouter = router({
           type: z.string(),
           buffer: z.instanceof(Uint8Array),
         }),
-        prefix: z.enum(["header-logo", "footer-logo"]),
+        prefix: z.enum(["header-logo", "footer-logo", "favicon"]),
       }),
     )
     .mutation(async ({ input }) => {

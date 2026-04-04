@@ -28,10 +28,13 @@ export const deleteProduct = (
       );
     }
 
-    // Single-shop mode: Simply delete the product
+    // Single-shop mode: Soft-delete the product (keep for order history)
     return yield* $(
       query(async (db) => {
-        await db.delete(product).where(eq(product.id, data.id));
+        await db
+          .update(product)
+          .set({ deleted: true })
+          .where(eq(product.id, data.id));
         return;
       }),
     );

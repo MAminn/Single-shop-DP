@@ -15,6 +15,17 @@ export interface HomepageMetaContent {
 }
 
 /**
+ * A single hero carousel slide
+ */
+export interface HeroSlideContent {
+  id: string;
+  imageUrl: string;
+  mobileImageUrl?: string;
+  linkUrl?: string;
+  alt?: string;
+}
+
+/**
  * Hero section content
  */
 export interface HomepageHeroContent {
@@ -26,6 +37,8 @@ export interface HomepageHeroContent {
   backgroundImage?: string;
   /** Mobile-specific hero background image. Falls back to backgroundImage if empty. */
   mobileBackgroundImage?: string;
+  /** Multiple hero carousel slides (takes priority over backgroundImage if non-empty) */
+  heroSlides?: HeroSlideContent[];
 }
 
 /**
@@ -83,6 +96,7 @@ export interface HomepageValuePropsContent {
 export interface HomepageCategoriesContent {
   enabled: boolean;
   title: string;
+  titleAr?: string;
   subtitle: string;
   ctaText: string;
   ctaLink: string;
@@ -94,8 +108,10 @@ export interface HomepageCategoriesContent {
 export interface HomepageFeaturedProductsContent {
   enabled: boolean;
   title: string;
+  titleAr?: string;
   subtitle: string;
   viewAllText: string;
+  viewAllTextAr?: string;
   viewAllLink: string;
 }
 
@@ -123,6 +139,39 @@ export interface HomepageFooterCtaContent {
 }
 
 /**
+ * Discounted / On-Sale products section content
+ */
+export interface HomepageDiscountedProductsContent {
+  enabled: boolean;
+  title: string;
+  titleAr?: string;
+  viewAllText: string;
+  viewAllTextAr?: string;
+  viewAllLink: string;
+}
+
+/**
+ * New Arrivals products section content
+ */
+export interface HomepageNewArrivalsContent {
+  enabled: boolean;
+  title: string;
+  titleAr?: string;
+  viewAllText: string;
+  viewAllTextAr?: string;
+  viewAllLink: string;
+}
+
+/**
+ * Marquee announcement bar content (minimal template)
+ */
+export interface HomepageMarqueeContent {
+  enabled: boolean;
+  text: string;
+  textAr?: string;
+}
+
+/**
  * Complete homepage content structure
  */
 export interface HomepageContent {
@@ -135,6 +184,9 @@ export interface HomepageContent {
   valueProps: HomepageValuePropsContent;
   newsletter: HomepageNewsletterContent;
   footerCta: HomepageFooterCtaContent;
+  discountedProducts?: HomepageDiscountedProductsContent;
+  newArrivals?: HomepageNewArrivalsContent;
+  marquee?: HomepageMarqueeContent;
 }
 
 /**
@@ -154,6 +206,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
     ctaLink: "/shop",
     backgroundImage: undefined,
     mobileBackgroundImage: undefined,
+    heroSlides: [],
   },
   brandStatement: {
     enabled: true,
@@ -217,5 +270,21 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
     subtitle: "Join thousands of satisfied customers today",
     ctaText: "Browse Products",
     ctaLink: "/shop",
+  },
+  discountedProducts: {
+    enabled: true,
+    title: "Offers",
+    viewAllText: "View All",
+    viewAllLink: "/shop",
+  },
+  newArrivals: {
+    enabled: true,
+    title: "New Arrivals",
+    viewAllText: "View All",
+    viewAllLink: "/shop",
+  },
+  marquee: {
+    enabled: false,
+    text: "",
   },
 };

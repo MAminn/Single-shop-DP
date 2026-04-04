@@ -2,11 +2,25 @@
 import { renderPage } from "vike/server";
 import { createMiddleware } from "hono/factory";
 import { getTemplateSelectionRaw } from "#root/backend/settings/get-template-selection-raw.js";
+import { getLayoutSettingsRaw } from "#root/backend/layout/get-layout-settings-raw.js";
+import { getStoreOwnerId } from "#root/shared/config/store.js";
 
 export const vikeHonoMiddleware = createMiddleware(
   async (c) => {
     // Fetch template selection for SSR to prevent hydration flicker
     const templateSelection = await getTemplateSelectionRaw(c.var.db);
+    // Fetch layout settings for SSR to prevent navbar/footer flicker
+    const activeLandingTemplate = templateSelection?.landing;
+    const layoutSettingsData = await getLayoutSettingsRaw(
+      c.var.db,
+      getStoreOwnerId(),
+      activeLandingTemplate,
+    );
+
+    // Read locale from cookie for SSR (prevents EN→AR flicker)
+    const cookieHeader = c.req.header("cookie") ?? "";
+    const localeMatch = cookieHeader.match(/(?:^|;\s*)minimal-locale=(en|ar)/);
+    const ssrLocale = (localeMatch?.[1] as "en" | "ar") ?? "en";
 
     const pageContextInit = {
       db: c.var.db,
@@ -14,6 +28,8 @@ export const vikeHonoMiddleware = createMiddleware(
       urlOriginal: c.req.url,
       headersOriginal: c.req.raw.headers,
       templateSelection,
+      layoutSettingsData,
+      ssrLocale,
     };
     const pageContext = await renderPage(pageContextInit);
     const response = pageContext.httpResponse;

@@ -1,0 +1,213 @@
+/**
+ * Minimal Template – i18n translations
+ *
+ * Only covers hardcoded UI strings used in the minimal template components.
+ * CMS content (headings, descriptions) is written by the admin in the target language.
+ */
+
+export type Locale = "en" | "ar";
+
+export const translations: Record<Locale, Record<string, string>> = {
+  en: {
+    // Navbar
+    "nav.search": "Search...",
+    "nav.login": "Login",
+    "nav.dashboard": "Dashboard",
+    "nav.logout": "Logout",
+    "nav.cart": "Cart",
+    "nav.menu": "Menu",
+
+    // Landing sections
+    "shop_now": "Shop now",
+    "view_all": "View All",
+    "add_to_cart": "Add to cart",
+    "quick_view": "Quick View",
+    "new": "New",
+    "sale": "Sale",
+    "exclusive": "Exclusive",
+    "best_seller": "Best Seller",
+    "on_sale": "Offers",
+    "new_arrivals": "New Arrivals",
+    "categories": "Categories",
+    "featured": "Featured",
+    "in_stock": "In Stock",
+    "out_of_stock": "Out of Stock",
+    "price_includes_tax": "Price includes tax",
+    "more": "More",
+    "close": "Close",
+    "weight": "Weight",
+    "model_number": "Model Number",
+    "description": "Description",
+
+    // Footer
+    "footer.copyright": "All rights reserved",
+    "footer.contact": "Contact Us",
+    "footer.links": "Quick Links",
+
+    // Wishlist
+    "added_to_wishlist": "Added to wishlist",
+    "removed_from_wishlist": "Removed from wishlist",
+
+    // Testimonials
+    "testimonials": "Customer Reviews",
+
+    // Currency
+    "currency": "SAR",
+
+    // Cart page
+    "cart.title": "Shopping Cart",
+    "cart.empty": "Your cart is empty",
+    "cart.empty_cta": "Add some items to get started!",
+    "cart.continue_shopping": "Continue Shopping",
+    "cart.loading": "Loading cart...",
+    "cart.order_summary": "Order Summary",
+    "cart.subtotal": "Subtotal",
+    "cart.discount": "Discount",
+    "cart.shipping": "Shipping",
+    "cart.free": "Free",
+    "cart.total": "Total",
+    "cart.coupon_code": "Coupon Code",
+    "cart.enter_code": "Enter code",
+    "cart.apply": "Apply",
+    "cart.proceed_to_checkout": "Proceed to Checkout",
+    "cart.in_stock": "{count} in stock",
+    "cart.out_of_stock": "Out of stock",
+
+    // Checkout page
+    "checkout.title": "Checkout",
+    "checkout.customer_info": "Customer Information",
+    "checkout.full_name": "Full Name",
+    "checkout.email": "Email",
+    "checkout.phone": "Phone Number",
+    "checkout.shipping_address": "Shipping Address",
+    "checkout.street": "Street Address",
+    "checkout.city": "City",
+    "checkout.state": "State / Governorate",
+    "checkout.postal_code": "Postal Code",
+    "checkout.country": "Country",
+    "checkout.order_notes": "Order Notes",
+    "checkout.notes_placeholder": "Any special instructions for your order? (optional)",
+    "checkout.payment_method": "Payment Method",
+    "checkout.loading_payment": "Loading payment options...",
+    "checkout.secure": "Secure",
+    "checkout.order_items": "Order Items",
+    "checkout.edit_cart": "Edit Cart",
+    "checkout.quantity": "Quantity",
+    "checkout.each": "each",
+    "checkout.order_summary": "Order Summary",
+    "checkout.place_order": "Place Order",
+    "checkout.place_order_pay": "Place Order & Pay",
+    "checkout.processing": "Processing...",
+    "checkout.terms": "By placing your order, you agree to our terms and conditions",
+    "checkout.required": "*",
+
+    // Validation
+    "validation.name_required": "Full name is required",
+    "validation.email_required": "Email is required",
+    "validation.email_invalid": "Please enter a valid email address",
+    "validation.phone_required": "Phone number is required",
+    "validation.address_required": "Shipping address is required",
+    "validation.city_required": "City is required",
+  },
+  ar: {
+    // Navbar
+    "nav.search": "بحث...",
+    "nav.login": "تسجيل الدخول",
+    "nav.dashboard": "لوحة التحكم",
+    "nav.logout": "تسجيل الخروج",
+    "nav.cart": "السلة",
+    "nav.menu": "القائمة",
+
+    // Landing sections
+    "shop_now": "تسوق الآن",
+    "view_all": "عرض الكل",
+    "add_to_cart": "إضافة للسلة",
+    "quick_view": "عرض سريع",
+    "new": "جديد",
+    "sale": "تخفيض",
+    "exclusive": "حصري",
+    "best_seller": "الأكثر مبيعاً",
+    "on_sale": "عروض",
+    "new_arrivals": "وصل حديثاً",
+    "categories": "الأقسام",
+    "featured": "مميز",
+    "in_stock": "متوفر",
+    "out_of_stock": "غير متوفر",
+    "price_includes_tax": "السعر شامل الضريبة",
+    "more": "المزيد",
+    "close": "إغلاق",
+    "weight": "الوزن",
+    "model_number": "رقم الموديل",
+    "description": "الوصف",
+
+    // Footer
+    "footer.copyright": "الحقوق محفوظة",
+    "footer.contact": "تواصل معنا",
+    "footer.links": "روابط مهمة",
+
+    // Wishlist
+    "added_to_wishlist": "تمت الإضافة للمفضلة",
+    "removed_from_wishlist": "تمت الإزالة من المفضلة",
+
+    // Testimonials
+    "testimonials": "آراء العملاء",
+
+    // Currency
+    "currency": "ر.س",
+
+    // Cart page
+    "cart.title": "سلة التسوق",
+    "cart.empty": "سلة التسوق فارغة",
+    "cart.empty_cta": "أضف بعض المنتجات للبدء!",
+    "cart.continue_shopping": "متابعة التسوق",
+    "cart.loading": "جاري تحميل السلة...",
+    "cart.order_summary": "ملخص الطلب",
+    "cart.subtotal": "المجموع الفرعي",
+    "cart.discount": "الخصم",
+    "cart.shipping": "الشحن",
+    "cart.free": "مجاني",
+    "cart.total": "الإجمالي",
+    "cart.coupon_code": "كود الخصم",
+    "cart.enter_code": "أدخل الكود",
+    "cart.apply": "تطبيق",
+    "cart.proceed_to_checkout": "إتمام الشراء",
+    "cart.in_stock": "{count} متوفر",
+    "cart.out_of_stock": "غير متوفر",
+
+    // Checkout page
+    "checkout.title": "إتمام الطلب",
+    "checkout.customer_info": "معلومات العميل",
+    "checkout.full_name": "الاسم الكامل",
+    "checkout.email": "البريد الإلكتروني",
+    "checkout.phone": "رقم الهاتف",
+    "checkout.shipping_address": "عنوان الشحن",
+    "checkout.street": "العنوان",
+    "checkout.city": "المدينة",
+    "checkout.state": "المنطقة / المحافظة",
+    "checkout.postal_code": "الرمز البريدي",
+    "checkout.country": "الدولة",
+    "checkout.order_notes": "ملاحظات الطلب",
+    "checkout.notes_placeholder": "أي تعليمات خاصة لطلبك؟ (اختياري)",
+    "checkout.payment_method": "طريقة الدفع",
+    "checkout.loading_payment": "جاري تحميل خيارات الدفع...",
+    "checkout.secure": "آمن",
+    "checkout.order_items": "المنتجات",
+    "checkout.edit_cart": "تعديل السلة",
+    "checkout.quantity": "الكمية",
+    "checkout.each": "للواحد",
+    "checkout.order_summary": "ملخص الطلب",
+    "checkout.place_order": "إتمام الطلب",
+    "checkout.place_order_pay": "إتمام الطلب والدفع",
+    "checkout.processing": "جاري المعالجة...",
+    "checkout.terms": "بإتمام الطلب، أنت توافق على الشروط والأحكام",
+    "checkout.required": "*",
+
+    // Validation
+    "validation.name_required": "الاسم الكامل مطلوب",
+    "validation.email_required": "البريد الإلكتروني مطلوب",
+    "validation.email_invalid": "يرجى إدخال بريد إلكتروني صحيح",
+    "validation.phone_required": "رقم الهاتف مطلوب",
+    "validation.address_required": "عنوان الشحن مطلوب",
+    "validation.city_required": "المدينة مطلوبة",
+  },
+};

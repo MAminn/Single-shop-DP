@@ -37,6 +37,11 @@ export interface LandingTemplateModernProps {
   featuredProducts?: FeaturedProduct[];
 
   /**
+   * Discounted products (used by minimal template)
+   */
+  discountedProducts?: FeaturedProduct[];
+
+  /**
    * Categories data for popular categories section
    */
   categories?: CategoryStripItem[];

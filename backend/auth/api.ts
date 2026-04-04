@@ -49,7 +49,9 @@ export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
     .then(serializeBackendEffectResult)
     .then((result) => {
       if (result.success) {
-        console.log("[Auth] Admin account created or already exists");
+        console.log("[Auth] Admin account created successfully");
+      } else if (result.error === "User already exists") {
+        console.log("[Auth] Admin already exists, skipping bootstrap");
       } else {
         console.log("[Auth] Admin bootstrap result:", result.error);
       }
