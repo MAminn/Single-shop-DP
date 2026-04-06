@@ -125,13 +125,14 @@ const Content = memo(({ children }: { children: React.ReactNode }) => {
   };
 
   const isDashboardRoute = pageContext.urlPathname.startsWith("/dashboard");
+  const isChromelessRoute = pageContext.urlPathname === "/links";
   const navbarMode = getNavbarMode(pageContext.urlPathname);
 
   return (
     <AuthContext.Provider value={{ session, logout }}>
       <CartProvider>
         <TemplateProvider>
-          <LayoutShell isDashboardRoute={isDashboardRoute} navbarMode={navbarMode}>
+          <LayoutShell isDashboardRoute={isDashboardRoute || isChromelessRoute} navbarMode={navbarMode}>
             {children}
           </LayoutShell>
         </TemplateProvider>
