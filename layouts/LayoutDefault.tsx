@@ -13,7 +13,10 @@ import { usePageContext } from "vike-react/usePageContext";
 import { TRPCClientError } from "@trpc/client";
 import { AuthContext } from "#root/context/AuthContext.js";
 import { CartProvider } from "#root/lib/context/CartContext";
-import { TemplateProvider, useTemplate } from "#root/frontend/contexts/TemplateContext";
+import {
+  TemplateProvider,
+  useTemplate,
+} from "#root/frontend/contexts/TemplateContext";
 import { TrackingProvider } from "#root/frontend/contexts/TrackingContext";
 import { Toaster as ShadcnToaster } from "#root/components/ui/toaster";
 import {
@@ -132,7 +135,9 @@ const Content = memo(({ children }: { children: React.ReactNode }) => {
     <AuthContext.Provider value={{ session, logout }}>
       <CartProvider>
         <TemplateProvider>
-          <LayoutShell isDashboardRoute={isDashboardRoute || isChromelessRoute} navbarMode={navbarMode}>
+          <LayoutShell
+            isDashboardRoute={isDashboardRoute || isChromelessRoute}
+            navbarMode={navbarMode}>
             {children}
           </LayoutShell>
         </TemplateProvider>
@@ -156,7 +161,9 @@ function LayoutShell({
 }) {
   const { getTemplateId } = useTemplate();
   const pageContext = usePageContext();
-  const ssrLayoutSettings = pageContext.layoutSettingsData as LayoutSettings | undefined;
+  const ssrLayoutSettings = pageContext.layoutSettingsData as
+    | LayoutSettings
+    | undefined;
 
   // Initialise from SSR data if available — prevents flicker
   const [layoutSettings, setLayoutSettings] = useState<LayoutSettings>(
@@ -168,7 +175,10 @@ function LayoutShell({
     if (ssrLayoutSettings) return; // SSR already provided, skip client fetch
     const activeLandingTemplate = getTemplateId("landing") ?? undefined;
     trpc.layout.getSettings
-      .query({ merchantId: getStoreOwnerId(), templateId: activeLandingTemplate })
+      .query({
+        merchantId: getStoreOwnerId(),
+        templateId: activeLandingTemplate,
+      })
       .then((res) => {
         if (res.success && res.result) {
           setLayoutSettings(res.result);
@@ -203,7 +213,9 @@ function LayoutShell({
               <div id='global-navbar'>{renderNavbar()}</div>
             )}
             {isDashboardRoute ? (
-              <div dir='ltr' style={{ direction: "ltr" }}>{children}</div>
+              <div dir='ltr' style={{ direction: "ltr" }}>
+                {children}
+              </div>
             ) : (
               children
             )}
@@ -227,7 +239,13 @@ function LayoutShell({
 
   // Wrap in MinimalI18nProvider only when the minimal navbar/template is active
   if (isMinimal) {
-    return <MinimalI18nProvider overrides={layoutSettings.translationOverrides} ssrLocale={ssrLocale}>{inner}</MinimalI18nProvider>;
+    return (
+      <MinimalI18nProvider
+        overrides={layoutSettings.translationOverrides}
+        ssrLocale={ssrLocale}>
+        {inner}
+      </MinimalI18nProvider>
+    );
   }
   return inner;
 }

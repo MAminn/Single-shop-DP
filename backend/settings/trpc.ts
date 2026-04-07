@@ -13,6 +13,9 @@ import { getShippingFee } from "./get-shipping-fee";
 import { updateShippingFee } from "./update-shipping-fee";
 import { getTemplateSelection } from "./get-template-selection";
 import { updateTemplateSelection } from "./update-template-selection";
+import { getLinkTreeConfig } from "./get-link-tree-config";
+import { updateLinkTreeConfig } from "./update-link-tree-config";
+import { linkTreeConfigSchema } from "#root/shared/types/link-tree";
 
 export const settingsRouter = router({
   /** Public: anyone (including the cart page) can read the shipping fee */
@@ -44,6 +47,22 @@ export const settingsRouter = router({
     .mutation(async ({ ctx, input }) => {
       return runBackendEffect(
         updateTemplateSelection(input.selection).pipe(provideDatabase(ctx)),
+      ).then(serializeBackendEffectResult);
+    }),
+
+  /** Public: anyone (including the /links page) can read the link tree config */
+  getLinkTreeConfig: publicProcedure.query(async ({ ctx }) => {
+    return runBackendEffect(
+      getLinkTreeConfig().pipe(provideDatabase(ctx)),
+    ).then(serializeBackendEffectResult);
+  }),
+
+  /** Admin-only: update the link tree config */
+  updateLinkTreeConfig: adminProcedure
+    .input(z.object({ config: linkTreeConfigSchema }))
+    .mutation(async ({ ctx, input }) => {
+      return runBackendEffect(
+        updateLinkTreeConfig(input.config).pipe(provideDatabase(ctx)),
       ).then(serializeBackendEffectResult);
     }),
 });

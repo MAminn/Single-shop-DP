@@ -12,6 +12,7 @@ import {
   Home,
   Radio,
   PanelTop,
+  Link2,
 } from "lucide-react";
 
 import {
@@ -93,6 +94,11 @@ export function DashboardSidebar() {
       label: "Pixels & Tracking",
       href: "/dashboard/admin/pixels",
       icon: Radio,
+    },
+    {
+      label: "Links Page",
+      href: "/dashboard/settings/links",
+      icon: Link2,
     },
     {
       label: "Settings",
