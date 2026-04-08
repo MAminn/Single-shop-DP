@@ -243,56 +243,77 @@ export function LandingTemplateEditorial({
           <section className='relative isolate min-h-svh w-full overflow-hidden bg-stone-950'>
             {/* Background image / fallback */}
             {content.hero.backgroundImage ? (
-              <div className='absolute inset-0 overflow-hidden'>
-                <ParallaxImage
-                  src={content.hero.backgroundImage}
-                  alt=''
-                  strength={18}
-                  className='object-[center_30%] sm:object-[center_35%] lg:object-center'
-                />
-              </div>
+              <>
+                {/* Mobile / tablet: <picture> with optional mobile image */}
+                <div className='absolute inset-0 lg:hidden'>
+                  <picture>
+                    {content.hero.mobileBackgroundImage && (
+                      <source
+                        media='(max-width: 640px)'
+                        srcSet={content.hero.mobileBackgroundImage}
+                      />
+                    )}
+                    <img
+                      src={content.hero.backgroundImage}
+                      alt=''
+                      className='h-full w-full object-cover object-[center_30%] sm:object-[center_35%]'
+                    />
+                  </picture>
+                </div>
+                {/* Desktop: parallax */}
+                <div className='absolute inset-0 hidden lg:block'>
+                  <ParallaxImage
+                    src={content.hero.backgroundImage}
+                    alt=''
+                    strength={18}
+                    className='object-center'
+                  />
+                </div>
+              </>
             ) : (
               <div className='absolute inset-0 bg-linear-to-b from-stone-800 via-stone-900 to-stone-950' />
             )}
 
-            {/* Subtle gradient — lets the image breathe */}
-            <div className='absolute inset-0 bg-linear-to-t from-black/50 via-black/20 to-black/10' />
+            {/* Bottom-weighted gradient for text readability */}
+            <div className='absolute inset-0 bg-linear-to-t from-black/70 via-black/30 to-black/5' />
 
-            {/* Hero content — centered editorial composition */}
-            <div className='relative z-5 flex flex-col items-center justify-center text-center px-6 sm:px-10 lg:px-16 min-h-svh'>
-              {/* Eyebrow */}
-              <Reveal variant='fadeIn' delay={0.2}>
-                <p className='text-[10px] sm:text-[11px] tracking-[0.35em] uppercase text-white/55 font-light'>
-                  {content.hero.subtitle || "New Collection"}
-                </p>
-              </Reveal>
+            {/* Hero content — bottom-left editorial composition */}
+            <div className='relative z-10 flex min-h-svh items-end'>
+              <div className='w-full max-w-2xl px-6 pb-16 sm:px-10 sm:pb-20 lg:px-16 lg:pb-24'>
+                {/* Eyebrow */}
+                <Reveal variant='fadeIn' delay={0.2}>
+                  <p className='text-[10px] sm:text-[11px] tracking-[0.35em] uppercase text-white/50 font-light'>
+                    {content.hero.subtitle || "New Collection"}
+                  </p>
+                </Reveal>
 
-              {/* Headline */}
-              <Reveal variant='fadeUp' delay={0.35}>
-                <h1 className='mt-6 sm:mt-7 max-w-[20ch] text-[clamp(2.75rem,6.5vw,5rem)] font-light tracking-[-0.01em] text-white leading-[1.05]'>
-                  {content.hero.title}
-                </h1>
-              </Reveal>
+                {/* Headline */}
+                <Reveal variant='fadeUp' delay={0.35}>
+                  <h1 className='mt-5 sm:mt-6 text-[clamp(2.5rem,7vw,5.5rem)] font-light tracking-[-0.02em] text-white leading-[1.05]'>
+                    {content.hero.title}
+                  </h1>
+                </Reveal>
 
-              {/* CTA — single, refined, editorial */}
-              <Reveal variant='fadeUp' delay={0.55}>
-                <div className='mt-12 sm:mt-14'>
-                  {onCtaClick ? (
-                    <button
-                      type='button'
-                      onClick={() => onCtaClick(content.hero.ctaLink)}
-                      className='inline-flex items-center justify-center border border-white/50 bg-transparent px-12 py-4 text-[11px] tracking-[0.22em] uppercase text-white font-normal hover:bg-white hover:text-stone-900 transition-all duration-500'>
-                      {content.hero.ctaText}
-                    </button>
-                  ) : (
-                    <a
-                      href={content.hero.ctaLink}
-                      className='inline-flex items-center justify-center border border-white/50 bg-transparent px-12 py-4 text-[11px] tracking-[0.22em] uppercase text-white font-normal hover:bg-white hover:text-stone-900 transition-all duration-500'>
-                      {content.hero.ctaText}
-                    </a>
-                  )}
-                </div>
-              </Reveal>
+                {/* CTA — single, refined, editorial */}
+                <Reveal variant='fadeUp' delay={0.55}>
+                  <div className='mt-10 sm:mt-12'>
+                    {onCtaClick ? (
+                      <button
+                        type='button'
+                        onClick={() => onCtaClick(content.hero.ctaLink)}
+                        className='inline-flex items-center justify-center border border-white/40 bg-transparent px-10 py-3.5 text-[11px] tracking-[0.2em] uppercase text-white font-light hover:bg-white hover:text-stone-900 transition-all duration-500'>
+                        {content.hero.ctaText}
+                      </button>
+                    ) : (
+                      <a
+                        href={content.hero.ctaLink}
+                        className='inline-flex items-center justify-center border border-white/40 bg-transparent px-10 py-3.5 text-[11px] tracking-[0.2em] uppercase text-white font-light hover:bg-white hover:text-stone-900 transition-all duration-500'>
+                        {content.hero.ctaText}
+                      </a>
+                    )}
+                  </div>
+                </Reveal>
+              </div>
             </div>
           </section>
         )}
