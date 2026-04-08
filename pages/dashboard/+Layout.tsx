@@ -127,9 +127,10 @@ function Content({ children }: { children: React.ReactNode }) {
                     </TabsList>
                   </Tabs>
                 </div>
-                <Link href='/' className='text-2xl font-light tracking-tight'>
+                {/* Commented out because of conflict between templates and brands Ps: ana 3mltlo comment 3shan msh mohem awe bdl ma SYNT ytl3lo Perce */}
+                {/* <Link href='/' className='text-2xl font-light tracking-tight'>
                   {STORE_NAME}
-                </Link>
+                </Link> */}
                 <div className='flex items-center gap-2'>
                   <Link href='/'>
                     <Button variant='outline' className='hidden lg:block'>
