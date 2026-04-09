@@ -40,19 +40,28 @@ export async function runMigrations(): Promise<void> {
     // If the tracking table claims migrations were applied but core
     // tables are missing, the tracking data is stale (fresh DB, different
     // cluster, etc.).  Wipe it so every migration re-runs cleanly.
+    //
+    // We check multiple core tables — not just one — so that a partially
+    // migrated database (e.g. `product` exists but `homepage_content`
+    // doesn't) is caught and the missing migrations are re-applied.
     const tracked = await client.query(
       "SELECT COUNT(*)::int AS cnt FROM __drizzle_migrations",
     );
     if (tracked.rows[0].cnt > 0) {
+      const coreTables = ["product", "homepage_content", "layout_settings"];
       const probe = await client.query(`
-        SELECT EXISTS (
-          SELECT 1 FROM information_schema.tables
-          WHERE table_schema = 'public' AND table_name = 'product'
-        ) AS ok
-      `);
-      if (!probe.rows[0].ok) {
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+          AND table_name = ANY($1)
+      `, [coreTables]);
+
+      const existing = new Set(probe.rows.map((r: any) => r.table_name));
+      const missing = coreTables.filter((t) => !existing.has(t));
+
+      if (missing.length > 0) {
         console.warn(
-          "⚠️  [Auto-Migrate] Tracking table has entries but core tables are missing — resetting tracking",
+          `⚠️  [Auto-Migrate] Tracking table has entries but core tables are missing (${missing.join(", ")}) — resetting tracking`,
         );
         await client.query("DELETE FROM __drizzle_migrations");
       }
