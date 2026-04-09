@@ -6,6 +6,12 @@ import path from "path";
  * Runs all pending Drizzle migrations on server startup.
  * Gracefully handles "already exists" / "does not exist" errors.
  * Executes each SQL statement individually so one failure doesn't block others.
+ *
+ * IMPORTANT: On first boot against a fresh database the tracking table
+ * (__drizzle_migrations) is empty, so every migration runs in order.
+ * If migrations were previously recorded but the actual schema was dropped
+ * (e.g. new database on a second deployment), we detect the mismatch and
+ * re-run all migrations.
  */
 export async function runMigrations(): Promise<void> {
   const dbUrl = process.env.DATABASE_URL;
@@ -29,6 +35,28 @@ export async function runMigrations(): Promise<void> {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // ── Integrity check ──────────────────────────────────────────────
+    // If the tracking table claims migrations were applied but core
+    // tables are missing, the tracking data is stale (fresh DB, different
+    // cluster, etc.).  Wipe it so every migration re-runs cleanly.
+    const tracked = await client.query(
+      "SELECT COUNT(*)::int AS cnt FROM __drizzle_migrations",
+    );
+    if (tracked.rows[0].cnt > 0) {
+      const probe = await client.query(`
+        SELECT EXISTS (
+          SELECT 1 FROM information_schema.tables
+          WHERE table_schema = 'public' AND table_name = 'product'
+        ) AS ok
+      `);
+      if (!probe.rows[0].ok) {
+        console.warn(
+          "⚠️  [Auto-Migrate] Tracking table has entries but core tables are missing — resetting tracking",
+        );
+        await client.query("DELETE FROM __drizzle_migrations");
+      }
+    }
 
     const migrationsFolder = path.join(
       process.cwd(),
@@ -78,20 +106,32 @@ export async function runMigrations(): Promise<void> {
         "utf-8",
       );
 
-      // Drizzle uses `--> statement-breakpoint` as delimiter between statements
-      // Filter out pure SQL comment lines but keep DO blocks intact
-      const statements = migrationSQL
-        .split("--> statement-breakpoint")
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0)
-        .map((s) => {
-          // Only strip trailing semicolons for simple statements, not DO blocks
-          if (s.endsWith(";") && !s.includes("$$")) {
-            return s.slice(0, -1).trim();
-          }
-          return s;
-        })
-        .filter((s) => s.length > 0 && !s.startsWith("--"));
+      // Custom (non-Drizzle) migrations don't use the statement-breakpoint
+      // delimiter — detect and handle them as a single block.
+      const usesBreakpoints = migrationSQL.includes(
+        "--> statement-breakpoint",
+      );
+
+      let statements: string[];
+      if (usesBreakpoints) {
+        statements = migrationSQL
+          .split("--> statement-breakpoint")
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0)
+          .map((s) => {
+            // Only strip trailing semicolons for simple statements, not DO blocks
+            if (s.endsWith(";") && !s.includes("$$")) {
+              return s.slice(0, -1).trim();
+            }
+            return s;
+          })
+          .filter((s) => s.length > 0 && !s.startsWith("--"));
+      } else {
+        // Run the entire file as a single statement — this handles
+        // multi-statement custom scripts (they rely on their own semicolons).
+        const trimmed = migrationSQL.trim();
+        statements = trimmed.length > 0 ? [trimmed] : [];
+      }
 
       let migrationFailed = false;
 
@@ -106,16 +146,13 @@ export async function runMigrations(): Promise<void> {
           // 42P07 = duplicate_table (relation already exists)
           // 42701 = duplicate_column (column already exists)
           // 42710 = duplicate_object (type/constraint/index already exists)
-          // 42704 = undefined_object (constraint/type does not exist — safe to skip for DROP)
-          // 42P01 = undefined_table (relation does not exist — safe to skip for DROP)
+          // 42704 = undefined_object (constraint/type does not exist — safe to skip for DROP IF EXISTS)
           const isIgnorable =
             code === "42P07" ||
             code === "42701" ||
             code === "42710" ||
             code === "42704" ||
-            code === "42P01" ||
             msg.includes("already exists") ||
-            msg.includes("does not exist") ||
             msg.includes("duplicate key value");
 
           if (isIgnorable) {
