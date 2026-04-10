@@ -120,7 +120,7 @@ function CategoryCarousel({ categories }: { categories: CategoryStripItem[] }) {
 
       <div
         ref={scrollRef}
-        className='flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2'>
+        className='flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 justify-center'>
         {categories.map((cat) => {
           const imgSrc = resolveImageUrl(cat.imageUrl);
           return (

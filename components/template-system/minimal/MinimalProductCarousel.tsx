@@ -101,7 +101,7 @@ export function MinimalProductCarousel({
           {/* Scrollable track */}
           <div
             ref={scrollRef}
-            className='flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory px-4 sm:px-6 lg:px-8 pb-2'>
+            className='flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory px-4 sm:px-6 lg:px-8 pb-2 justify-center'>
             {products.map((product) => (
               <div
                 key={product.id}

@@ -29,6 +29,7 @@ export interface ProductPageMinimalProps {
   relatedProducts?: FeaturedProduct[];
   showWishlist?: boolean;
   showSocialShare?: boolean;
+  isLoading?: boolean;
   onAddToCart?: (product: ProductPageProduct) => void;
   onAddToWishlist?: (product: ProductPageProduct) => void;
   onImageClick?: (imageUrl: string, index: number) => void;
@@ -86,9 +87,10 @@ const DEFAULT_PRODUCT: ProductPageProduct = {
  * Best for: Premium brands, luxury items, minimalist aesthetics
  */
 export function ProductPageMinimal({
-  product = DEFAULT_PRODUCT,
+  product,
   relatedProducts,
   showWishlist = true,
+  isLoading = false,
   onAddToCart,
   onAddToWishlist,
   onImageClick,
@@ -97,6 +99,35 @@ export function ProductPageMinimal({
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [showShareMenu, setShowShareMenu] = useState(false);
+
+  if (isLoading || !product) {
+    return (
+      <div className={`min-h-screen bg-white ${className}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Breadcrumb skeleton */}
+          <div className="flex gap-2 mb-8">
+            <div className="h-4 w-12 bg-stone-100 animate-pulse" />
+            <div className="h-4 w-4 bg-stone-100 animate-pulse" />
+            <div className="h-4 w-12 bg-stone-100 animate-pulse" />
+            <div className="h-4 w-4 bg-stone-100 animate-pulse" />
+            <div className="h-4 w-32 bg-stone-100 animate-pulse" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* Image skeleton */}
+            <div className="aspect-square bg-stone-100 animate-pulse" />
+            {/* Info skeleton */}
+            <div className="space-y-6 pt-4">
+              <div className="h-8 w-3/4 bg-stone-100 animate-pulse" />
+              <div className="h-6 w-1/4 bg-stone-100 animate-pulse" />
+              <div className="h-4 w-full bg-stone-100 animate-pulse" />
+              <div className="h-4 w-5/6 bg-stone-100 animate-pulse" />
+              <div className="h-12 w-full bg-stone-100 animate-pulse mt-8" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const maxQty = Math.min(product.stock || 99, 99);
   const incrementQty = () => setQuantity((q) => Math.min(q + 1, maxQty));
