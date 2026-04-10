@@ -108,6 +108,21 @@ export const translations: Record<Locale, Record<string, string>> = {
     "validation.phone_required": "Phone number is required",
     "validation.address_required": "Shipping address is required",
     "validation.city_required": "City is required",
+
+    // Product page
+    "product.home": "Home",
+    "product.shop": "Shop",
+    "product.reviews": "reviews",
+    "product.quantity": "Quantity",
+    "product.decrease_qty": "Decrease quantity",
+    "product.increase_qty": "Increase quantity",
+    "product.save": "Save",
+    "product.share": "Share",
+    "product.you_may_also_like": "You May Also Like",
+    "product.view_details": "View Details",
+    "product.added_to_cart": "Added to cart",
+    "product.view_cart": "View Cart",
+    "product.checkout": "Checkout",
   },
   ar: {
     // Navbar
@@ -209,5 +224,20 @@ export const translations: Record<Locale, Record<string, string>> = {
     "validation.phone_required": "رقم الهاتف مطلوب",
     "validation.address_required": "عنوان الشحن مطلوب",
     "validation.city_required": "المدينة مطلوبة",
+
+    // Product page
+    "product.home": "الرئيسية",
+    "product.shop": "المتجر",
+    "product.reviews": "تقييمات",
+    "product.quantity": "الكمية",
+    "product.decrease_qty": "تقليل الكمية",
+    "product.increase_qty": "زيادة الكمية",
+    "product.save": "حفظ",
+    "product.share": "مشاركة",
+    "product.you_may_also_like": "قد يعجبك أيضاً",
+    "product.view_details": "عرض التفاصيل",
+    "product.added_to_cart": "تمت الإضافة إلى السلة",
+    "product.view_cart": "عرض السلة",
+    "product.checkout": "إتمام الطلب",
   },
 };

@@ -1,7 +1,6 @@
 import type React from "react";
-import { useState } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "#root/components/ui/button";
-import { HomeFeaturedProducts } from "../home/HomeFeaturedProducts";
 import type {
   ProductPageProduct,
   ProductImage,
@@ -11,7 +10,6 @@ import {
   ShoppingCart,
   Heart,
   Star,
-  ArrowRight,
   Plus,
   Minus,
   Share2,
@@ -19,7 +17,17 @@ import {
   Twitter,
   Link as LinkIcon,
   Mail,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Check,
+  X,
 } from "lucide-react";
+import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
+import { useCart } from "#root/lib/context/CartContext";
+import { Link } from "#root/components/utils/Link";
+import { getProductUrl } from "#root/lib/utils/route-helpers";
+import { STORE_CURRENCY } from "#root/shared/config/branding";
 
 /**
  * Props for ProductPageMinimal
@@ -83,6 +91,7 @@ const DEFAULT_PRODUCT: ProductPageProduct = {
  * - Calm, high-end aesthetic
  * - Focus on product and content
  * - Borderless, clean layout
+ * - Scrollable recommendation carousel with expandable cards
  *
  * Best for: Premium brands, luxury items, minimalist aesthetics
  */
@@ -99,6 +108,9 @@ export function ProductPageMinimal({
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [showShareMenu, setShowShareMenu] = useState(false);
+  const [cartToast, setCartToast] = useState(false);
+  const { t, locale } = useMinimalI18n();
+  const isAr = locale === "ar";
 
   if (isLoading || !product) {
     return (
@@ -144,6 +156,8 @@ export function ProductPageMinimal({
   const handleAddToCart = () => {
     if (onAddToCart) {
       onAddToCart(product);
+      setCartToast(true);
+      setTimeout(() => setCartToast(false), 4000);
     }
   };
 
@@ -182,16 +196,66 @@ export function ProductPageMinimal({
 
   return (
     <div className={`product-page-minimal bg-white ${className}`}>
+
+      {/* ── Add-to-Cart Confirmation Toast ── */}
+      {cartToast && (
+      <div
+        className='fixed top-4 start-4 z-[10001] w-[320px] bg-white border border-stone-200 shadow-xl animate-[slideDown_300ms_ease-out_forwards]'>
+        <div className='h-1 bg-emerald-500 w-full animate-[shrink_4s_linear_forwards]' />
+        <div className='p-4'>
+          <div className='flex items-start justify-between mb-3'>
+            <div className='flex items-center gap-2 text-emerald-600'>
+              <Check className='w-4 h-4' />
+              <span className='text-sm font-medium'>{t("product.added_to_cart")}</span>
+            </div>
+            <button
+              type='button'
+              onClick={() => setCartToast(false)}
+              className='text-stone-400 hover:text-stone-600 transition-colors'>
+              <X className='w-4 h-4' />
+            </button>
+          </div>
+          <div className='flex items-center gap-3'>
+            {product.imageUrl && (
+              <img
+                src={product.imageUrl}
+                alt={product.name}
+                className='w-14 h-14 object-cover flex-none'
+              />
+            )}
+            <div className='min-w-0 flex-1'>
+              <p className='text-sm text-stone-800 font-medium truncate'>{product.name}</p>
+              <p className='text-sm text-stone-500'>
+                {hasDiscount ? (product.discountPrice as number) : product.price} {STORE_CURRENCY}
+              </p>
+            </div>
+          </div>
+          <div className='flex gap-2 mt-3'>
+            <Link
+              href='/cart'
+              className='flex-1 py-2 text-center text-xs font-medium border border-stone-200 text-stone-700 hover:bg-stone-50 transition-colors'>
+              {t("product.view_cart")}
+            </Link>
+            <Link
+              href='/checkout'
+              className='flex-1 py-2 text-center text-xs font-medium bg-stone-900 text-white hover:bg-stone-800 transition-colors'>
+              {t("product.checkout")}
+            </Link>
+          </div>
+        </div>
+      </div>
+      )}
+
       {/* Minimal Breadcrumb */}
       <div className='border-b border-gray-100 py-6 px-4 sm:px-6 lg:px-8'>
         <div className='max-w-7xl mx-auto'>
           <nav className='text-sm text-gray-500 font-light'>
             <a href='/' className='hover:text-gray-900'>
-              Home
+              {t("product.home")}
             </a>
             <span className='mx-3'>/</span>
             <a href='/shop' className='hover:text-gray-900'>
-              Shop
+              {t("product.shop")}
             </a>
             <span className='mx-3'>/</span>
             <span className='text-gray-900'>{product.name}</span>
@@ -253,13 +317,13 @@ export function ProductPageMinimal({
               </h1>
 
               {/* Rating */}
-              {product.rating && (
+              {product.rating !== undefined && product.rating > 0 && (
                 <div className='flex items-center gap-3'>
                   <div className='flex items-center gap-1'>
                     {renderStars(product.rating)}
                   </div>
                   <span className='text-sm text-gray-500 font-light'>
-                    {product.rating} — {product.reviewCount || 0} reviews
+                    {product.rating} — {product.reviewCount || 0} {t("product.reviews")}
                   </span>
                 </div>
               )}
@@ -270,22 +334,27 @@ export function ProductPageMinimal({
               {hasDiscount ? (
                 <div className='flex items-baseline gap-4'>
                   <span className='text-5xl font-light text-gray-900'>
-                    EGP {(product.discountPrice as number).toFixed(2)}
+                    {(product.discountPrice as number).toFixed(2)} {STORE_CURRENCY}
                   </span>
                   <span className='text-2xl font-light text-gray-400 line-through'>
-                    EGP {product.price.toFixed(2)}
+                    {product.price.toFixed(2)} {STORE_CURRENCY}
                   </span>
                 </div>
               ) : (
                 <span className='text-5xl font-light text-gray-900'>
-                  EGP {product.price.toFixed(2)}
+                  {product.price.toFixed(2)} {STORE_CURRENCY}
                 </span>
               )}
 
+              <p className='text-xs text-gray-400 font-light mt-2'>
+                {t("price_includes_tax")}
+              </p>
+
               {/* Stock - Subtle */}
               {product.available && product.stock && (
-                <p className='text-sm text-gray-500 font-light mt-4'>
-                  {product.stock} in stock
+                <p className='text-sm text-emerald-600 font-light mt-3 flex items-center gap-1.5'>
+                  <Check className='w-3.5 h-3.5' />
+                  {t("in_stock")}
                 </p>
               )}
             </div>
@@ -300,13 +369,13 @@ export function ProductPageMinimal({
             {/* Quantity Selector */}
             {product.available && (
               <div className='flex items-center gap-6'>
-                <span className='text-sm text-gray-500 font-light'>Quantity</span>
+                <span className='text-sm text-gray-500 font-light'>{t("product.quantity")}</span>
                 <div className='flex items-center border border-gray-200'>
                   <button
                     onClick={decrementQty}
                     disabled={quantity <= 1}
                     className='w-10 h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors'
-                    aria-label='Decrease quantity'>
+                    aria-label={t("product.decrease_qty")}>
                     <Minus className='w-4 h-4' />
                   </button>
                   <span className='w-12 h-10 flex items-center justify-center text-sm font-light border-x border-gray-200 tabular-nums'>
@@ -316,7 +385,7 @@ export function ProductPageMinimal({
                     onClick={incrementQty}
                     disabled={quantity >= maxQty}
                     className='w-10 h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors'
-                    aria-label='Increase quantity'>
+                    aria-label={t("product.increase_qty")}>
                     <Plus className='w-4 h-4' />
                   </button>
                 </div>
@@ -330,7 +399,7 @@ export function ProductPageMinimal({
                 className='bg-gray-900 hover:bg-gray-800 text-white rounded-none px-12 py-6 text-base font-light shadow-none hover:shadow-lg transition-all'
                 onClick={handleAddToCart}
                 disabled={!product.available}>
-                {product.available ? "Add to Cart" : "Out of Stock"}
+                {product.available ? t("add_to_cart") : t("out_of_stock")}
               </Button>
 
               {showWishlist && (
@@ -339,8 +408,8 @@ export function ProductPageMinimal({
                   variant='ghost'
                   className='rounded-none px-8 py-6 text-base font-light hover:bg-gray-50 group'
                   onClick={handleAddToWishlist}>
-                  <Heart className='mr-2 w-5 h-5 group-hover:fill-gray-900 transition-all' />
-                  Save
+                  <Heart className='me-2 w-5 h-5 group-hover:fill-gray-900 transition-all' />
+                  {t("product.save")}
                 </Button>
               )}
             </div>
@@ -351,7 +420,7 @@ export function ProductPageMinimal({
                 onClick={() => setShowShareMenu(!showShareMenu)}
                 className='flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 font-light transition-colors'>
                 <Share2 className='w-4 h-4' />
-                Share
+                {t("product.share")}
               </button>
               {showShareMenu && (
                 <div className='flex items-center gap-3 mt-3'>
@@ -440,19 +509,224 @@ export function ProductPageMinimal({
           </div>
         </div>
 
-        {/* Related Products - Minimal */}
+        {/* ═══════════════════════════════════════════════
+            RECOMMENDATIONS — Scrollable Carousel
+            Expandable cards inspired by matchperfumes.com
+            ═══════════════════════════════════════════════ */}
         {relatedProducts && relatedProducts.length > 0 && (
-          <div className='mt-32 pt-16 border-t border-gray-100'>
-            <h2 className='text-4xl font-light text-gray-900 mb-16'>
-              Related Items
-            </h2>
-            <HomeFeaturedProducts
-              title=''
-              products={relatedProducts}
-              showViewAllButton={false}
-            />
-          </div>
+          <RecommendationsCarousel
+            products={relatedProducts}
+            title={t("product.you_may_also_like")}
+            currentProductId={product.id}
+          />
         )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Recommendations Carousel ────────────────────────────────────────
+
+function RecommendationsCarousel({
+  products,
+  title,
+  currentProductId,
+}: {
+  products: FeaturedProduct[];
+  title: string;
+  currentProductId: string;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", checkScroll, { passive: true });
+    window.addEventListener("resize", checkScroll);
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [checkScroll, products]);
+
+  const scroll = (direction: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const card = el.querySelector("[data-rec-card]");
+    const cardWidth = card?.clientWidth ?? 220;
+    const gap = 16;
+    el.scrollBy({
+      left: direction === "right" ? (cardWidth + gap) * 2 : -(cardWidth + gap) * 2,
+      behavior: "smooth",
+    });
+  };
+
+  const filteredProducts = products.filter((p) => p.id !== currentProductId);
+  if (filteredProducts.length === 0) return null;
+
+  return (
+    <div className='mt-24 pt-16 border-t border-gray-100'>
+      {/* Section heading */}
+      <div className='text-center mb-10'>
+        <h2 className='text-2xl sm:text-3xl font-light text-stone-900 tracking-tight inline-block relative pb-3'>
+          {title}
+          <span className='absolute bottom-0 left-1/4 right-1/4 h-[2px] bg-stone-900' />
+        </h2>
+      </div>
+
+      {/* Carousel */}
+      <div className='relative'>
+        <button
+          onClick={() => scroll("left")}
+          disabled={!canScrollLeft}
+          className='absolute -start-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-9 h-9 items-center justify-center border border-stone-200 bg-white hover:border-stone-900 disabled:opacity-20 disabled:cursor-not-allowed transition-colors'
+          aria-label='Scroll left'>
+          <ChevronLeft className='w-4 h-4' />
+        </button>
+        <button
+          onClick={() => scroll("right")}
+          disabled={!canScrollRight}
+          className='absolute -end-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-9 h-9 items-center justify-center border border-stone-200 bg-white hover:border-stone-900 disabled:opacity-20 disabled:cursor-not-allowed transition-colors'
+          aria-label='Scroll right'>
+          <ChevronRight className='w-4 h-4' />
+        </button>
+
+        <div
+          ref={scrollRef}
+          className='flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 justify-center'>
+          {filteredProducts.map((product) => (
+            <RecommendationCard key={product.id} product={product} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Expandable Recommendation Card ──────────────────────────────────
+
+function RecommendationCard({ product }: { product: FeaturedProduct }) {
+  const [expanded, setExpanded] = useState(false);
+  const { t } = useMinimalI18n();
+  const { addItem } = useCart();
+
+  const imageUrl = (() => {
+    if (product.images && product.images.length > 0) {
+      const primary = product.images.find((img) => img.isPrimary);
+      const url = (primary || product.images[0])?.url;
+      if (!url) return "/assets/placeholder-product.png";
+      if (url.startsWith("http") || url.startsWith("/")) return url;
+      return `/uploads/${url}`;
+    }
+    if (!product.imageUrl) return "/assets/placeholder-product.png";
+    if (product.imageUrl.startsWith("http") || product.imageUrl.startsWith("/")) return product.imageUrl;
+    return `/uploads/${product.imageUrl}`;
+  })();
+
+  const hasDiscount =
+    product.discountPrice !== undefined &&
+    product.discountPrice !== null &&
+    Number(product.discountPrice) < product.price;
+
+  const displayPrice = hasDiscount ? Number(product.discountPrice) : product.price;
+  const productUrl = getProductUrl(product.id);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!product.available) return;
+    addItem(
+      {
+        id: product.id,
+        name: product.name,
+        price: displayPrice,
+        imageUrl,
+        stock: product.stock,
+      },
+      1,
+      {},
+    );
+  };
+
+  return (
+    <div
+      data-rec-card
+      className='flex-none w-[180px] sm:w-[200px] snap-start group'>
+      {/* Clickable card container */}
+      <div
+        className='relative cursor-pointer'
+        onClick={() => setExpanded(!expanded)}>
+        {/* Image */}
+        <div className='aspect-square bg-stone-50 overflow-hidden'>
+          <img
+            src={imageUrl}
+            alt={product.name}
+            className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-105'
+            loading='lazy'
+          />
+        </div>
+
+        {/* Expand indicator */}
+        <div className='absolute bottom-2 end-2 w-6 h-6 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm'>
+          <ChevronDown
+            className={`w-3.5 h-3.5 text-stone-600 transition-transform duration-300 ${
+              expanded ? "rotate-180" : ""
+            }`}
+          />
+        </div>
+      </div>
+
+      {/* Basic info (always visible) */}
+      <div className='pt-2.5 text-center'>
+        <Link href={productUrl}>
+          <h3 className='text-sm font-normal text-stone-800 line-clamp-1 hover:text-stone-600 transition-colors'>
+            {product.name}
+          </h3>
+        </Link>
+        <div className='mt-1 flex items-center justify-center gap-2'>
+          {hasDiscount && (
+            <span className='text-xs text-stone-400 line-through'>
+              {product.price} {STORE_CURRENCY}
+            </span>
+          )}
+          <span className={`text-sm font-medium ${hasDiscount ? "text-red-600" : "text-stone-800"}`}>
+            {displayPrice} {STORE_CURRENCY}
+          </span>
+        </div>
+      </div>
+
+      {/* Expandable detail panel */}
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          expanded ? "max-h-40 opacity-100 mt-2" : "max-h-0 opacity-0"
+        }`}>
+        <div className='border-t border-stone-100 pt-2 space-y-2'>
+          {product.categoryName && (
+            <p className='text-xs text-stone-400 text-center'>{product.categoryName}</p>
+          )}
+          <Link
+            href={productUrl}
+            className='block w-full py-2 text-center text-xs font-medium border border-stone-200 text-stone-700 hover:border-stone-900 hover:text-stone-900 transition-colors'>
+            {t("product.view_details")}
+          </Link>
+          <button
+            type='button'
+            onClick={handleAddToCart}
+            disabled={!product.available}
+            className='w-full py-2 border border-stone-900 text-stone-900 text-xs font-medium tracking-wide uppercase hover:bg-stone-900 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed'>
+            {product.available ? t("add_to_cart") : t("out_of_stock")}
+          </button>
+        </div>
       </div>
     </div>
   );

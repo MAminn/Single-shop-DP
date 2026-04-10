@@ -59,28 +59,11 @@ export default function ProductDetailPage() {
         ? reviewsResponse.result
         : null;
 
-      // Fetch related products
-      const relatedProductsResponse = await trpc.product.view.query({
-        categoryId: product.categoryId,
-        limit: 4,
-      });
-      const relatedProductsData = relatedProductsResponse.success
-        ? relatedProductsResponse.result
-        : null;
-
-      // Extract reviews and their statistics
-      const reviewStats = {
-        averageRating: reviewsData?.averageRating || 0,
-        totalReviews: reviewsData?.totalReviews || 0,
-      };
-
-      // Filter related products to exclude current product and map to correct format
-      const mappedRelatedProducts: FeaturedProduct[] =
-        relatedProductsData?.products
-          ?.filter(
-            (rp: { product: { id: string } }) => rp.product.id !== productId,
-          )
-          .map((rp) => ({
+      // Fetch related products (same category first, fallback to search)
+      const mapViewToFeatured = (items: any[]): FeaturedProduct[] =>
+        items
+          .filter((rp: any) => rp.product.id !== productId)
+          .map((rp: any) => ({
             id: rp.product.id,
             name: rp.product.name,
             price: Number(rp.product.price),
@@ -93,10 +76,66 @@ export default function ProductDetailPage() {
             images: rp.file?.diskname
               ? [{ url: `/uploads/${rp.file.diskname}`, isPrimary: true }]
               : [],
-            categoryName: rp.category.name,
+            categoryName: rp.category?.name || "",
             stock: rp.product.stock || 0,
             available: (rp.product.stock || 0) > 0,
-          })) || [];
+          }));
+
+      let mappedRelatedProducts: FeaturedProduct[] = [];
+
+      // 1) Try same-category products
+      if (product.categoryId) {
+        try {
+          const viewRes = await trpc.product.view.query({
+            categoryId: product.categoryId,
+            limit: 9,
+          });
+          if (viewRes.success && viewRes.result?.products?.length) {
+            mappedRelatedProducts = mapViewToFeatured(viewRes.result.products);
+          }
+        } catch {
+          // continue to fallback
+        }
+      }
+
+      // 2) Fallback: if no results after filtering, use general search
+      if (mappedRelatedProducts.length === 0) {
+        try {
+          const searchRes = await trpc.product.search.query({
+            limit: 9,
+            includeOutOfStock: false,
+          });
+          if (searchRes.success && searchRes.result?.items?.length) {
+            mappedRelatedProducts = searchRes.result.items
+              .filter((item: any) => item.id !== productId)
+              .map((item: any) => ({
+                id: item.id,
+                name: item.name,
+                price: Number(item.price),
+                discountPrice: item.discountPrice
+                  ? Number(item.discountPrice)
+                  : null,
+                imageUrl: item.imageUrl
+                  ? `/uploads/${item.imageUrl}`
+                  : undefined,
+                images: item.imageUrl
+                  ? [{ url: `/uploads/${item.imageUrl}`, isPrimary: true }]
+                  : [],
+                categoryName: item.categoryName || "",
+                stock: item.stock || 0,
+                available: (item.stock || 0) > 0,
+              }));
+          }
+        } catch {
+          // silently continue
+        }
+      }
+
+      // Extract reviews and their statistics
+      const reviewStats = {
+        averageRating: reviewsData?.averageRating || 0,
+        totalReviews: reviewsData?.totalReviews || 0,
+      };
 
       // Map product data to ProductPageProduct interface
       const mappedProduct: ProductPageProduct = {

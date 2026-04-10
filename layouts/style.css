@@ -331,3 +331,24 @@ html[data-has-template-newsletter] [data-footer-newsletter] {
 .animate-hero-fade {
   animation: hero-fade-in 700ms ease-out forwards;
 }
+
+/* ── Cart toast progress bar ── */
+@keyframes shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
