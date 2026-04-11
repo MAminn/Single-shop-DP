@@ -108,6 +108,10 @@ const HomepageContentSchema = z.object({
     text: z.string(),
     textAr: z.string().optional(),
   }).optional(),
+  promoLine: z.object({
+    text: z.string(),
+    textAr: z.string().optional(),
+  }).optional(),
 });
 
 export const homepageRouter = router({

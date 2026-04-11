@@ -172,6 +172,14 @@ export interface HomepageMarqueeContent {
 }
 
 /**
+ * Promo text line for product detail page (minimal template)
+ */
+export interface HomepagePromoLineContent {
+  text: string;
+  textAr?: string;
+}
+
+/**
  * Complete homepage content structure
  */
 export interface HomepageContent {
@@ -187,6 +195,7 @@ export interface HomepageContent {
   discountedProducts?: HomepageDiscountedProductsContent;
   newArrivals?: HomepageNewArrivalsContent;
   marquee?: HomepageMarqueeContent;
+  promoLine?: HomepagePromoLineContent;
 }
 
 /**
@@ -286,5 +295,9 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
   marquee: {
     enabled: false,
     text: "",
+  },
+  promoLine: {
+    text: "",
+    textAr: "",
   },
 };

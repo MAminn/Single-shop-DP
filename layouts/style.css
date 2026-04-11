@@ -329,7 +329,7 @@ html[data-has-template-newsletter] [data-footer-newsletter] {
   }
 }
 .animate-marquee {
-  animation: marquee var(--marquee-duration, 60s) linear infinite;
+  animation: marquee var(--marquee-duration, 240s) linear infinite;
 }
 
 /* ── Hero carousel fade ── */
@@ -356,12 +356,28 @@ html[data-has-template-newsletter] [data-footer-newsletter] {
 }
 
 @keyframes slideDown {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(-1rem);
+    transform: translateY(-2rem) scale(0.95);
   }
-  to {
+  50% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0.3rem) scale(1.02);
+  }
+  70% {
+    transform: translateY(-0.15rem) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes cartToastPulse {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0);
+  }
+  50% {
+    box-shadow: 0 4px 24px rgba(16, 185, 129, 0.25);
   }
 }

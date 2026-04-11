@@ -53,7 +53,7 @@ export function CartToastContainer() {
   if (!visible || !item) return null;
 
   return (
-    <div className="fixed top-4 start-4 z-[10001] w-[320px] bg-white border border-stone-200 shadow-xl animate-[slideDown_300ms_ease-out_forwards]">
+    <div className="fixed top-4 start-4 z-[10001] w-[320px] bg-white border border-emerald-200 shadow-xl animate-[slideDown_400ms_ease-out_forwards,cartToastPulse_1.5s_ease-in-out_400ms_2]">
       <div className="h-1 bg-emerald-500 w-full animate-[shrink_4s_linear_forwards]" />
       <div className="p-4">
         <div className="flex items-start justify-between mb-3">

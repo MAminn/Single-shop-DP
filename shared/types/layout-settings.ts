@@ -92,6 +92,9 @@ export interface HeaderSettings {
   marqueeEnabled?: boolean;
   marqueeText?: string;
   marqueeTextAr?: string;
+  /** Promo text line for product detail page (minimal template) */
+  promoText?: string;
+  promoTextAr?: string;
 }
 
 // ─── Footer Settings ────────────────────────────────────────────────────────
@@ -150,6 +153,8 @@ export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
     marqueeEnabled: false,
     marqueeText: "",
     marqueeTextAr: "",
+    promoText: "",
+    promoTextAr: "",
   },
   footer: {
     logoUrl: "",

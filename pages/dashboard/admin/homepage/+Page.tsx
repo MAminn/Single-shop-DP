@@ -367,6 +367,8 @@ export default function HomepageAdminPage() {
                     marqueeEnabled: trimmedContent.marquee?.enabled ?? false,
                     marqueeText: trimmedContent.marquee?.text ?? "",
                     marqueeTextAr: trimmedContent.marquee?.textAr ?? "",
+                    promoText: trimmedContent.promoLine?.text ?? "",
+                    promoTextAr: trimmedContent.promoLine?.textAr ?? "",
                   },
                 },
               });
@@ -2015,6 +2017,51 @@ export default function HomepageAdminPage() {
             <div className='bg-muted p-3 rounded-md'>
               <p className='text-sm text-muted-foreground'>
                 This text scrolls across the top of the page above the navigation bar.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        )}
+
+        {/* Product Page Promo Line — minimal only */}
+        {isMinimal && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Product Page Promo Line</CardTitle>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <div>
+              <Label htmlFor='promo-line-text'>Promo Text (English)</Label>
+              <Input
+                id='promo-line-text'
+                value={content.promoLine?.text ?? ""}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    promoLine: { ...prev.promoLine, text: e.target.value, textAr: prev.promoLine?.textAr ?? "" },
+                  }))
+                }
+                placeholder='Free delivery on orders over 100 SAR'
+              />
+            </div>
+            <div>
+              <Label htmlFor='promo-line-text-ar'>Promo Text (Arabic)</Label>
+              <Input
+                id='promo-line-text-ar'
+                dir='rtl'
+                value={content.promoLine?.textAr ?? ""}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    promoLine: { ...prev.promoLine, text: prev.promoLine?.text ?? "", textAr: e.target.value },
+                  }))
+                }
+                placeholder='توصيل مجاني للطلبات فوق 100 ريال'
+              />
+            </div>
+            <div className='bg-muted p-3 rounded-md'>
+              <p className='text-sm text-muted-foreground'>
+                This text appears on the product detail page between the stock status and category carousels.
               </p>
             </div>
           </CardContent>

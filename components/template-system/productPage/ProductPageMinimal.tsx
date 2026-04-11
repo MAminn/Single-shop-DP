@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import { useCart } from "#root/lib/context/CartContext";
+import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext";
 import { Link } from "#root/components/utils/Link";
 import { getProductUrl } from "#root/lib/utils/route-helpers";
 import { STORE_CURRENCY } from "#root/shared/config/branding";
@@ -68,8 +69,20 @@ export function ProductPageMinimal({
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [showShareMenu, setShowShareMenu] = useState(false);
+  const [selectedAddOns, setSelectedAddOns] = useState<Set<string>>(new Set());
   const { t, locale } = useMinimalI18n();
   const isAr = locale === "ar";
+  const layoutSettings = useLayoutSettings();
+  const { addItem } = useCart();
+
+  const toggleAddOn = useCallback((productId: string) => {
+    setSelectedAddOns((prev) => {
+      const next = new Set(prev);
+      if (next.has(productId)) next.delete(productId);
+      else next.add(productId);
+      return next;
+    });
+  }, []);
 
   /* ── Loading skeleton ── */
   if (isLoading || !product) {
@@ -113,6 +126,33 @@ export function ProductPageMinimal({
   const handleAddToCart = () => {
     if (onAddToCart) {
       onAddToCart(product);
+
+      // Also add selected add-on products from inline carousels
+      if (selectedAddOns.size > 0 && categoryGroups) {
+        const allCategoryProducts = categoryGroups.flatMap((g) => g.products);
+        for (const addOnId of selectedAddOns) {
+          const addOn = allCategoryProducts.find((p) => p.id === addOnId);
+          if (addOn) {
+            const addOnPrice = addOn.discountPrice != null && Number(addOn.discountPrice) < addOn.price
+              ? Number(addOn.discountPrice) : addOn.price;
+            addItem(
+              {
+                id: addOn.id,
+                name: addOn.name,
+                price: addOnPrice,
+                stock: addOn.stock || 99,
+                imageUrl: addOn.imageUrl,
+                categoryName: addOn.categoryName || undefined,
+                available: (addOn.stock || 0) > 0,
+              },
+              1,
+              {},
+            );
+          }
+        }
+        setSelectedAddOns(new Set());
+      }
+
       showCartToast({
         name: product.name,
         price: displayPrice,
@@ -195,7 +235,7 @@ export function ProductPageMinimal({
 
             {/* Main large image */}
             <div className="flex-1">
-              <div className="aspect-[3/4] sm:aspect-square lg:aspect-[3/4] overflow-hidden bg-stone-50 relative">
+              <div className="overflow-hidden bg-stone-50 relative">
                 {product.available && (
                   <span className="absolute top-3 start-3 z-10 bg-stone-900 text-white text-xs font-medium px-3 py-1">
                     {t("new") || "New"}
@@ -204,7 +244,7 @@ export function ProductPageMinimal({
                 <img
                   src={images[selectedImage]?.url || product.imageUrl}
                   alt={product.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-auto object-contain"
                 />
               </div>
 
@@ -325,6 +365,18 @@ export function ProductPageMinimal({
               </p>
             )}
 
+            {/* ── Promo text line (CMS-driven) ── */}
+            {(() => {
+              const promoText = isAr && layoutSettings.header.promoTextAr
+                ? layoutSettings.header.promoTextAr
+                : layoutSettings.header.promoText;
+              return promoText ? (
+                <p className="text-sm  font-medium">
+                  {promoText}
+                </p>
+              ) : null;
+            })()}
+
             {/* ── Category Carousels (inline, matchperfumes style) ── */}
             {categoryGroups && categoryGroups.length > 0 && (
               <div className="space-y-6 pt-2">
@@ -334,6 +386,8 @@ export function ProductPageMinimal({
                     title={group.categoryName}
                     products={group.products}
                     currentProductId={product.id}
+                    selectedIds={selectedAddOns}
+                    onToggle={toggleAddOn}
                   />
                 ))}
               </div>
@@ -436,10 +490,14 @@ function InlineCategoryCarousel({
   title,
   products,
   currentProductId,
+  selectedIds,
+  onToggle,
 }: {
   title: string;
   products: FeaturedProduct[];
   currentProductId: string;
+  selectedIds: Set<string>;
+  onToggle: (id: string) => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -499,7 +557,12 @@ function InlineCategoryCarousel({
           ref={scrollRef}
           className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1">
           {filteredProducts.map((p) => (
-            <InlineProductCard key={p.id} product={p} />
+            <InlineProductCard
+              key={p.id}
+              product={p}
+              isSelected={selectedIds.has(p.id)}
+              onToggle={() => onToggle(p.id)}
+            />
           ))}
         </div>
       </div>
@@ -509,7 +572,15 @@ function InlineCategoryCarousel({
 
 /* ── Small inline card for category carousels ── */
 
-function InlineProductCard({ product }: { product: FeaturedProduct }) {
+function InlineProductCard({
+  product,
+  isSelected,
+  onToggle,
+}: {
+  product: FeaturedProduct;
+  isSelected: boolean;
+  onToggle: () => void;
+}) {
   const imageUrl = resolveImageUrl(product);
   const hasDiscount =
     product.discountPrice !== undefined &&
@@ -519,29 +590,37 @@ function InlineProductCard({ product }: { product: FeaturedProduct }) {
   const productUrl = getProductUrl(product.id);
 
   return (
-    <Link
-      href={productUrl}
-      className="flex-none w-[130px] snap-start group/card border border-gray-100 hover:border-gray-300 transition-colors bg-white p-2">
-      <div className="aspect-square bg-stone-50 overflow-hidden mb-2">
-        <img
-          src={imageUrl}
-          alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover/card:scale-105"
-          loading="lazy"
-        />
-      </div>
-      <h4 className="text-xs font-medium text-gray-800 line-clamp-1">{product.name}</h4>
-      <div className="flex items-center gap-1.5 mt-0.5">
-        {hasDiscount && (
-          <span className="text-[10px] text-gray-400 line-through">
-            {product.price} {STORE_CURRENCY}
+    <div className={`flex-none w-[130px] snap-start border transition-colors bg-white p-2 ${isSelected ? "border-emerald-500 ring-1 ring-emerald-500" : "border-gray-100 hover:border-gray-300"}`}>
+      {/* Checkbox */}
+      <button
+        type="button"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggle(); }}
+        className={`w-5 h-5 mb-1.5 flex items-center justify-center border-2 transition-all cursor-pointer ${isSelected ? "bg-emerald-500 border-emerald-500 text-white" : "border-gray-300 hover:border-gray-500 bg-white"}`}
+        aria-label={isSelected ? "Deselect" : "Select"}>
+        {isSelected && <Check className="w-3 h-3" />}
+      </button>
+      <Link href={productUrl} className="group/card">
+        <div className="aspect-square bg-stone-50 overflow-hidden mb-2">
+          <img
+            src={imageUrl}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover/card:scale-105"
+            loading="lazy"
+          />
+        </div>
+        <h4 className="text-xs font-medium text-gray-800 line-clamp-1">{product.name}</h4>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          {hasDiscount && (
+            <span className="text-[10px] text-gray-400 line-through">
+              {product.price} {STORE_CURRENCY}
+            </span>
+          )}
+          <span className={`text-xs font-semibold ${hasDiscount ? "text-red-600" : "text-gray-800"}`}>
+            {displayPrice} {STORE_CURRENCY}
           </span>
-        )}
-        <span className={`text-xs font-semibold ${hasDiscount ? "text-red-600" : "text-gray-800"}`}>
-          {displayPrice} {STORE_CURRENCY}
-        </span>
-      </div>
-    </Link>
+        </div>
+      </Link>
+    </div>
   );
 }
 

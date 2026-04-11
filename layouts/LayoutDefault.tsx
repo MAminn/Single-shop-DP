@@ -211,7 +211,7 @@ function LayoutShell({
             id='page-content'
             className={`bg-background h-full text-foreground w-full font-poppins${isMinimal && !isDashboardRoute ? " minimal-template" : ""}`}>
             {!isDashboardRoute && (
-              <div id='global-navbar'>{renderNavbar()}</div>
+              <div id='global-navbar' className='sticky top-0 z-[10000]'>{renderNavbar()}</div>
             )}
             {isDashboardRoute ? (
               <div dir='ltr' style={{ direction: "ltr" }}>

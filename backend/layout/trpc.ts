@@ -71,6 +71,8 @@ const LayoutSettingsSchema = z.object({
     marqueeEnabled: z.boolean().optional(),
     marqueeText: z.string().optional(),
     marqueeTextAr: z.string().optional(),
+    promoText: z.string().optional(),
+    promoTextAr: z.string().optional(),
     navigationLinks: z.array(NavigationLinkSchema),
     navbarStyle: z.enum(["default", "editorial", "minimal"]),
   }),
