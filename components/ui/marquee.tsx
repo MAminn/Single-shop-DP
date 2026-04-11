@@ -4,7 +4,7 @@ interface MarqueeProps {
   text: string;
   /** Number of times to repeat the text for seamless looping */
   repeat?: number;
-  /** Animation speed — higher = slower (default 30s) */
+  /** Animation speed — higher = slower (default 60s) */
   duration?: number;
   className?: string;
 }
@@ -21,7 +21,7 @@ interface MarqueeProps {
 export function Marquee({
   text,
   repeat = 12,
-  duration = 30,
+  duration = 60,
   className,
 }: MarqueeProps) {
   const items = Array.from({ length: repeat }).map((_, i) => (

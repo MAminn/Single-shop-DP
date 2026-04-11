@@ -4,6 +4,7 @@ import { Effect, Option } from "effect";
 import { hashPassword } from "../shared/utils";
 import { eq } from "drizzle-orm";
 import { ServerError } from "#root/shared/error/server.js";
+import { STORE_NAME } from "#root/shared/config/branding";
 import { z } from "zod";
 import { randomBytes } from "node:crypto";
 import {
@@ -140,7 +141,7 @@ export const register = ({
         yield* $(
           emailService.sendEmail(
             newUser.email,
-            "Verify your Lebsy account",
+            `Verify your ${STORE_NAME} account`,
             emailTemplate
           )
         );

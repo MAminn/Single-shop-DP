@@ -6,6 +6,19 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ── LaRojaTV font — minimal template only ── */
+@font-face {
+  font-family: "LaRojaTV";
+  src: url("/assets/fonts/LaRojaTV-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+.minimal-template {
+  font-family: "LaRojaTV", "Poppins", sans-serif;
+}
+
 /* Links */
 a:where(:not([class*="text-"])) {
   text-decoration: none;
@@ -316,7 +329,7 @@ html[data-has-template-newsletter] [data-footer-newsletter] {
   }
 }
 .animate-marquee {
-  animation: marquee var(--marquee-duration, 30s) linear infinite;
+  animation: marquee var(--marquee-duration, 60s) linear infinite;
 }
 
 /* ── Hero carousel fade ── */

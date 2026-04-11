@@ -421,11 +421,10 @@ export function LandingTemplateMinimal({
         <HeroCarousel
           slides={heroSlides}
           interval={5000}
-          heightClass='h-[55vh] sm:h-[65vh] lg:h-[80vh]'
         />
       ) : content.hero.enabled ? (
         /* Fallback: text-only hero when no images are uploaded */
-        <section className='relative h-[55vh] sm:h-[65vh] lg:h-[80vh] flex items-center justify-center bg-stone-100'>
+        <section className='relative min-h-[50vh] flex items-center justify-center bg-stone-100'>
           <div className='max-w-3xl mx-auto text-center px-6'>
             <h1 className='text-4xl sm:text-5xl lg:text-7xl font-light text-stone-900 mb-6 leading-[1.1] tracking-tight'>
               {content.hero.title}

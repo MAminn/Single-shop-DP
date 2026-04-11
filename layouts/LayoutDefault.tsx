@@ -208,7 +208,7 @@ function LayoutShell({
         <TrackingProvider>
           <main
             id='page-content'
-            className='bg-background h-full text-foreground w-full font-poppins'>
+            className={`bg-background h-full text-foreground w-full font-poppins${isMinimal ? " minimal-template" : ""}`}>
             {!isDashboardRoute && (
               <div id='global-navbar'>{renderNavbar()}</div>
             )}

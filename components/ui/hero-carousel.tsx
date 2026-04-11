@@ -13,8 +13,6 @@ interface HeroCarouselProps {
   slides: HeroSlide[];
   /** Auto-play interval in ms (default 5000) */
   interval?: number;
-  /** Height class (default: h-[60vh] md:h-[85vh]) */
-  heightClass?: string;
   className?: string;
 }
 
@@ -25,7 +23,6 @@ interface HeroCarouselProps {
 export function HeroCarousel({
   slides,
   interval = 5000,
-  heightClass = "h-[60vh] md:h-[85vh]",
   className,
 }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0);
@@ -75,7 +72,7 @@ export function HeroCarousel({
 
   return (
     <div
-      className={cn("relative w-full overflow-hidden", heightClass, className)}
+      className={cn("relative w-full overflow-hidden", className)}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
@@ -88,7 +85,8 @@ export function HeroCarousel({
         <div
           key={i}
           className={cn(
-            "absolute inset-0 transition-opacity duration-700 ease-in-out",
+            "w-full transition-opacity duration-700 ease-in-out",
+            i === 0 ? "relative" : "absolute inset-0",
             i === current ? "opacity-100 z-10" : "opacity-0 z-0",
           )}
           aria-hidden={i !== current}>
@@ -96,13 +94,13 @@ export function HeroCarousel({
             const Inner = slide.linkUrl ? "a" : "div";
             const innerProps = slide.linkUrl ? { href: slide.linkUrl } : {};
             return (
-              <Inner {...innerProps} className='block w-full h-full'>
+              <Inner {...innerProps} className='block w-full'>
                 {/* Desktop image */}
                 <img
                   src={slide.imageUrl}
                   alt={slide.alt || `Slide ${i + 1}`}
                   className={cn(
-                    "w-full h-full object-cover",
+                    "w-full h-auto",
                     slide.mobileImageUrl ? "hidden md:block" : "",
                   )}
                   loading={i === 0 ? "eager" : "lazy"}
@@ -112,7 +110,7 @@ export function HeroCarousel({
                   <img
                     src={slide.mobileImageUrl}
                     alt={slide.alt || `Slide ${i + 1}`}
-                    className='w-full h-full object-cover md:hidden'
+                    className='w-full h-auto md:hidden'
                     loading={i === 0 ? "eager" : "lazy"}
                   />
                 )}

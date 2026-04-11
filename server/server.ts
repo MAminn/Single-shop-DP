@@ -17,6 +17,7 @@ import { ensureDefaultStoreVendor } from "#root/shared/database/bootstrap.js";
 import { listActiveClientConfigsRaw } from "#root/backend/pixel-tracking/pixel-config/ssr.js";
 import { getTemplateSelectionRaw } from "#root/backend/settings/get-template-selection-raw.js";
 import { getLayoutSettingsRaw } from "#root/backend/layout/get-layout-settings-raw.js";
+import { getLinkTreeConfigRaw } from "#root/backend/settings/get-link-tree-config.js";
 import { getStoreOwnerId } from "#root/shared/config/store.js";
 import { trackBeaconPlugin } from "#root/server/routes/track.js";
 
@@ -278,6 +279,9 @@ async function buildServer() {
         getStoreOwnerId(),
         activeLandingTemplate,
       );
+      // Fetch brand name from link-tree config for dynamic page titles
+      const linkTreeConfig = await getLinkTreeConfigRaw(request.db);
+      const brandName = linkTreeConfig.brandName || undefined;
 
       // Read locale from cookie for SSR (prevents EN→AR flicker)
       const cookieHeader = request.headers.cookie ?? "";
@@ -292,6 +296,7 @@ async function buildServer() {
         pixelConfigs,
         templateSelection,
         layoutSettingsData,
+        brandName,
         ssrLocale,
       };
 

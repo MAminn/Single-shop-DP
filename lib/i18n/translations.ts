@@ -123,6 +123,9 @@ export const translations: Record<Locale, Record<string, string>> = {
     "product.added_to_cart": "Added to cart",
     "product.view_cart": "View Cart",
     "product.checkout": "Checkout",
+    "read_more": "Read more",
+    "read_less": "Read less",
+    "price": "Price",
   },
   ar: {
     // Navbar
@@ -239,5 +242,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     "product.added_to_cart": "تمت الإضافة إلى السلة",
     "product.view_cart": "عرض السلة",
     "product.checkout": "إتمام الطلب",
+    "read_more": "اقرأ المزيد",
+    "read_less": "اقرأ أقل",
+    "price": "السعر",
   },
 };

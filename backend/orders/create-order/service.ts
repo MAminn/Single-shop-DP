@@ -13,6 +13,7 @@ import { z } from "zod";
 import type { ClientSession } from "#root/backend/auth/shared/entities";
 import { ServerError } from "#root/shared/error/server";
 import { EmailService, renderEmailTemplate } from "#root/shared/email/service";
+import { STORE_NAME } from "#root/shared/config/branding";
 import { NewOrderEmailTemplate } from "./email-template";
 import axios from "axios";
 import { validatePromoCode } from "#root/backend/promo-codes/validate-promo-code/validate-promo-code";
@@ -584,7 +585,7 @@ export const createOrder = (
       yield* $(
         emailService.sendEmail(
           input.customerEmail,
-          "Lebsy Order Confirmation",
+          `${STORE_NAME} Order Confirmation`,
           emailTemplate,
         ),
       );

@@ -13,6 +13,14 @@ import { STORE_CURRENCY } from "#root/shared/config/branding";
 import type { ProductPageProduct } from "#root/components/template-system/productPage/ProductPageModernSplit";
 import type { FeaturedProduct } from "#root/components/template-system/home/HomeFeaturedProducts";
 
+/** A group of products belonging to a single category type */
+export interface CategoryProductGroup {
+  categoryType: string;
+  categoryName: string;
+  categoryId: string;
+  products: FeaturedProduct[];
+}
+
 export default function ProductDetailPage() {
   const pageContext = usePageContext();
   const productId = pageContext.routeParams?.productId as string;
@@ -22,10 +30,10 @@ export default function ProductDetailPage() {
   const { trackEvent } = useTracking();
   const hasTrackedView = useRef<string | null>(null);
 
-  const [productData, setProductData] = useState<ProductPageProduct | null>(
-    null,
-  );
+  const [productData, setProductData] = useState<ProductPageProduct | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<FeaturedProduct[]>([]);
+  const [categoryGroups, setCategoryGroups] = useState<CategoryProductGroup[]>([]);
+  const [allProducts, setAllProducts] = useState<FeaturedProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,77 +67,90 @@ export default function ProductDetailPage() {
         ? reviewsResponse.result
         : null;
 
-      // Fetch related products (same category first, fallback to search)
+      // ── Helpers ──
       const mapViewToFeatured = (items: any[]): FeaturedProduct[] =>
-        items
-          .filter((rp: any) => rp.product.id !== productId)
-          .map((rp: any) => ({
-            id: rp.product.id,
-            name: rp.product.name,
-            price: Number(rp.product.price),
-            discountPrice: rp.product.discountPrice
-              ? Number(rp.product.discountPrice)
-              : null,
-            imageUrl: rp.file?.diskname
-              ? `/uploads/${rp.file.diskname}`
-              : undefined,
-            images: rp.file?.diskname
-              ? [{ url: `/uploads/${rp.file.diskname}`, isPrimary: true }]
-              : [],
-            categoryName: rp.category?.name || "",
-            stock: rp.product.stock || 0,
-            available: (rp.product.stock || 0) > 0,
-          }));
+        items.map((rp: any) => ({
+          id: rp.product.id,
+          name: rp.product.name,
+          price: Number(rp.product.price),
+          discountPrice: rp.product.discountPrice
+            ? Number(rp.product.discountPrice)
+            : null,
+          imageUrl: rp.file?.diskname
+            ? `/uploads/${rp.file.diskname}`
+            : undefined,
+          images: rp.file?.diskname
+            ? [{ url: `/uploads/${rp.file.diskname}`, isPrimary: true }]
+            : [],
+          categoryName: rp.category?.name || "",
+          stock: rp.product.stock || 0,
+          available: (rp.product.stock || 0) > 0,
+        }));
 
-      let mappedRelatedProducts: FeaturedProduct[] = [];
+      const mapSearchToFeatured = (items: any[]): FeaturedProduct[] =>
+        items.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          price: Number(item.price),
+          discountPrice: item.discountPrice
+            ? Number(item.discountPrice)
+            : null,
+          imageUrl: item.imageUrl
+            ? `/uploads/${item.imageUrl}`
+            : undefined,
+          images: item.imageUrl
+            ? [{ url: `/uploads/${item.imageUrl}`, isPrimary: true }]
+            : [],
+          categoryName: item.categoryName || "",
+          stock: item.stock || 0,
+          available: (item.stock || 0) > 0,
+        }));
 
-      // 1) Try same-category products
-      if (product.categoryId) {
-        try {
-          const viewRes = await trpc.product.view.query({
-            categoryId: product.categoryId,
-            limit: 9,
+      // ── Fetch category groups (for inline carousels) ──
+      const groups: CategoryProductGroup[] = [];
+      try {
+        const mainCats = await trpc.category.viewMain.query();
+        if (mainCats.success && mainCats.result) {
+          const cats = Array.isArray(mainCats.result) ? mainCats.result : [];
+          // Fetch products for each main category in parallel
+          const groupPromises = cats.map(async (cat: any) => {
+            try {
+              const res = await trpc.product.view.query({
+                categoryId: cat.id,
+                limit: 12,
+              });
+              if (res.success && res.result?.products?.length) {
+                return {
+                  categoryType: cat.type || cat.name,
+                  categoryName: cat.name,
+                  categoryId: cat.id,
+                  products: mapViewToFeatured(res.result.products),
+                };
+              }
+            } catch { /* skip */ }
+            return null;
           });
-          if (viewRes.success && viewRes.result?.products?.length) {
-            mappedRelatedProducts = mapViewToFeatured(viewRes.result.products);
+          const resolved = await Promise.all(groupPromises);
+          for (const g of resolved) {
+            if (g && g.products.length > 0) groups.push(g);
           }
-        } catch {
-          // continue to fallback
         }
-      }
+      } catch { /* ignore */ }
 
-      // 2) Fallback: if no results after filtering, use general search
-      if (mappedRelatedProducts.length === 0) {
-        try {
-          const searchRes = await trpc.product.search.query({
-            limit: 9,
-            includeOutOfStock: false,
-          });
-          if (searchRes.success && searchRes.result?.items?.length) {
-            mappedRelatedProducts = searchRes.result.items
-              .filter((item: any) => item.id !== productId)
-              .map((item: any) => ({
-                id: item.id,
-                name: item.name,
-                price: Number(item.price),
-                discountPrice: item.discountPrice
-                  ? Number(item.discountPrice)
-                  : null,
-                imageUrl: item.imageUrl
-                  ? `/uploads/${item.imageUrl}`
-                  : undefined,
-                images: item.imageUrl
-                  ? [{ url: `/uploads/${item.imageUrl}`, isPrimary: true }]
-                  : [],
-                categoryName: item.categoryName || "",
-                stock: item.stock || 0,
-                available: (item.stock || 0) > 0,
-              }));
-          }
-        } catch {
-          // silently continue
+      // ── Fetch ALL products for the bottom carousel ──
+      let allProds: FeaturedProduct[] = [];
+      try {
+        const searchRes = await trpc.product.search.query({
+          limit: 30,
+          includeOutOfStock: false,
+        });
+        if (searchRes.success && searchRes.result?.items?.length) {
+          allProds = mapSearchToFeatured(searchRes.result.items);
         }
-      }
+      } catch { /* ignore */ }
+
+      // ── Legacy: relatedProducts for non-minimal templates ──
+      let mappedRelatedProducts = allProds.filter((p) => p.id !== productId);
 
       // Extract reviews and their statistics
       const reviewStats = {
@@ -159,6 +180,8 @@ export default function ProductDetailPage() {
 
       setProductData(mappedProduct);
       setRelatedProducts(mappedRelatedProducts);
+      setCategoryGroups(groups);
+      setAllProducts(allProds);
       setIsLoading(false);
       setError(null);
 
@@ -218,6 +241,8 @@ export default function ProductDetailPage() {
     <Template
       product={productData ?? undefined}
       relatedProducts={relatedProducts}
+      categoryGroups={categoryGroups}
+      allProducts={allProducts}
       isLoading={isLoading}
       onAddToCart={(product: ProductPageProduct) => {
         const success = addItem(

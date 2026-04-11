@@ -16,6 +16,7 @@ declare global {
       pixelConfigs?: SsrPixelConfig[];
       templateSelection?: Record<string, string>;
       layoutSettingsData?: LayoutSettings;
+      brandName?: string;
       ssrLocale?: "en" | "ar";
     }
   }

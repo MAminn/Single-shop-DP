@@ -22,5 +22,5 @@ export default {
   hydrationCanBeAborted: true,
 
   // Pass client session, pixel configs, and template selection to the client side
-  passToClient: ["clientSession", "pixelConfigs", "templateSelection", "layoutSettingsData", "ssrLocale"],
+  passToClient: ["clientSession", "pixelConfigs", "templateSelection", "layoutSettingsData", "brandName", "ssrLocale"],
 } satisfies Config;

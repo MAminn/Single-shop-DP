@@ -4,5 +4,5 @@ import { STORE_NAME } from "#root/shared/config/branding";
 
 export default function title(pageContext: PageContext) {
   const layoutSettings = pageContext.layoutSettingsData as LayoutSettings | undefined;
-  return layoutSettings?.siteTitle || STORE_NAME;
+  return pageContext.brandName || layoutSettings?.siteTitle || STORE_NAME;
 }

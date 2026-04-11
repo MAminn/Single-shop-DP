@@ -3,6 +3,7 @@ import { renderPage } from "vike/server";
 import { createMiddleware } from "hono/factory";
 import { getTemplateSelectionRaw } from "#root/backend/settings/get-template-selection-raw.js";
 import { getLayoutSettingsRaw } from "#root/backend/layout/get-layout-settings-raw.js";
+import { getLinkTreeConfigRaw } from "#root/backend/settings/get-link-tree-config.js";
 import { getStoreOwnerId } from "#root/shared/config/store.js";
 
 export const vikeHonoMiddleware = createMiddleware(
@@ -16,6 +17,9 @@ export const vikeHonoMiddleware = createMiddleware(
       getStoreOwnerId(),
       activeLandingTemplate,
     );
+    // Fetch brand name from link-tree config for dynamic page titles
+    const linkTreeConfig = await getLinkTreeConfigRaw(c.var.db);
+    const brandName = linkTreeConfig.brandName || undefined;
 
     // Read locale from cookie for SSR (prevents EN→AR flicker)
     const cookieHeader = c.req.header("cookie") ?? "";
@@ -29,6 +33,7 @@ export const vikeHonoMiddleware = createMiddleware(
       headersOriginal: c.req.raw.headers,
       templateSelection,
       layoutSettingsData,
+      brandName,
       ssrLocale,
     };
     const pageContext = await renderPage(pageContextInit);

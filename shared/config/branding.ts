@@ -6,8 +6,7 @@
 
 export const STORE_NAME =
   (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_STORE_NAME) ||
-  process.env.VITE_STORE_NAME ||
-  "Percé";
+  process.env.VITE_STORE_NAME 
 
 export const STORE_CURRENCY =
   (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_CURRENCY) ||

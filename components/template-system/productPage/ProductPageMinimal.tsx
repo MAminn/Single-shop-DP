@@ -6,6 +6,7 @@ import type {
   ProductImage,
 } from "./ProductPageModernSplit";
 import type { FeaturedProduct } from "../home/HomeFeaturedProducts";
+import type { CategoryProductGroup } from "#root/pages/featured/products/@productId/+Page";
 import {
   ShoppingCart,
   Heart,
@@ -19,9 +20,9 @@ import {
   Mail,
   ChevronLeft,
   ChevronRight,
-  ChevronDown,
   Check,
   X,
+  Eye,
 } from "lucide-react";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import { useCart } from "#root/lib/context/CartContext";
@@ -29,12 +30,15 @@ import { Link } from "#root/components/utils/Link";
 import { getProductUrl } from "#root/lib/utils/route-helpers";
 import { STORE_CURRENCY } from "#root/shared/config/branding";
 
-/**
- * Props for ProductPageMinimal
- */
+/* ═══════════════════════════════════════════════════════════════════
+   Props
+   ═══════════════════════════════════════════════════════════════════ */
+
 export interface ProductPageMinimalProps {
   product?: ProductPageProduct;
   relatedProducts?: FeaturedProduct[];
+  categoryGroups?: CategoryProductGroup[];
+  allProducts?: FeaturedProduct[];
   showWishlist?: boolean;
   showSocialShare?: boolean;
   isLoading?: boolean;
@@ -44,60 +48,15 @@ export interface ProductPageMinimalProps {
   className?: string;
 }
 
-// Default product for preview
-const DEFAULT_PRODUCT: ProductPageProduct = {
-  id: "mock-1",
-  name: "Premium Wireless Headphones",
-  price: 199.99,
-  discountPrice: 149.99,
-  stock: 45,
-  available: true,
-  imageUrl:
-    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800",
-  images: [
-    {
-      url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800",
-      isPrimary: true,
-    },
-    {
-      url: "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800",
-    },
-    {
-      url: "https://images.unsplash.com/photo-1487215078519-e21cc028cb29?w=800",
-    },
-  ],
-  description:
-    "High-quality wireless headphones with premium sound and comfort",
-  longDescription:
-    "Experience superior sound quality with our Premium Wireless Headphones. Featuring advanced noise cancellation, 40-hour battery life, and premium comfort padding.",
-  rating: 4.5,
-  reviewCount: 128,
-  sku: "WH-PRO-2024",
-  brand: "TechGear",
-  specifications: [
-    { label: "Connectivity", value: "Bluetooth 5.0" },
-    { label: "Battery Life", value: "40 hours" },
-    { label: "Weight", value: "250g" },
-  ],
-};
+/* ═══════════════════════════════════════════════════════════════════
+   Main Component
+   ═══════════════════════════════════════════════════════════════════ */
 
-/**
- * Product Page Minimal Template
- *
- * Premium minimal product page with clean aesthetic:
- * - Heavy whitespace and breathing room
- * - Typography-driven design
- * - Minimal UI elements
- * - Calm, high-end aesthetic
- * - Focus on product and content
- * - Borderless, clean layout
- * - Scrollable recommendation carousel with expandable cards
- *
- * Best for: Premium brands, luxury items, minimalist aesthetics
- */
 export function ProductPageMinimal({
   product,
   relatedProducts,
+  categoryGroups,
+  allProducts,
   showWishlist = true,
   isLoading = false,
   onAddToCart,
@@ -112,11 +71,11 @@ export function ProductPageMinimal({
   const { t, locale } = useMinimalI18n();
   const isAr = locale === "ar";
 
+  /* ── Loading skeleton ── */
   if (isLoading || !product) {
     return (
       <div className={`min-h-screen bg-white ${className}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Breadcrumb skeleton */}
           <div className="flex gap-2 mb-8">
             <div className="h-4 w-12 bg-stone-100 animate-pulse" />
             <div className="h-4 w-4 bg-stone-100 animate-pulse" />
@@ -125,9 +84,7 @@ export function ProductPageMinimal({
             <div className="h-4 w-32 bg-stone-100 animate-pulse" />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Image skeleton */}
             <div className="aspect-square bg-stone-100 animate-pulse" />
-            {/* Info skeleton */}
             <div className="space-y-6 pt-4">
               <div className="h-8 w-3/4 bg-stone-100 animate-pulse" />
               <div className="h-6 w-1/4 bg-stone-100 animate-pulse" />
@@ -161,12 +118,6 @@ export function ProductPageMinimal({
     }
   };
 
-  const handleAddToWishlist = () => {
-    if (onAddToWishlist) {
-      onAddToWishlist(product);
-    }
-  };
-
   const handleImageClick = (index: number) => {
     setSelectedImage(index);
     if (onImageClick) {
@@ -174,366 +125,364 @@ export function ProductPageMinimal({
     }
   };
 
-  const renderStars = (rating: number = 0) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
+  const displayPrice = hasDiscount
+    ? (product.discountPrice as number)
+    : product.price;
 
-    for (let i = 0; i < 5; i++) {
-      stars.push(
-        <Star
-          key={i}
-          className={`w-3 h-3 ${
-            i < fullStars
-              ? "fill-gray-900 text-gray-900"
-              : "fill-gray-300 text-gray-300"
-          }`}
-        />,
-      );
-    }
-
-    return stars;
-  };
+  // Bottom carousel: use allProducts or fall back to relatedProducts
+  const bottomCarouselProducts = (allProducts && allProducts.length > 0
+    ? allProducts
+    : relatedProducts || []
+  ).filter((p) => p.id !== product.id);
 
   return (
     <div className={`product-page-minimal bg-white ${className}`}>
-
       {/* ── Add-to-Cart Confirmation Toast ── */}
       {cartToast && (
-      <div
-        className='fixed top-4 start-4 z-[10001] w-[320px] bg-white border border-stone-200 shadow-xl animate-[slideDown_300ms_ease-out_forwards]'>
-        <div className='h-1 bg-emerald-500 w-full animate-[shrink_4s_linear_forwards]' />
-        <div className='p-4'>
-          <div className='flex items-start justify-between mb-3'>
-            <div className='flex items-center gap-2 text-emerald-600'>
-              <Check className='w-4 h-4' />
-              <span className='text-sm font-medium'>{t("product.added_to_cart")}</span>
+        <div className="fixed top-4 start-4 z-[10001] w-[320px] bg-white border border-stone-200 shadow-xl animate-[slideDown_300ms_ease-out_forwards]">
+          <div className="h-1 bg-emerald-500 w-full animate-[shrink_4s_linear_forwards]" />
+          <div className="p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2 text-emerald-600">
+                <Check className="w-4 h-4" />
+                <span className="text-sm font-medium">{t("product.added_to_cart")}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCartToast(false)}
+                className="text-stone-400 hover:text-stone-600 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            <button
-              type='button'
-              onClick={() => setCartToast(false)}
-              className='text-stone-400 hover:text-stone-600 transition-colors'>
-              <X className='w-4 h-4' />
-            </button>
-          </div>
-          <div className='flex items-center gap-3'>
-            {product.imageUrl && (
-              <img
-                src={product.imageUrl}
-                alt={product.name}
-                className='w-14 h-14 object-cover flex-none'
-              />
-            )}
-            <div className='min-w-0 flex-1'>
-              <p className='text-sm text-stone-800 font-medium truncate'>{product.name}</p>
-              <p className='text-sm text-stone-500'>
-                {hasDiscount ? (product.discountPrice as number) : product.price} {STORE_CURRENCY}
-              </p>
+            <div className="flex items-center gap-3">
+              {product.imageUrl && (
+                <img
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className="w-14 h-14 object-cover flex-none"
+                />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-stone-800 font-medium truncate">{product.name}</p>
+                <p className="text-sm text-stone-500">
+                  {displayPrice} {STORE_CURRENCY}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className='flex gap-2 mt-3'>
-            <Link
-              href='/cart'
-              className='flex-1 py-2 text-center text-xs font-medium border border-stone-200 text-stone-700 hover:bg-stone-50 transition-colors'>
-              {t("product.view_cart")}
-            </Link>
-            <Link
-              href='/checkout'
-              className='flex-1 py-2 text-center text-xs font-medium bg-stone-900 text-white hover:bg-stone-800 transition-colors'>
-              {t("product.checkout")}
-            </Link>
+            <div className="flex gap-2 mt-3">
+              <Link
+                href="/cart"
+                className="flex-1 py-2 text-center text-xs font-medium border border-stone-200 text-stone-700 hover:bg-stone-50 transition-colors">
+                {t("product.view_cart")}
+              </Link>
+              <Link
+                href="/checkout"
+                className="flex-1 py-2 text-center text-xs font-medium bg-stone-900 text-white hover:bg-stone-800 transition-colors">
+                {t("product.checkout")}
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
       )}
 
-      {/* Minimal Breadcrumb */}
-      <div className='border-b border-gray-100 py-6 px-4 sm:px-6 lg:px-8'>
-        <div className='max-w-7xl mx-auto'>
-          <nav className='text-sm text-gray-500 font-light'>
-            <a href='/' className='hover:text-gray-900'>
-              {t("product.home")}
-            </a>
-            <span className='mx-3'>/</span>
-            <a href='/shop' className='hover:text-gray-900'>
-              {t("product.shop")}
-            </a>
-            <span className='mx-3'>/</span>
-            <span className='text-gray-900'>{product.name}</span>
+      {/* ═══════════════════════════════════════════════
+          BREADCRUMB
+          ═══════════════════════════════════════════════ */}
+      <div className="border-b border-gray-100 py-4 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <nav className="text-sm text-gray-500 font-light">
+            <a href="/" className="hover:text-gray-900">{t("product.home")}</a>
+            <span className="mx-2 text-gray-300">&gt;</span>
+            {product.categoryName && (
+              <>
+                <a href="/shop" className="hover:text-gray-900">{product.categoryName}</a>
+                <span className="mx-2 text-gray-300">&gt;</span>
+              </>
+            )}
+            <a href="/shop" className="hover:text-gray-900">{t("product.shop")}</a>
+            <span className="mx-2 text-gray-300">&gt;</span>
+            <span className="text-gray-900">{product.name}</span>
           </nav>
         </div>
       </div>
 
-      {/* Main Product Section */}
-      <div className='max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24'>
-        <div className='grid lg:grid-cols-2 gap-16 lg:gap-24'>
-          {/* Left: Image */}
-          <div className='space-y-8'>
-            {/* Main Image - Minimal */}
-            <div className='aspect-square overflow-hidden'>
-              <img
-                src={images[selectedImage]?.url || product.imageUrl}
-                alt={product.name}
-                className='w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity'
-                onClick={() => handleImageClick(selectedImage)}
-              />
-            </div>
+      {/* ═══════════════════════════════════════════════
+          MAIN CONTENT — Two-column split on desktop
+          ═══════════════════════════════════════════════ */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
-            {/* Minimal Image Selector */}
+          {/* ── COLUMN 1: Image Gallery ── */}
+          <div className="flex gap-3">
+            {/* Vertical thumbnails strip (desktop) */}
             {images.length > 1 && (
-              <div className='flex gap-4'>
+              <div className="hidden sm:flex flex-col gap-2 w-20 flex-shrink-0">
                 {images.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleImageClick(idx)}
-                    className={`flex-1 aspect-square overflow-hidden transition-opacity ${
+                    className={`aspect-square overflow-hidden border-2 transition-all ${
                       idx === selectedImage
-                        ? "opacity-100"
-                        : "opacity-40 hover:opacity-70"
+                        ? "border-stone-900 opacity-100"
+                        : "border-transparent opacity-50 hover:opacity-80"
                     }`}>
                     <img
                       src={img.url}
-                      alt={`View ${idx + 1}`}
-                      className='w-full h-full object-cover'
+                      alt={`${product.name} view ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
                     />
                   </button>
                 ))}
               </div>
             )}
-          </div>
 
-          {/* Right: Product Info */}
-          <div className='space-y-12 pt-8'>
-            {/* Brand */}
-            {product.brand && (
-              <p className='text-sm uppercase tracking-widest text-gray-500 font-light'>
-                {product.brand}
-              </p>
-            )}
-
-            {/* Product Name */}
-            <div>
-              <h1 className='text-5xl lg:text-6xl font-light text-gray-900 leading-[1.1] mb-8'>
-                {product.name}
-              </h1>
-
-              {/* Rating */}
-              {product.rating !== undefined && product.rating > 0 && (
-                <div className='flex items-center gap-3'>
-                  <div className='flex items-center gap-1'>
-                    {renderStars(product.rating)}
-                  </div>
-                  <span className='text-sm text-gray-500 font-light'>
-                    {product.rating} — {product.reviewCount || 0} {t("product.reviews")}
+            {/* Main large image */}
+            <div className="flex-1">
+              <div className="aspect-[3/4] sm:aspect-square lg:aspect-[3/4] overflow-hidden bg-stone-50 relative">
+                {product.available && (
+                  <span className="absolute top-3 start-3 z-10 bg-stone-900 text-white text-xs font-medium px-3 py-1">
+                    {t("new") || "New"}
                   </span>
+                )}
+                <img
+                  src={images[selectedImage]?.url || product.imageUrl}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Mobile thumbnails (horizontal) */}
+              {images.length > 1 && (
+                <div className="flex sm:hidden gap-2 mt-3 overflow-x-auto">
+                  {images.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleImageClick(idx)}
+                      className={`w-16 h-16 flex-shrink-0 overflow-hidden border-2 transition-all ${
+                        idx === selectedImage
+                          ? "border-stone-900 opacity-100"
+                          : "border-transparent opacity-50 hover:opacity-80"
+                      }`}>
+                      <img
+                        src={img.url}
+                        alt={`View ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
+          </div>
 
-            {/* Price - Minimal */}
-            <div className='py-8 border-y border-gray-100'>
+          {/* ── COLUMN 2: Product Info + Inline Carousels ── */}
+          <div className="space-y-6">
+            {/* Share + Wishlist top-right actions */}
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowShareMenu(!showShareMenu)}
+                className="w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 transition-colors"
+                aria-label={t("product.share")}>
+                <Share2 className="w-4 h-4 text-gray-600" />
+              </button>
+              {showWishlist && (
+                <button
+                  onClick={() => onAddToWishlist?.(product)}
+                  className="w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 transition-colors"
+                  aria-label={t("product.save")}>
+                  <Heart className="w-4 h-4 text-gray-600" />
+                </button>
+              )}
+            </div>
+
+            {/* Share menu dropdown */}
+            {showShareMenu && (
+              <div className="flex items-center gap-3 pb-2">
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors"
+                  aria-label="Share on Facebook">
+                  <Facebook className="w-4 h-4" />
+                </a>
+                <a
+                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}&text=${encodeURIComponent(product.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors"
+                  aria-label="Share on Twitter">
+                  <Twitter className="w-4 h-4" />
+                </a>
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(product.name + " " + (typeof window !== "undefined" ? window.location.href : ""))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors"
+                  aria-label="Share on WhatsApp">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+                </a>
+                <button
+                  onClick={() => { if (typeof navigator !== "undefined") navigator.clipboard.writeText(window.location.href); }}
+                  className="w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors"
+                  aria-label="Copy link">
+                  <LinkIcon className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Product Name */}
+            <h1 className="text-3xl lg:text-4xl font-medium text-gray-900 leading-tight">
+              {product.name}
+            </h1>
+
+            {/* Price */}
+            <div>
               {hasDiscount ? (
-                <div className='flex items-baseline gap-4'>
-                  <span className='text-5xl font-light text-gray-900'>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-2xl font-semibold text-gray-900">
                     {(product.discountPrice as number).toFixed(2)} {STORE_CURRENCY}
                   </span>
-                  <span className='text-2xl font-light text-gray-400 line-through'>
+                  <span className="text-lg text-gray-400 line-through">
                     {product.price.toFixed(2)} {STORE_CURRENCY}
                   </span>
                 </div>
               ) : (
-                <span className='text-5xl font-light text-gray-900'>
+                <span className="text-2xl font-semibold text-gray-900">
                   {product.price.toFixed(2)} {STORE_CURRENCY}
                 </span>
               )}
-
-              <p className='text-xs text-gray-400 font-light mt-2'>
-                {t("price_includes_tax")}
-              </p>
-
-              {/* Stock - Subtle */}
-              {product.available && product.stock && (
-                <p className='text-sm text-emerald-600 font-light mt-3 flex items-center gap-1.5'>
-                  <Check className='w-3.5 h-3.5' />
-                  {t("in_stock")}
-                </p>
-              )}
+              <p className="text-xs text-gray-400 mt-1">{t("price_includes_tax")}</p>
             </div>
 
-            {/* Description */}
-            {product.description && (
-              <p className='text-lg text-gray-700 font-light leading-relaxed'>
-                {product.description}
+            {/* Stock status */}
+            {product.available ? (
+              <p className="text-sm text-emerald-600 font-medium flex items-center gap-1.5">
+                <Check className="w-4 h-4" />
+                {t("in_stock")}
+              </p>
+            ) : (
+              <p className="text-sm text-red-500 font-medium">
+                {t("out_of_stock")}
               </p>
             )}
 
-            {/* Quantity Selector */}
-            {product.available && (
-              <div className='flex items-center gap-6'>
-                <span className='text-sm text-gray-500 font-light'>{t("product.quantity")}</span>
-                <div className='flex items-center border border-gray-200'>
-                  <button
-                    onClick={decrementQty}
-                    disabled={quantity <= 1}
-                    className='w-10 h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors'
-                    aria-label={t("product.decrease_qty")}>
-                    <Minus className='w-4 h-4' />
-                  </button>
-                  <span className='w-12 h-10 flex items-center justify-center text-sm font-light border-x border-gray-200 tabular-nums'>
-                    {quantity}
-                  </span>
-                  <button
-                    onClick={incrementQty}
-                    disabled={quantity >= maxQty}
-                    className='w-10 h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors'
-                    aria-label={t("product.increase_qty")}>
-                    <Plus className='w-4 h-4' />
-                  </button>
-                </div>
+            {/* ── Category Carousels (inline, matchperfumes style) ── */}
+            {categoryGroups && categoryGroups.length > 0 && (
+              <div className="space-y-6 pt-2">
+                {categoryGroups.map((group) => (
+                  <InlineCategoryCarousel
+                    key={group.categoryId}
+                    title={group.categoryName}
+                    products={group.products}
+                    currentProductId={product.id}
+                  />
+                ))}
               </div>
             )}
 
-            {/* Actions */}
-            <div className='flex flex-col sm:flex-row gap-4'>
+            {/* Description */}
+            {product.description && (
+              <div className="pt-4 border-t border-gray-100">
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                  {product.description}
+                </p>
+                {product.longDescription && (
+                  <ExpandableText text={product.longDescription} />
+                )}
+              </div>
+            )}
+
+            {/* Specifications */}
+            {product.specifications && product.specifications.length > 0 && (
+              <div className="space-y-2 pt-2">
+                {product.specifications.map((spec, idx) => (
+                  <div
+                    key={idx}
+                    className="flex justify-between items-baseline py-2 border-b border-gray-100 last:border-0">
+                    <span className="text-sm text-gray-500">{spec.label}</span>
+                    <span className="text-sm text-gray-900 font-medium">{spec.value}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Price again + Quantity + Add to Cart */}
+            <div className="pt-4 border-t border-gray-100 space-y-4">
+              <div className="flex items-baseline justify-between">
+                <span className="text-sm text-gray-500">{t("price") || "Price"}</span>
+                <span className="text-xl font-semibold text-gray-900">
+                  {displayPrice.toFixed(2)} {STORE_CURRENCY}
+                </span>
+              </div>
+
+              {/* Quantity */}
+              {product.available && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">{t("product.quantity")}</span>
+                  <div className="flex items-center border border-gray-200 rounded-full">
+                    <button
+                      onClick={incrementQty}
+                      disabled={quantity >= maxQty}
+                      className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors rounded-s-full"
+                      aria-label="Increase quantity">
+                      <Plus className="w-4 h-4" />
+                    </button>
+                    <span className="w-10 h-10 flex items-center justify-center text-sm font-medium tabular-nums border-x border-gray-200">
+                      {quantity}
+                    </span>
+                    <button
+                      onClick={decrementQty}
+                      disabled={quantity <= 1}
+                      className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors rounded-e-full"
+                      aria-label="Decrease quantity">
+                      <Minus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Add to Cart */}
               <Button
-                size='lg'
-                className='bg-gray-900 hover:bg-gray-800 text-white rounded-none px-12 py-6 text-base font-light shadow-none hover:shadow-lg transition-all'
+                size="lg"
+                className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-none py-6 text-base font-medium shadow-none hover:shadow-lg transition-all"
                 onClick={handleAddToCart}
                 disabled={!product.available}>
                 {product.available ? t("add_to_cart") : t("out_of_stock")}
               </Button>
-
-              {showWishlist && (
-                <Button
-                  size='lg'
-                  variant='ghost'
-                  className='rounded-none px-8 py-6 text-base font-light hover:bg-gray-50 group'
-                  onClick={handleAddToWishlist}>
-                  <Heart className='me-2 w-5 h-5 group-hover:fill-gray-900 transition-all' />
-                  {t("product.save")}
-                </Button>
-              )}
             </div>
-
-            {/* Social Sharing */}
-            <div className='relative'>
-              <button
-                onClick={() => setShowShareMenu(!showShareMenu)}
-                className='flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 font-light transition-colors'>
-                <Share2 className='w-4 h-4' />
-                {t("product.share")}
-              </button>
-              {showShareMenu && (
-                <div className='flex items-center gap-3 mt-3'>
-                  <a
-                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
-                    aria-label='Share on Facebook'>
-                    <Facebook className='w-4 h-4' />
-                  </a>
-                  <a
-                    href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}&text=${encodeURIComponent(product.name)}`}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
-                    aria-label='Share on Twitter'>
-                    <Twitter className='w-4 h-4' />
-                  </a>
-                  <a
-                    href={`https://wa.me/?text=${encodeURIComponent(product.name + " " + (typeof window !== "undefined" ? window.location.href : ""))}`}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
-                    aria-label='Share on WhatsApp'>
-                    <svg className='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'><path d='M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z'/></svg>
-                  </a>
-                  <a
-                    href={`mailto:?subject=${encodeURIComponent(product.name)}&body=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
-                    className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
-                    aria-label='Share via Email'>
-                    <Mail className='w-4 h-4' />
-                  </a>
-                  <button
-                    onClick={() => { if (typeof navigator !== "undefined") navigator.clipboard.writeText(window.location.href); }}
-                    className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
-                    aria-label='Copy link'>
-                    <LinkIcon className='w-4 h-4' />
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Long Description */}
-            {product.longDescription && (
-              <div className='pt-8 border-t border-gray-100'>
-                <p className='text-gray-600 font-light leading-relaxed'>
-                  {product.longDescription}
-                </p>
-              </div>
-            )}
-
-            {/* Specifications - Minimal */}
-            {product.specifications && product.specifications.length > 0 && (
-              <div className='pt-8 border-t border-gray-100 space-y-4'>
-                {product.specifications.map((spec, idx) => (
-                  <div
-                    key={idx}
-                    className='flex justify-between items-baseline py-2 border-b border-gray-100 last:border-0'>
-                    <span className='text-gray-600 font-light'>
-                      {spec.label}
-                    </span>
-                    <span className='text-gray-900 font-light'>
-                      {spec.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Features - Minimal List */}
-            {product.features && product.features.length > 0 && (
-              <div className='pt-8 border-t border-gray-100 space-y-6'>
-                {product.features.map((feature, idx) => (
-                  <div key={idx}>
-                    <h3 className='text-lg font-light text-gray-900 mb-1'>
-                      {feature.title}
-                    </h3>
-                    <p className='text-sm text-gray-600 font-light'>
-                      {feature.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
-
-        {/* ═══════════════════════════════════════════════
-            RECOMMENDATIONS — Scrollable Carousel
-            Expandable cards inspired by matchperfumes.com
-            ═══════════════════════════════════════════════ */}
-        {relatedProducts && relatedProducts.length > 0 && (
-          <RecommendationsCarousel
-            products={relatedProducts}
-            title={t("product.you_may_also_like")}
-            currentProductId={product.id}
-          />
-        )}
       </div>
+
+      {/* ═══════════════════════════════════════════════
+          BOTTOM SECTION — "Products you may like" Carousel
+          Full-width, separate section
+          ═══════════════════════════════════════════════ */}
+      {bottomCarouselProducts.length > 0 && (
+        <BottomProductsCarousel
+          products={bottomCarouselProducts}
+          title={t("product.you_may_also_like")}
+        />
+      )}
     </div>
   );
 }
 
-// ─── Recommendations Carousel ────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════════════
+   Inline Category Carousel (matchperfumes style)
+   Compact cards inside the info column
+   ═══════════════════════════════════════════════════════════════════ */
 
-function RecommendationsCarousel({
-  products,
+function InlineCategoryCarousel({
   title,
+  products,
   currentProductId,
 }: {
-  products: FeaturedProduct[];
   title: string;
+  products: FeaturedProduct[];
   currentProductId: string;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -562,11 +511,8 @@ function RecommendationsCarousel({
   const scroll = (direction: "left" | "right") => {
     const el = scrollRef.current;
     if (!el) return;
-    const card = el.querySelector("[data-rec-card]");
-    const cardWidth = card?.clientWidth ?? 220;
-    const gap = 16;
     el.scrollBy({
-      left: direction === "right" ? (cardWidth + gap) * 2 : -(cardWidth + gap) * 2,
+      left: direction === "right" ? 200 : -200,
       behavior: "smooth",
     });
   };
@@ -575,37 +521,29 @@ function RecommendationsCarousel({
   if (filteredProducts.length === 0) return null;
 
   return (
-    <div className='mt-24 pt-16 border-t border-gray-100'>
-      {/* Section heading */}
-      <div className='text-center mb-10'>
-        <h2 className='text-2xl sm:text-3xl font-light text-stone-900 tracking-tight inline-block relative pb-3'>
-          {title}
-          <span className='absolute bottom-0 left-1/4 right-1/4 h-[2px] bg-stone-900' />
-        </h2>
-      </div>
-
-      {/* Carousel */}
-      <div className='relative'>
+    <div>
+      <p className="text-sm font-semibold text-gray-800 mb-3">{title}</p>
+      <div className="relative group/carousel">
         <button
           onClick={() => scroll("left")}
           disabled={!canScrollLeft}
-          className='absolute -start-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-9 h-9 items-center justify-center border border-stone-200 bg-white hover:border-stone-900 disabled:opacity-20 disabled:cursor-not-allowed transition-colors'
-          aria-label='Scroll left'>
-          <ChevronLeft className='w-4 h-4' />
+          className="absolute -start-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-7 h-7 items-center justify-center bg-white border border-stone-200 shadow-sm hover:border-stone-900 disabled:opacity-0 transition-all"
+          aria-label="Scroll left">
+          <ChevronLeft className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => scroll("right")}
           disabled={!canScrollRight}
-          className='absolute -end-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-9 h-9 items-center justify-center border border-stone-200 bg-white hover:border-stone-900 disabled:opacity-20 disabled:cursor-not-allowed transition-colors'
-          aria-label='Scroll right'>
-          <ChevronRight className='w-4 h-4' />
+          className="absolute -end-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-7 h-7 items-center justify-center bg-white border border-stone-200 shadow-sm hover:border-stone-900 disabled:opacity-0 transition-all"
+          aria-label="Scroll right">
+          <ChevronRight className="w-3.5 h-3.5" />
         </button>
 
         <div
           ref={scrollRef}
-          className='flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 justify-center'>
-          {filteredProducts.map((product) => (
-            <RecommendationCard key={product.id} product={product} />
+          className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1">
+          {filteredProducts.map((p) => (
+            <InlineProductCard key={p.id} product={p} />
           ))}
         </div>
       </div>
@@ -613,123 +551,276 @@ function RecommendationsCarousel({
   );
 }
 
-// ─── Expandable Recommendation Card ──────────────────────────────────
+/* ── Small inline card for category carousels ── */
 
-function RecommendationCard({ product }: { product: FeaturedProduct }) {
-  const [expanded, setExpanded] = useState(false);
-  const { t } = useMinimalI18n();
-  const { addItem } = useCart();
-
-  const imageUrl = (() => {
-    if (product.images && product.images.length > 0) {
-      const primary = product.images.find((img) => img.isPrimary);
-      const url = (primary || product.images[0])?.url;
-      if (!url) return "/assets/placeholder-product.png";
-      if (url.startsWith("http") || url.startsWith("/")) return url;
-      return `/uploads/${url}`;
-    }
-    if (!product.imageUrl) return "/assets/placeholder-product.png";
-    if (product.imageUrl.startsWith("http") || product.imageUrl.startsWith("/")) return product.imageUrl;
-    return `/uploads/${product.imageUrl}`;
-  })();
-
+function InlineProductCard({ product }: { product: FeaturedProduct }) {
+  const imageUrl = resolveImageUrl(product);
   const hasDiscount =
     product.discountPrice !== undefined &&
     product.discountPrice !== null &&
     Number(product.discountPrice) < product.price;
-
   const displayPrice = hasDiscount ? Number(product.discountPrice) : product.price;
   const productUrl = getProductUrl(product.id);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!product.available) return;
-    addItem(
-      {
-        id: product.id,
-        name: product.name,
-        price: displayPrice,
-        imageUrl,
-        stock: product.stock,
-      },
-      1,
-      {},
-    );
+  return (
+    <Link
+      href={productUrl}
+      className="flex-none w-[130px] snap-start group/card border border-gray-100 hover:border-gray-300 transition-colors bg-white p-2">
+      <div className="aspect-square bg-stone-50 overflow-hidden mb-2">
+        <img
+          src={imageUrl}
+          alt={product.name}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover/card:scale-105"
+          loading="lazy"
+        />
+      </div>
+      <h4 className="text-xs font-medium text-gray-800 line-clamp-1">{product.name}</h4>
+      <div className="flex items-center gap-1.5 mt-0.5">
+        {hasDiscount && (
+          <span className="text-[10px] text-gray-400 line-through">
+            {product.price} {STORE_CURRENCY}
+          </span>
+        )}
+        <span className={`text-xs font-semibold ${hasDiscount ? "text-red-600" : "text-gray-800"}`}>
+          {displayPrice} {STORE_CURRENCY}
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Bottom Full-Width "Products you may like" Carousel
+   Large cards with hover overlays
+   ═══════════════════════════════════════════════════════════════════ */
+
+function BottomProductsCarousel({
+  products,
+  title,
+}: {
+  products: FeaturedProduct[];
+  title: string;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+  const { t } = useMinimalI18n();
+  const { addItem } = useCart();
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", checkScroll, { passive: true });
+    window.addEventListener("resize", checkScroll);
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [checkScroll, products]);
+
+  const scroll = (direction: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const card = el.querySelector("[data-bottom-card]");
+    const cardWidth = card?.clientWidth ?? 280;
+    const gap = 24;
+    el.scrollBy({
+      left: direction === "right" ? (cardWidth + gap) * 2 : -(cardWidth + gap) * 2,
+      behavior: "smooth",
+    });
   };
 
+  if (products.length === 0) return null;
+
   return (
-    <div
-      data-rec-card
-      className='flex-none w-[180px] sm:w-[200px] snap-start group'>
-      {/* Clickable card container */}
-      <div
-        className='relative cursor-pointer'
-        onClick={() => setExpanded(!expanded)}>
-        {/* Image */}
-        <div className='aspect-square bg-stone-50 overflow-hidden'>
-          <img
-            src={imageUrl}
-            alt={product.name}
-            className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-105'
-            loading='lazy'
-          />
+    <div className="bg-stone-50/50 py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-medium text-stone-900">{title}</h2>
+          <div className="h-[2px] w-24 bg-stone-900 mt-2 mx-auto" />
         </div>
 
-        {/* Expand indicator */}
-        <div className='absolute bottom-2 end-2 w-6 h-6 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm'>
-          <ChevronDown
-            className={`w-3.5 h-3.5 text-stone-600 transition-transform duration-300 ${
-              expanded ? "rotate-180" : ""
-            }`}
-          />
-        </div>
-      </div>
-
-      {/* Basic info (always visible) */}
-      <div className='pt-2.5 text-center'>
-        <Link href={productUrl}>
-          <h3 className='text-sm font-normal text-stone-800 line-clamp-1 hover:text-stone-600 transition-colors'>
-            {product.name}
-          </h3>
-        </Link>
-        <div className='mt-1 flex items-center justify-center gap-2'>
-          {hasDiscount && (
-            <span className='text-xs text-stone-400 line-through'>
-              {product.price} {STORE_CURRENCY}
-            </span>
-          )}
-          <span className={`text-sm font-medium ${hasDiscount ? "text-red-600" : "text-stone-800"}`}>
-            {displayPrice} {STORE_CURRENCY}
-          </span>
-        </div>
-      </div>
-
-      {/* Expandable detail panel */}
-      <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          expanded ? "max-h-40 opacity-100 mt-2" : "max-h-0 opacity-0"
-        }`}>
-        <div className='border-t border-stone-100 pt-2 space-y-2'>
-          {product.categoryName && (
-            <p className='text-xs text-stone-400 text-center'>{product.categoryName}</p>
-          )}
-          <Link
-            href={productUrl}
-            className='block w-full py-2 text-center text-xs font-medium border border-stone-200 text-stone-700 hover:border-stone-900 hover:text-stone-900 transition-colors'>
-            {t("product.view_details")}
-          </Link>
+        <div className="relative">
           <button
-            type='button'
-            onClick={handleAddToCart}
-            disabled={!product.available}
-            className='w-full py-2 border border-stone-900 text-stone-900 text-xs font-medium tracking-wide uppercase hover:bg-stone-900 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed'>
-            {product.available ? t("add_to_cart") : t("out_of_stock")}
+            onClick={() => scroll("left")}
+            disabled={!canScrollLeft}
+            className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-10 h-10 items-center justify-center bg-white border border-stone-200 shadow-sm text-stone-600 hover:text-stone-900 hover:border-stone-900 disabled:opacity-0 transition-all rounded-full"
+            aria-label="Previous">
+            <ChevronLeft className="w-5 h-5" />
           </button>
+          <button
+            onClick={() => scroll("right")}
+            disabled={!canScrollRight}
+            className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-10 h-10 items-center justify-center bg-white border border-stone-200 shadow-sm text-stone-600 hover:text-stone-900 hover:border-stone-900 disabled:opacity-0 transition-all rounded-full"
+            aria-label="Next">
+            <ChevronRight className="w-5 h-5" />
+          </button>
+
+          <div
+            ref={scrollRef}
+            className="flex gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 justify-center">
+          {products.map((product) => (
+            <BottomProductCard
+              key={product.id}
+              product={product}
+              onAddToCart={() => {
+                if (!product.available) return;
+                const price = product.discountPrice
+                  ? Number(product.discountPrice)
+                  : product.price;
+                addItem(
+                  {
+                    id: product.id,
+                    name: product.name,
+                    price,
+                    imageUrl: resolveImageUrl(product),
+                    stock: product.stock,
+                  },
+                  1,
+                  {},
+                );
+              }}
+            />
+          ))}
+        </div>
         </div>
       </div>
     </div>
   );
+}
+
+/* ── Large card for bottom carousel ── */
+
+function BottomProductCard({
+  product,
+  onAddToCart,
+}: {
+  product: FeaturedProduct;
+  onAddToCart: () => void;
+}) {
+  const { t } = useMinimalI18n();
+  const imageUrl = resolveImageUrl(product);
+  const hasDiscount =
+    product.discountPrice !== undefined &&
+    product.discountPrice !== null &&
+    Number(product.discountPrice) < product.price;
+  const displayPrice = hasDiscount ? Number(product.discountPrice) : product.price;
+  const productUrl = getProductUrl(product.id);
+
+  return (
+    <div
+      data-bottom-card
+      className="flex-none w-[240px] sm:w-[260px] snap-start group/bcard">
+      <div className="relative aspect-square bg-stone-100 overflow-hidden">
+        <Link href={productUrl}>
+          <img
+            src={imageUrl}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover/bcard:scale-105"
+            loading="lazy"
+          />
+        </Link>
+        <div className="absolute bottom-3 start-3 flex gap-2 opacity-0 group-hover/bcard:opacity-100 transition-opacity duration-300">
+          <button
+            className="w-9 h-9 flex items-center justify-center bg-white rounded-full shadow-md hover:bg-stone-900 hover:text-white transition-colors"
+            aria-label="Wishlist">
+            <Heart className="w-4 h-4" />
+          </button>
+          <Link
+            href={productUrl}
+            className="w-9 h-9 flex items-center justify-center bg-white rounded-full shadow-md hover:bg-stone-900 hover:text-white transition-colors"
+            aria-label="View">
+            <Eye className="w-4 h-4" />
+          </Link>
+        </div>
+        {product.available && !hasDiscount && (
+          <span className="absolute top-3 start-3 bg-stone-900 text-white text-[10px] font-semibold px-2 py-0.5">
+            {t("new") || "New"}
+          </span>
+        )}
+        {hasDiscount && (
+          <span className="absolute top-3 start-3 bg-red-600 text-white text-[10px] font-semibold px-2 py-0.5">
+            {t("sale") || "Sale"}
+          </span>
+        )}
+      </div>
+
+      <div className="pt-3 text-center">
+        <Link href={productUrl}>
+          <h3 className="text-sm font-medium text-stone-800 line-clamp-1 hover:text-stone-600 transition-colors">
+            {product.name}
+          </h3>
+        </Link>
+        <div className="flex items-center justify-center gap-2 mt-1">
+          {hasDiscount && (
+            <span className="text-xs text-stone-400 line-through">
+              {product.price} {STORE_CURRENCY}
+            </span>
+          )}
+          <span className={`text-sm font-semibold ${hasDiscount ? "text-red-600" : "text-stone-800"}`}>
+            {displayPrice} {STORE_CURRENCY}
+          </span>
+        </div>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            onAddToCart();
+          }}
+          disabled={!product.available}
+          className="mt-3 w-full py-2.5 border border-stone-900 text-stone-900 text-xs font-medium uppercase tracking-wider hover:bg-stone-900 hover:text-white transition-colors disabled:border-stone-300 disabled:text-stone-400 disabled:cursor-not-allowed disabled:hover:bg-transparent">
+          {product.available ? t("add_to_cart") : t("out_of_stock")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Expandable Text (Read more / Read less)
+   ═══════════════════════════════════════════════════════════════════ */
+
+function ExpandableText({ text }: { text: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const { t } = useMinimalI18n();
+
+  return (
+    <div className="mt-2">
+      <div className={`text-sm text-gray-600 leading-relaxed whitespace-pre-line ${!expanded ? "line-clamp-3" : ""}`}>
+        {text}
+      </div>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="text-sm text-gray-900 underline underline-offset-2 mt-1 hover:text-gray-700 transition-colors">
+        {expanded ? (t("read_less") || "Read less") : (t("read_more") || "Read more")}
+      </button>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Utility: Resolve image URL from a product
+   ═══════════════════════════════════════════════════════════════════ */
+
+function resolveImageUrl(product: FeaturedProduct): string {
+  if (product.images && product.images.length > 0) {
+    const primary = product.images.find((img) => img.isPrimary);
+    const url = (primary || product.images[0])?.url;
+    if (!url) return "/assets/placeholder-product.png";
+    if (url.startsWith("http") || url.startsWith("/")) return url;
+    return `/uploads/${url}`;
+  }
+  if (!product.imageUrl) return "/assets/placeholder-product.png";
+  if (product.imageUrl.startsWith("http") || product.imageUrl.startsWith("/"))
+    return product.imageUrl;
+  return `/uploads/${product.imageUrl}`;
 }
 
 ProductPageMinimal.displayName = "ProductPageMinimal";
