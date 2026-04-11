@@ -63,16 +63,9 @@ export function HeroCarousel({
 
   if (!slides.length) return null;
 
-  const activeSlide = slides[current];
-
-  const Wrapper = activeSlide?.linkUrl ? "a" : "div";
-  const wrapperProps = activeSlide?.linkUrl
-    ? { href: activeSlide.linkUrl }
-    : {};
-
   return (
     <div
-      className={cn("relative w-full overflow-hidden", className)}
+      className={cn("relative w-full overflow-hidden aspect-[16/9] max-h-[650px]", className)}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
@@ -85,8 +78,7 @@ export function HeroCarousel({
         <div
           key={i}
           className={cn(
-            "w-full transition-opacity duration-700 ease-in-out",
-            i === 0 ? "relative" : "absolute inset-0",
+            "absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out",
             i === current ? "opacity-100 z-10" : "opacity-0 z-0",
           )}
           aria-hidden={i !== current}>
@@ -94,13 +86,13 @@ export function HeroCarousel({
             const Inner = slide.linkUrl ? "a" : "div";
             const innerProps = slide.linkUrl ? { href: slide.linkUrl } : {};
             return (
-              <Inner {...innerProps} className='block w-full'>
+              <Inner {...innerProps} className='block w-full h-full'>
                 {/* Desktop image */}
                 <img
                   src={slide.imageUrl}
                   alt={slide.alt || `Slide ${i + 1}`}
                   className={cn(
-                    "w-full h-auto",
+                    "w-full h-full object-cover",
                     slide.mobileImageUrl ? "!hidden md:!block" : "",
                   )}
                   loading={i === 0 ? "eager" : "lazy"}
@@ -110,7 +102,7 @@ export function HeroCarousel({
                   <img
                     src={slide.mobileImageUrl}
                     alt={slide.alt || `Slide ${i + 1}`}
-                    className='w-full h-auto block md:!hidden'
+                    className='w-full h-full object-cover block md:!hidden'
                     loading={i === 0 ? "eager" : "lazy"}
                   />
                 )}
