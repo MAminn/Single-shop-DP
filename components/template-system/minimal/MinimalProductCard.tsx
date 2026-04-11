@@ -6,6 +6,7 @@ import { useWishlist } from "#root/lib/hooks/useWishlist";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import { getProductUrl } from "#root/lib/utils/route-helpers";
 import { cn } from "#root/lib/utils";
+import { showCartToast } from "#root/components/ui/cart-toast";
 
 interface ProductImage {
   url: string;
@@ -86,6 +87,11 @@ export function MinimalProductCard({
           1,
           {},
         );
+        showCartToast({
+          name: product.name,
+          price: displayPrice,
+          imageUrl: displayImageUrl,
+        });
       } catch {
         // silent
       } finally {

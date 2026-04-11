@@ -101,7 +101,7 @@ export function HeroCarousel({
                   alt={slide.alt || `Slide ${i + 1}`}
                   className={cn(
                     "w-full h-auto",
-                    slide.mobileImageUrl ? "hidden md:block" : "",
+                    slide.mobileImageUrl ? "!hidden md:!block" : "",
                   )}
                   loading={i === 0 ? "eager" : "lazy"}
                 />
@@ -110,7 +110,7 @@ export function HeroCarousel({
                   <img
                     src={slide.mobileImageUrl}
                     alt={slide.alt || `Slide ${i + 1}`}
-                    className='w-full h-auto md:hidden'
+                    className='w-full h-auto block md:!hidden'
                     loading={i === 0 ? "eager" : "lazy"}
                   />
                 )}

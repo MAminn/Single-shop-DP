@@ -7,6 +7,7 @@ import type {
 } from "./ProductPageModernSplit";
 import type { FeaturedProduct } from "../home/HomeFeaturedProducts";
 import type { CategoryProductGroup } from "#root/pages/featured/products/@productId/+Page";
+import { showCartToast } from "#root/components/ui/cart-toast";
 import {
   ShoppingCart,
   Heart,
@@ -67,7 +68,6 @@ export function ProductPageMinimal({
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [showShareMenu, setShowShareMenu] = useState(false);
-  const [cartToast, setCartToast] = useState(false);
   const { t, locale } = useMinimalI18n();
   const isAr = locale === "ar";
 
@@ -113,8 +113,11 @@ export function ProductPageMinimal({
   const handleAddToCart = () => {
     if (onAddToCart) {
       onAddToCart(product);
-      setCartToast(true);
-      setTimeout(() => setCartToast(false), 4000);
+      showCartToast({
+        name: product.name,
+        price: displayPrice,
+        imageUrl: product.imageUrl || "",
+      });
     }
   };
 
@@ -137,53 +140,6 @@ export function ProductPageMinimal({
 
   return (
     <div className={`product-page-minimal bg-white ${className}`}>
-      {/* ── Add-to-Cart Confirmation Toast ── */}
-      {cartToast && (
-        <div className="fixed top-4 start-4 z-[10001] w-[320px] bg-white border border-stone-200 shadow-xl animate-[slideDown_300ms_ease-out_forwards]">
-          <div className="h-1 bg-emerald-500 w-full animate-[shrink_4s_linear_forwards]" />
-          <div className="p-4">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-2 text-emerald-600">
-                <Check className="w-4 h-4" />
-                <span className="text-sm font-medium">{t("product.added_to_cart")}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setCartToast(false)}
-                className="text-stone-400 hover:text-stone-600 transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex items-center gap-3">
-              {product.imageUrl && (
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  className="w-14 h-14 object-cover flex-none"
-                />
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="text-sm text-stone-800 font-medium truncate">{product.name}</p>
-                <p className="text-sm text-stone-500">
-                  {displayPrice} {STORE_CURRENCY}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-2 mt-3">
-              <Link
-                href="/cart"
-                className="flex-1 py-2 text-center text-xs font-medium border border-stone-200 text-stone-700 hover:bg-stone-50 transition-colors">
-                {t("product.view_cart")}
-              </Link>
-              <Link
-                href="/checkout"
-                className="flex-1 py-2 text-center text-xs font-medium bg-stone-900 text-white hover:bg-stone-800 transition-colors">
-                {t("product.checkout")}
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ═══════════════════════════════════════════════
           BREADCRUMB
@@ -687,6 +643,11 @@ function BottomProductsCarousel({
                   1,
                   {},
                 );
+                showCartToast({
+                  name: product.name,
+                  price,
+                  imageUrl: resolveImageUrl(product),
+                });
               }}
             />
           ))}

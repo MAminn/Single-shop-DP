@@ -8,6 +8,7 @@ import { useEffect, useState, memo } from "react";
 import "./style.css";
 import { trpc } from "#root/shared/trpc/client.js";
 import { toast, Toaster } from "sonner";
+import { CartToastContainer } from "#root/components/ui/cart-toast";
 import type { ClientSession } from "#root/backend/auth/shared/entities.js";
 import { usePageContext } from "vike-react/usePageContext";
 import { TRPCClientError } from "@trpc/client";
@@ -208,7 +209,7 @@ function LayoutShell({
         <TrackingProvider>
           <main
             id='page-content'
-            className={`bg-background h-full text-foreground w-full font-poppins${isMinimal ? " minimal-template" : ""}`}>
+            className={`bg-background h-full text-foreground w-full font-poppins${isMinimal && !isDashboardRoute ? " minimal-template" : ""}`}>
             {!isDashboardRoute && (
               <div id='global-navbar'>{renderNavbar()}</div>
             )}
@@ -220,6 +221,7 @@ function LayoutShell({
               children
             )}
             {!isDashboardRoute && <GlobalFooter />}
+            {isMinimal && !isDashboardRoute && <CartToastContainer />}
             <Toaster />
             <ShadcnToaster />
             {/* Phase 3 — page-transition overlay (CSS-only, SSR-inert) */}

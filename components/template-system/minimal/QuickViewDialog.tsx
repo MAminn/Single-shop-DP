@@ -4,6 +4,7 @@ import { useCart } from "#root/lib/context/CartContext";
 import { useWishlist } from "#root/lib/hooks/useWishlist";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import { cn } from "#root/lib/utils";
+import { showCartToast } from "#root/components/ui/cart-toast";
 import type { MinimalProduct } from "./MinimalProductCard";
 
 interface QuickViewDialogProps {
@@ -59,8 +60,13 @@ export function QuickViewDialog({ product, open, onClose }: QuickViewDialogProps
       quantity,
       {},
     );
+    showCartToast({
+      name: product.name,
+      price: displayPrice,
+      imageUrl: images[0] || "",
+    });
     onClose();
-  }, [product, displayPrice, images, quantity, addItem, onClose]);
+  }, [product, displayPrice, images, quantity, addItem, onClose, t]);
 
   if (!open || !product) return null;
 
