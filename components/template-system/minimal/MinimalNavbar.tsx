@@ -1,5 +1,5 @@
 import { useContext, useState, useRef, useEffect } from "react";
-import { Search, ShoppingCart, User, X, Menu, Globe, LogOut } from "lucide-react";
+import { Search, ShoppingCart, User, X, Menu, Globe, LogOut, Mail, ChevronDown } from "lucide-react";
 import { Link } from "#root/components/utils/Link";
 import { AuthContext } from "#root/context/AuthContext";
 import { useCart } from "#root/lib/context/CartContext";
@@ -33,6 +33,17 @@ export function MinimalNavbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [categories, setCategories] = useState<{ id: string; name: string; slug?: string }[]>([]);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+
+  useEffect(() => {
+    trpc.category.view.query().then((res) => {
+      if (res.success && res.result) {
+        setCategories(res.result.map((c: { id: string; name: string; slug?: string }) => ({ id: c.id, name: c.name, slug: c.slug })));
+      }
+    }).catch(() => {});
+  }, []);
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -48,10 +59,13 @@ export function MinimalNavbar() {
   const links =
     cmsNavLinks.length > 0
       ? cmsNavLinks.map((l) => ({
+          id: l.id,
           label: locale === "ar" && l.labelAr ? l.labelAr : l.label,
           to: l.url,
+          isDropdown: l.isDropdown ?? false,
+          categoryIds: l.categoryIds ?? [],
         }))
-      : [{ label: "Shop", to: "/shop" }];
+      : [{ id: "default-shop", label: "Shop", to: "/shop", isDropdown: false, categoryIds: [] as string[] }];
 
   const handleCloseSheet = () => setIsSheetOpen(false);
 
@@ -72,6 +86,28 @@ export function MinimalNavbar() {
           className='bg-white text-black'
         />
       )}
+
+      {/* ── Info Bar (language + email) ── */}
+      <div className='w-full bg-gray-100 border-b border-gray-200'>
+        <div className='max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-8 text-[11px] text-gray-600'>
+          <button
+            type='button'
+            onClick={toggleLocale}
+            className='flex items-center gap-1.5 hover:text-black transition-colors'
+            aria-label='Toggle language'>
+            <Globe className='w-3 h-3' />
+            {locale === "en" ? "العربية" : "English"}
+          </button>
+          {layoutSettings.header.contactEmail && (
+            <a
+              href={`mailto:${layoutSettings.header.contactEmail}`}
+              className='flex items-center gap-1.5 hover:text-black transition-colors'>
+              <Mail className='w-3 h-3' />
+              {layoutSettings.header.contactEmail}
+            </a>
+          )}
+        </div>
+      </div>
 
       <nav className='w-full bg-white border-b border-gray-200' dir={dir === "rtl" ? "ltr" : "rtl"}>
         <div className='max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8'>
@@ -121,25 +157,57 @@ export function MinimalNavbar() {
               
 
               {/* Language toggle */}
-              <button
+              {/* <button
                 type='button'
                 onClick={toggleLocale}
                 className='p-2 text-gray-700 hover:text-black transition-colors text-xs font-medium'
                 aria-label='Toggle language'>
                 {locale === "en" ? "AR" : "EN"}
-              </button>
+              </button> */}
             </div>
 
             {/* ── Center / Right: Navigation Links (desktop) ── */}
             <div className='hidden lg:flex items-center gap-1'>
-              {links.map((link) => (
-                <Link
-                  key={link.to}
-                  href={link.to}
-                  className='px-3 py-1.5 text-[13px] font-normal text-gray-700 hover:text-black transition-colors tracking-wide'>
-                  {link.label}
-                </Link>
-              ))}
+              {links.map((link) => {
+                if (link.isDropdown && link.categoryIds.length > 0) {
+                  const dropdownCats = categories.filter((c) => link.categoryIds.includes(c.id));
+                  if (dropdownCats.length === 0) return null;
+                  return (
+                    <div
+                      key={link.id}
+                      className='relative'
+                      onMouseEnter={() => setOpenDropdown(link.id)}
+                      onMouseLeave={() => setOpenDropdown(null)}>
+                      <button
+                        type='button'
+                        className='flex items-center gap-1 px-3 py-1.5 text-[13px] font-normal text-gray-700 hover:text-black transition-colors tracking-wide'>
+                        <ChevronDown className='w-3 h-3' />
+                        {link.label}
+                      </button>
+                      {openDropdown === link.id && (
+                        <div dir="ltr" className='absolute top-full start-0 mt-0 min-w-[180px] bg-white border border-gray-200 shadow-lg z-50'>
+                          {dropdownCats.map((cat) => (
+                            <Link
+                              key={cat.id}
+                              href={`/shop?category=${cat.slug || cat.id}`}
+                              className='block px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-black transition-colors whitespace-nowrap'>
+                              {cat.name}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+                return (
+                  <Link
+                    key={link.id}
+                    href={link.to}
+                    className='px-3 py-1.5 text-[13px] font-normal text-gray-700 hover:text-black transition-colors tracking-wide'>
+                    {link.label}
+                  </Link>
+                );
+              })}
             </div>
 
             {/* ── Far Right: Logo + Mobile hamburger ── */}
@@ -191,15 +259,46 @@ export function MinimalNavbar() {
                       {/* Mobile nav links */}
                       <div className='flex-1 px-5 pt-6'>
                         <div className='flex flex-col gap-4'>
-                          {links.map((link) => (
-                            <Link
-                              key={link.to}
-                              href={link.to}
-                              className='text-sm font-normal text-gray-800 hover:text-black transition-colors tracking-wide'
-                              onClick={handleCloseSheet}>
-                              {link.label}
-                            </Link>
-                          ))}
+                          {links.map((link) => {
+                            if (link.isDropdown && link.categoryIds.length > 0) {
+                              const dropdownCats = categories.filter((c) => link.categoryIds.includes(c.id));
+                              if (dropdownCats.length === 0) return null;
+                              const isExpanded = mobileExpanded === link.id;
+                              return (
+                                <div key={link.id}>
+                                  <button
+                                    type='button'
+                                    onClick={() => setMobileExpanded(isExpanded ? null : link.id)}
+                                    className='flex items-center justify-between w-full text-sm font-normal text-gray-800 hover:text-black transition-colors tracking-wide'>
+                                    {link.label}
+                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                                  </button>
+                                  {isExpanded && (
+                                    <div className='flex flex-col gap-2 mt-2 ps-4'>
+                                      {dropdownCats.map((cat) => (
+                                        <Link
+                                          key={cat.id}
+                                          href={`/shop?category=${cat.slug || cat.id}`}
+                                          className='text-sm text-gray-600 hover:text-black transition-colors'
+                                          onClick={handleCloseSheet}>
+                                          {cat.name}
+                                        </Link>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            }
+                            return (
+                              <Link
+                                key={link.id}
+                                href={link.to}
+                                className='text-sm font-normal text-gray-800 hover:text-black transition-colors tracking-wide'
+                                onClick={handleCloseSheet}>
+                                {link.label}
+                              </Link>
+                            );
+                          })}
                         </div>
 
                         {/* Language toggle */}

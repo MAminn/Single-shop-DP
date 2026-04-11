@@ -82,6 +82,15 @@ export default function LayoutSettingsPage() {
   const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
   const [activeTab, setActiveTab] = useState<"header" | "footer">("header");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(activeLandingTemplate);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    trpc.category.view.query().then((res) => {
+      if (res.success && res.result) {
+        setCategories(res.result.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })));
+      }
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     setHasUnsavedChanges(
@@ -262,7 +271,7 @@ export default function LayoutSettingsPage() {
   const updateNavLink = (
     id: string,
     field: keyof NavigationLink,
-    value: string | boolean,
+    value: string | boolean | string[],
   ) => {
     updateHeader(
       "navigationLinks",
@@ -862,6 +871,27 @@ export default function LayoutSettingsPage() {
           )}
 
           {/* Navigation links */}
+
+          {/* Contact Email (minimal template info bar) */}
+          {settings.header.navbarStyle === "minimal" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className='text-base'>Info Bar — Contact Email</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Label htmlFor='contact-email'>Email shown in the bar above the navbar</Label>
+              <Input
+                id='contact-email'
+                type='email'
+                value={settings.header.contactEmail ?? ""}
+                onChange={(e) => updateHeader("contactEmail", e.target.value)}
+                placeholder='e.g. cs@yourbrand.com'
+                className='mt-1'
+              />
+            </CardContent>
+          </Card>
+          )}
+
           <Card>
             <CardHeader className='flex flex-row items-center justify-between'>
               <CardTitle className='text-base'>Navigation Links</CardTitle>
@@ -918,6 +948,46 @@ export default function LayoutSettingsPage() {
                         placeholder='Arabic label'
                         className='flex-1'
                       />
+                    </div>
+                  )}
+                  {/* Dropdown toggle + category picker */}
+                  {settings.header.navbarStyle === "minimal" && (
+                    <div className='pl-6 space-y-2'>
+                      <div className='flex items-center gap-2'>
+                        <Switch
+                          checked={link.isDropdown ?? false}
+                          onCheckedChange={(v) =>
+                            updateNavLink(link.id, "isDropdown", v)
+                          }
+                        />
+                        <Label className='text-xs text-muted-foreground'>
+                          Show as dropdown with categories
+                        </Label>
+                      </div>
+                      {link.isDropdown && categories.length > 0 && (
+                        <div className='grid grid-cols-2 sm:grid-cols-3 gap-1.5 rounded border p-2 bg-background max-h-48 overflow-y-auto'>
+                          {categories.map((cat) => {
+                            const selected = link.categoryIds?.includes(cat.id) ?? false;
+                            return (
+                              <label key={cat.id} className='flex items-center gap-1.5 text-xs cursor-pointer'>
+                                <input
+                                  type='checkbox'
+                                  className='accent-stone-900'
+                                  checked={selected}
+                                  onChange={(e) => {
+                                    const current = link.categoryIds ?? [];
+                                    const next = e.target.checked
+                                      ? [...current, cat.id]
+                                      : current.filter((id) => id !== cat.id);
+                                    updateNavLink(link.id, "categoryIds", next);
+                                  }}
+                                />
+                                {cat.name}
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

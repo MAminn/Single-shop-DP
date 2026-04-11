@@ -6,6 +6,7 @@ import { HeroCarousel } from "#root/components/ui/hero-carousel";
 import type { HeroSlide } from "#root/components/ui/hero-carousel";
 import { MinimalProductCarousel } from "#root/components/template-system/minimal/MinimalProductCarousel";
 import { QuickViewDialog } from "#root/components/template-system/minimal/QuickViewDialog";
+import { MinimalTestimonialsSection } from "#root/components/template-system/minimal/MinimalTestimonials";
 import type { MinimalProduct } from "#root/components/template-system/minimal/MinimalProductCard";
 import { HomeFeaturedProducts } from "../home/HomeFeaturedProducts";
 import type { FeaturedProduct } from "../home/HomeFeaturedProducts";
@@ -544,7 +545,7 @@ export function LandingTemplateMinimal({
       {/* ═══════════════════════════════════════════════
           8. TESTIMONIALS
           ═══════════════════════════════════════════════ */}
-      <TestimonialsSection />
+      <MinimalTestimonialsSection />
 
       {/* Quick View Dialog */}
       <QuickViewDialog

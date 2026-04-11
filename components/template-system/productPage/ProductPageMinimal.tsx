@@ -7,7 +7,7 @@ import type {
 } from "./ProductPageModernSplit";
 import type { FeaturedProduct } from "../home/HomeFeaturedProducts";
 import type { CategoryProductGroup } from "#root/pages/featured/products/@productId/+Page";
-import { showCartToast } from "#root/components/ui/cart-toast";
+import { showCartToast, flyToCart } from "#root/components/ui/cart-toast";
 import {
   ShoppingCart,
   Heart,
@@ -70,6 +70,8 @@ export function ProductPageMinimal({
   const [quantity, setQuantity] = useState(1);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [selectedAddOns, setSelectedAddOns] = useState<Set<string>>(new Set());
+  const mainImageRef = useRef<HTMLImageElement>(null);
+  const addToCartBtnRef = useRef<HTMLButtonElement>(null);
   const { t, locale } = useMinimalI18n();
   const isAr = locale === "ar";
   const layoutSettings = useLayoutSettings();
@@ -125,6 +127,9 @@ export function ProductPageMinimal({
 
   const handleAddToCart = () => {
     if (onAddToCart) {
+      // Fly animation from the main product image
+      flyToCart(addToCartBtnRef.current, images[selectedImage]?.url || product.imageUrl || "");
+
       onAddToCart(product);
 
       // Also add selected add-on products from inline carousels
@@ -242,6 +247,7 @@ export function ProductPageMinimal({
                   </span>
                 )}
                 <img
+                  ref={mainImageRef}
                   src={images[selectedImage]?.url || product.imageUrl}
                   alt={product.name}
                   className="w-full h-auto object-contain"
@@ -275,22 +281,27 @@ export function ProductPageMinimal({
 
           {/* ── COLUMN 2: Product Info + Inline Carousels ── */}
           <div className="space-y-6">
-            {/* Share + Wishlist top-right actions */}
-            <div className="flex items-center justify-end gap-3">
-              <button
-                onClick={() => setShowShareMenu(!showShareMenu)}
-                className="w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 transition-colors"
-                aria-label={t("product.share")}>
-                <Share2 className="w-4 h-4 text-gray-600" />
-              </button>
-              {showWishlist && (
+            {/* Product Name + Share/Wishlist on same row */}
+            <div className="flex items-start gap-3">
+              <h1 className="flex-1 text-3xl lg:text-4xl font-medium text-gray-900 leading-tight">
+                {product.name}
+              </h1>
+              <div className="flex items-center gap-2 flex-shrink-0 pt-1">
                 <button
-                  onClick={() => onAddToWishlist?.(product)}
+                  onClick={() => setShowShareMenu(!showShareMenu)}
                   className="w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 transition-colors"
-                  aria-label={t("product.save")}>
-                  <Heart className="w-4 h-4 text-gray-600" />
+                  aria-label={t("product.share")}>
+                  <Share2 className="w-4 h-4 text-gray-600" />
                 </button>
-              )}
+                {showWishlist && (
+                  <button
+                    onClick={() => onAddToWishlist?.(product)}
+                    className="w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 transition-colors"
+                    aria-label={t("product.save")}>
+                    <Heart className="w-4 h-4 text-gray-600" />
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Share menu dropdown */}
@@ -328,11 +339,6 @@ export function ProductPageMinimal({
                 </button>
               </div>
             )}
-
-            {/* Product Name */}
-            <h1 className="text-3xl lg:text-4xl font-medium text-gray-900 leading-tight">
-              {product.name}
-            </h1>
 
             {/* Price */}
             <div>
@@ -456,6 +462,7 @@ export function ProductPageMinimal({
 
               {/* Add to Cart */}
               <Button
+                ref={addToCartBtnRef}
                 size="lg"
                 className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-none py-6 text-base font-medium shadow-none hover:shadow-lg transition-all"
                 onClick={handleAddToCart}

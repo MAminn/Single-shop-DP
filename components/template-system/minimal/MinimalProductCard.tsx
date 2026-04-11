@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { Eye, Heart, ShoppingCart } from "lucide-react";
 import { Link } from "#root/components/utils/Link";
 import { useCart } from "#root/lib/context/CartContext";
@@ -6,7 +6,7 @@ import { useWishlist } from "#root/lib/hooks/useWishlist";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import { getProductUrl } from "#root/lib/utils/route-helpers";
 import { cn } from "#root/lib/utils";
-import { showCartToast } from "#root/components/ui/cart-toast";
+import { showCartToast, flyToCart } from "#root/components/ui/cart-toast";
 
 interface ProductImage {
   url: string;
@@ -51,6 +51,8 @@ export function MinimalProductCard({
   const { t } = useMinimalI18n();
   const [isAdding, setIsAdding] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const cardImageRef = useRef<HTMLImageElement>(null);
+  const addToCartBtnRef = useRef<HTMLButtonElement>(null);
 
   const displayImageUrl = useMemo(() => {
     if (product.images && product.images.length > 0) {
@@ -76,6 +78,7 @@ export function MinimalProductCard({
       if (!product.available) return;
       setIsAdding(true);
       try {
+        flyToCart(addToCartBtnRef.current, displayImageUrl);
         addItem(
           {
             id: product.id,
@@ -113,6 +116,7 @@ export function MinimalProductCard({
       <div className='relative aspect-square bg-stone-50 overflow-hidden'>
         <Link href={productUrl} className='block w-full h-full'>
           <img
+            ref={cardImageRef}
             src={displayImageUrl}
             alt={product.name}
             className={cn(
@@ -186,6 +190,7 @@ export function MinimalProductCard({
 
       {/* Add to cart button */}
       <button
+        ref={addToCartBtnRef}
         type='button'
         onClick={handleAddToCart}
         disabled={!product.available || isAdding}

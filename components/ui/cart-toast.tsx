@@ -21,6 +21,60 @@ export function showCartToast(item: CartToastItem) {
 }
 
 /**
+ * Launch a ghost image that flies from a source element to the cart toast area.
+ * Call this before or alongside showCartToast() for the visual effect.
+ *
+ * @param sourceEl - The image element or its container to fly from
+ * @param imageUrl - URL of the product image
+ */
+export function flyToCart(sourceEl: HTMLElement | null, imageUrl?: string) {
+  if (!sourceEl || typeof document === "undefined") return;
+
+  const rect = sourceEl.getBoundingClientRect();
+  const ghost = document.createElement("img");
+  ghost.src = imageUrl || (sourceEl instanceof HTMLImageElement ? sourceEl.src : "");
+  if (!ghost.src) return;
+
+  // Style the ghost
+  Object.assign(ghost.style, {
+    position: "fixed",
+    top: `${rect.top}px`,
+    left: `${rect.left}px`,
+    width: `${rect.width}px`,
+    height: `${rect.height}px`,
+    objectFit: "cover",
+    zIndex: "20000",
+    pointerEvents: "none",
+    borderRadius: "8px",
+    boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+    transition: "all 1.1s cubic-bezier(0.22, 0.68, 0, 1.1)",
+    opacity: "1",
+  });
+
+  document.body.appendChild(ghost);
+
+  // Force reflow
+  ghost.getBoundingClientRect();
+
+  // Animate to top-left (where the cart toast appears)
+  requestAnimationFrame(() => {
+    Object.assign(ghost.style, {
+      top: "16px",
+      left: "16px",
+      width: "56px",
+      height: "56px",
+      opacity: "0.3",
+      borderRadius: "50%",
+      transform: "rotate(-8deg)",
+    });
+  });
+
+  // Clean up
+  ghost.addEventListener("transitionend", () => ghost.remove(), { once: true });
+  setTimeout(() => ghost.remove(), 1300);
+}
+
+/**
  * Mount once in the layout. Renders the custom add-to-cart toast.
  */
 export function CartToastContainer() {

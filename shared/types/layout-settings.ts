@@ -11,6 +11,10 @@ export interface NavigationLink {
   labelAr?: string;
   url: string;
   openInNewTab?: boolean;
+  /** When true, link renders as a dropdown showing selected categories */
+  isDropdown?: boolean;
+  /** Category IDs to show in the dropdown */
+  categoryIds?: string[];
 }
 
 // ─── Social Link ─────────────────────────────────────────────────────────────
@@ -95,6 +99,8 @@ export interface HeaderSettings {
   /** Promo text line for product detail page (minimal template) */
   promoText?: string;
   promoTextAr?: string;
+  /** Contact email shown in the info bar (minimal template) */
+  contactEmail?: string;
 }
 
 // ─── Footer Settings ────────────────────────────────────────────────────────
@@ -155,6 +161,7 @@ export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
     marqueeTextAr: "",
     promoText: "",
     promoTextAr: "",
+    contactEmail: "",
   },
   footer: {
     logoUrl: "",

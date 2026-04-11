@@ -17,6 +17,8 @@ const NavigationLinkSchema = z.object({
   labelAr: z.string().optional(),
   url: z.string(),
   openInNewTab: z.boolean().optional(),
+  isDropdown: z.boolean().optional(),
+  categoryIds: z.array(z.string()).optional(),
 });
 
 const SocialLinkSchema = z.object({
@@ -73,6 +75,7 @@ const LayoutSettingsSchema = z.object({
     marqueeTextAr: z.string().optional(),
     promoText: z.string().optional(),
     promoTextAr: z.string().optional(),
+    contactEmail: z.string().optional(),
     navigationLinks: z.array(NavigationLinkSchema),
     navbarStyle: z.enum(["default", "editorial", "minimal"]),
   }),

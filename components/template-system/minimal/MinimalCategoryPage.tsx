@@ -5,12 +5,14 @@ import {
   MinimalProductCard,
   type MinimalProduct,
 } from "#root/components/template-system/minimal/MinimalProductCard";
+import { QuickViewDialog } from "#root/components/template-system/minimal/QuickViewDialog";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import {
   minimalCategoryT,
   type MinimalCategoryKey,
 } from "#root/lib/i18n/minimal-category-translations";
 import { cn } from "#root/lib/utils";
+import { MinimalTestimonialsSection } from "#root/components/template-system/minimal/MinimalTestimonials";
 
 /* ── Types ──────────────────────────────────────────────────────────── */
 
@@ -225,6 +227,15 @@ export function MinimalCategoryPage({
   const ct = useCategoryT();
   const { locale } = useMinimalI18n();
   const sortOptions = useSortOptions();
+  const [quickViewProduct, setQuickViewProduct] = useState<MinimalProduct | null>(null);
+
+  const handleQuickView = useCallback((product: MinimalProduct) => {
+    if (onQuickView) {
+      onQuickView(product);
+    } else {
+      setQuickViewProduct(product);
+    }
+  }, [onQuickView]);
 
   return (
     <div className="min-h-screen">
@@ -291,7 +302,7 @@ export function MinimalCategoryPage({
                   <MinimalProductCard
                     key={product.id}
                     product={product}
-                    onQuickView={onQuickView}
+                    onQuickView={handleQuickView}
                   />
                 ))}
               </div>
@@ -306,6 +317,16 @@ export function MinimalCategoryPage({
           )}
         </div>
       </div>
+
+      {/* Testimonials */}
+      <MinimalTestimonialsSection />
+
+      {/* Quick View Dialog */}
+      <QuickViewDialog
+        product={quickViewProduct}
+        open={!!quickViewProduct}
+        onClose={() => setQuickViewProduct(null)}
+      />
     </div>
   );
 }
