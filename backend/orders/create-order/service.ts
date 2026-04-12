@@ -15,6 +15,8 @@ import { ServerError } from "#root/shared/error/server";
 import { EmailService, renderEmailTemplate } from "#root/shared/email/service";
 import { STORE_NAME } from "#root/shared/config/branding";
 import { NewOrderEmailTemplate } from "./email-template";
+import { MinimalOrderEmailTemplate } from "#root/backend/emails/minimal/order-confirmation";
+import { getEmailBranding } from "#root/backend/emails/branding";
 import axios from "axios";
 import { validatePromoCode } from "#root/backend/promo-codes/validate-promo-code/validate-promo-code";
 import { getStoreOwnerId } from "#root/shared/config/store";
@@ -544,31 +546,53 @@ export const createOrder = (
 
     const emailService = yield* $(EmailService);
 
+    const branding = yield* $(Effect.promise(() => getEmailBranding()));
+
+    const orderItems = result.items.map((i) => ({
+      name: i.name ?? "-",
+      quantity: i.quantity ?? 0,
+      price: i.price ? Number.parseFloat(i.price) : 0,
+      discountPrice: i.discountPrice
+        ? Number.parseFloat(i.discountPrice)
+        : undefined,
+      vendorName: i.vendorName ?? undefined,
+    }));
+
     const emailTemplate = yield* $(
       renderEmailTemplate(
-        NewOrderEmailTemplate({
-          items: result.items.map((i) => ({
-            name: i.name ?? "-",
-            quantity: i.quantity ?? 0,
-            price: i.price ? Number.parseFloat(i.price) : 0,
-            discountPrice: i.discountPrice
-              ? Number.parseFloat(i.discountPrice)
-              : undefined,
-            vendorName: i.vendorName ?? undefined,
-          })),
-          shippingFees: Number.parseFloat(result.shipping),
-          subTotal: Number.parseFloat(result.subtotal),
-
-          total: Number.parseFloat(result.total),
-          address: result.shippingAddress,
-          city: result.shippingCity,
-          state: result.shippingState,
-          country: result.shippingCountry,
-          postalCode: result.shippingPostalCode,
-          customerName: result.customerName,
-          customerEmail: result.customerEmail,
-          customerPhone: result.customerPhone,
-        }),
+        branding.isMinimal
+          ? MinimalOrderEmailTemplate({
+              storeName: branding.storeName,
+              logoUrl: branding.logoUrl,
+              contactEmail: branding.contactEmail,
+              currency: branding.currency,
+              items: orderItems,
+              shippingFees: Number.parseFloat(result.shipping),
+              subTotal: Number.parseFloat(result.subtotal),
+              total: Number.parseFloat(result.total),
+              address: result.shippingAddress,
+              city: result.shippingCity,
+              state: result.shippingState,
+              country: result.shippingCountry,
+              postalCode: result.shippingPostalCode,
+              customerName: result.customerName,
+              customerEmail: result.customerEmail,
+              customerPhone: result.customerPhone,
+            })
+          : NewOrderEmailTemplate({
+              items: orderItems,
+              shippingFees: Number.parseFloat(result.shipping),
+              subTotal: Number.parseFloat(result.subtotal),
+              total: Number.parseFloat(result.total),
+              address: result.shippingAddress,
+              city: result.shippingCity,
+              state: result.shippingState,
+              country: result.shippingCountry,
+              postalCode: result.shippingPostalCode,
+              customerName: result.customerName,
+              customerEmail: result.customerEmail,
+              customerPhone: result.customerPhone,
+            }),
       ),
     );
 
@@ -585,7 +609,7 @@ export const createOrder = (
       yield* $(
         emailService.sendEmail(
           input.customerEmail,
-          `${STORE_NAME} Order Confirmation`,
+          `${branding.storeName} Order Confirmation`,
           emailTemplate,
         ),
       );

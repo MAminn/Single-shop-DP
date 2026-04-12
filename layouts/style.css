@@ -19,6 +19,17 @@
   font-family: "LaRojaTV", "Poppins", sans-serif;
 }
 
+/* Body/description text in the minimal template uses Poppins instead of LaRojaTV.
+   Headings, buttons, nav links keep the branded font. */
+.minimal-template p,
+.minimal-template dd,
+.minimal-template li,
+.minimal-template td,
+.minimal-template blockquote,
+.minimal-template figcaption {
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
 /* Links */
 a:where(:not([class*="text-"])) {
   text-decoration: none;

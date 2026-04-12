@@ -12,6 +12,8 @@ import {
   renderEmailTemplate,
 } from "#root/shared/email/service.js";
 import { EmailVerificationTemplate } from "./email-template";
+import { MinimalEmailVerificationTemplate } from "#root/backend/emails/minimal/email-verification";
+import { getEmailBranding } from "#root/backend/emails/branding";
 
 export const registerSchema = z
   .object({
@@ -128,12 +130,21 @@ export const register = ({
       const baseUrl = process.env.BASE_URL || "http://127.0.0.1:3000";
       const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
 
+      const branding = yield* $(Effect.promise(() => getEmailBranding()));
+
       const emailTemplate = yield* $(
         renderEmailTemplate(
-          EmailVerificationTemplate({
-            userName: newUser.name,
-            verificationUrl,
-          })
+          branding.isMinimal
+            ? MinimalEmailVerificationTemplate({
+                storeName: branding.storeName,
+                logoUrl: branding.logoUrl,
+                userName: newUser.name,
+                verificationUrl,
+              })
+            : EmailVerificationTemplate({
+                userName: newUser.name,
+                verificationUrl,
+              })
         )
       );
 
@@ -141,7 +152,7 @@ export const register = ({
         yield* $(
           emailService.sendEmail(
             newUser.email,
-            `Verify your ${STORE_NAME} account`,
+            `Verify your ${branding.storeName} account`,
             emailTemplate
           )
         );

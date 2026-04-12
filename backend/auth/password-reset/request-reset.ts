@@ -10,6 +10,8 @@ import {
   renderEmailTemplate,
 } from "#root/shared/email/service.js";
 import { PasswordResetTemplate } from "./email-template";
+import { MinimalPasswordResetTemplate } from "#root/backend/emails/minimal/password-reset";
+import { getEmailBranding } from "#root/backend/emails/branding";
 
 export const requestResetSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -75,12 +77,21 @@ export const requestPasswordReset = (
     const baseUrl = process.env.BASE_URL || "http://127.0.0.1:3000";
     const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
+    const branding = yield* $(Effect.promise(() => getEmailBranding()));
+
     const emailHtml = yield* $(
       renderEmailTemplate(
-        PasswordResetTemplate({
-          userName: existingUser.name,
-          resetUrl,
-        }),
+        branding.isMinimal
+          ? MinimalPasswordResetTemplate({
+              storeName: branding.storeName,
+              logoUrl: branding.logoUrl,
+              userName: existingUser.name,
+              resetUrl,
+            })
+          : PasswordResetTemplate({
+              userName: existingUser.name,
+              resetUrl,
+            }),
       ),
     );
 
@@ -88,7 +99,7 @@ export const requestPasswordReset = (
       yield* $(
         emailService.sendEmail(
           existingUser.email,
-          "Reset your password",
+          `Reset your ${branding.storeName} password`,
           emailHtml,
         ),
       );
