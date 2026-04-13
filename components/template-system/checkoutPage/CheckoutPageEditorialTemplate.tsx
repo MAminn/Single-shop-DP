@@ -411,6 +411,11 @@ export function CheckoutPageEditorialTemplate({
                         <p className="text-sm text-stone-900 line-clamp-1">
                           {item.name}
                         </p>
+                        {item.variant && (
+                          <p className="text-xs text-stone-400">
+                            {item.variant}
+                          </p>
+                        )}
                         <p className="text-xs text-stone-500">
                           Qty: {item.quantity}
                         </p>

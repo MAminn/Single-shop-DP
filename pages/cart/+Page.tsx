@@ -29,10 +29,19 @@ export default function CartPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // Create a stable key for each cart item (product ID + selected options)
+  const getCartItemKey = (item: typeof items[number]) => {
+    const opts = item.selectedOptions;
+    if (opts && Object.keys(opts).length > 0) {
+      return `${item.id}|${JSON.stringify(opts)}`;
+    }
+    return item.id;
+  };
+
   // Transform cart items to new template format
   const cartItems: CartPageCartItem[] = useMemo(() => {
     return items.map((item) => ({
-      id: item.id,
+      id: getCartItemKey(item),
       name: item.name,
       price: item.price,
       quantity: item.quantity,
@@ -47,6 +56,11 @@ export default function CartPage() {
     }));
   }, [items]);
 
+  // Find the original cart item by its composite key
+  const findCartItem = (cartItemKey: string) => {
+    return items.find((item) => getCartItemKey(item) === cartItemKey);
+  };
+
   // Build totals object
   const totals: CartPageTotals = useMemo(() => {
     return {
@@ -58,19 +72,25 @@ export default function CartPage() {
   }, [subtotal, discount, shipping, total]);
 
   // Handle quantity change
-  const handleQuantityChange = (itemId: string, newQuantity: number): void => {
+  const handleQuantityChange = (cartItemKey: string, newQuantity: number): void => {
     setIsUpdating(true);
-    const success = updateQuantity(itemId, newQuantity);
-    if (!success) {
-      console.error("Failed to update quantity");
+    const item = findCartItem(cartItemKey);
+    if (item) {
+      const success = updateQuantity(item.id, newQuantity, item.selectedOptions);
+      if (!success) {
+        console.error("Failed to update quantity");
+      }
     }
     setIsUpdating(false);
   };
 
   // Handle remove item
-  const handleRemoveItem = (itemId: string): void => {
+  const handleRemoveItem = (cartItemKey: string): void => {
     setIsUpdating(true);
-    removeItem(itemId);
+    const item = findCartItem(cartItemKey);
+    if (item) {
+      removeItem(item.id, item.selectedOptions);
+    }
     setIsUpdating(false);
   };
 

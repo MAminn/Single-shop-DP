@@ -1,5 +1,6 @@
 import type React from "react";
 import { useState } from "react";
+import { VariantSelector } from "#root/components/shop/VariantSelector";
 import { Button } from "#root/components/ui/button";
 import { Badge } from "#root/components/ui/badge";
 import { HomeFeaturedProducts } from "../home/HomeFeaturedProducts";
@@ -29,7 +30,7 @@ export interface ProductPageTechnicalProps {
   relatedProducts?: FeaturedProduct[];
   showWishlist?: boolean;
   showSocialShare?: boolean;
-  onAddToCart?: (product: ProductPageProduct) => void;
+  onAddToCart?: (product: ProductPageProduct, selectedOptions?: Record<string, string>) => void;
   onAddToWishlist?: (product: ProductPageProduct) => void;
   onImageClick?: (imageUrl: string, index: number) => void;
   className?: string;
@@ -144,9 +145,14 @@ export function ProductPageTechnical({
       )
     : 0;
 
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+
+  const allVariantsSelected = !product.variants?.length ||
+    product.variants.every(v => selectedVariants[v.name]);
+
   const handleAddToCart = () => {
     if (onAddToCart) {
-      onAddToCart(product);
+      onAddToCart(product, selectedVariants);
     }
   };
 
@@ -322,13 +328,24 @@ export function ProductPageTechnical({
                 </div>
               )}
 
+              {/* Variant Selector */}
+              {product.variants && product.variants.length > 0 && (
+                <VariantSelector
+                  variants={product.variants}
+                  selectedVariants={selectedVariants}
+                  onVariantChange={(name, value) =>
+                    setSelectedVariants(prev => ({ ...prev, [name]: value }))
+                  }
+                />
+              )}
+
               {/* Actions */}
               <div className='flex gap-3 pt-4'>
                 <Button
                   size='lg'
                   className='flex-1 bg-blue-600 hover:bg-blue-700 text-white'
                   onClick={handleAddToCart}
-                  disabled={!product.available}>
+                  disabled={!product.available || !allVariantsSelected}>
                   <ShoppingCart className='mr-2 w-5 h-5' />
                   {product.available ? "Add to Cart" : "Out of Stock"}
                 </Button>

@@ -54,6 +54,7 @@ export interface CheckoutOrderSummaryItem {
   name: string;
   price: number;
   quantity: number;
+  variant?: string | null;
 }
 
 /**
@@ -461,6 +462,11 @@ export function CheckoutPageModernTemplate({
                     className='flex justify-between items-center'>
                     <div className='flex-1'>
                       <p className='font-medium'>{item.name}</p>
+                      {item.variant && (
+                        <p className='text-xs text-muted-foreground'>
+                          {item.variant}
+                        </p>
+                      )}
                       <p className='text-sm text-muted-foreground'>
                         {t("checkout.quantity")}: {item.quantity}
                       </p>

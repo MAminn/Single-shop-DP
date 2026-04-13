@@ -1,5 +1,6 @@
 import type React from "react";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { VariantSelector } from "#root/components/shop/VariantSelector";
 import { HomeFeaturedProducts } from "../home/HomeFeaturedProducts";
 import type {
   ProductPageProduct,
@@ -31,7 +32,7 @@ export interface ProductPagePerceProps {
   relatedProducts?: FeaturedProduct[];
   showWishlist?: boolean;
   showSocialShare?: boolean;
-  onAddToCart?: (product: ProductPageProduct) => void;
+  onAddToCart?: (product: ProductPageProduct, selectedOptions?: Record<string, string>) => void;
   onAddToWishlist?: (product: ProductPageProduct) => void;
   onImageClick?: (imageUrl: string, index: number) => void;
   isLoading?: boolean;
@@ -507,8 +508,13 @@ export function ProductPagePerce({
     ? Number(product.discountPrice)
     : product.price;
 
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+
+  const allVariantsSelected = !product.variants?.length ||
+    product.variants.every(v => selectedVariants[v.name]);
+
   // ── Handlers
-  const handleAddToCart = () => onAddToCart?.(product);
+  const handleAddToCart = () => onAddToCart?.(product, selectedVariants);
   const handleWishlist = () => onAddToWishlist?.(product);
 
   if (isLoading) return <Skeleton />;
@@ -670,6 +676,18 @@ export function ProductPagePerce({
                 </p>
               )}
 
+              {/* Variant Selector */}
+              {product.variants && product.variants.length > 0 && (
+                <VariantSelector
+                  variants={product.variants}
+                  selectedVariants={selectedVariants}
+                  onVariantChange={(name, value) =>
+                    setSelectedVariants(prev => ({ ...prev, [name]: value }))
+                  }
+                  className='mb-4'
+                />
+              )}
+
               {/* Quantity + Add to Bag row */}
               <div className='mb-4 flex flex-col gap-2.5 sm:flex-row sm:items-center'>
                 {/* Quantity */}
@@ -699,7 +717,7 @@ export function ProductPagePerce({
                 <button
                   type='button'
                   onClick={handleAddToCart}
-                  disabled={!product.available || product.stock === 0}
+                  disabled={!product.available || product.stock === 0 || !allVariantsSelected}
                   className='flex h-12 p-4 flex-1 items-center justify-center gap-2.5 rounded-lg bg-stone-800 text-[11.5px] font-normal uppercase tracking-[0.18em] text-stone-100 transition-colors duration-200 hover:bg-stone-700 disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-stone-400'>
                   <ShoppingCart size={14} strokeWidth={1.5} />
                   Add to Bag

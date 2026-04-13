@@ -165,6 +165,11 @@ export default function CheckoutPage() {
       name: item.name,
       price: item.price,
       quantity: item.quantity,
+      variant: item.selectedOptions
+        ? Object.entries(item.selectedOptions)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(", ") || undefined
+        : undefined,
     }));
   }, [items]);
 
@@ -198,10 +203,18 @@ export default function CheckoutPage() {
       }
 
       // Prepare order items
-      const orderItemsPayload = items.map((item) => ({
-        productId: item.id,
-        quantity: item.quantity,
-      }));
+      const orderItemsPayload = items.map((item) => {
+        const variantStr = item.selectedOptions
+          ? Object.entries(item.selectedOptions)
+              .map(([k, v]) => `${k}: ${v}`)
+              .join(", ")
+          : "";
+        return {
+          productId: item.id,
+          quantity: item.quantity,
+          selectedOptions: variantStr || undefined,
+        };
+      });
 
       // Submit order via tRPC (with paymentMethod)
       const result = await trpc.order.create.mutate({

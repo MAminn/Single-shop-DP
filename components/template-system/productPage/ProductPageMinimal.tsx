@@ -1,5 +1,6 @@
 import type React from "react";
 import { useState, useRef, useCallback, useEffect } from "react";
+import { VariantSelector } from "#root/components/shop/VariantSelector";
 import { Button } from "#root/components/ui/button";
 import type {
   ProductPageProduct,
@@ -44,7 +45,7 @@ export interface ProductPageMinimalProps {
   showWishlist?: boolean;
   showSocialShare?: boolean;
   isLoading?: boolean;
-  onAddToCart?: (product: ProductPageProduct) => void;
+  onAddToCart?: (product: ProductPageProduct, selectedOptions?: Record<string, string>) => void;
   onAddToWishlist?: (product: ProductPageProduct) => void;
   onImageClick?: (imageUrl: string, index: number) => void;
   className?: string;
@@ -125,12 +126,17 @@ export function ProductPageMinimal({
     typeof product.discountPrice === "number" &&
     product.discountPrice < product.price;
 
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+
+  const allVariantsSelected = !product.variants?.length ||
+    product.variants.every(v => selectedVariants[v.name]);
+
   const handleAddToCart = () => {
     if (onAddToCart) {
       // Fly animation from the main product image
       flyToCart(addToCartBtnRef.current, images[selectedImage]?.url || product.imageUrl || "");
 
-      onAddToCart(product);
+      onAddToCart(product, selectedVariants);
 
       // Also add selected add-on products from inline carousels
       if (selectedAddOns.size > 0 && categoryGroups) {
@@ -460,13 +466,24 @@ export function ProductPageMinimal({
                 </div>
               )}
 
+              {/* Variant Selector */}
+              {product.variants && product.variants.length > 0 && (
+                <VariantSelector
+                  variants={product.variants}
+                  selectedVariants={selectedVariants}
+                  onVariantChange={(name, value) =>
+                    setSelectedVariants(prev => ({ ...prev, [name]: value }))
+                  }
+                />
+              )}
+
               {/* Add to Cart */}
               <Button
                 ref={addToCartBtnRef}
                 size="lg"
                 className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-none py-6 text-base font-medium shadow-none hover:shadow-lg transition-all"
                 onClick={handleAddToCart}
-                disabled={!product.available}>
+                disabled={!product.available || !allVariantsSelected}>
                 {product.available ? t("add_to_cart") : t("out_of_stock")}
               </Button>
             </div>

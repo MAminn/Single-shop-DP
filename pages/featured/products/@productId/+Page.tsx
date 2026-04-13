@@ -176,6 +176,7 @@ export default function ProductDetailPage() {
         available: (product.stock || 0) > 0,
         rating: reviewStats.averageRating,
         reviewCount: reviewStats.totalReviews,
+        variants: product.variants ?? [],
       };
 
       setProductData(mappedProduct);
@@ -244,7 +245,7 @@ export default function ProductDetailPage() {
       categoryGroups={categoryGroups}
       allProducts={allProducts}
       isLoading={isLoading}
-      onAddToCart={(product: ProductPageProduct) => {
+      onAddToCart={(product: ProductPageProduct, selectedOptions?: Record<string, string>) => {
         const success = addItem(
           {
             id: product.id,
@@ -256,7 +257,7 @@ export default function ProductDetailPage() {
             available: product.available,
           },
           1, // quantity
-          {}, // selectedOptions
+          selectedOptions || {}, // selectedOptions
         );
 
         if (success) {

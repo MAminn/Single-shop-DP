@@ -1,5 +1,6 @@
 import React, { useState, useMemo, memo } from "react";
 import { Button } from "#root/components/ui/button";
+import { VariantSelector } from "#root/components/shop/VariantSelector";
 import { Skeleton } from "#root/components/ui/skeleton";
 import {
   Dialog,
@@ -44,7 +45,7 @@ export interface ProductPageEditorialProps {
   relatedProducts?: FeaturedProduct[];
   showWishlist?: boolean;
   showSocialShare?: boolean;
-  onAddToCart?: (product: ProductPageProduct) => void;
+  onAddToCart?: (product: ProductPageProduct, selectedOptions?: Record<string, string>) => void;
   onAddToWishlist?: (product: ProductPageProduct) => void;
   onImageClick?: (imageUrl: string, index: number) => void;
   className?: string;
@@ -213,9 +214,14 @@ export function ProductPageEditorial({
 
   const isSoldOut = !product.available || product.stock <= 0;
 
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+
+  const allVariantsSelected = !product.variants?.length ||
+    product.variants.every(v => selectedVariants[v.name]);
+
   const handleAddToCart = () => {
     if (onAddToCart && !isSoldOut) {
-      onAddToCart(product);
+      onAddToCart(product, selectedVariants);
     }
   };
 
@@ -430,12 +436,24 @@ export function ProductPageEditorial({
                 </div>
               </div>
 
+              {/* Variant Selector */}
+              {product.variants && product.variants.length > 0 && (
+                <VariantSelector
+                  variants={product.variants}
+                  selectedVariants={selectedVariants}
+                  onVariantChange={(name, value) =>
+                    setSelectedVariants(prev => ({ ...prev, [name]: value }))
+                  }
+                  className="mt-6"
+                />
+              )}
+
               {/* Add to bag + Wishlist */}
               <div className="mt-6 flex items-center gap-3">
                 <Button
                   size="lg"
                   className="flex-1 rounded-full py-6 text-sm tracking-wide"
-                  disabled={isSoldOut}
+                  disabled={isSoldOut || !allVariantsSelected}
                   onClick={handleAddToCart}
                 >
                   {isSoldOut ? "Sold Out" : "Add to Bag"}

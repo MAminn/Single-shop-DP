@@ -25,6 +25,7 @@ import { getShippingFeeRaw } from "#root/backend/settings/get-shipping-fee";
 const OrderItemSchema = z.object({
   productId: z.string().uuid(),
   quantity: z.number().min(1),
+  selectedOptions: z.string().optional(),
 });
 
 export const createOrderSchema = z.object({
@@ -508,6 +509,10 @@ export const createOrder = (
                 })
                 .where(eq(product.id, item.productId));
 
+              const itemName = item.selectedOptions
+                ? `${productData.name} (${item.selectedOptions})`
+                : productData.name;
+
               const orderItemInsert = await tx
                 .insert(orderItem)
                 .values({
@@ -517,7 +522,7 @@ export const createOrder = (
                   quantity: item.quantity,
                   price: productData.price.toString(),
                   discountPrice: productData.discountPrice?.toString() || null,
-                  name: productData.name,
+                  name: itemName,
                   vendorName: null, // Single-shop: no vendor names
                 })
                 .returning();
