@@ -115,5 +115,7 @@ function mergeWithDefaults(
     discountedProducts: storedContent.discountedProducts ?? DEFAULT_HOMEPAGE_CONTENT.discountedProducts,
     newArrivals: storedContent.newArrivals ?? DEFAULT_HOMEPAGE_CONTENT.newArrivals,
     marquee: storedContent.marquee ?? DEFAULT_HOMEPAGE_CONTENT.marquee,
+    promoLine: storedContent.promoLine ?? DEFAULT_HOMEPAGE_CONTENT.promoLine,
+    contactBanner: storedContent.contactBanner ?? DEFAULT_HOMEPAGE_CONTENT.contactBanner,
   };
 }

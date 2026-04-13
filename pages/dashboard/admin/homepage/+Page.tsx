@@ -2527,6 +2527,371 @@ export default function HomepageAdminPage() {
         </Card>
         )}
 
+        {/* ── Contact Page Banner (Minimal only) ──────────── */}
+        {isMinimal && (
+          <Card>
+            <CardHeader>
+              <div className='flex items-center justify-between'>
+                <CardTitle className='text-base'>Contact Page Banner & Content</CardTitle>
+                <div className='flex items-center gap-3'>
+                  <Switch
+                    checked={content.contactBanner?.enabled ?? true}
+                    onCheckedChange={(checked) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        contactBanner: {
+                          ...prev.contactBanner!,
+                          enabled: checked,
+                          slides: prev.contactBanner?.slides ?? [],
+                          heading: prev.contactBanner?.heading ?? DEFAULT_HOMEPAGE_CONTENT.contactBanner!.heading,
+                          description: prev.contactBanner?.description ?? DEFAULT_HOMEPAGE_CONTENT.contactBanner!.description,
+                        },
+                      }))
+                    }
+                  />
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    disabled={!(content.contactBanner?.enabled ?? true)}
+                    onClick={() => {
+                      const newSlide = {
+                        id: crypto.randomUUID(),
+                        imageUrl: "",
+                        mobileImageUrl: undefined as string | undefined,
+                        alt: undefined as string | undefined,
+                      };
+                      setContent((prev) => ({
+                        ...prev,
+                        contactBanner: {
+                          ...prev.contactBanner!,
+                          enabled: prev.contactBanner?.enabled ?? true,
+                          slides: [...(prev.contactBanner?.slides ?? []), newSlide],
+                          heading: prev.contactBanner?.heading ?? DEFAULT_HOMEPAGE_CONTENT.contactBanner!.heading,
+                          description: prev.contactBanner?.description ?? DEFAULT_HOMEPAGE_CONTENT.contactBanner!.description,
+                        },
+                      }));
+                    }}>
+                    <Plus className='w-4 h-4 mr-1' />
+                    Add Slide
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <p className='text-sm text-muted-foreground'>
+                Configure the banner images and text shown on the <strong>/contact</strong> page. Banner images appear as a carousel above the contact form.
+              </p>
+
+              {/* Heading */}
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <Label className='text-xs'>Heading (English)</Label>
+                  <Input
+                    value={content.contactBanner?.heading ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        contactBanner: {
+                          ...prev.contactBanner!,
+                          enabled: prev.contactBanner?.enabled ?? true,
+                          slides: prev.contactBanner?.slides ?? [],
+                          heading: e.target.value,
+                          description: prev.contactBanner?.description ?? "",
+                        },
+                      }))
+                    }
+                    placeholder='We Would Love To Hear From You'
+                    className='text-sm mt-1'
+                    disabled={!(content.contactBanner?.enabled ?? true)}
+                  />
+                </div>
+                <div>
+                  <Label className='text-xs'>Heading (Arabic)</Label>
+                  <Input
+                    dir='rtl'
+                    value={content.contactBanner?.headingAr ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        contactBanner: {
+                          ...prev.contactBanner!,
+                          enabled: prev.contactBanner?.enabled ?? true,
+                          slides: prev.contactBanner?.slides ?? [],
+                          heading: prev.contactBanner?.heading ?? "",
+                          description: prev.contactBanner?.description ?? "",
+                          headingAr: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder='نود أن نسمع منك'
+                    className='text-sm mt-1'
+                    disabled={!(content.contactBanner?.enabled ?? true)}
+                  />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <Label className='text-xs'>Description (English)</Label>
+                  <Textarea
+                    value={content.contactBanner?.description ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        contactBanner: {
+                          ...prev.contactBanner!,
+                          enabled: prev.contactBanner?.enabled ?? true,
+                          slides: prev.contactBanner?.slides ?? [],
+                          heading: prev.contactBanner?.heading ?? "",
+                          description: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder='Have a question, feedback, or just want to say hello?'
+                    className='text-sm mt-1'
+                    rows={3}
+                    disabled={!(content.contactBanner?.enabled ?? true)}
+                  />
+                </div>
+                <div>
+                  <Label className='text-xs'>Description (Arabic)</Label>
+                  <Textarea
+                    dir='rtl'
+                    value={content.contactBanner?.descriptionAr ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        contactBanner: {
+                          ...prev.contactBanner!,
+                          enabled: prev.contactBanner?.enabled ?? true,
+                          slides: prev.contactBanner?.slides ?? [],
+                          heading: prev.contactBanner?.heading ?? "",
+                          description: prev.contactBanner?.description ?? "",
+                          descriptionAr: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder='هل لديك سؤال أو ملاحظة؟'
+                    className='text-sm mt-1'
+                    rows={3}
+                    disabled={!(content.contactBanner?.enabled ?? true)}
+                  />
+                </div>
+              </div>
+
+              {/* Directions URL */}
+              <div>
+                <Label className='text-xs'>Get Directions URL (optional)</Label>
+                <Input
+                  value={content.contactBanner?.directionsUrl ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      contactBanner: {
+                        ...prev.contactBanner!,
+                        enabled: prev.contactBanner?.enabled ?? true,
+                        slides: prev.contactBanner?.slides ?? [],
+                        heading: prev.contactBanner?.heading ?? "",
+                        description: prev.contactBanner?.description ?? "",
+                        directionsUrl: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='https://maps.google.com/...'
+                  className='text-sm mt-1'
+                  disabled={!(content.contactBanner?.enabled ?? true)}
+                />
+              </div>
+
+              {/* Banner Slides */}
+              {(content.contactBanner?.slides ?? []).length === 0 ? (
+                <div className='text-center py-8 text-sm text-muted-foreground border border-dashed border-gray-200 rounded-lg'>
+                  <ImageIcon className='w-8 h-8 mx-auto mb-2 text-gray-300' />
+                  <p>No banner slides yet. Add slides to create a banner carousel on the contact page.</p>
+                </div>
+              ) : (
+                <div className='space-y-4'>
+                  {(content.contactBanner?.slides ?? []).map((slide, index) => (
+                    <div key={slide.id} className='border border-gray-200 rounded-lg p-4 space-y-3'>
+                      <div className='flex items-center justify-between'>
+                        <span className='text-sm font-medium text-gray-700'>Slide {index + 1}</span>
+                        <Button
+                          type='button'
+                          variant='ghost'
+                          size='icon'
+                          className='h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50'
+                          onClick={() => {
+                            setContent((prev) => ({
+                              ...prev,
+                              contactBanner: {
+                                ...prev.contactBanner!,
+                                enabled: prev.contactBanner?.enabled ?? true,
+                                slides: (prev.contactBanner?.slides ?? []).filter((s) => s.id !== slide.id),
+                                heading: prev.contactBanner?.heading ?? "",
+                                description: prev.contactBanner?.description ?? "",
+                              },
+                            }));
+                          }}>
+                          <Trash2 className='w-4 h-4' />
+                        </Button>
+                      </div>
+
+                      {/* Desktop image */}
+                      <div>
+                        <Label className='text-xs'>Desktop Image</Label>
+                        <div className='flex gap-2 mt-1'>
+                          <Input
+                            value={slide.imageUrl}
+                            onChange={(e) => {
+                              setContent((prev) => ({
+                                ...prev,
+                                contactBanner: {
+                                  ...prev.contactBanner!,
+                                  enabled: prev.contactBanner?.enabled ?? true,
+                                  slides: (prev.contactBanner?.slides ?? []).map((s) =>
+                                    s.id === slide.id ? { ...s, imageUrl: e.target.value } : s,
+                                  ),
+                                  heading: prev.contactBanner?.heading ?? "",
+                                  description: prev.contactBanner?.description ?? "",
+                                },
+                              }));
+                            }}
+                            placeholder='/uploads/homepage/contact-banner.webp'
+                            className='text-sm'
+                          />
+                          <input
+                            type='file'
+                            id={`contact-slide-upload-${slide.id}`}
+                            accept='image/jpeg,image/jpg,image/png,image/webp'
+                            className='hidden'
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              if (file.size > 5 * 1024 * 1024) {
+                                toast.error("File too large. Max 5MB.");
+                                return;
+                              }
+                              try {
+                                const buffer = new Uint8Array(await file.arrayBuffer());
+                                const result = await trpc.homepage.uploadHeroImage.mutate({
+                                  file: { name: file.name, type: file.type, buffer },
+                                });
+                                if (result.success && result.data) {
+                                  setContent((prev) => ({
+                                    ...prev,
+                                    contactBanner: {
+                                      ...prev.contactBanner!,
+                                      enabled: prev.contactBanner?.enabled ?? true,
+                                      slides: (prev.contactBanner?.slides ?? []).map((s) =>
+                                        s.id === slide.id ? { ...s, imageUrl: result.data.url } : s,
+                                      ),
+                                      heading: prev.contactBanner?.heading ?? "",
+                                      description: prev.contactBanner?.description ?? "",
+                                    },
+                                  }));
+                                  toast.success("Slide image uploaded!");
+                                }
+                              } catch {
+                                toast.error("Upload failed");
+                              }
+                              e.target.value = "";
+                            }}
+                          />
+                          <Button
+                            type='button'
+                            variant='outline'
+                            size='sm'
+                            onClick={() => document.getElementById(`contact-slide-upload-${slide.id}`)?.click()}>
+                            <Upload className='w-4 h-4' />
+                          </Button>
+                        </div>
+                        {slide.imageUrl && (
+                          <div className='mt-2 h-20 rounded overflow-hidden border bg-muted'>
+                            <img src={slide.imageUrl} alt={`Contact slide ${index + 1}`} className='w-full h-full object-cover' />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Mobile image */}
+                      <div>
+                        <Label className='text-xs'>Mobile Image (optional)</Label>
+                        <div className='flex gap-2 mt-1'>
+                          <Input
+                            value={slide.mobileImageUrl || ""}
+                            onChange={(e) => {
+                              setContent((prev) => ({
+                                ...prev,
+                                contactBanner: {
+                                  ...prev.contactBanner!,
+                                  enabled: prev.contactBanner?.enabled ?? true,
+                                  slides: (prev.contactBanner?.slides ?? []).map((s) =>
+                                    s.id === slide.id ? { ...s, mobileImageUrl: e.target.value || undefined } : s,
+                                  ),
+                                  heading: prev.contactBanner?.heading ?? "",
+                                  description: prev.contactBanner?.description ?? "",
+                                },
+                              }));
+                            }}
+                            placeholder='Optional mobile-specific image'
+                            className='text-sm'
+                          />
+                          <input
+                            type='file'
+                            id={`contact-slide-mobile-upload-${slide.id}`}
+                            accept='image/jpeg,image/jpg,image/png,image/webp'
+                            className='hidden'
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              if (file.size > 5 * 1024 * 1024) {
+                                toast.error("File too large. Max 5MB.");
+                                return;
+                              }
+                              try {
+                                const buffer = new Uint8Array(await file.arrayBuffer());
+                                const result = await trpc.homepage.uploadMobileHeroImage.mutate({
+                                  file: { name: file.name, type: file.type, buffer },
+                                });
+                                if (result.success && result.data) {
+                                  setContent((prev) => ({
+                                    ...prev,
+                                    contactBanner: {
+                                      ...prev.contactBanner!,
+                                      enabled: prev.contactBanner?.enabled ?? true,
+                                      slides: (prev.contactBanner?.slides ?? []).map((s) =>
+                                        s.id === slide.id ? { ...s, mobileImageUrl: result.data.url } : s,
+                                      ),
+                                      heading: prev.contactBanner?.heading ?? "",
+                                      description: prev.contactBanner?.description ?? "",
+                                    },
+                                  }));
+                                  toast.success("Mobile slide image uploaded!");
+                                }
+                              } catch {
+                                toast.error("Upload failed");
+                              }
+                              e.target.value = "";
+                            }}
+                          />
+                          <Button
+                            type='button'
+                            variant='outline'
+                            size='sm'
+                            onClick={() => document.getElementById(`contact-slide-mobile-upload-${slide.id}`)?.click()}>
+                            <Upload className='w-4 h-4' />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* ── i18n Translation Overrides — Other UI Labels ──────────── */}
         {isMinimal && (
           <Card>

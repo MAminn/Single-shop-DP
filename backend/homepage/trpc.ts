@@ -112,6 +112,20 @@ const HomepageContentSchema = z.object({
     text: z.string(),
     textAr: z.string().optional(),
   }).optional(),
+  contactBanner: z.object({
+    enabled: z.boolean(),
+    slides: z.array(z.object({
+      id: z.string(),
+      imageUrl: z.string(),
+      mobileImageUrl: z.string().optional(),
+      alt: z.string().optional(),
+    })),
+    heading: z.string(),
+    headingAr: z.string().optional(),
+    description: z.string(),
+    descriptionAr: z.string().optional(),
+    directionsUrl: z.string().optional(),
+  }).optional(),
 });
 
 export const homepageRouter = router({

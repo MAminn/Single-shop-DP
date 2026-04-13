@@ -19,6 +19,7 @@ import { pixelTrackingRouter } from "#root/backend/pixel-tracking/trpc";
 import { paymentRouter } from "#root/backend/payments/trpc";
 import { settingsRouter } from "#root/backend/settings/trpc";
 import { analyticsRouter } from "#root/backend/analytics/trpc";
+import { contactRouter } from "#root/backend/contact/trpc";
 import { publicProcedure, router, t } from "./server";
 
 const authRouter = t.router({
@@ -48,6 +49,7 @@ export const appRouter = router({
   payment: paymentRouter,
   settings: settingsRouter,
   analytics: analyticsRouter,
+  contact: contactRouter,
 });
 
 export type AppRouter = typeof appRouter;

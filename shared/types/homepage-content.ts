@@ -180,6 +180,29 @@ export interface HomepagePromoLineContent {
 }
 
 /**
+ * A single contact page banner slide
+ */
+export interface ContactBannerSlide {
+  id: string;
+  imageUrl: string;
+  mobileImageUrl?: string;
+  alt?: string;
+}
+
+/**
+ * Contact page banner content (minimal template)
+ */
+export interface HomepageContactBannerContent {
+  enabled: boolean;
+  slides: ContactBannerSlide[];
+  heading: string;
+  headingAr?: string;
+  description: string;
+  descriptionAr?: string;
+  directionsUrl?: string;
+}
+
+/**
  * Complete homepage content structure
  */
 export interface HomepageContent {
@@ -196,6 +219,7 @@ export interface HomepageContent {
   newArrivals?: HomepageNewArrivalsContent;
   marquee?: HomepageMarqueeContent;
   promoLine?: HomepagePromoLineContent;
+  contactBanner?: HomepageContactBannerContent;
 }
 
 /**
@@ -299,5 +323,14 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
   promoLine: {
     text: "",
     textAr: "",
+  },
+  contactBanner: {
+    enabled: true,
+    slides: [],
+    heading: "We Would Love To Hear From You",
+    headingAr: "نود أن نسمع منك",
+    description: "Have a question, feedback, or just want to say hello? Drop us a message and we'll get back to you as soon as possible.",
+    descriptionAr: "هل لديك سؤال أو ملاحظة أو تريد فقط أن تقول مرحبا؟ أرسل لنا رسالة وسنعود إليك في أقرب وقت ممكن.",
+    directionsUrl: "",
   },
 };
