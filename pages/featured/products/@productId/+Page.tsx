@@ -30,9 +30,13 @@ export default function ProductDetailPage() {
   const { trackEvent } = useTracking();
   const hasTrackedView = useRef<string | null>(null);
 
-  const [productData, setProductData] = useState<ProductPageProduct | null>(null);
+  const [productData, setProductData] = useState<ProductPageProduct | null>(
+    null,
+  );
   const [relatedProducts, setRelatedProducts] = useState<FeaturedProduct[]>([]);
-  const [categoryGroups, setCategoryGroups] = useState<CategoryProductGroup[]>([]);
+  const [categoryGroups, setCategoryGroups] = useState<CategoryProductGroup[]>(
+    [],
+  );
   const [allProducts, setAllProducts] = useState<FeaturedProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,12 +96,8 @@ export default function ProductDetailPage() {
           id: item.id,
           name: item.name,
           price: Number(item.price),
-          discountPrice: item.discountPrice
-            ? Number(item.discountPrice)
-            : null,
-          imageUrl: item.imageUrl
-            ? `/uploads/${item.imageUrl}`
-            : undefined,
+          discountPrice: item.discountPrice ? Number(item.discountPrice) : null,
+          imageUrl: item.imageUrl ? `/uploads/${item.imageUrl}` : undefined,
           images: item.imageUrl
             ? [{ url: `/uploads/${item.imageUrl}`, isPrimary: true }]
             : [],
@@ -127,7 +127,9 @@ export default function ProductDetailPage() {
                   products: mapViewToFeatured(res.result.products),
                 };
               }
-            } catch { /* skip */ }
+            } catch {
+              /* skip */
+            }
             return null;
           });
           const resolved = await Promise.all(groupPromises);
@@ -135,7 +137,9 @@ export default function ProductDetailPage() {
             if (g && g.products.length > 0) groups.push(g);
           }
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
 
       // ── Fetch ALL products for the bottom carousel ──
       let allProds: FeaturedProduct[] = [];
@@ -147,7 +151,9 @@ export default function ProductDetailPage() {
         if (searchRes.success && searchRes.result?.items?.length) {
           allProds = mapSearchToFeatured(searchRes.result.items);
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
 
       // ── Legacy: relatedProducts for non-minimal templates ──
       let mappedRelatedProducts = allProds.filter((p) => p.id !== productId);
@@ -197,7 +203,9 @@ export default function ProductDetailPage() {
               {
                 itemId: mappedProduct.id,
                 itemName: mappedProduct.name,
-                price: Number(mappedProduct.discountPrice ?? mappedProduct.price),
+                price: Number(
+                  mappedProduct.discountPrice ?? mappedProduct.price,
+                ),
                 category: mappedProduct.categoryName ?? undefined,
               },
             ],
@@ -218,7 +226,7 @@ export default function ProductDetailPage() {
   const isMinimal = layoutSettings.header.navbarStyle === "minimal";
   const activeTemplateId = isMinimal
     ? "product-minimal"
-    : getTemplateId("productPage") ?? "product-perce";
+    : (getTemplateId("productPage") ?? "product-perce");
   const TemplateEntry = getTemplateComponent("productPage", activeTemplateId);
 
   if (!TemplateEntry) {
@@ -245,7 +253,10 @@ export default function ProductDetailPage() {
       categoryGroups={categoryGroups}
       allProducts={allProducts}
       isLoading={isLoading}
-      onAddToCart={(product: ProductPageProduct, selectedOptions?: Record<string, string>) => {
+      onAddToCart={(
+        product: ProductPageProduct,
+        selectedOptions?: Record<string, string>,
+      ) => {
         const success = addItem(
           {
             id: product.id,

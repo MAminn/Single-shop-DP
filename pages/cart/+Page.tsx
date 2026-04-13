@@ -30,7 +30,7 @@ export default function CartPage() {
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Create a stable key for each cart item (product ID + selected options)
-  const getCartItemKey = (item: typeof items[number]) => {
+  const getCartItemKey = (item: (typeof items)[number]) => {
     const opts = item.selectedOptions;
     if (opts && Object.keys(opts).length > 0) {
       return `${item.id}|${JSON.stringify(opts)}`;
@@ -72,11 +72,18 @@ export default function CartPage() {
   }, [subtotal, discount, shipping, total]);
 
   // Handle quantity change
-  const handleQuantityChange = (cartItemKey: string, newQuantity: number): void => {
+  const handleQuantityChange = (
+    cartItemKey: string,
+    newQuantity: number,
+  ): void => {
     setIsUpdating(true);
     const item = findCartItem(cartItemKey);
     if (item) {
-      const success = updateQuantity(item.id, newQuantity, item.selectedOptions);
+      const success = updateQuantity(
+        item.id,
+        newQuantity,
+        item.selectedOptions,
+      );
       if (!success) {
         console.error("Failed to update quantity");
       }

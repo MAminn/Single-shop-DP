@@ -32,7 +32,10 @@ export interface ProductPagePerceProps {
   relatedProducts?: FeaturedProduct[];
   showWishlist?: boolean;
   showSocialShare?: boolean;
-  onAddToCart?: (product: ProductPageProduct, selectedOptions?: Record<string, string>) => void;
+  onAddToCart?: (
+    product: ProductPageProduct,
+    selectedOptions?: Record<string, string>,
+  ) => void;
   onAddToWishlist?: (product: ProductPageProduct) => void;
   onImageClick?: (imageUrl: string, index: number) => void;
   isLoading?: boolean;
@@ -508,10 +511,13 @@ export function ProductPagePerce({
     ? Number(product.discountPrice)
     : product.price;
 
-  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+  const [selectedVariants, setSelectedVariants] = useState<
+    Record<string, string>
+  >({});
 
-  const allVariantsSelected = !product.variants?.length ||
-    product.variants.every(v => selectedVariants[v.name]);
+  const allVariantsSelected =
+    !product.variants?.length ||
+    product.variants.every((v) => selectedVariants[v.name]);
 
   // ── Handlers
   const handleAddToCart = () => onAddToCart?.(product, selectedVariants);
@@ -682,7 +688,7 @@ export function ProductPagePerce({
                   variants={product.variants}
                   selectedVariants={selectedVariants}
                   onVariantChange={(name, value) =>
-                    setSelectedVariants(prev => ({ ...prev, [name]: value }))
+                    setSelectedVariants((prev) => ({ ...prev, [name]: value }))
                   }
                   className='mb-4'
                 />
@@ -717,7 +723,11 @@ export function ProductPagePerce({
                 <button
                   type='button'
                   onClick={handleAddToCart}
-                  disabled={!product.available || product.stock === 0 || !allVariantsSelected}
+                  disabled={
+                    !product.available ||
+                    product.stock === 0 ||
+                    !allVariantsSelected
+                  }
                   className='flex h-12 p-4 flex-1 items-center justify-center gap-2.5 rounded-lg bg-stone-800 text-[11.5px] font-normal uppercase tracking-[0.18em] text-stone-100 transition-colors duration-200 hover:bg-stone-700 disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-stone-400'>
                   <ShoppingCart size={14} strokeWidth={1.5} />
                   Add to Bag

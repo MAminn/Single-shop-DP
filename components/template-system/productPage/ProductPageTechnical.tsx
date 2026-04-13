@@ -30,7 +30,10 @@ export interface ProductPageTechnicalProps {
   relatedProducts?: FeaturedProduct[];
   showWishlist?: boolean;
   showSocialShare?: boolean;
-  onAddToCart?: (product: ProductPageProduct, selectedOptions?: Record<string, string>) => void;
+  onAddToCart?: (
+    product: ProductPageProduct,
+    selectedOptions?: Record<string, string>,
+  ) => void;
   onAddToWishlist?: (product: ProductPageProduct) => void;
   onImageClick?: (imageUrl: string, index: number) => void;
   className?: string;
@@ -145,10 +148,13 @@ export function ProductPageTechnical({
       )
     : 0;
 
-  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+  const [selectedVariants, setSelectedVariants] = useState<
+    Record<string, string>
+  >({});
 
-  const allVariantsSelected = !product.variants?.length ||
-    product.variants.every(v => selectedVariants[v.name]);
+  const allVariantsSelected =
+    !product.variants?.length ||
+    product.variants.every((v) => selectedVariants[v.name]);
 
   const handleAddToCart = () => {
     if (onAddToCart) {
@@ -334,7 +340,7 @@ export function ProductPageTechnical({
                   variants={product.variants}
                   selectedVariants={selectedVariants}
                   onVariantChange={(name, value) =>
-                    setSelectedVariants(prev => ({ ...prev, [name]: value }))
+                    setSelectedVariants((prev) => ({ ...prev, [name]: value }))
                   }
                 />
               )}

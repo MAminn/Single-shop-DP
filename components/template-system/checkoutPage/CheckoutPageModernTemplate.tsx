@@ -194,7 +194,10 @@ export function CheckoutPageModernTemplate({
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div className='space-y-2'>
                     <Label htmlFor='fullName'>
-                      {t("checkout.full_name")} <span className='text-destructive'>{t("checkout.required")}</span>
+                      {t("checkout.full_name")}{" "}
+                      <span className='text-destructive'>
+                        {t("checkout.required")}
+                      </span>
                     </Label>
                     <Input
                       id='fullName'
@@ -213,7 +216,10 @@ export function CheckoutPageModernTemplate({
                   </div>
                   <div className='space-y-2'>
                     <Label htmlFor='email'>
-                      {t("checkout.email")} <span className='text-destructive'>{t("checkout.required")}</span>
+                      {t("checkout.email")}{" "}
+                      <span className='text-destructive'>
+                        {t("checkout.required")}
+                      </span>
                     </Label>
                     <Input
                       id='email'
@@ -232,7 +238,10 @@ export function CheckoutPageModernTemplate({
                 </div>
                 <div className='space-y-2'>
                   <Label htmlFor='phoneNumber'>
-                    {t("checkout.phone")} <span className='text-destructive'>{t("checkout.required")}</span>
+                    {t("checkout.phone")}{" "}
+                    <span className='text-destructive'>
+                      {t("checkout.required")}
+                    </span>
                   </Label>
                   <Input
                     id='phoneNumber'
@@ -264,7 +273,10 @@ export function CheckoutPageModernTemplate({
               <CardContent className='space-y-4'>
                 <div className='space-y-2'>
                   <Label htmlFor='address'>
-                    {t("checkout.street")} <span className='text-destructive'>{t("checkout.required")}</span>
+                    {t("checkout.street")}{" "}
+                    <span className='text-destructive'>
+                      {t("checkout.required")}
+                    </span>
                   </Label>
                   <Input
                     id='address'
@@ -282,7 +294,10 @@ export function CheckoutPageModernTemplate({
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div className='space-y-2'>
                     <Label htmlFor='city'>
-                      {t("checkout.city")} <span className='text-destructive'>{t("checkout.required")}</span>
+                      {t("checkout.city")}{" "}
+                      <span className='text-destructive'>
+                        {t("checkout.required")}
+                      </span>
                     </Label>
                     <Input
                       id='city'
@@ -309,7 +324,9 @@ export function CheckoutPageModernTemplate({
                 </div>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div className='space-y-2'>
-                    <Label htmlFor='postalCode'>{t("checkout.postal_code")}</Label>
+                    <Label htmlFor='postalCode'>
+                      {t("checkout.postal_code")}
+                    </Label>
                     <Input
                       id='postalCode'
                       placeholder='11511'

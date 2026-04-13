@@ -93,7 +93,10 @@ export interface ProductPageModernSplitProps {
   /**
    * Callback handlers
    */
-  onAddToCart?: (product: ProductPageProduct, selectedOptions?: Record<string, string>) => void;
+  onAddToCart?: (
+    product: ProductPageProduct,
+    selectedOptions?: Record<string, string>,
+  ) => void;
   onAddToWishlist?: (product: ProductPageProduct) => void;
   onImageClick?: (imageUrl: string, index: number) => void;
 
@@ -228,10 +231,13 @@ export function ProductPageModernSplit({
     }
   };
 
-  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+  const [selectedVariants, setSelectedVariants] = useState<
+    Record<string, string>
+  >({});
 
-  const allVariantsSelected = !product.variants?.length ||
-    product.variants.every(v => selectedVariants[v.name]);
+  const allVariantsSelected =
+    !product.variants?.length ||
+    product.variants.every((v) => selectedVariants[v.name]);
 
   const handleAddToCart = () => {
     if (onAddToCart) {
@@ -407,7 +413,7 @@ export function ProductPageModernSplit({
                   variants={product.variants}
                   selectedVariants={selectedVariants}
                   onVariantChange={(name, value) =>
-                    setSelectedVariants(prev => ({ ...prev, [name]: value }))
+                    setSelectedVariants((prev) => ({ ...prev, [name]: value }))
                   }
                 />
               )}
@@ -418,7 +424,11 @@ export function ProductPageModernSplit({
                   size='lg'
                   className='flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-6 text-lg'
                   onClick={handleAddToCart}
-                  disabled={!product.available || product.stock === 0 || !allVariantsSelected}>
+                  disabled={
+                    !product.available ||
+                    product.stock === 0 ||
+                    !allVariantsSelected
+                  }>
                   <ShoppingCart className='w-5 h-5 mr-2' />
                   Add to Cart
                 </Button>

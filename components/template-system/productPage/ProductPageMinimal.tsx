@@ -45,7 +45,10 @@ export interface ProductPageMinimalProps {
   showWishlist?: boolean;
   showSocialShare?: boolean;
   isLoading?: boolean;
-  onAddToCart?: (product: ProductPageProduct, selectedOptions?: Record<string, string>) => void;
+  onAddToCart?: (
+    product: ProductPageProduct,
+    selectedOptions?: Record<string, string>,
+  ) => void;
   onAddToWishlist?: (product: ProductPageProduct) => void;
   onImageClick?: (imageUrl: string, index: number) => void;
   className?: string;
@@ -91,22 +94,22 @@ export function ProductPageMinimal({
   if (isLoading || !product) {
     return (
       <div className={`min-h-screen bg-white ${className}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex gap-2 mb-8">
-            <div className="h-4 w-12 bg-stone-100 animate-pulse" />
-            <div className="h-4 w-4 bg-stone-100 animate-pulse" />
-            <div className="h-4 w-12 bg-stone-100 animate-pulse" />
-            <div className="h-4 w-4 bg-stone-100 animate-pulse" />
-            <div className="h-4 w-32 bg-stone-100 animate-pulse" />
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+          <div className='flex gap-2 mb-8'>
+            <div className='h-4 w-12 bg-stone-100 animate-pulse' />
+            <div className='h-4 w-4 bg-stone-100 animate-pulse' />
+            <div className='h-4 w-12 bg-stone-100 animate-pulse' />
+            <div className='h-4 w-4 bg-stone-100 animate-pulse' />
+            <div className='h-4 w-32 bg-stone-100 animate-pulse' />
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div className="aspect-square bg-stone-100 animate-pulse" />
-            <div className="space-y-6 pt-4">
-              <div className="h-8 w-3/4 bg-stone-100 animate-pulse" />
-              <div className="h-6 w-1/4 bg-stone-100 animate-pulse" />
-              <div className="h-4 w-full bg-stone-100 animate-pulse" />
-              <div className="h-4 w-5/6 bg-stone-100 animate-pulse" />
-              <div className="h-12 w-full bg-stone-100 animate-pulse mt-8" />
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-12'>
+            <div className='aspect-square bg-stone-100 animate-pulse' />
+            <div className='space-y-6 pt-4'>
+              <div className='h-8 w-3/4 bg-stone-100 animate-pulse' />
+              <div className='h-6 w-1/4 bg-stone-100 animate-pulse' />
+              <div className='h-4 w-full bg-stone-100 animate-pulse' />
+              <div className='h-4 w-5/6 bg-stone-100 animate-pulse' />
+              <div className='h-12 w-full bg-stone-100 animate-pulse mt-8' />
             </div>
           </div>
         </div>
@@ -126,15 +129,21 @@ export function ProductPageMinimal({
     typeof product.discountPrice === "number" &&
     product.discountPrice < product.price;
 
-  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+  const [selectedVariants, setSelectedVariants] = useState<
+    Record<string, string>
+  >({});
 
-  const allVariantsSelected = !product.variants?.length ||
-    product.variants.every(v => selectedVariants[v.name]);
+  const allVariantsSelected =
+    !product.variants?.length ||
+    product.variants.every((v) => selectedVariants[v.name]);
 
   const handleAddToCart = () => {
     if (onAddToCart) {
       // Fly animation from the main product image
-      flyToCart(addToCartBtnRef.current, images[selectedImage]?.url || product.imageUrl || "");
+      flyToCart(
+        addToCartBtnRef.current,
+        images[selectedImage]?.url || product.imageUrl || "",
+      );
 
       onAddToCart(product, selectedVariants);
 
@@ -144,8 +153,11 @@ export function ProductPageMinimal({
         for (const addOnId of selectedAddOns) {
           const addOn = allCategoryProducts.find((p) => p.id === addOnId);
           if (addOn) {
-            const addOnPrice = addOn.discountPrice != null && Number(addOn.discountPrice) < addOn.price
-              ? Number(addOn.discountPrice) : addOn.price;
+            const addOnPrice =
+              addOn.discountPrice != null &&
+              Number(addOn.discountPrice) < addOn.price
+                ? Number(addOn.discountPrice)
+                : addOn.price;
             addItem(
               {
                 id: addOn.id,
@@ -184,31 +196,35 @@ export function ProductPageMinimal({
     : product.price;
 
   // Bottom carousel: use allProducts or fall back to relatedProducts
-  const bottomCarouselProducts = (allProducts && allProducts.length > 0
-    ? allProducts
-    : relatedProducts || []
+  const bottomCarouselProducts = (
+    allProducts && allProducts.length > 0 ? allProducts : relatedProducts || []
   ).filter((p) => p.id !== product.id);
 
   return (
     <div className={`product-page-minimal bg-white ${className}`}>
-
       {/* ═══════════════════════════════════════════════
           BREADCRUMB
           ═══════════════════════════════════════════════ */}
-      <div className="border-b border-gray-100 py-4 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <nav className="text-sm text-gray-500 font-light">
-            <a href="/" className="hover:text-gray-900">{t("product.home")}</a>
-            <span className="mx-2 text-gray-300">&gt;</span>
+      <div className='border-b border-gray-100 py-4 px-4 sm:px-6 lg:px-8'>
+        <div className='max-w-7xl mx-auto'>
+          <nav className='text-sm text-gray-500 font-light'>
+            <a href='/' className='hover:text-gray-900'>
+              {t("product.home")}
+            </a>
+            <span className='mx-2 text-gray-300'>&gt;</span>
             {product.categoryName && (
               <>
-                <a href="/shop" className="hover:text-gray-900">{product.categoryName}</a>
-                <span className="mx-2 text-gray-300">&gt;</span>
+                <a href='/shop' className='hover:text-gray-900'>
+                  {product.categoryName}
+                </a>
+                <span className='mx-2 text-gray-300'>&gt;</span>
               </>
             )}
-            <a href="/shop" className="hover:text-gray-900">{t("product.shop")}</a>
-            <span className="mx-2 text-gray-300">&gt;</span>
-            <span className="text-gray-900">{product.name}</span>
+            <a href='/shop' className='hover:text-gray-900'>
+              {t("product.shop")}
+            </a>
+            <span className='mx-2 text-gray-300'>&gt;</span>
+            <span className='text-gray-900'>{product.name}</span>
           </nav>
         </div>
       </div>
@@ -216,14 +232,13 @@ export function ProductPageMinimal({
       {/* ═══════════════════════════════════════════════
           MAIN CONTENT — Two-column split on desktop
           ═══════════════════════════════════════════════ */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12'>
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12'>
           {/* ── COLUMN 1: Image Gallery ── */}
-          <div className="flex gap-3">
+          <div className='flex gap-3'>
             {/* Vertical thumbnails strip (desktop) */}
             {images.length > 1 && (
-              <div className="hidden sm:flex flex-col gap-2 w-20 flex-shrink-0">
+              <div className='hidden sm:flex flex-col gap-2 w-20 flex-shrink-0'>
                 {images.map((img, idx) => (
                   <button
                     key={idx}
@@ -236,8 +251,8 @@ export function ProductPageMinimal({
                     <img
                       src={img.url}
                       alt={`${product.name} view ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
+                      className='w-full h-full object-cover'
+                      loading='lazy'
                     />
                   </button>
                 ))}
@@ -245,10 +260,10 @@ export function ProductPageMinimal({
             )}
 
             {/* Main large image */}
-            <div className="flex-1">
-              <div className="overflow-hidden bg-stone-50 relative">
+            <div className='flex-1'>
+              <div className='overflow-hidden bg-stone-50 relative'>
                 {product.available && (
-                  <span className="absolute top-3 start-3 z-10 bg-stone-900 text-white text-xs font-medium px-3 py-1">
+                  <span className='absolute top-3 start-3 z-10 bg-stone-900 text-white text-xs font-medium px-3 py-1'>
                     {t("new") || "New"}
                   </span>
                 )}
@@ -256,13 +271,13 @@ export function ProductPageMinimal({
                   ref={mainImageRef}
                   src={images[selectedImage]?.url || product.imageUrl}
                   alt={product.name}
-                  className="w-full h-auto object-contain"
+                  className='w-full h-auto object-contain'
                 />
               </div>
 
               {/* Mobile thumbnails (horizontal) */}
               {images.length > 1 && (
-                <div className="flex sm:hidden gap-2 mt-3 overflow-x-auto">
+                <div className='flex sm:hidden gap-2 mt-3 overflow-x-auto'>
                   {images.map((img, idx) => (
                     <button
                       key={idx}
@@ -275,8 +290,8 @@ export function ProductPageMinimal({
                       <img
                         src={img.url}
                         alt={`View ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
+                        className='w-full h-full object-cover'
+                        loading='lazy'
                       />
                     </button>
                   ))}
@@ -286,25 +301,25 @@ export function ProductPageMinimal({
           </div>
 
           {/* ── COLUMN 2: Product Info + Inline Carousels ── */}
-          <div className="space-y-6">
+          <div className='space-y-6'>
             {/* Product Name + Share/Wishlist on same row */}
-            <div className="flex items-start gap-3">
-              <h1 className="flex-1 text-3xl lg:text-4xl font-medium text-gray-900 leading-tight">
+            <div className='flex items-start gap-3'>
+              <h1 className='flex-1 text-3xl lg:text-4xl font-medium text-gray-900 leading-tight'>
                 {product.name}
               </h1>
-              <div className="flex items-center gap-2 flex-shrink-0 pt-1">
+              <div className='flex items-center gap-2 flex-shrink-0 pt-1'>
                 <button
                   onClick={() => setShowShareMenu(!showShareMenu)}
-                  className="w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 transition-colors"
+                  className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 transition-colors'
                   aria-label={t("product.share")}>
-                  <Share2 className="w-4 h-4 text-gray-600" />
+                  <Share2 className='w-4 h-4 text-gray-600' />
                 </button>
                 {showWishlist && (
                   <button
                     onClick={() => onAddToWishlist?.(product)}
-                    className="w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 transition-colors"
+                    className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 transition-colors'
                     aria-label={t("product.save")}>
-                    <Heart className="w-4 h-4 text-gray-600" />
+                    <Heart className='w-4 h-4 text-gray-600' />
                   </button>
                 )}
               </div>
@@ -312,36 +327,44 @@ export function ProductPageMinimal({
 
             {/* Share menu dropdown */}
             {showShareMenu && (
-              <div className="flex items-center gap-3 pb-2">
+              <div className='flex items-center gap-3 pb-2'>
                 <a
                   href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors"
-                  aria-label="Share on Facebook">
-                  <Facebook className="w-4 h-4" />
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
+                  aria-label='Share on Facebook'>
+                  <Facebook className='w-4 h-4' />
                 </a>
                 <a
                   href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}&text=${encodeURIComponent(product.name)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors"
-                  aria-label="Share on Twitter">
-                  <Twitter className="w-4 h-4" />
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
+                  aria-label='Share on Twitter'>
+                  <Twitter className='w-4 h-4' />
                 </a>
                 <a
                   href={`https://wa.me/?text=${encodeURIComponent(product.name + " " + (typeof window !== "undefined" ? window.location.href : ""))}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors"
-                  aria-label="Share on WhatsApp">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
+                  aria-label='Share on WhatsApp'>
+                  <svg
+                    className='w-4 h-4'
+                    viewBox='0 0 24 24'
+                    fill='currentColor'>
+                    <path d='M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z' />
+                  </svg>
                 </a>
                 <button
-                  onClick={() => { if (typeof navigator !== "undefined") navigator.clipboard.writeText(window.location.href); }}
-                  className="w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors"
-                  aria-label="Copy link">
-                  <LinkIcon className="w-4 h-4" />
+                  onClick={() => {
+                    if (typeof navigator !== "undefined")
+                      navigator.clipboard.writeText(window.location.href);
+                  }}
+                  className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
+                  aria-label='Copy link'>
+                  <LinkIcon className='w-4 h-4' />
                 </button>
               </div>
             )}
@@ -349,49 +372,51 @@ export function ProductPageMinimal({
             {/* Price */}
             <div>
               {hasDiscount ? (
-                <div className="flex items-baseline gap-3">
-                  <span className="text-2xl font-semibold text-gray-900">
-                    {(product.discountPrice as number).toFixed(2)} {STORE_CURRENCY}
+                <div className='flex items-baseline gap-3'>
+                  <span className='text-2xl font-semibold text-gray-900'>
+                    {(product.discountPrice as number).toFixed(2)}{" "}
+                    {STORE_CURRENCY}
                   </span>
-                  <span className="text-lg text-gray-400 line-through">
+                  <span className='text-lg text-gray-400 line-through'>
                     {product.price.toFixed(2)} {STORE_CURRENCY}
                   </span>
                 </div>
               ) : (
-                <span className="text-2xl font-semibold text-gray-900">
+                <span className='text-2xl font-semibold text-gray-900'>
                   {product.price.toFixed(2)} {STORE_CURRENCY}
                 </span>
               )}
-              <p className="text-xs text-gray-400 mt-1">{t("price_includes_tax")}</p>
+              <p className='text-xs text-gray-400 mt-1'>
+                {t("price_includes_tax")}
+              </p>
             </div>
 
             {/* Stock status */}
             {product.available ? (
-              <p className="text-sm text-emerald-600 font-medium flex items-center gap-1.5">
-                <Check className="w-4 h-4" />
+              <p className='text-sm text-emerald-600 font-medium flex items-center gap-1.5'>
+                <Check className='w-4 h-4' />
                 {t("in_stock")}
               </p>
             ) : (
-              <p className="text-sm text-red-500 font-medium">
+              <p className='text-sm text-red-500 font-medium'>
                 {t("out_of_stock")}
               </p>
             )}
 
             {/* ── Promo text line (CMS-driven) ── */}
             {(() => {
-              const promoText = isAr && layoutSettings.header.promoTextAr
-                ? layoutSettings.header.promoTextAr
-                : layoutSettings.header.promoText;
+              const promoText =
+                isAr && layoutSettings.header.promoTextAr
+                  ? layoutSettings.header.promoTextAr
+                  : layoutSettings.header.promoText;
               return promoText ? (
-                <p className="text-sm  font-medium">
-                  {promoText}
-                </p>
+                <p className='text-sm  font-medium'>{promoText}</p>
               ) : null;
             })()}
 
             {/* ── Category Carousels (inline, matchperfumes style) ── */}
             {categoryGroups && categoryGroups.length > 0 && (
-              <div className="space-y-6 pt-2">
+              <div className='space-y-6 pt-2'>
                 {categoryGroups.map((group) => (
                   <InlineCategoryCarousel
                     key={group.categoryId}
@@ -407,8 +432,8 @@ export function ProductPageMinimal({
 
             {/* Description */}
             {product.description && (
-              <div className="pt-4 border-t border-gray-100">
-                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+              <div className='pt-4 border-t border-gray-100'>
+                <p className='text-sm text-gray-700 leading-relaxed whitespace-pre-line'>
                   {product.description}
                 </p>
                 {product.longDescription && (
@@ -419,48 +444,54 @@ export function ProductPageMinimal({
 
             {/* Specifications */}
             {product.specifications && product.specifications.length > 0 && (
-              <div className="space-y-2 pt-2">
+              <div className='space-y-2 pt-2'>
                 {product.specifications.map((spec, idx) => (
                   <div
                     key={idx}
-                    className="flex justify-between items-baseline py-2 border-b border-gray-100 last:border-0">
-                    <span className="text-sm text-gray-500">{spec.label}</span>
-                    <span className="text-sm text-gray-900 font-medium">{spec.value}</span>
+                    className='flex justify-between items-baseline py-2 border-b border-gray-100 last:border-0'>
+                    <span className='text-sm text-gray-500'>{spec.label}</span>
+                    <span className='text-sm text-gray-900 font-medium'>
+                      {spec.value}
+                    </span>
                   </div>
                 ))}
               </div>
             )}
 
             {/* Price again + Quantity + Add to Cart */}
-            <div className="pt-4 border-t border-gray-100 space-y-4">
-              <div className="flex items-baseline justify-between">
-                <span className="text-sm text-gray-500">{t("price") || "Price"}</span>
-                <span className="text-xl font-semibold text-gray-900">
+            <div className='pt-4 border-t border-gray-100 space-y-4'>
+              <div className='flex items-baseline justify-between'>
+                <span className='text-sm text-gray-500'>
+                  {t("price") || "Price"}
+                </span>
+                <span className='text-xl font-semibold text-gray-900'>
                   {displayPrice.toFixed(2)} {STORE_CURRENCY}
                 </span>
               </div>
 
               {/* Quantity */}
               {product.available && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">{t("product.quantity")}</span>
-                  <div className="flex items-center border border-gray-200 rounded-full">
+                <div className='flex items-center justify-between'>
+                  <span className='text-sm text-gray-500'>
+                    {t("product.quantity")}
+                  </span>
+                  <div className='flex items-center border border-gray-200 rounded-full'>
                     <button
                       onClick={incrementQty}
                       disabled={quantity >= maxQty}
-                      className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors rounded-s-full"
-                      aria-label="Increase quantity">
-                      <Plus className="w-4 h-4" />
+                      className='w-10 h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors rounded-s-full'
+                      aria-label='Increase quantity'>
+                      <Plus className='w-4 h-4' />
                     </button>
-                    <span className="w-10 h-10 flex items-center justify-center text-sm font-medium tabular-nums border-x border-gray-200">
+                    <span className='w-10 h-10 flex items-center justify-center text-sm font-medium tabular-nums border-x border-gray-200'>
                       {quantity}
                     </span>
                     <button
                       onClick={decrementQty}
                       disabled={quantity <= 1}
-                      className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors rounded-e-full"
-                      aria-label="Decrease quantity">
-                      <Minus className="w-4 h-4" />
+                      className='w-10 h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors rounded-e-full'
+                      aria-label='Decrease quantity'>
+                      <Minus className='w-4 h-4' />
                     </button>
                   </div>
                 </div>
@@ -472,7 +503,7 @@ export function ProductPageMinimal({
                   variants={product.variants}
                   selectedVariants={selectedVariants}
                   onVariantChange={(name, value) =>
-                    setSelectedVariants(prev => ({ ...prev, [name]: value }))
+                    setSelectedVariants((prev) => ({ ...prev, [name]: value }))
                   }
                 />
               )}
@@ -480,8 +511,8 @@ export function ProductPageMinimal({
               {/* Add to Cart */}
               <Button
                 ref={addToCartBtnRef}
-                size="lg"
-                className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-none py-6 text-base font-medium shadow-none hover:shadow-lg transition-all"
+                size='lg'
+                className='w-full bg-gray-900 hover:bg-gray-800 text-white rounded-none py-6 text-base font-medium shadow-none hover:shadow-lg transition-all'
                 onClick={handleAddToCart}
                 disabled={!product.available || !allVariantsSelected}>
                 {product.available ? t("add_to_cart") : t("out_of_stock")}
@@ -560,26 +591,26 @@ function InlineCategoryCarousel({
 
   return (
     <div>
-      <p className="text-sm font-semibold text-gray-800 mb-3">{title}</p>
-      <div className="relative group/carousel">
+      <p className='text-sm font-semibold text-gray-800 mb-3'>{title}</p>
+      <div className='relative group/carousel'>
         <button
           onClick={() => scroll("left")}
           disabled={!canScrollLeft}
-          className="absolute -start-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-7 h-7 items-center justify-center bg-white border border-stone-200 shadow-sm hover:border-stone-900 disabled:opacity-0 transition-all"
-          aria-label="Scroll left">
-          <ChevronLeft className="w-3.5 h-3.5" />
+          className='absolute -start-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-7 h-7 items-center justify-center bg-white border border-stone-200 shadow-sm hover:border-stone-900 disabled:opacity-0 transition-all'
+          aria-label='Scroll left'>
+          <ChevronLeft className='w-3.5 h-3.5' />
         </button>
         <button
           onClick={() => scroll("right")}
           disabled={!canScrollRight}
-          className="absolute -end-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-7 h-7 items-center justify-center bg-white border border-stone-200 shadow-sm hover:border-stone-900 disabled:opacity-0 transition-all"
-          aria-label="Scroll right">
-          <ChevronRight className="w-3.5 h-3.5" />
+          className='absolute -end-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-7 h-7 items-center justify-center bg-white border border-stone-200 shadow-sm hover:border-stone-900 disabled:opacity-0 transition-all'
+          aria-label='Scroll right'>
+          <ChevronRight className='w-3.5 h-3.5' />
         </button>
 
         <div
           ref={scrollRef}
-          className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1">
+          className='flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1'>
           {filteredProducts.map((p) => (
             <InlineProductCard
               key={p.id}
@@ -610,36 +641,46 @@ function InlineProductCard({
     product.discountPrice !== undefined &&
     product.discountPrice !== null &&
     Number(product.discountPrice) < product.price;
-  const displayPrice = hasDiscount ? Number(product.discountPrice) : product.price;
+  const displayPrice = hasDiscount
+    ? Number(product.discountPrice)
+    : product.price;
   const productUrl = getProductUrl(product.id);
 
   return (
-    <div className={`flex-none w-[130px] snap-start border transition-colors bg-white p-2 ${isSelected ? "border-emerald-500 ring-1 ring-emerald-500" : "border-gray-100 hover:border-gray-300"}`}>
+    <div
+      className={`flex-none w-[130px] snap-start border transition-colors bg-white p-2 ${isSelected ? "border-emerald-500 ring-1 ring-emerald-500" : "border-gray-100 hover:border-gray-300"}`}>
       {/* Checkbox */}
       <button
-        type="button"
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggle(); }}
+        type='button'
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onToggle();
+        }}
         className={`w-5 h-5 mb-1.5 flex items-center justify-center border-2 transition-all cursor-pointer ${isSelected ? "bg-emerald-500 border-emerald-500 text-white" : "border-gray-300 hover:border-gray-500 bg-white"}`}
         aria-label={isSelected ? "Deselect" : "Select"}>
-        {isSelected && <Check className="w-3 h-3" />}
+        {isSelected && <Check className='w-3 h-3' />}
       </button>
-      <Link href={productUrl} className="group/card">
-        <div className="aspect-square bg-stone-50 overflow-hidden mb-2">
+      <Link href={productUrl} className='group/card'>
+        <div className='aspect-square bg-stone-50 overflow-hidden mb-2'>
           <img
             src={imageUrl}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover/card:scale-105"
-            loading="lazy"
+            className='w-full h-full object-cover transition-transform duration-300 group-hover/card:scale-105'
+            loading='lazy'
           />
         </div>
-        <h4 className="text-xs font-medium text-gray-800 line-clamp-1">{product.name}</h4>
-        <div className="flex items-center gap-1.5 mt-0.5">
+        <h4 className='text-xs font-medium text-gray-800 line-clamp-1'>
+          {product.name}
+        </h4>
+        <div className='flex items-center gap-1.5 mt-0.5'>
           {hasDiscount && (
-            <span className="text-[10px] text-gray-400 line-through">
+            <span className='text-[10px] text-gray-400 line-through'>
               {product.price} {STORE_CURRENCY}
             </span>
           )}
-          <span className={`text-xs font-semibold ${hasDiscount ? "text-red-600" : "text-gray-800"}`}>
+          <span
+            className={`text-xs font-semibold ${hasDiscount ? "text-red-600" : "text-gray-800"}`}>
             {displayPrice} {STORE_CURRENCY}
           </span>
         </div>
@@ -692,7 +733,8 @@ function BottomProductsCarousel({
     const cardWidth = card?.clientWidth ?? 280;
     const gap = 24;
     el.scrollBy({
-      left: direction === "right" ? (cardWidth + gap) * 2 : -(cardWidth + gap) * 2,
+      left:
+        direction === "right" ? (cardWidth + gap) * 2 : -(cardWidth + gap) * 2,
       behavior: "smooth",
     });
   };
@@ -700,61 +742,61 @@ function BottomProductsCarousel({
   if (products.length === 0) return null;
 
   return (
-    <div className="bg-stone-50/50 py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-medium text-stone-900">{title}</h2>
-          <div className="h-[2px] w-24 bg-stone-900 mt-2 mx-auto" />
+    <div className='bg-stone-50/50 py-16'>
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+        <div className='text-center mb-8'>
+          <h2 className='text-2xl font-medium text-stone-900'>{title}</h2>
+          <div className='h-[2px] w-24 bg-stone-900 mt-2 mx-auto' />
         </div>
 
-        <div className="relative">
+        <div className='relative'>
           <button
             onClick={() => scroll("left")}
             disabled={!canScrollLeft}
-            className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-10 h-10 items-center justify-center bg-white border border-stone-200 shadow-sm text-stone-600 hover:text-stone-900 hover:border-stone-900 disabled:opacity-0 transition-all rounded-full"
-            aria-label="Previous">
-            <ChevronLeft className="w-5 h-5" />
+            className='absolute -left-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-10 h-10 items-center justify-center bg-white border border-stone-200 shadow-sm text-stone-600 hover:text-stone-900 hover:border-stone-900 disabled:opacity-0 transition-all rounded-full'
+            aria-label='Previous'>
+            <ChevronLeft className='w-5 h-5' />
           </button>
           <button
             onClick={() => scroll("right")}
             disabled={!canScrollRight}
-            className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-10 h-10 items-center justify-center bg-white border border-stone-200 shadow-sm text-stone-600 hover:text-stone-900 hover:border-stone-900 disabled:opacity-0 transition-all rounded-full"
-            aria-label="Next">
-            <ChevronRight className="w-5 h-5" />
+            className='absolute -right-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-10 h-10 items-center justify-center bg-white border border-stone-200 shadow-sm text-stone-600 hover:text-stone-900 hover:border-stone-900 disabled:opacity-0 transition-all rounded-full'
+            aria-label='Next'>
+            <ChevronRight className='w-5 h-5' />
           </button>
 
           <div
             ref={scrollRef}
-            className="flex gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 justify-center">
-          {products.map((product) => (
-            <BottomProductCard
-              key={product.id}
-              product={product}
-              onAddToCart={() => {
-                if (!product.available) return;
-                const price = product.discountPrice
-                  ? Number(product.discountPrice)
-                  : product.price;
-                addItem(
-                  {
-                    id: product.id,
+            className='flex gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 justify-center'>
+            {products.map((product) => (
+              <BottomProductCard
+                key={product.id}
+                product={product}
+                onAddToCart={() => {
+                  if (!product.available) return;
+                  const price = product.discountPrice
+                    ? Number(product.discountPrice)
+                    : product.price;
+                  addItem(
+                    {
+                      id: product.id,
+                      name: product.name,
+                      price,
+                      imageUrl: resolveImageUrl(product),
+                      stock: product.stock,
+                    },
+                    1,
+                    {},
+                  );
+                  showCartToast({
                     name: product.name,
                     price,
                     imageUrl: resolveImageUrl(product),
-                    stock: product.stock,
-                  },
-                  1,
-                  {},
-                );
-                showCartToast({
-                  name: product.name,
-                  price,
-                  imageUrl: resolveImageUrl(product),
-                });
-              }}
-            />
-          ))}
-        </div>
+                  });
+                }}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -776,60 +818,63 @@ function BottomProductCard({
     product.discountPrice !== undefined &&
     product.discountPrice !== null &&
     Number(product.discountPrice) < product.price;
-  const displayPrice = hasDiscount ? Number(product.discountPrice) : product.price;
+  const displayPrice = hasDiscount
+    ? Number(product.discountPrice)
+    : product.price;
   const productUrl = getProductUrl(product.id);
 
   return (
     <div
       data-bottom-card
-      className="flex-none w-[240px] sm:w-[260px] snap-start group/bcard">
-      <div className="relative aspect-square bg-stone-100 overflow-hidden">
+      className='flex-none w-[240px] sm:w-[260px] snap-start group/bcard'>
+      <div className='relative aspect-square bg-stone-100 overflow-hidden'>
         <Link href={productUrl}>
           <img
             src={imageUrl}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover/bcard:scale-105"
-            loading="lazy"
+            className='w-full h-full object-cover transition-transform duration-500 group-hover/bcard:scale-105'
+            loading='lazy'
           />
         </Link>
-        <div className="absolute bottom-3 start-3 flex gap-2 opacity-0 group-hover/bcard:opacity-100 transition-opacity duration-300">
+        <div className='absolute bottom-3 start-3 flex gap-2 opacity-0 group-hover/bcard:opacity-100 transition-opacity duration-300'>
           <button
-            className="w-9 h-9 flex items-center justify-center bg-white rounded-full shadow-md hover:bg-stone-900 hover:text-white transition-colors"
-            aria-label="Wishlist">
-            <Heart className="w-4 h-4" />
+            className='w-9 h-9 flex items-center justify-center bg-white rounded-full shadow-md hover:bg-stone-900 hover:text-white transition-colors'
+            aria-label='Wishlist'>
+            <Heart className='w-4 h-4' />
           </button>
           <Link
             href={productUrl}
-            className="w-9 h-9 flex items-center justify-center bg-white rounded-full shadow-md hover:bg-stone-900 hover:text-white transition-colors"
-            aria-label="View">
-            <Eye className="w-4 h-4" />
+            className='w-9 h-9 flex items-center justify-center bg-white rounded-full shadow-md hover:bg-stone-900 hover:text-white transition-colors'
+            aria-label='View'>
+            <Eye className='w-4 h-4' />
           </Link>
         </div>
         {product.available && !hasDiscount && (
-          <span className="absolute top-3 start-3 bg-stone-900 text-white text-[10px] font-semibold px-2 py-0.5">
+          <span className='absolute top-3 start-3 bg-stone-900 text-white text-[10px] font-semibold px-2 py-0.5'>
             {t("new") || "New"}
           </span>
         )}
         {hasDiscount && (
-          <span className="absolute top-3 start-3 bg-red-600 text-white text-[10px] font-semibold px-2 py-0.5">
+          <span className='absolute top-3 start-3 bg-red-600 text-white text-[10px] font-semibold px-2 py-0.5'>
             {t("sale") || "Sale"}
           </span>
         )}
       </div>
 
-      <div className="pt-3 text-center">
+      <div className='pt-3 text-center'>
         <Link href={productUrl}>
-          <h3 className="text-sm font-medium text-stone-800 line-clamp-1 hover:text-stone-600 transition-colors">
+          <h3 className='text-sm font-medium text-stone-800 line-clamp-1 hover:text-stone-600 transition-colors'>
             {product.name}
           </h3>
         </Link>
-        <div className="flex items-center justify-center gap-2 mt-1">
+        <div className='flex items-center justify-center gap-2 mt-1'>
           {hasDiscount && (
-            <span className="text-xs text-stone-400 line-through">
+            <span className='text-xs text-stone-400 line-through'>
               {product.price} {STORE_CURRENCY}
             </span>
           )}
-          <span className={`text-sm font-semibold ${hasDiscount ? "text-red-600" : "text-stone-800"}`}>
+          <span
+            className={`text-sm font-semibold ${hasDiscount ? "text-red-600" : "text-stone-800"}`}>
             {displayPrice} {STORE_CURRENCY}
           </span>
         </div>
@@ -839,7 +884,7 @@ function BottomProductCard({
             onAddToCart();
           }}
           disabled={!product.available}
-          className="mt-3 w-full py-2.5 border border-stone-900 text-stone-900 text-xs font-medium uppercase tracking-wider hover:bg-stone-900 hover:text-white transition-colors disabled:border-stone-300 disabled:text-stone-400 disabled:cursor-not-allowed disabled:hover:bg-transparent">
+          className='mt-3 w-full py-2.5 border border-stone-900 text-stone-900 text-xs font-medium uppercase tracking-wider hover:bg-stone-900 hover:text-white transition-colors disabled:border-stone-300 disabled:text-stone-400 disabled:cursor-not-allowed disabled:hover:bg-transparent'>
           {product.available ? t("add_to_cart") : t("out_of_stock")}
         </button>
       </div>
@@ -856,14 +901,17 @@ function ExpandableText({ text }: { text: string }) {
   const { t } = useMinimalI18n();
 
   return (
-    <div className="mt-2">
-      <div className={`text-sm text-gray-600 leading-relaxed whitespace-pre-line ${!expanded ? "line-clamp-3" : ""}`}>
+    <div className='mt-2'>
+      <div
+        className={`text-sm text-gray-600 leading-relaxed whitespace-pre-line ${!expanded ? "line-clamp-3" : ""}`}>
         {text}
       </div>
       <button
         onClick={() => setExpanded(!expanded)}
-        className="text-sm text-gray-900 underline underline-offset-2 mt-1 hover:text-gray-700 transition-colors">
-        {expanded ? (t("read_less") || "Read less") : (t("read_more") || "Read more")}
+        className='text-sm text-gray-900 underline underline-offset-2 mt-1 hover:text-gray-700 transition-colors'>
+        {expanded
+          ? t("read_less") || "Read less"
+          : t("read_more") || "Read more"}
       </button>
     </div>
   );
