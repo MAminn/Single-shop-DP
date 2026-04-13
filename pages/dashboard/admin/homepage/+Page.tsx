@@ -400,9 +400,11 @@ export default function HomepageAdminPage() {
       } else {
         toast.error("Failed to save homepage content");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving content:", error);
-      toast.error("Error saving homepage content");
+      const detail =
+        error?.message || error?.data?.message || JSON.stringify(error);
+      toast.error(`Error saving homepage content: ${detail}`);
     } finally {
       setIsSaving(false);
     }
