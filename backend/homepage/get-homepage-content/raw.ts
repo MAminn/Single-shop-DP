@@ -66,53 +66,70 @@ export async function getHomepageContentRaw(
   }
 }
 
+function stripNulls<T>(obj: T): T {
+  if (obj === null || obj === undefined) return undefined as unknown as T;
+  if (Array.isArray(obj)) return obj.map(stripNulls) as unknown as T;
+  if (typeof obj === "object") {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+      if (value !== null) {
+        result[key] = typeof value === "object" ? stripNulls(value) : value;
+      }
+    }
+    return result as T;
+  }
+  return obj;
+}
+
 function mergeWithDefaults(
   storedContent: Partial<HomepageContent>,
 ): HomepageContent {
+  const clean = stripNulls(storedContent);
   return {
     meta: {
       ...DEFAULT_HOMEPAGE_CONTENT.meta,
-      ...storedContent.meta,
+      ...clean.meta,
     },
     hero: {
       ...DEFAULT_HOMEPAGE_CONTENT.hero,
-      ...storedContent.hero,
+      ...clean.hero,
     },
     brandStatement: {
       ...DEFAULT_HOMEPAGE_CONTENT.brandStatement,
-      ...storedContent.brandStatement,
+      ...clean.brandStatement,
     },
     promoBanner: {
       ...DEFAULT_HOMEPAGE_CONTENT.promoBanner,
-      ...storedContent.promoBanner,
+      ...clean.promoBanner,
     },
     categories: {
       ...DEFAULT_HOMEPAGE_CONTENT.categories,
-      ...storedContent.categories,
+      ...clean.categories,
     },
     featuredProducts: {
       ...DEFAULT_HOMEPAGE_CONTENT.featuredProducts,
-      ...storedContent.featuredProducts,
+      ...clean.featuredProducts,
     },
     valueProps: {
       ...DEFAULT_HOMEPAGE_CONTENT.valueProps,
-      ...(storedContent.valueProps || {}),
+      ...(clean.valueProps || {}),
       items:
-        storedContent.valueProps?.items ||
-        DEFAULT_HOMEPAGE_CONTENT.valueProps.items,
+        clean.valueProps?.items || DEFAULT_HOMEPAGE_CONTENT.valueProps.items,
     },
     newsletter: {
       ...DEFAULT_HOMEPAGE_CONTENT.newsletter,
-      ...storedContent.newsletter,
+      ...clean.newsletter,
     },
     footerCta: {
       ...DEFAULT_HOMEPAGE_CONTENT.footerCta,
-      ...storedContent.footerCta,
+      ...clean.footerCta,
     },
-    discountedProducts: storedContent.discountedProducts ?? DEFAULT_HOMEPAGE_CONTENT.discountedProducts,
-    newArrivals: storedContent.newArrivals ?? DEFAULT_HOMEPAGE_CONTENT.newArrivals,
-    marquee: storedContent.marquee ?? DEFAULT_HOMEPAGE_CONTENT.marquee,
-    promoLine: storedContent.promoLine ?? DEFAULT_HOMEPAGE_CONTENT.promoLine,
-    contactBanner: storedContent.contactBanner ?? DEFAULT_HOMEPAGE_CONTENT.contactBanner,
+    discountedProducts:
+      clean.discountedProducts ?? DEFAULT_HOMEPAGE_CONTENT.discountedProducts,
+    newArrivals: clean.newArrivals ?? DEFAULT_HOMEPAGE_CONTENT.newArrivals,
+    marquee: clean.marquee ?? DEFAULT_HOMEPAGE_CONTENT.marquee,
+    promoLine: clean.promoLine ?? DEFAULT_HOMEPAGE_CONTENT.promoLine,
+    contactBanner:
+      clean.contactBanner ?? DEFAULT_HOMEPAGE_CONTENT.contactBanner,
   };
 }

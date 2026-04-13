@@ -23,32 +23,36 @@ const HomepageContentSchema = z.object({
     subtitle: z.string(),
     ctaText: z.string(),
     ctaLink: z.string(),
-    backgroundImage: z.string().optional(),
-    mobileBackgroundImage: z.string().optional(),
-    heroSlides: z.array(z.object({
-      id: z.string(),
-      imageUrl: z.string(),
-      mobileImageUrl: z.string().optional(),
-      linkUrl: z.string().optional(),
-      alt: z.string().optional(),
-    })).optional(),
+    backgroundImage: z.string().nullish(),
+    mobileBackgroundImage: z.string().nullish(),
+    heroSlides: z
+      .array(
+        z.object({
+          id: z.string(),
+          imageUrl: z.string(),
+          mobileImageUrl: z.string().nullish(),
+          linkUrl: z.string().nullish(),
+          alt: z.string().nullish(),
+        }),
+      )
+      .nullish(),
   }),
   brandStatement: z.object({
     enabled: z.boolean(),
     title: z.string(),
     description: z.string(),
-    image: z.string().optional(),
+    image: z.string().nullish(),
   }),
   promoBanner: z.object({
     enabled: z.boolean(),
     text: z.string(),
-    linkText: z.string().optional(),
-    linkUrl: z.string().optional(),
+    linkText: z.string().nullish(),
+    linkUrl: z.string().nullish(),
   }),
   categories: z.object({
     enabled: z.boolean(),
     title: z.string(),
-    titleAr: z.string().optional(),
+    titleAr: z.string().nullish(),
     subtitle: z.string(),
     ctaText: z.string(),
     ctaLink: z.string(),
@@ -56,10 +60,10 @@ const HomepageContentSchema = z.object({
   featuredProducts: z.object({
     enabled: z.boolean(),
     title: z.string(),
-    titleAr: z.string().optional(),
+    titleAr: z.string().nullish(),
     subtitle: z.string(),
     viewAllText: z.string(),
-    viewAllTextAr: z.string().optional(),
+    viewAllTextAr: z.string().nullish(),
     viewAllLink: z.string(),
   }),
   valueProps: z.object({
@@ -87,45 +91,57 @@ const HomepageContentSchema = z.object({
     ctaText: z.string(),
     ctaLink: z.string(),
   }),
-  discountedProducts: z.object({
-    enabled: z.boolean(),
-    title: z.string(),
-    titleAr: z.string().optional(),
-    viewAllText: z.string(),
-    viewAllTextAr: z.string().optional(),
-    viewAllLink: z.string(),
-  }).optional(),
-  newArrivals: z.object({
-    enabled: z.boolean(),
-    title: z.string(),
-    titleAr: z.string().optional(),
-    viewAllText: z.string(),
-    viewAllTextAr: z.string().optional(),
-    viewAllLink: z.string(),
-  }).optional(),
-  marquee: z.object({
-    enabled: z.boolean(),
-    text: z.string(),
-    textAr: z.string().optional(),
-  }).optional(),
-  promoLine: z.object({
-    text: z.string(),
-    textAr: z.string().optional(),
-  }).optional(),
-  contactBanner: z.object({
-    enabled: z.boolean(),
-    slides: z.array(z.object({
-      id: z.string(),
-      imageUrl: z.string(),
-      mobileImageUrl: z.string().optional(),
-      alt: z.string().optional(),
-    })),
-    heading: z.string(),
-    headingAr: z.string().optional(),
-    description: z.string(),
-    descriptionAr: z.string().optional(),
-    directionsUrl: z.string().optional(),
-  }).optional(),
+  discountedProducts: z
+    .object({
+      enabled: z.boolean(),
+      title: z.string(),
+      titleAr: z.string().nullish(),
+      viewAllText: z.string(),
+      viewAllTextAr: z.string().nullish(),
+      viewAllLink: z.string(),
+    })
+    .nullish(),
+  newArrivals: z
+    .object({
+      enabled: z.boolean(),
+      title: z.string(),
+      titleAr: z.string().nullish(),
+      viewAllText: z.string(),
+      viewAllTextAr: z.string().nullish(),
+      viewAllLink: z.string(),
+    })
+    .nullish(),
+  marquee: z
+    .object({
+      enabled: z.boolean(),
+      text: z.string(),
+      textAr: z.string().nullish(),
+    })
+    .nullish(),
+  promoLine: z
+    .object({
+      text: z.string(),
+      textAr: z.string().nullish(),
+    })
+    .nullish(),
+  contactBanner: z
+    .object({
+      enabled: z.boolean(),
+      slides: z.array(
+        z.object({
+          id: z.string(),
+          imageUrl: z.string(),
+          mobileImageUrl: z.string().nullish(),
+          alt: z.string().nullish(),
+        }),
+      ),
+      heading: z.string(),
+      headingAr: z.string().nullish(),
+      description: z.string(),
+      descriptionAr: z.string().nullish(),
+      directionsUrl: z.string().nullish(),
+    })
+    .nullish(),
 });
 
 export const homepageRouter = router({
@@ -175,7 +191,7 @@ export const homepageRouter = router({
           type: z.string(),
           buffer: z.instanceof(Uint8Array),
         }),
-        preserveAspect: z.boolean().optional(), // For brand statement images
+        preserveAspect: z.boolean().nullish(), // For brand statement images
       }),
     )
     .mutation(async ({ ctx, input }) => {
