@@ -880,7 +880,7 @@ export function ProductPagePerce({
           <button
             type='button'
             onClick={handleAddToCart}
-            disabled={!product.available || product.stock === 0}
+            disabled={!product.available || product.stock === 0 || !allVariantsSelected}
             className='flex h-11 items-center justify-center gap-2 rounded-lg bg-stone-800 px-6 text-[11px] font-normal uppercase tracking-[0.15em] text-stone-100 transition-colors hover:bg-stone-700 disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-stone-400'>
             <ShoppingCart size={14} strokeWidth={1.5} />
             Add to Bag

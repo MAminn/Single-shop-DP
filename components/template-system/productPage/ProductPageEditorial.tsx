@@ -558,7 +558,7 @@ export function ProductPageEditorial({
             </div>
             <Button
               className='rounded-full px-6 py-5 text-sm tracking-wide'
-              disabled={isSoldOut}
+              disabled={isSoldOut || !allVariantsSelected}
               onClick={handleAddToCart}>
               {isSoldOut ? "Sold Out" : "Add to Bag"}
             </Button>
