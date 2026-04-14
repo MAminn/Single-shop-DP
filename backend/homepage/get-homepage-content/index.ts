@@ -138,5 +138,7 @@ function mergeWithDefaults(
     promoLine: clean.promoLine ?? DEFAULT_HOMEPAGE_CONTENT.promoLine,
     contactBanner:
       clean.contactBanner ?? DEFAULT_HOMEPAGE_CONTENT.contactBanner,
+    bottomCarousel:
+      clean.bottomCarousel ?? DEFAULT_HOMEPAGE_CONTENT.bottomCarousel,
   };
 }

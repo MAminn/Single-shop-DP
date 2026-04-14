@@ -118,6 +118,10 @@ export interface FooterSettings {
   footerStyle: FooterStyle;
   footerLinkGroups: FooterLinkGroup[];
   socialLinks: SocialLink[];
+  /** Contact phone number shown in footer (minimal template) */
+  contactPhone?: string;
+  /** Contact email shown in footer (minimal template) */
+  contactEmail?: string;
 }
 
 // ─── Combined Layout Settings ───────────────────────────────────────────────

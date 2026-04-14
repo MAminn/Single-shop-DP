@@ -220,6 +220,11 @@ export interface HomepageContent {
   marquee?: HomepageMarqueeContent;
   promoLine?: HomepagePromoLineContent;
   contactBanner?: HomepageContactBannerContent;
+  /** Bottom carousel slides shown above testimonials (minimal template) */
+  bottomCarousel?: {
+    enabled: boolean;
+    slides: HeroSlideContent[];
+  };
 }
 
 /**
@@ -323,6 +328,10 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
   promoLine: {
     text: "",
     textAr: "",
+  },
+  bottomCarousel: {
+    enabled: true,
+    slides: [],
   },
   contactBanner: {
     enabled: true,

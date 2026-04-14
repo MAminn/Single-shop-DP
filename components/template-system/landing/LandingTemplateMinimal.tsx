@@ -543,6 +543,23 @@ export function LandingTemplateMinimal({
 
 
       {/* ═══════════════════════════════════════════════
+          BOTTOM IMAGE CAROUSEL (above testimonials)
+          ═══════════════════════════════════════════════ */}
+      {(() => {
+        const bottomSlides: HeroSlide[] = (content.bottomCarousel?.slides ?? [])
+          .filter((s) => s.imageUrl)
+          .map((s) => ({
+            imageUrl: resolveImageUrl(s.imageUrl) || "",
+            mobileImageUrl: resolveImageUrl(s.mobileImageUrl),
+            linkUrl: s.linkUrl,
+            alt: s.alt,
+          }));
+        return content.bottomCarousel?.enabled !== false && bottomSlides.length > 0 ? (
+          <HeroCarousel slides={bottomSlides} interval={5000} />
+        ) : null;
+      })()}
+
+      {/* ═══════════════════════════════════════════════
           8. TESTIMONIALS
           ═══════════════════════════════════════════════ */}
       <MinimalTestimonialsSection />

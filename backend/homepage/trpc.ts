@@ -7,7 +7,7 @@ import {
 import { getHomepageContent } from "./get-homepage-content";
 import { updateHomepageContent } from "./update-homepage-content";
 import { uploadHeroImage } from "./upload-hero-image";
-import { ValuePropIconType } from "#root/shared/types/homepage-content";
+import { ValuePropIconType, type HomepageContent } from "#root/shared/types/homepage-content";
 import { Effect } from "effect";
 
 // Zod schema for validating homepage content
@@ -142,6 +142,20 @@ const HomepageContentSchema = z.object({
       directionsUrl: z.string().nullish(),
     })
     .nullish(),
+  bottomCarousel: z
+    .object({
+      enabled: z.boolean(),
+      slides: z.array(
+        z.object({
+          id: z.string(),
+          imageUrl: z.string(),
+          mobileImageUrl: z.string().nullish(),
+          linkUrl: z.string().nullish(),
+          alt: z.string().nullish(),
+        }),
+      ),
+    })
+    .nullish(),
 });
 
 export const homepageRouter = router({
@@ -174,7 +188,7 @@ export const homepageRouter = router({
     .mutation(async ({ input }) => {
       const content = await updateHomepageContent(
         input.merchantId,
-        input.content,
+        input.content as HomepageContent,
         input.templateId,
       );
       return {
@@ -210,7 +224,7 @@ export const homepageRouter = router({
           uploadHeroImage({
             buffer: input.file.buffer,
             mimeType: input.file.type,
-            preserveAspect: input.preserveAspect,
+            preserveAspect: input.preserveAspect ?? undefined,
           }),
         );
 

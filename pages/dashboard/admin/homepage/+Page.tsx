@@ -2690,6 +2690,249 @@ export default function HomepageAdminPage() {
           </Card>
         )}
 
+        {/* ── Bottom Carousel (above testimonials, Minimal only) ──────────── */}
+        {isMinimal && (
+          <Card>
+            <CardHeader>
+              <div className='flex items-center justify-between'>
+                <CardTitle className='text-base'>Bottom Carousel (Above Testimonials)</CardTitle>
+                <div className='flex items-center gap-3'>
+                  <Switch
+                    checked={content.bottomCarousel?.enabled ?? true}
+                    onCheckedChange={(checked) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        bottomCarousel: {
+                          enabled: checked,
+                          slides: prev.bottomCarousel?.slides ?? [],
+                        },
+                      }))
+                    }
+                  />
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    disabled={!(content.bottomCarousel?.enabled ?? true)}
+                    onClick={() => {
+                      const newSlide = {
+                        id: crypto.randomUUID(),
+                        imageUrl: "",
+                        mobileImageUrl: undefined as string | undefined,
+                        linkUrl: undefined as string | undefined,
+                        alt: undefined as string | undefined,
+                      };
+                      setContent((prev) => ({
+                        ...prev,
+                        bottomCarousel: {
+                          enabled: prev.bottomCarousel?.enabled ?? true,
+                          slides: [...(prev.bottomCarousel?.slides ?? []), newSlide],
+                        },
+                      }));
+                    }}>
+                    <Plus className='w-4 h-4 mr-1' />
+                    Add Slide
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <p className='text-sm text-muted-foreground'>
+                A full-width image carousel displayed just above the testimonials section on the homepage.
+              </p>
+
+              {(content.bottomCarousel?.slides ?? []).length === 0 ? (
+                <div className='text-center py-8 text-sm text-muted-foreground border border-dashed border-gray-200 rounded-lg'>
+                  <ImageIcon className='w-8 h-8 mx-auto mb-2 text-gray-300' />
+                  <p>No slides yet. Add slides to create a carousel above the testimonials.</p>
+                </div>
+              ) : (
+                <div className='space-y-4'>
+                  {(content.bottomCarousel?.slides ?? []).map((slide, index) => (
+                    <div key={slide.id} className='border border-gray-200 rounded-lg p-4 space-y-3'>
+                      <div className='flex items-center justify-between'>
+                        <span className='text-sm font-medium text-gray-700'>Slide {index + 1}</span>
+                        <Button
+                          type='button'
+                          variant='ghost'
+                          size='icon'
+                          className='h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50'
+                          onClick={() => {
+                            setContent((prev) => ({
+                              ...prev,
+                              bottomCarousel: {
+                                enabled: prev.bottomCarousel?.enabled ?? true,
+                                slides: (prev.bottomCarousel?.slides ?? []).filter((s) => s.id !== slide.id),
+                              },
+                            }));
+                          }}>
+                          <Trash2 className='w-4 h-4' />
+                        </Button>
+                      </div>
+
+                      {/* Desktop image */}
+                      <div>
+                        <Label className='text-xs'>Desktop Image</Label>
+                        <div className='flex gap-2 mt-1'>
+                          <Input
+                            value={slide.imageUrl}
+                            onChange={(e) => {
+                              setContent((prev) => ({
+                                ...prev,
+                                bottomCarousel: {
+                                  enabled: prev.bottomCarousel?.enabled ?? true,
+                                  slides: (prev.bottomCarousel?.slides ?? []).map((s) =>
+                                    s.id === slide.id ? { ...s, imageUrl: e.target.value } : s,
+                                  ),
+                                },
+                              }));
+                            }}
+                            placeholder='/uploads/homepage/bottom-slide.webp'
+                            className='text-sm'
+                          />
+                          <input
+                            type='file'
+                            id={`bottom-slide-upload-${slide.id}`}
+                            accept='image/jpeg,image/jpg,image/png,image/webp'
+                            className='hidden'
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              if (file.size > 5 * 1024 * 1024) {
+                                toast.error("File too large. Max 5MB.");
+                                return;
+                              }
+                              try {
+                                const buffer = new Uint8Array(await file.arrayBuffer());
+                                const result = await trpc.homepage.uploadHeroImage.mutate({
+                                  file: { name: file.name, type: file.type, buffer },
+                                });
+                                if (result.success && result.data) {
+                                  setContent((prev) => ({
+                                    ...prev,
+                                    bottomCarousel: {
+                                      enabled: prev.bottomCarousel?.enabled ?? true,
+                                      slides: (prev.bottomCarousel?.slides ?? []).map((s) =>
+                                        s.id === slide.id ? { ...s, imageUrl: result.data.url } : s,
+                                      ),
+                                    },
+                                  }));
+                                  toast.success("Slide image uploaded!");
+                                }
+                              } catch {
+                                toast.error("Upload failed");
+                              }
+                              e.target.value = "";
+                            }}
+                          />
+                          <Button
+                            type='button'
+                            variant='outline'
+                            size='sm'
+                            onClick={() => document.getElementById(`bottom-slide-upload-${slide.id}`)?.click()}>
+                            <Upload className='w-4 h-4' />
+                          </Button>
+                        </div>
+                        {slide.imageUrl && (
+                          <div className='mt-2 h-20 rounded overflow-hidden border bg-muted'>
+                            <img src={slide.imageUrl} alt={`Slide ${index + 1}`} className='w-full h-full object-cover' />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Mobile image */}
+                      <div>
+                        <Label className='text-xs'>Mobile Image (optional)</Label>
+                        <div className='flex gap-2 mt-1'>
+                          <Input
+                            value={slide.mobileImageUrl || ""}
+                            onChange={(e) => {
+                              setContent((prev) => ({
+                                ...prev,
+                                bottomCarousel: {
+                                  enabled: prev.bottomCarousel?.enabled ?? true,
+                                  slides: (prev.bottomCarousel?.slides ?? []).map((s) =>
+                                    s.id === slide.id ? { ...s, mobileImageUrl: e.target.value || undefined } : s,
+                                  ),
+                                },
+                              }));
+                            }}
+                            placeholder='Optional mobile-specific image'
+                            className='text-sm'
+                          />
+                          <input
+                            type='file'
+                            id={`bottom-slide-mobile-upload-${slide.id}`}
+                            accept='image/jpeg,image/jpg,image/png,image/webp'
+                            className='hidden'
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              if (file.size > 5 * 1024 * 1024) {
+                                toast.error("File too large. Max 5MB.");
+                                return;
+                              }
+                              try {
+                                const buffer = new Uint8Array(await file.arrayBuffer());
+                                const result = await trpc.homepage.uploadMobileHeroImage.mutate({
+                                  file: { name: file.name, type: file.type, buffer },
+                                });
+                                if (result.success && result.data) {
+                                  setContent((prev) => ({
+                                    ...prev,
+                                    bottomCarousel: {
+                                      enabled: prev.bottomCarousel?.enabled ?? true,
+                                      slides: (prev.bottomCarousel?.slides ?? []).map((s) =>
+                                        s.id === slide.id ? { ...s, mobileImageUrl: result.data.url } : s,
+                                      ),
+                                    },
+                                  }));
+                                  toast.success("Mobile slide image uploaded!");
+                                }
+                              } catch {
+                                toast.error("Upload failed");
+                              }
+                              e.target.value = "";
+                            }}
+                          />
+                          <Button
+                            type='button'
+                            variant='outline'
+                            size='sm'
+                            onClick={() => document.getElementById(`bottom-slide-mobile-upload-${slide.id}`)?.click()}>
+                            <Upload className='w-4 h-4' />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Link URL */}
+                      <div>
+                        <Label className='text-xs'>Link URL (optional)</Label>
+                        <Input
+                          value={slide.linkUrl || ""}
+                          onChange={(e) => {
+                            setContent((prev) => ({
+                              ...prev,
+                              bottomCarousel: {
+                                enabled: prev.bottomCarousel?.enabled ?? true,
+                                slides: (prev.bottomCarousel?.slides ?? []).map((s) =>
+                                  s.id === slide.id ? { ...s, linkUrl: e.target.value || undefined } : s,
+                                ),
+                              },
+                            }));
+                          }}
+                          placeholder='/shop or https://...'
+                          className='text-sm mt-1'
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* ── Contact Page Banner (Minimal only) ──────────── */}
         {isMinimal && (
           <Card>

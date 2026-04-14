@@ -127,6 +127,37 @@ export function MinimalFooter() {
               </ul>
             </div>
           ))}
+
+          {/* ── Contact us column ── */}
+          {(footer.contactPhone || footer.contactEmail) && (
+            <div className='md:col-span-2 flex flex-col items-center md:items-start'>
+              <h4 className='text-sm font-semibold text-stone-900 mb-4 tracking-wide'>
+                {t("footer.contact")}
+              </h4>
+              <ul className='space-y-2.5'>
+                {footer.contactPhone && (
+                  <li>
+                    <a
+                      href={`tel:${footer.contactPhone}`}
+                      className='flex items-center gap-2 text-sm text-stone-500 hover:text-stone-900 transition-colors'>
+                      <Phone className='w-4 h-4 shrink-0' />
+                      <span dir='ltr'>{footer.contactPhone}</span>
+                    </a>
+                  </li>
+                )}
+                {footer.contactEmail && (
+                  <li>
+                    <a
+                      href={`mailto:${footer.contactEmail}`}
+                      className='flex items-center gap-2 text-sm text-stone-500 hover:text-stone-900 transition-colors'>
+                      <Mail className='w-4 h-4 shrink-0' />
+                      {footer.contactEmail}
+                    </a>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 

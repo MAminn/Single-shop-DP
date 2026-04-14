@@ -1403,6 +1403,42 @@ export default function LayoutSettingsPage() {
             </CardContent>
           </Card>
 
+          {/* Footer Contact Info (minimal only) */}
+          {settings.header.navbarStyle === "minimal" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className='text-base'>Footer Contact Info</CardTitle>
+              </CardHeader>
+              <CardContent className='space-y-4'>
+                <p className='text-sm text-muted-foreground'>
+                  Phone number and email displayed in a "Contact us" column in the footer.
+                </p>
+                <div>
+                  <Label htmlFor='footer-contact-phone'>Phone Number</Label>
+                  <Input
+                    id='footer-contact-phone'
+                    value={settings.footer.contactPhone ?? ""}
+                    onChange={(e) => updateFooter("contactPhone", e.target.value)}
+                    placeholder='e.g. 920032057'
+                    className='mt-1'
+                    dir='ltr'
+                  />
+                </div>
+                <div>
+                  <Label htmlFor='footer-contact-email'>Email Address</Label>
+                  <Input
+                    id='footer-contact-email'
+                    type='email'
+                    value={settings.footer.contactEmail ?? ""}
+                    onChange={(e) => updateFooter("contactEmail", e.target.value)}
+                    placeholder='e.g. cs@yourstore.com'
+                    className='mt-1'
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Social Links */}
           <Card>
             <CardHeader className='flex flex-row items-center justify-between'>

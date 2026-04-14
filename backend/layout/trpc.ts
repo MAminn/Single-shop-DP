@@ -92,6 +92,8 @@ const LayoutSettingsSchema = z.object({
     footerStyle: z.enum(["default", "editorial"]),
     footerLinkGroups: z.array(FooterLinkGroupSchema),
     socialLinks: z.array(SocialLinkSchema),
+    contactPhone: z.string().optional(),
+    contactEmail: z.string().optional(),
   }),
 });
 
