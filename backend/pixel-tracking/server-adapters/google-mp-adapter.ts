@@ -87,9 +87,16 @@ function buildGA4Params(
  * falls back to our sessionId.
  */
 function resolveClientId(event: EnrichedTrackingEvent): string {
-  // The _ga cookie value looks like "GA1.1.12345.67890"
-  // We could forward it from cookies, but our session ID is fine
-  // as a stable client identifier for server-side events.
+  // Prefer GA4's own client ID from the _ga cookie for accurate
+  // user stitching. Cookie format: "GA1.1.XXXXXXX.YYYYYYY"
+  const gaCookie = event.serverContext?.ga;
+  if (gaCookie) {
+    const parts = gaCookie.split(".");
+    if (parts.length >= 4) {
+      return parts.slice(2).join(".");
+    }
+  }
+  // Fallback to internal session ID if _ga cookie is unavailable
   return event.sessionId;
 }
 

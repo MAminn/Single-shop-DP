@@ -107,6 +107,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ events: batch }),
       keepalive: true, // ensures delivery even during navigation
+      credentials: "same-origin", // send first-party cookies (_ga, _fbp, etc.)
     }).catch(() => {
       // Silent — fire-and-forget
     });

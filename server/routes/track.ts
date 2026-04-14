@@ -67,6 +67,7 @@ export interface ServerContext {
   gclid?: string;
   ttp?: string;
   scid?: string;
+  ga?: string;
 }
 
 /** Hash an IP address so we never store raw IPs. */
@@ -127,6 +128,9 @@ function extractServerContext(request: {
   // Snapchat click ID cookie
   const scid = request.cookies?._scid ?? undefined;
 
+  // Google Analytics client ID cookie
+  const ga = request.cookies?._ga ?? undefined;
+
   return {
     ip,
     ipHash: hashIp(ip),
@@ -137,6 +141,7 @@ function extractServerContext(request: {
     gclid,
     ttp,
     scid,
+    ga,
   };
 }
 
