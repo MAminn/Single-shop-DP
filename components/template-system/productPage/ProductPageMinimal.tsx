@@ -74,6 +74,9 @@ export function ProductPageMinimal({
   const [quantity, setQuantity] = useState(1);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [selectedAddOns, setSelectedAddOns] = useState<Set<string>>(new Set());
+  const [selectedVariants, setSelectedVariants] = useState<
+    Record<string, string>
+  >({});
   const mainImageRef = useRef<HTMLImageElement>(null);
   const addToCartBtnRef = useRef<HTMLButtonElement>(null);
   const { t, locale } = useMinimalI18n();
@@ -128,10 +131,6 @@ export function ProductPageMinimal({
     product.discountPrice &&
     typeof product.discountPrice === "number" &&
     product.discountPrice < product.price;
-
-  const [selectedVariants, setSelectedVariants] = useState<
-    Record<string, string>
-  >({});
 
   const allVariantsSelected =
     !product.variants?.length ||
