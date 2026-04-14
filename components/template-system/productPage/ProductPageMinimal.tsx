@@ -647,20 +647,18 @@ function InlineProductCard({
 
   return (
     <div
-      className={`flex-none w-[130px] snap-start border transition-colors bg-white p-2 ${isSelected ? "border-emerald-500 ring-1 ring-emerald-500" : "border-gray-100 hover:border-gray-300"}`}>
+      role='button'
+      tabIndex={0}
+      onClick={onToggle}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); } }}
+      className={`flex-none w-[130px] snap-start border transition-colors bg-white p-2 cursor-pointer ${isSelected ? "border-emerald-500 ring-1 ring-emerald-500" : "border-gray-100 hover:border-gray-300"}`}>
       {/* Checkbox */}
-      <button
-        type='button'
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          onToggle();
-        }}
-        className={`w-5 h-5 mb-1.5 flex items-center justify-center border-2 transition-all cursor-pointer ${isSelected ? "bg-emerald-500 border-emerald-500 text-white" : "border-gray-300 hover:border-gray-500 bg-white"}`}
-        aria-label={isSelected ? "Deselect" : "Select"}>
+      <div
+        className={`w-5 h-5 mb-1.5 flex items-center justify-center border-2 transition-all ${isSelected ? "bg-emerald-500 border-emerald-500 text-white" : "border-gray-300 bg-white"}`}
+        aria-hidden='true'>
         {isSelected && <Check className='w-3 h-3' />}
-      </button>
-      <Link href={productUrl} className='group/card'>
+      </div>
+      <div className='group/card'>
         <div className='aspect-square bg-stone-50 overflow-hidden mb-2'>
           <img
             src={imageUrl}
@@ -683,7 +681,7 @@ function InlineProductCard({
             {displayPrice} {STORE_CURRENCY}
           </span>
         </div>
-      </Link>
+      </div>
     </div>
   );
 }
