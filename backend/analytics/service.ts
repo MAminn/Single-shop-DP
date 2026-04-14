@@ -304,9 +304,7 @@ export const getTopTrackedProducts = () =>
             sql`${trackingEvent.eventData}->>'productId' IS NOT NULL`,
           ),
         )
-        .groupBy(
-          sql`${trackingEvent.eventData}->>'productId'`,
-        )
+        .groupBy(sql`${trackingEvent.eventData}->>'productId'`)
         .orderBy(desc(count()))
         .limit(5)
         .execute();
@@ -325,9 +323,7 @@ export const getTopTrackedProducts = () =>
             sql`${trackingEvent.eventData}->>'productId' IS NOT NULL`,
           ),
         )
-        .groupBy(
-          sql`${trackingEvent.eventData}->>'productId'`,
-        )
+        .groupBy(sql`${trackingEvent.eventData}->>'productId'`)
         .orderBy(desc(count()))
         .limit(5)
         .execute();
@@ -340,13 +336,14 @@ export const getTopTrackedProducts = () =>
         ]),
       ].filter(Boolean);
 
-      const productNames = allProductIds.length > 0
-        ? await db
-            .select({ id: product.id, name: product.name })
-            .from(product)
-            .where(inArray(product.id, allProductIds))
-            .execute()
-        : [];
+      const productNames =
+        allProductIds.length > 0
+          ? await db
+              .select({ id: product.id, name: product.name })
+              .from(product)
+              .where(inArray(product.id, allProductIds))
+              .execute()
+          : [];
 
       const nameMap = new Map(productNames.map((p) => [p.id, p.name]));
 
