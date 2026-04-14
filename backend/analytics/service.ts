@@ -28,13 +28,7 @@ export const getOverviewMetrics = () =>
       const now = new Date();
       const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-      // Order count (all statuses, all-time)
-      const [orderCount] = await db
-        .select({ total: count() })
-        .from(order)
-        .execute();
-
-      // Revenue from non-cancelled orders (all-time)
+      // Revenue + order count from non-cancelled orders (all-time)
       const [revenueTotals] = await db
         .select({
           orderCount: count(),
@@ -44,11 +38,16 @@ export const getOverviewMetrics = () =>
         .where(sql`${order.status} != 'cancelled'`)
         .execute();
 
-      // Order count (all statuses, last 7 days)
+      // Order count (non-cancelled, last 7 days)
       const [orderCount7d] = await db
         .select({ total: count() })
         .from(order)
-        .where(gte(order.createdAt, sevenDaysAgo))
+        .where(
+          and(
+            sql`${order.status} != 'cancelled'`,
+            gte(order.createdAt, sevenDaysAgo),
+          ),
+        )
         .execute();
 
       // Revenue from non-cancelled orders (last 7 days)
@@ -79,7 +78,7 @@ export const getOverviewMetrics = () =>
         .execute();
 
       return {
-        totalOrders: orderCount?.total ?? 0,
+        totalOrders: nonCancelledCount,
         totalRevenue,
         avgOrderValue: Math.round(avgOrderValue * 100) / 100,
         totalOrders7d: orderCount7d?.total ?? 0,
