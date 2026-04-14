@@ -102,7 +102,7 @@ interface TopTrackedData {
 const FUNNEL_COLORS = ["#6366f1", "#8b5cf6", "#a78bfa", "#c4b5fd", "#ddd6fe"];
 
 const FUNNEL_LABELS: Record<string, string> = {
-  page_viewed: "Page Viewed",
+  page_viewed: "Site Visits",
   product_viewed: "Product Viewed",
   product_added_to_cart: "Added to Cart",
   checkout_started: "Checkout Started",
@@ -244,7 +244,7 @@ export default function AnalyticsDashboardPage() {
                         ? funnelData[idx - 1]!.uniqueSessions
                         : stage.uniqueSessions;
                     const dropOff =
-                      idx > 0 && prevSessions > 0
+                      idx > 1 && prevSessions > 0
                         ? (
                             (1 - stage.uniqueSessions / prevSessions) *
                             100
