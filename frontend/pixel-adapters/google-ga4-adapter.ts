@@ -73,7 +73,9 @@ export class GoogleGA4Adapter implements PixelAdapter {
         window.dataLayer.push(args);
       };
       window.gtag("js", new Date());
-      window.gtag("config", this.measurementId);
+      window.gtag("config", this.measurementId, {
+        send_page_view: false,
+      });
     }
 
     this.loaded = true;
@@ -90,19 +92,19 @@ export class GoogleGA4Adapter implements PixelAdapter {
 
   trackEvent(event: TrackingEvent): void {
     if (!this.loaded || !this.enabled) return;
-    if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+    if (typeof window === "undefined" || typeof window.gtag !== "function")
+      return;
 
     const ga4EventName = GA4_EVENT_MAP[event.eventName as TrackingEventName];
 
     if (ga4EventName) {
       const params = buildGA4Params(event);
       window.gtag("event", ga4EventName, params);
-    } else if (event.eventName !== TrackingEventName.PAGE_VIEWED) {
+    } else {
       // Custom / unmapped events — send with our canonical name
       const params = buildGA4Params(event);
       window.gtag("event", event.eventName, params);
     }
-    // Note: page_view is auto-tracked by gtag('config', ...) — we skip duplicates
   }
 
   isLoaded(): boolean {
