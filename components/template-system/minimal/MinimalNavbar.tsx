@@ -229,15 +229,25 @@ export function MinimalNavbar() {
                       <Menu className='w-5 h-5' />
                     </button>
                   </SheetTrigger>
-                  <SheetContent side={dir === "rtl" ? "right" : "left"} className='w-72 bg-white p-0'>
+                  <SheetContent side={dir === "rtl" ? "right" : "left"} className='w-72 bg-white p-0 [&>button:last-child]:hidden'>
                     <div className='flex flex-col h-full'>
-                      {/* Mobile logo */}
-                      <div className='p-6 border-b border-gray-100 flex justify-center'>
+                      {/* Mobile header: logo + close */}
+                      <div className='p-6 border-b border-gray-100 flex items-center justify-between'>
                         <HeaderLogo
                           variant='mobile'
-                          onClick={handleCloseSheet}
+                          onClick={() => {
+                            handleCloseSheet();
+                            navigate('/');
+                          }}
                           textClassName='text-xl font-normal tracking-[0.2em] text-gray-900 uppercase'
                         />
+                        <button
+                          type='button'
+                          onClick={handleCloseSheet}
+                          className='p-1 text-gray-500 hover:text-black transition-colors'
+                          aria-label='Close menu'>
+                          <X className='w-5 h-5' />
+                        </button>
                       </div>
 
                       {/* Mobile search */}
