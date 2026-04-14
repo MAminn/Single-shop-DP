@@ -201,7 +201,10 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {
         // Pixel config fetch failed — gracefully degrade, no pixels fire
-        if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+        if (
+          typeof window !== "undefined" &&
+          window.location.hostname === "localhost"
+        ) {
           console.debug("[Tracking] Failed to fetch pixel configs");
         }
       });
@@ -219,7 +222,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-const trackEvent = useCallback(
+  const trackEvent = useCallback(
     (
       eventName: TrackingEventName | string,
       data?: {
@@ -270,9 +273,11 @@ const trackEvent = useCallback(
     if (typeof window === "undefined") return;
 
     let cancelled = false;
-    const manager = new CustomEventTriggerManager((eventName, customProperties) => {
-      trackEvent(eventName, { customProperties });
-    });
+    const manager = new CustomEventTriggerManager(
+      (eventName, customProperties) => {
+        trackEvent(eventName, { customProperties });
+      },
+    );
     customTriggerRef.current = manager;
 
     // Fetch active custom event configs
@@ -285,7 +290,10 @@ const trackEvent = useCallback(
         manager.loadConfigs(configs);
       })
       .catch(() => {
-        if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+        if (
+          typeof window !== "undefined" &&
+          window.location.hostname === "localhost"
+        ) {
           console.debug("[Tracking] Failed to fetch custom event configs");
         }
       });
@@ -294,7 +302,9 @@ const trackEvent = useCallback(
     const handleTestEvent = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail?.eventName) {
-        trackEvent(detail.eventName, { customProperties: detail.eventData ?? {} });
+        trackEvent(detail.eventName, {
+          customProperties: detail.eventData ?? {},
+        });
       }
     };
     window.addEventListener("tracking:custom-event-test", handleTestEvent);
@@ -329,7 +339,9 @@ const trackEvent = useCallback(
   );
 
   return (
-    <TrackingContext.Provider value={value}>{children}</TrackingContext.Provider>
+    <TrackingContext.Provider value={value}>
+      {children}
+    </TrackingContext.Provider>
   );
 }
 

@@ -5,10 +5,7 @@ import {
   type PixelConfig,
 } from "#root/shared/types/pixel-tracking";
 import type { EnrichedTrackingEvent } from "#root/backend/pixel-tracking/event-logger";
-import type {
-  ServerPixelAdapter,
-  AdapterDeliveryResult,
-} from "./types";
+import type { ServerPixelAdapter, AdapterDeliveryResult } from "./types";
 
 /** Google Analytics 4 Measurement Protocol collect endpoint */
 const GA4_MP_URL = "https://www.google-analytics.com/mp/collect";
@@ -25,24 +22,24 @@ const BASE_DELAY_MS = 500;
  */
 function mapEventName(eventName: string): string {
   const mapped =
-    PLATFORM_EVENT_MAP[PixelPlatform.GOOGLE_GA4][eventName as TrackingEventName];
+    PLATFORM_EVENT_MAP[PixelPlatform.GOOGLE_GA4][
+      eventName as TrackingEventName
+    ];
   return mapped ?? eventName;
 }
 
 /**
  * Build a single GA4 item from our product item format.
  */
-function toGA4Item(
-  item: {
-    itemId: string;
-    itemName: string;
-    price?: number;
-    quantity?: number;
-    category?: string;
-    brand?: string;
-    variant?: string;
-  },
-): Record<string, unknown> {
+function toGA4Item(item: {
+  itemId: string;
+  itemName: string;
+  price?: number;
+  quantity?: number;
+  category?: string;
+  brand?: string;
+  variant?: string;
+}): Record<string, unknown> {
   const ga4Item: Record<string, unknown> = {
     item_id: item.itemId,
     item_name: item.itemName,
@@ -58,9 +55,7 @@ function toGA4Item(
 /**
  * Build GA4 event params from enriched tracking event.
  */
-function buildGA4Params(
-  event: EnrichedTrackingEvent,
-): Record<string, unknown> {
+function buildGA4Params(event: EnrichedTrackingEvent): Record<string, unknown> {
   const params: Record<string, unknown> = {};
   const ecom = event.ecommerce;
 
@@ -171,7 +166,11 @@ async function sendToGA4MP(
       }
 
       // Non-retryable client errors (4xx except 429)
-      if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+      if (
+        response.status >= 400 &&
+        response.status < 500 &&
+        response.status !== 429
+      ) {
         return {
           platform: PixelPlatform.GOOGLE_GA4,
           success: false,

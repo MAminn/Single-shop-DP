@@ -185,7 +185,6 @@ export const trackBeaconPlugin: FastifyPluginAsync = async (fastify) => {
     // For now we persist via the existing trackEvents service.
     // This will be replaced by the full delivery pipeline in Task 3.5.
     try {
-      
       // processTrackingBeacon is async — we intentionally do NOT await it
       // so the client gets 204 immediately.
       processTrackingBeacon(events, serverContext, request.db).catch(
