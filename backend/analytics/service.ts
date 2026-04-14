@@ -13,6 +13,7 @@ import {
   desc,
   eq,
   gte,
+  inArray,
   sql,
   sum,
   and,
@@ -290,10 +291,9 @@ export const getTopTrackedProducts = () =>
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
       // Most viewed products (from product_viewed events, reading productId from eventData)
-      const mostViewed = await db
+      const mostViewedRaw = await db
         .select({
           productId: sql<string>`${trackingEvent.eventData}->>'productId'`,
-          productName: sql<string>`${trackingEvent.eventData}->>'productName'`,
           viewCount: count(),
         })
         .from(trackingEvent)
@@ -306,17 +306,15 @@ export const getTopTrackedProducts = () =>
         )
         .groupBy(
           sql`${trackingEvent.eventData}->>'productId'`,
-          sql`${trackingEvent.eventData}->>'productName'`,
         )
         .orderBy(desc(count()))
         .limit(5)
         .execute();
 
       // Most added to cart
-      const mostCarted = await db
+      const mostCartedRaw = await db
         .select({
           productId: sql<string>`${trackingEvent.eventData}->>'productId'`,
-          productName: sql<string>`${trackingEvent.eventData}->>'productName'`,
           cartCount: count(),
         })
         .from(trackingEvent)
@@ -329,11 +327,40 @@ export const getTopTrackedProducts = () =>
         )
         .groupBy(
           sql`${trackingEvent.eventData}->>'productId'`,
-          sql`${trackingEvent.eventData}->>'productName'`,
         )
         .orderBy(desc(count()))
         .limit(5)
         .execute();
+
+      // Look up current product names from the product table
+      const allProductIds = [
+        ...new Set([
+          ...mostViewedRaw.map((r) => r.productId),
+          ...mostCartedRaw.map((r) => r.productId),
+        ]),
+      ].filter(Boolean);
+
+      const productNames = allProductIds.length > 0
+        ? await db
+            .select({ id: product.id, name: product.name })
+            .from(product)
+            .where(inArray(product.id, allProductIds))
+            .execute()
+        : [];
+
+      const nameMap = new Map(productNames.map((p) => [p.id, p.name]));
+
+      const mostViewed = mostViewedRaw.map((r) => ({
+        productId: r.productId,
+        productName: nameMap.get(r.productId) ?? "Deleted Product",
+        viewCount: r.viewCount,
+      }));
+
+      const mostCarted = mostCartedRaw.map((r) => ({
+        productId: r.productId,
+        productName: nameMap.get(r.productId) ?? "Deleted Product",
+        cartCount: r.cartCount,
+      }));
 
       return { mostViewed, mostCarted };
     });
