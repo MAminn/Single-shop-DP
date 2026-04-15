@@ -10,7 +10,7 @@ import {
 import { ServerError } from "#root/shared/error/server";
 import { Effect } from "effect";
 import { z } from "zod";
-import { and, asc, desc, eq, ilike, or, count, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, or, count, sql, lt, inArray } from "drizzle-orm";
 
 const promoCodeStatuses = [
   "active",
@@ -65,6 +65,21 @@ export const viewPromoCodes = (
 
     const { page, limit, searchCode, status, sortBy, sortOrder } = input;
     const offset = (page - 1) * limit;
+
+    // Auto-expire promo codes whose endDate has passed
+    yield* $(
+      query((db) =>
+        db
+          .update(promoCode)
+          .set({ status: "expired" })
+          .where(
+            and(
+              inArray(promoCode.status, ["active", "scheduled"]),
+              lt(promoCode.endDate, new Date())
+            )
+          )
+      )
+    );
 
     const conditions = [];
     if (searchCode) {

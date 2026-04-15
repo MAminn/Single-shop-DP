@@ -65,6 +65,7 @@ const HomepageContentSchema = z.object({
     viewAllText: z.string(),
     viewAllTextAr: z.string().nullish(),
     viewAllLink: z.string(),
+    productIds: z.array(z.string().uuid()).nullish(),
   }),
   valueProps: z.object({
     enabled: z.boolean(),
@@ -99,6 +100,7 @@ const HomepageContentSchema = z.object({
       viewAllText: z.string(),
       viewAllTextAr: z.string().nullish(),
       viewAllLink: z.string(),
+      productIds: z.array(z.string().uuid()).nullish(),
     })
     .nullish(),
   newArrivals: z
@@ -109,6 +111,7 @@ const HomepageContentSchema = z.object({
       viewAllText: z.string(),
       viewAllTextAr: z.string().nullish(),
       viewAllLink: z.string(),
+      productIds: z.array(z.string().uuid()).nullish(),
     })
     .nullish(),
   marquee: z

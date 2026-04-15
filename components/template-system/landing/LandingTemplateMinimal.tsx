@@ -503,7 +503,7 @@ export function LandingTemplateMinimal({
         <MinimalProductCarousel
           products={discountedMinimal}
           title={locale === "ar" && content.discountedProducts?.titleAr ? content.discountedProducts.titleAr : (content.discountedProducts?.title || t("on_sale"))}
-          viewAllHref={content.discountedProducts?.viewAllLink || '/shop'}
+          viewAllHref={`${content.discountedProducts?.viewAllLink || '/shop'}${(content.discountedProducts?.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=offers`}
           viewAllText={locale === "ar" && content.discountedProducts?.viewAllTextAr ? content.discountedProducts.viewAllTextAr : (content.discountedProducts?.viewAllText || t("view_all"))}
           className='bg-white'
           onQuickView={setQuickViewProduct}
@@ -517,7 +517,7 @@ export function LandingTemplateMinimal({
         <MinimalProductCarousel
           products={featuredMinimal}
           title={locale === "ar" && content.featuredProducts.titleAr ? content.featuredProducts.titleAr : content.featuredProducts.title}
-          viewAllHref={content.featuredProducts.viewAllLink}
+          viewAllHref={`${content.featuredProducts.viewAllLink || '/shop'}${(content.featuredProducts.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=featured`}
           viewAllText={locale === "ar" && content.featuredProducts.viewAllTextAr ? content.featuredProducts.viewAllTextAr : content.featuredProducts.viewAllText}
           className='bg-stone-50'
           onQuickView={setQuickViewProduct}
@@ -533,7 +533,7 @@ export function LandingTemplateMinimal({
         <MinimalProductCarousel
           products={newArrivalProducts}
           title={locale === "ar" && content.newArrivals?.titleAr ? content.newArrivals.titleAr : (content.newArrivals?.title || t("new_arrivals"))}
-          viewAllHref={content.newArrivals?.viewAllLink || '/shop'}
+          viewAllHref={`${content.newArrivals?.viewAllLink || '/shop'}${(content.newArrivals?.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=newarrivals`}
           viewAllText={locale === "ar" && content.newArrivals?.viewAllTextAr ? content.newArrivals.viewAllTextAr : (content.newArrivals?.viewAllText || t("view_all"))}
           className='bg-stone-50'
           onQuickView={setQuickViewProduct}

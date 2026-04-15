@@ -9,7 +9,7 @@ import {
 import { ServerError } from "#root/shared/error/server";
 import { Effect } from "effect";
 import { z } from "zod";
-import { and, eq, gte, lte, inArray, or, isNull } from "drizzle-orm";
+import { and, eq, gte, lte, inArray, or, isNull, lt } from "drizzle-orm";
 
 const CartItemSchema = z.object({
   id: z.string().uuid(),
@@ -95,6 +95,16 @@ export const validatePromoCode = (
     }
 
     if (foundPromoCode.endDate && foundPromoCode.endDate < now) {
+      // Auto-update status to expired so admin dashboard reflects reality
+      yield* $(
+        query((db) =>
+          db
+            .update(promoCode)
+            .set({ status: "expired" })
+            .where(eq(promoCode.id, foundPromoCode.id))
+        )
+      );
+
       return yield* $(
         Effect.fail(
           new ServerError({

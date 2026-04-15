@@ -10,6 +10,8 @@ import {
   PRODUCTS_PER_PAGE,
   type MinimalCategoryProduct,
 } from "#root/components/template-system/minimal/MinimalCategoryPage";
+import { getStoreOwnerId } from "#root/shared/config/store";
+import type { HomepageContent } from "#root/shared/types/homepage-content";
 
 /**
  * /shop – Canonical all-products collection page.
@@ -31,10 +33,17 @@ export default function ShopPage() {
 
   // Optional category filter from query string
   const categoryParam = searchParams.get("category");
+  const sectionParam = searchParams.get("section"); // offers | featured | newarrivals
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
   const [categoryName, setCategoryName] = useState<string | undefined>(
     undefined,
   );
+
+  // Section-specific filter data from homepage CMS content
+  const [sectionProductIds, setSectionProductIds] = useState<string[] | undefined>(undefined);
+  const [sectionDiscountedOnly, setSectionDiscountedOnly] = useState<boolean | undefined>(undefined);
+  const [sectionSortBy, setSectionSortBy] = useState<"newest" | undefined>(undefined);
+  const [sectionReady, setSectionReady] = useState(!sectionParam); // true immediately if no section param
 
   // Minimal-specific state
   const [currentPage, setCurrentPage] = useState(1);
@@ -77,6 +86,61 @@ export default function ShopPage() {
     };
   }, [categoryParam]);
 
+  // Resolve section filter from homepage CMS content
+  useEffect(() => {
+    if (!sectionParam) {
+      setSectionReady(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    const resolveSection = async () => {
+      try {
+        const merchantId = getStoreOwnerId();
+        const result = await trpc.homepage.getContent.query({
+          merchantId,
+          templateId: "landing-minimal",
+        });
+        if (cancelled) return;
+
+        if (result.success && result.result) {
+          const content = result.result as HomepageContent;
+          if (sectionParam === "offers") {
+            const ids = content.discountedProducts?.productIds;
+            if (ids && ids.length > 0) {
+              setSectionProductIds(ids);
+            } else {
+              setSectionDiscountedOnly(true);
+            }
+          } else if (sectionParam === "featured") {
+            const ids = content.featuredProducts?.productIds;
+            if (ids && ids.length > 0) {
+              setSectionProductIds(ids);
+            }
+            // No special filter for featured without productIds — shows all
+          } else if (sectionParam === "newarrivals") {
+            const ids = content.newArrivals?.productIds;
+            if (ids && ids.length > 0) {
+              setSectionProductIds(ids);
+            } else {
+              setSectionSortBy("newest");
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error resolving section:", err);
+      } finally {
+        if (!cancelled) setSectionReady(true);
+      }
+    };
+
+    resolveSection();
+    return () => {
+      cancelled = true;
+    };
+  }, [sectionParam]);
+
   // Map sort value → server-side sortBy param
   const serverSort = useMemo(() => {
     if (currentSort === "price-asc") return "price-asc" as const;
@@ -85,23 +149,30 @@ export default function ShopPage() {
     return undefined;
   }, [currentSort]);
 
-  // Fetch products (all or filtered by category)
+  // Fetch products (all or filtered by category / section)
   useEffect(() => {
     // Wait for category resolution if param is present
     if (categoryParam && !categoryId) return;
+    // Wait for section resolution if param is present
+    if (sectionParam && !sectionReady) return;
 
     let cancelled = false;
 
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
+        // Determine effective sort: user-selected sort overrides section default
+        const effectiveSort = serverSort ?? sectionSortBy ?? undefined;
+
         const result = await trpc.product.search.query({
           limit: isMinimal ? PRODUCTS_PER_PAGE : 100,
           offset: isMinimal ? (currentPage - 1) * PRODUCTS_PER_PAGE : 0,
           includeOutOfStock: true,
           categoryIds: categoryId ? [categoryId] : undefined,
           search: isMinimal && searchQuery ? searchQuery : undefined,
-          sortBy: isMinimal ? serverSort : undefined,
+          sortBy: isMinimal ? effectiveSort : undefined,
+          productIds: sectionProductIds && sectionProductIds.length > 0 ? sectionProductIds : undefined,
+          discountedOnly: sectionDiscountedOnly || undefined,
         });
 
         if (cancelled) return;
@@ -132,7 +203,7 @@ export default function ShopPage() {
     return () => {
       cancelled = true;
     };
-  }, [categoryParam, categoryId, isMinimal, currentPage, serverSort, searchQuery]);
+  }, [categoryParam, categoryId, isMinimal, currentPage, serverSort, searchQuery, sectionParam, sectionReady, sectionProductIds, sectionDiscountedOnly, sectionSortBy]);
 
   // Debounced search for minimal template
   const [debouncedSearch, setDebouncedSearch] = useState("");

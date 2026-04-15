@@ -29,12 +29,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "#root/components/ui/popover";
-import { Check, ChevronsUpDown, XIcon } from "lucide-react";
+import { Check, ChevronsUpDown, XIcon, Zap, Palette } from "lucide-react";
 import { FileUploadInput } from "#root/components/file-uploads/FileUpload";
 import { MultiFileUploadInput } from "#root/components/file-uploads/MultiFileUpload";
 import { TagsInput } from "#root/components/ui/tags-input";
 import { Label } from "#root/components/ui/label";
 import { Badge } from "#root/components/ui/badge";
+import { trpc } from "#root/shared/trpc/client";
 
 // Define the interface to match our component
 export interface FileMetadata {
@@ -325,8 +326,18 @@ export function ProductForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Description</FormLabel>
+                <div className='flex items-center gap-2 mb-1'>
+                  <DescriptionColorButton
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                  <span className='text-xs text-muted-foreground'>
+                    Select text, then pick a color
+                  </span>
+                </div>
                 <FormControl>
                   <Textarea
+                    id='product-description-textarea'
                     placeholder='This product is awesome because...'
                     className='resize-none'
                     {...field}
@@ -561,6 +572,52 @@ export function VariantsInput({
   // Ensure value is always an array
   const variants = value || [];
 
+  const [presets, setPresets] = useState<
+    { id: string; name: string; values: string[] }[]
+  >([]);
+  const [presetsOpen, setPresetsOpen] = useState(false);
+
+  useEffect(() => {
+    trpc.settings.getVariantPresets
+      .query()
+      .then((result) => {
+        if (result.success && Array.isArray(result.result)) {
+          const fetched = result.result as { id: string; name: string; values: string[] }[];
+          setPresets(fetched);
+          // Auto-apply all presets when creating a new product (empty variants)
+          if ((!value || value.length === 0) && fetched.length > 0) {
+            const autoApplied = fetched.map((p) => ({
+              name: p.name,
+              values: [...p.values],
+            }));
+            onChange(autoApplied);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const applyPreset = (preset: { name: string; values: string[] }) => {
+    // Check if a variant with this name already exists
+    const existingIndex = variants.findIndex(
+      (v) => v.name.toLowerCase() === preset.name.toLowerCase(),
+    );
+    if (existingIndex >= 0) {
+      // Merge values
+      const existing = variants[existingIndex]!;
+      const merged = [
+        ...new Set([...existing.values, ...preset.values]),
+      ];
+      const newValue = [...variants];
+      newValue[existingIndex] = { ...existing, values: merged };
+      onChange(newValue);
+    } else {
+      onChange([...variants, { name: preset.name, values: [...preset.values] }]);
+    }
+    setPresetsOpen(false);
+    toast.success(`Applied "${preset.name}" preset`);
+  };
+
   return (
     <div className='flex flex-col gap-2'>
       {variants.map((v, i) => (
@@ -593,16 +650,44 @@ export function VariantsInput({
         </Fragment>
       ))}
 
-      <Button
-        type='button'
-        onClick={() =>
-          onChange([
-            ...variants,
-            { name: `Variant ${variants.length + 1}`, values: [] },
-          ])
-        }>
-        Add Variant
-      </Button>
+      <div className='flex items-center gap-2'>
+        <Button
+          type='button'
+          onClick={() =>
+            onChange([
+              ...variants,
+              { name: `Variant ${variants.length + 1}`, values: [] },
+            ])
+          }>
+          Add Variant
+        </Button>
+        {presets.length > 0 && (
+          <Popover open={presetsOpen} onOpenChange={setPresetsOpen}>
+            <PopoverTrigger asChild>
+              <Button type='button' variant='outline'>
+                <Zap className='mr-1 h-4 w-4' />
+                Apply Preset
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className='w-64 p-2' align='start'>
+              <div className='space-y-1'>
+                {presets.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type='button'
+                    className='w-full text-left px-2 py-1.5 text-sm rounded hover:bg-muted'
+                    onClick={() => applyPreset(preset)}>
+                    <span className='font-medium'>{preset.name}</span>
+                    <span className='text-muted-foreground ml-1 text-xs'>
+                      ({preset.values.join(", ")})
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
+      </div>
     </div>
   );
 }
@@ -639,5 +724,100 @@ export function VariantInput({
         </p>
       </div>
     </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Description Color Button
+   Wraps the selected text in the description textarea with
+   [color:#hex]...[/color] tags
+   ═══════════════════════════════════════════════════════════════════ */
+
+const PRESET_COLORS = [
+  "#ef4444",
+  "#f97316",
+  "#eab308",
+  "#22c55e",
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
+  "#6b7280",
+  "#000000",
+];
+
+function DescriptionColorButton({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [customColor, setCustomColor] = useState("#000000");
+
+  const applyColor = (color: string) => {
+    const textarea = document.getElementById(
+      "product-description-textarea",
+    ) as HTMLTextAreaElement | null;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    if (start === end) {
+      // No selection — insert a placeholder
+      const tag = `[color:${color}]colored text[/color]`;
+      const newVal = value.slice(0, start) + tag + value.slice(end);
+      onChange(newVal);
+    } else {
+      const selected = value.slice(start, end);
+      const newVal =
+        value.slice(0, start) +
+        `[color:${color}]${selected}[/color]` +
+        value.slice(end);
+      onChange(newVal);
+    }
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button type='button' variant='outline' size='sm' className='h-7 px-2'>
+          <Palette className='h-3.5 w-3.5 mr-1' />
+          Color
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className='w-52 p-3' align='start'>
+        <div className='grid grid-cols-5 gap-1.5 mb-2'>
+          {PRESET_COLORS.map((c) => (
+            <button
+              key={c}
+              type='button'
+              className='w-7 h-7 rounded-full border border-gray-200 hover:scale-110 transition-transform'
+              style={{ backgroundColor: c }}
+              onClick={() => applyColor(c)}
+              aria-label={`Apply color ${c}`}
+            />
+          ))}
+        </div>
+        <div className='flex items-center gap-1.5'>
+          <input
+            type='color'
+            value={customColor}
+            onChange={(e) => setCustomColor(e.target.value)}
+            className='w-7 h-7 rounded cursor-pointer border-0 p-0'
+          />
+          <Button
+            type='button'
+            variant='outline'
+            size='sm'
+            className='flex-1 h-7 text-xs'
+            onClick={() => applyColor(customColor)}>
+            Apply
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

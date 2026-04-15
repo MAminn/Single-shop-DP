@@ -61,10 +61,16 @@ function Page() {
       setIsLoading(true);
       setError(null);
       try {
-        const productsResult = await trpc.product.search.query({
+        const searchParams: Record<string, any> = {
           limit: 8,
           includeOutOfStock: false,
-        });
+        };
+        // Use manually selected product IDs from CMS if configured
+        const featuredIds = homepageContent.featuredProducts?.productIds;
+        if (featuredIds && featuredIds.length > 0) {
+          searchParams.productIds = featuredIds;
+        }
+        const productsResult = await trpc.product.search.query(searchParams);
 
         if (productsResult.success && productsResult.result) {
           setFeaturedProducts(
@@ -97,7 +103,7 @@ function Page() {
     };
 
     fetchProducts();
-  }, []);
+  }, [homepageContent.featuredProducts?.productIds]);
 
   // ───────────────────────────────────────────────────
   // Re-fetch CMS content only when the active template changes
@@ -165,11 +171,17 @@ function Page() {
     const fetchNewArrivals = async () => {
       setNewArrivalsLoading(true);
       try {
-        const result = await trpc.product.search.query({
+        const searchParams: Record<string, any> = {
           limit: 8,
-          sortBy: "newest",
+          sortBy: "newest" as const,
           includeOutOfStock: true,
-        });
+        };
+        // Use manually selected product IDs from CMS if configured
+        const newArrivalIds = homepageContent.newArrivals?.productIds;
+        if (newArrivalIds && newArrivalIds.length > 0) {
+          searchParams.productIds = newArrivalIds;
+        }
+        const result = await trpc.product.search.query(searchParams);
 
         if (result.success && result.result) {
           setNewArrivals(
@@ -200,17 +212,23 @@ function Page() {
     };
 
     fetchNewArrivals();
-  }, []);
+  }, [homepageContent.newArrivals?.productIds]);
 
   // Fetch discounted products (products with discountPrice < price)
   useEffect(() => {
     const fetchDiscounted = async () => {
       try {
-        const result = await trpc.product.search.query({
+        const searchParams: Record<string, any> = {
           limit: 8,
           discountedOnly: true,
           includeOutOfStock: false,
-        });
+        };
+        // Use manually selected product IDs from CMS if configured
+        const discountedIds = homepageContent.discountedProducts?.productIds;
+        if (discountedIds && discountedIds.length > 0) {
+          searchParams.productIds = discountedIds;
+        }
+        const result = await trpc.product.search.query(searchParams);
 
         if (result.success && result.result) {
           setDiscountedProducts(
@@ -240,7 +258,7 @@ function Page() {
     };
 
     fetchDiscounted();
-  }, []);
+  }, [homepageContent.discountedProducts?.productIds]);
 
   // Get the selected landing template
   const templateEntry = getTemplateComponent("landing", activeLandingTemplateId);

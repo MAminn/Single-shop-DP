@@ -1195,6 +1195,9 @@ export const storeSettings = pgTable("store_settings", {
     .default("0"),
   templateSelection: jsonb("template_selection").default({}),
   linkTreeConfig: jsonb("link_tree_config").default({}),
+  variantPresets: jsonb("variant_presets")
+    .default([])
+    .$type<Array<{ id: string; name: string; values: string[] }>>(),
   updatedAt: timestamp("updated_at", {
     withTimezone: true,
     mode: "date",

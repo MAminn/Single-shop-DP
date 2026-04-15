@@ -152,12 +152,29 @@ export function CheckoutPageModernTemplate({
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       errors.email = t("validation.email_invalid");
     }
-    if (!form.phoneNumber.trim())
+    if (!form.phoneNumber.trim()) {
       errors.phoneNumber = t("validation.phone_required");
+    } else if (!/^[\d\s+()-]{7,20}$/.test(form.phoneNumber.trim())) {
+      errors.phoneNumber = t("validation.phone_invalid");
+    }
     if (!form.address.trim()) errors.address = t("validation.address_required");
     if (!form.city.trim()) errors.city = t("validation.city_required");
+    if (!form.state.trim()) errors.state = t("validation.state_required");
+    if (!form.postalCode.trim()) errors.postalCode = t("validation.postal_code_required");
+    if (!form.country.trim()) errors.country = t("validation.country_required");
 
     setFieldErrors(errors);
+
+    // Scroll to first error field
+    if (Object.keys(errors).length > 0) {
+      const firstErrorField = Object.keys(errors)[0];
+      const el = document.getElementById(firstErrorField!);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.focus();
+      }
+    }
+
     return Object.keys(errors).length === 0;
   };
 
@@ -169,12 +186,19 @@ export function CheckoutPageModernTemplate({
 
   return (
     <div className='container mx-auto px-4 py-8'>
-      <h1 className='text-3xl font-bold mb-8'>{t("checkout.title")}</h1>
+      <h1 className='text-xl md:text-3xl font-bold mb-8'>{t("checkout.title")}</h1>
 
       {errorMessage && (
         <Alert variant='destructive' className='mb-6'>
           <AlertCircle className='h-4 w-4' />
           <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
+      )}
+
+      {Object.keys(fieldErrors).length > 0 && (
+        <Alert variant='destructive' className='mb-6'>
+          <AlertCircle className='h-4 w-4' />
+          <AlertDescription>{t("validation.fix_errors")}</AlertDescription>
         </Alert>
       )}
 
@@ -313,19 +337,33 @@ export function CheckoutPageModernTemplate({
                     )}
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='state'>{t("checkout.state")}</Label>
+                    <Label htmlFor='state'>
+                      {t("checkout.state")}{" "}
+                      <span className='text-destructive'>
+                        {t("checkout.required")}
+                      </span>
+                    </Label>
                     <Input
                       id='state'
                       placeholder='Cairo Governorate'
                       value={form.state}
                       onChange={(e) => updateField("state", e.target.value)}
+                      className={fieldErrors.state ? "border-destructive" : ""}
                     />
+                    {fieldErrors.state && (
+                      <p className='text-sm text-destructive'>
+                        {fieldErrors.state}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div className='space-y-2'>
                     <Label htmlFor='postalCode'>
-                      {t("checkout.postal_code")}
+                      {t("checkout.postal_code")}{" "}
+                      <span className='text-destructive'>
+                        {t("checkout.required")}
+                      </span>
                     </Label>
                     <Input
                       id='postalCode'
@@ -334,16 +372,33 @@ export function CheckoutPageModernTemplate({
                       onChange={(e) =>
                         updateField("postalCode", e.target.value)
                       }
+                      className={fieldErrors.postalCode ? "border-destructive" : ""}
                     />
+                    {fieldErrors.postalCode && (
+                      <p className='text-sm text-destructive'>
+                        {fieldErrors.postalCode}
+                      </p>
+                    )}
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='country'>{t("checkout.country")}</Label>
+                    <Label htmlFor='country'>
+                      {t("checkout.country")}{" "}
+                      <span className='text-destructive'>
+                        {t("checkout.required")}
+                      </span>
+                    </Label>
                     <Input
                       id='country'
                       placeholder='Egypt'
                       value={form.country}
                       onChange={(e) => updateField("country", e.target.value)}
+                      className={fieldErrors.country ? "border-destructive" : ""}
                     />
+                    {fieldErrors.country && (
+                      <p className='text-sm text-destructive'>
+                        {fieldErrors.country}
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -544,7 +599,7 @@ export function CheckoutPageModernTemplate({
 
                 <Separator />
 
-                <div className='flex justify-between text-lg font-bold'>
+                <div className='flex justify-between text-base md:text-lg font-bold'>
                   <span>{t("cart.total")}</span>
                   <span>
                     {currency}

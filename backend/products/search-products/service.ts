@@ -33,6 +33,7 @@ export const searchProductsSchema = z.object({
   offset: z.number().min(0).optional().default(0),
   includeOutOfStock: z.boolean().optional().default(false),
   discountedOnly: z.boolean().optional(),
+  productIds: z.array(z.string().uuid()).optional(),
 });
 
 export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
@@ -96,6 +97,10 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
             and(
               // Exclude soft-deleted products
               eq(product.deleted, false),
+              // Filter by specific product IDs
+              input.productIds && input.productIds.length > 0
+                ? inArray(product.id, input.productIds)
+                : undefined,
               // Filter by categories (using junction table)
               categoryCondition,
               // Filter by search term if specified
@@ -137,6 +142,10 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
             and(
               // Exclude soft-deleted products
               eq(product.deleted, false),
+              // Filter by specific product IDs
+              input.productIds && input.productIds.length > 0
+                ? inArray(product.id, input.productIds)
+                : undefined,
               // Filter by categories (using junction table)
               categoryCondition,
               // Filter by search term if specified

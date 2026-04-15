@@ -106,8 +106,13 @@ export const translations: Record<Locale, Record<string, string>> = {
     "validation.email_required": "Email is required",
     "validation.email_invalid": "Please enter a valid email address",
     "validation.phone_required": "Phone number is required",
+    "validation.phone_invalid": "Please enter a valid phone number",
     "validation.address_required": "Shipping address is required",
     "validation.city_required": "City is required",
+    "validation.state_required": "State / Governorate is required",
+    "validation.postal_code_required": "Postal code is required",
+    "validation.country_required": "Country is required",
+    "validation.fix_errors": "Please fix the errors below before placing your order",
 
     // Product page
     "product.home": "Home",
@@ -225,8 +230,13 @@ export const translations: Record<Locale, Record<string, string>> = {
     "validation.email_required": "البريد الإلكتروني مطلوب",
     "validation.email_invalid": "يرجى إدخال بريد إلكتروني صحيح",
     "validation.phone_required": "رقم الهاتف مطلوب",
+    "validation.phone_invalid": "يرجى إدخال رقم هاتف صحيح",
     "validation.address_required": "عنوان الشحن مطلوب",
     "validation.city_required": "المدينة مطلوبة",
+    "validation.state_required": "المحافظة مطلوبة",
+    "validation.postal_code_required": "الرمز البريدي مطلوب",
+    "validation.country_required": "الدولة مطلوبة",
+    "validation.fix_errors": "يرجى تصحيح الأخطاء أدناه قبل إتمام الطلب",
 
     // Product page
     "product.home": "الرئيسية",

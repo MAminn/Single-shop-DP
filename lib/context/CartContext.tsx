@@ -68,7 +68,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (savedPromoCode) {
       try {
         const parsedPromoCode = JSON.parse(savedPromoCode);
-        setPromoCode(parsedPromoCode);
+        // Re-validate the promo code against backend to check if it's still active/not expired
+        const savedCartItems = savedCart ? JSON.parse(savedCart) : [];
+        const cartItems = savedCartItems.map((item: CartItem) => ({
+          id: item.id,
+          quantity: item.quantity,
+          price: item.price,
+        }));
+        const cartSubtotal = savedCartItems.reduce(
+          (total: number, item: CartItem) => total + item.price * item.quantity,
+          0,
+        );
+        trpc.promoCode.validate
+          .query({
+            code: parsedPromoCode.code,
+            cartItems,
+            subtotal: cartSubtotal,
+          })
+          .then((result) => {
+            if (result.success && result.result) {
+              setPromoCode(result.result);
+            } else {
+              setPromoCode(null);
+              localStorage.removeItem("promoCode");
+            }
+          })
+          .catch(() => {
+            setPromoCode(null);
+            localStorage.removeItem("promoCode");
+          });
       } catch (error) {
         console.error("Failed to parse promo code from localStorage");
         localStorage.removeItem("promoCode");

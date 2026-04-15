@@ -13,6 +13,7 @@ import {
   ShoppingCart,
   Heart,
   Star,
+  StarHalf,
   Plus,
   Minus,
   Share2,
@@ -368,6 +369,12 @@ export function ProductPageMinimal({
               </div>
             )}
 
+            {/* Star Rating */}
+            <MinimalStarRating
+              rating={product.rating ?? 0}
+              count={product.reviewCount}
+            />
+
             {/* Price */}
             <div>
               {hasDiscount ? (
@@ -432,9 +439,10 @@ export function ProductPageMinimal({
             {/* Description */}
             {product.description && (
               <div className='pt-4 border-t border-gray-100'>
-                <p className='text-sm text-gray-700 leading-relaxed whitespace-pre-line'>
-                  {product.description}
-                </p>
+                <ColoredDescription
+                  text={product.description}
+                  className='text-sm text-gray-700 leading-relaxed whitespace-pre-line'
+                />
                 {product.longDescription && (
                   <ExpandableText text={product.longDescription} />
                 )}
@@ -933,3 +941,87 @@ function resolveImageUrl(product: FeaturedProduct): string {
 }
 
 ProductPageMinimal.displayName = "ProductPageMinimal";
+
+/* ═══════════════════════════════════════════════════════════════════
+   Colored Description Parser
+   Syntax: [color:#hex]colored text[/color]
+   ═══════════════════════════════════════════════════════════════════ */
+
+const COLOR_REGEX = /\[color:(#[0-9a-fA-F]{3,8})\]([\s\S]*?)\[\/color\]/g;
+
+function ColoredDescription({
+  text,
+  className,
+}: {
+  text: string;
+  className?: string;
+}) {
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  let keyIdx = 0;
+  const regex = new RegExp(COLOR_REGEX.source, "g");
+
+  while ((match = regex.exec(text)) !== null) {
+    // Plain text before this match
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    // Colored span — only allow valid hex colors
+    const color = match[1]!;
+    const content = match[2]!;
+    parts.push(
+      <span key={keyIdx++} style={{ color }}>
+        {content}
+      </span>,
+    );
+    lastIndex = match.index + match[0].length;
+  }
+  // Remaining plain text
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return <p className={className}>{parts}</p>;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Star Rating Component (Minimal template)
+   ═══════════════════════════════════════════════════════════════════ */
+
+function MinimalStarRating({
+  rating,
+  count,
+}: {
+  rating: number;
+  count?: number;
+}) {
+  const stars: React.ReactNode[] = [];
+  const full = Math.floor(rating);
+  const half = rating % 1 >= 0.25;
+
+  for (let i = 0; i < full; i++)
+    stars.push(
+      <Star
+        key={`f${i}`}
+        className='h-4 w-4 fill-gray-900 text-gray-900'
+      />,
+    );
+  if (half)
+    stars.push(
+      <StarHalf key='h' className='h-4 w-4 fill-gray-900 text-gray-900' />,
+    );
+  for (let i = 0; i < 5 - Math.ceil(rating); i++)
+    stars.push(<Star key={`e${i}`} className='h-4 w-4 text-gray-300' />);
+
+  return (
+    <div className='flex items-center gap-2'>
+      <div className='flex gap-0.5'>{stars}</div>
+      {count !== undefined && (
+        <span className='text-xs text-gray-400'>
+          {rating.toFixed(1)} ({count})
+        </span>
+      )}
+    </div>
+  );
+}

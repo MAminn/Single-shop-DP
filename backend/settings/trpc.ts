@@ -15,6 +15,8 @@ import { getTemplateSelection } from "./get-template-selection";
 import { updateTemplateSelection } from "./update-template-selection";
 import { getLinkTreeConfig } from "./get-link-tree-config";
 import { updateLinkTreeConfig } from "./update-link-tree-config";
+import { getVariantPresets } from "./get-variant-presets";
+import { updateVariantPresets } from "./update-variant-presets";
 import { linkTreeConfigSchema } from "#root/shared/types/link-tree";
 
 export const settingsRouter = router({
@@ -63,6 +65,32 @@ export const settingsRouter = router({
     .mutation(async ({ ctx, input }) => {
       return runBackendEffect(
         updateLinkTreeConfig(input.config).pipe(provideDatabase(ctx)),
+      ).then(serializeBackendEffectResult);
+    }),
+
+  /** Public: product form needs presets to offer quick-apply */
+  getVariantPresets: publicProcedure.query(async ({ ctx }) => {
+    return runBackendEffect(
+      getVariantPresets().pipe(provideDatabase(ctx)),
+    ).then(serializeBackendEffectResult);
+  }),
+
+  /** Admin-only: update variant presets */
+  updateVariantPresets: adminProcedure
+    .input(
+      z.object({
+        presets: z.array(
+          z.object({
+            id: z.string(),
+            name: z.string().min(1).max(255),
+            values: z.array(z.string().min(1).max(255)),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return runBackendEffect(
+        updateVariantPresets(input.presets).pipe(provideDatabase(ctx)),
       ).then(serializeBackendEffectResult);
     }),
 });

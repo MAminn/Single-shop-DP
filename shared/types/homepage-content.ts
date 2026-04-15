@@ -113,6 +113,8 @@ export interface HomepageFeaturedProductsContent {
   viewAllText: string;
   viewAllTextAr?: string;
   viewAllLink: string;
+  /** Manually selected product IDs (when set, only these products are shown) */
+  productIds?: string[];
 }
 
 /**
@@ -148,6 +150,8 @@ export interface HomepageDiscountedProductsContent {
   viewAllText: string;
   viewAllTextAr?: string;
   viewAllLink: string;
+  /** Manually selected product IDs (when set, only these products are shown) */
+  productIds?: string[];
 }
 
 /**
@@ -160,6 +164,8 @@ export interface HomepageNewArrivalsContent {
   viewAllText: string;
   viewAllTextAr?: string;
   viewAllLink: string;
+  /** Manually selected product IDs (when set, only these products are shown) */
+  productIds?: string[];
 }
 
 /**

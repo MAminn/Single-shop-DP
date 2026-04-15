@@ -48,6 +48,7 @@ import {
   type TemplateCategory,
 } from "#root/components/template-system/templateConfig";
 import { useTemplate } from "#root/frontend/contexts/TemplateContext";
+import { HomepageProductPicker } from "#root/components/admin/HomepageProductPicker";
 import { translations as staticTranslations } from "#root/lib/i18n/translations";
 import type { TranslationOverrides } from "#root/shared/types/layout-settings";
 
@@ -2407,6 +2408,27 @@ export default function HomepageAdminPage() {
                   only items with a discount price are shown.
                 </p>
               </div>
+              <HomepageProductPicker
+                selectedIds={
+                  content.discountedProducts?.productIds ?? []
+                }
+                onChange={(ids) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    discountedProducts: {
+                      ...prev.discountedProducts!,
+                      enabled: prev.discountedProducts?.enabled ?? true,
+                      title: prev.discountedProducts?.title ?? "Offers",
+                      viewAllText:
+                        prev.discountedProducts?.viewAllText ?? "View All",
+                      viewAllLink:
+                        prev.discountedProducts?.viewAllLink ?? "/shop",
+                      productIds: ids.length > 0 ? ids : undefined,
+                    },
+                  }))
+                }
+                disabled={!(content.discountedProducts?.enabled ?? true)}
+              />
             </CardContent>
           </Card>
         )}
@@ -2550,6 +2572,23 @@ export default function HomepageAdminPage() {
                 text.
               </p>
             </div>
+            {isMinimal && (
+              <HomepageProductPicker
+                selectedIds={
+                  content.featuredProducts?.productIds ?? []
+                }
+                onChange={(ids) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    featuredProducts: {
+                      ...prev.featuredProducts,
+                      productIds: ids.length > 0 ? ids : undefined,
+                    },
+                  }))
+                }
+                disabled={!content.featuredProducts.enabled}
+              />
+            )}
           </CardContent>
         </Card>
 
@@ -2686,6 +2725,26 @@ export default function HomepageAdminPage() {
                   only recently added items are shown.
                 </p>
               </div>
+              <HomepageProductPicker
+                selectedIds={
+                  content.newArrivals?.productIds ?? []
+                }
+                onChange={(ids) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    newArrivals: {
+                      ...prev.newArrivals!,
+                      enabled: prev.newArrivals?.enabled ?? true,
+                      title: prev.newArrivals?.title ?? "New Arrivals",
+                      viewAllText:
+                        prev.newArrivals?.viewAllText ?? "View All",
+                      viewAllLink: prev.newArrivals?.viewAllLink ?? "/shop",
+                      productIds: ids.length > 0 ? ids : undefined,
+                    },
+                  }))
+                }
+                disabled={!(content.newArrivals?.enabled ?? true)}
+              />
             </CardContent>
           </Card>
         )}
