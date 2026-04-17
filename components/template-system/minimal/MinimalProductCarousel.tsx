@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { cn } from "#root/lib/utils";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import {
   MinimalProductCard,
   type MinimalProduct,
@@ -119,15 +119,48 @@ export function MinimalProductCarousel({
 
         {/* View all link */}
         {viewAllHref && (
-          <div className='mt-8 text-center'>
-            <a
-              href={viewAllHref}
-              className='text-sm text-stone-600 hover:text-stone-900 font-light underline underline-offset-4 decoration-stone-300 hover:decoration-stone-900 transition-colors'>
-              {viewAllText || t("view_all")}
-            </a>
-          </div>
+          <ViewAllButton href={viewAllHref} text={viewAllText || t("view_all")} />
         )}
       </div>
     </section>
+  );
+}
+
+function ViewAllButton({ href, text }: { href: string; text: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.3 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "mt-10 text-center transition-all duration-700 ease-out",
+        isVisible
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 translate-y-6",
+      )}>
+      <a
+        href={href}
+        className='group inline-flex items-center gap-2 px-8 py-3 border border-stone-900 text-sm font-light text-stone-900 tracking-widest uppercase hover:bg-stone-900 hover:text-white transition-all duration-300'>
+        {text}
+        <ArrowRight className='w-4 h-4 transition-transform duration-300 group-hover:translate-x-1' />
+      </a>
+    </div>
   );
 }

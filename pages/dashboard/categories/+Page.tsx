@@ -36,7 +36,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "#root/components/ui/alert-dialog";
-import { Plus, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Plus, MoreVertical, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
 import { useData } from "vike-react/useData";
 import { navigate } from "vike/client/router";
 import type { Data } from "./+data";
@@ -44,6 +44,7 @@ import { ErrorSection } from "#root/components/dashboard/ErrorSection";
 import { trpc } from "#root/shared/trpc/client";
 import { useToast } from "#root/components/ui/use-toast";
 import { CategoryImageUpload } from "#root/components/file-uploads/CategoryImageUpload";
+import { Switch } from "#root/components/ui/switch";
 
 export default function Categories() {
   const fetchData = useData<Data>();
@@ -160,6 +161,27 @@ export default function Categories() {
         variant: "destructive",
       });
       setDeleteDialogOpen(false);
+    }
+  };
+
+  const handleToggleLanding = async (categoryId: string, currentValue: boolean) => {
+    const result = await trpc.category.toggleLanding.mutate({
+      id: categoryId,
+      showOnLanding: !currentValue,
+    });
+
+    if (result.success) {
+      toast({
+        title: "Success",
+        description: `Category ${!currentValue ? "shown on" : "hidden from"} landing page`,
+      });
+      navigate("/dashboard/categories");
+    } else {
+      toast({
+        title: "Error",
+        description: result.error || "Failed to update category",
+        variant: "destructive",
+      });
     }
   };
 
@@ -288,6 +310,22 @@ export default function Categories() {
                   <CardDescription>
                     {subcategories.length} subcategories
                   </CardDescription>
+                  <div className='flex items-center gap-2 mt-2'>
+                    <Switch
+                      checked={category.showOnLanding !== false}
+                      onCheckedChange={() =>
+                        handleToggleLanding(
+                          category.id,
+                          category.showOnLanding !== false,
+                        )
+                      }
+                    />
+                    <span className='text-xs text-muted-foreground'>
+                      {category.showOnLanding !== false
+                        ? "Shown on landing"
+                        : "Hidden from landing"}
+                    </span>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <ul className='space-y-1'>

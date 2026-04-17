@@ -144,7 +144,7 @@ function Page() {
 
         if (categoriesResult.success && categoriesResult.result) {
           const mappedCategories: CategoryStripItem[] = categoriesResult.result
-            .filter((cat: any) => !cat.deleted)
+            .filter((cat: any) => !cat.deleted && cat.showOnLanding !== false)
             .slice(0, 8) // Limit to 8 categories for the strip
             .map((cat: any) => ({
               id: cat.id,

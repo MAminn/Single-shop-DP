@@ -64,6 +64,8 @@ export function ProductForm({
     categoryId: string;
     categoryIds: string[];
     variants: { name: string; values: string[] }[];
+    inspiredBy?: string;
+    sortOrder?: number;
   }>;
   categories: { id: string; name: string }[];
   vendors?: { id: string; name: string }[];
@@ -107,6 +109,8 @@ export function ProductForm({
         }),
       )
       .optional(),
+    inspiredBy: z.string().max(1000).optional(),
+    sortOrder: z.coerce.number().int().min(0).optional(),
   });
 
   // Debug initial values
@@ -118,6 +122,8 @@ export function ProductForm({
     defaultValues: {
       name: initialValues?.name || "",
       description: initialValues?.description || "",
+      inspiredBy: initialValues?.inspiredBy || "",
+      sortOrder: initialValues?.sortOrder || 0,
       price: initialValues?.price || 0,
       discountPrice: initialValues?.discountPrice || null,
       stock: initialValues?.stock || 0,
@@ -348,6 +354,33 @@ export function ProductForm({
             )}
           />
 
+          <FormField
+            control={form.control}
+            name='inspiredBy'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Inspired By (Optional)</FormLabel>
+                <div className='flex items-center gap-2 mb-1'>
+                  <DescriptionColorButton
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                  />
+                  <span className='text-xs text-muted-foreground'>
+                    Select text, then pick a color
+                  </span>
+                </div>
+                <FormControl>
+                  <Textarea
+                    placeholder='e.g., Inspired by Baccarat Rouge 540...'
+                    className='resize-none'
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <div className='grid grid-cols-2 gap-4'>
             <FormField
               control={form.control}
@@ -412,6 +445,28 @@ export function ProductForm({
               )}
             />
           </div>
+
+          <FormField
+            control={form.control}
+            name='sortOrder'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Sort Order (Optional)</FormLabel>
+                <FormControl>
+                  <Input
+                    type='number'
+                    placeholder='0'
+                    {...field}
+                    value={field.value ?? 0}
+                    onChange={(e) => {
+                      field.onChange(e.target.valueAsNumber);
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}

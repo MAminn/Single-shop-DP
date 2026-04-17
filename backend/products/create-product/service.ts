@@ -39,6 +39,8 @@ export const createProductSchema = z.object({
       }),
     )
     .optional(),
+  inspiredBy: z.string().max(1000).optional(),
+  sortOrder: z.number().int().min(0).optional(),
 });
 
 export const createProduct = (
@@ -77,6 +79,8 @@ export const createProduct = (
                 ? data.discountPrice.toString()
                 : null,
               stock: data.stock,
+              inspiredBy: data.inspiredBy || null,
+              sortOrder: data.sortOrder ?? 0,
             })
             .returning()
             .then((data) => data[0]);

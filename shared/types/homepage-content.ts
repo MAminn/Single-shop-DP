@@ -209,6 +209,18 @@ export interface HomepageContactBannerContent {
 }
 
 /**
+ * About Us section content
+ */
+export interface HomepageAboutUsContent {
+  enabled: boolean;
+  title: string;
+  titleAr?: string;
+  description: string;
+  descriptionAr?: string;
+  imageUrl?: string;
+}
+
+/**
  * Complete homepage content structure
  */
 export interface HomepageContent {
@@ -231,6 +243,11 @@ export interface HomepageContent {
     enabled: boolean;
     slides: HeroSlideContent[];
   };
+  /** About Us section */
+  aboutUs?: HomepageAboutUsContent;
+  /** Product page inline carousel custom title */
+  productCarouselTitle?: string;
+  productCarouselTitleAr?: string;
 }
 
 /**
@@ -347,5 +364,13 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
     description: "Have a question, feedback, or just want to say hello? Drop us a message and we'll get back to you as soon as possible.",
     descriptionAr: "هل لديك سؤال أو ملاحظة أو تريد فقط أن تقول مرحبا؟ أرسل لنا رسالة وسنعود إليك في أقرب وقت ممكن.",
     directionsUrl: "",
+  },
+  aboutUs: {
+    enabled: false,
+    title: "About Us",
+    titleAr: "من نحن",
+    description: "Welcome to our store. We are passionate about bringing you the finest products.",
+    descriptionAr: "",
+    imageUrl: "",
   },
 };

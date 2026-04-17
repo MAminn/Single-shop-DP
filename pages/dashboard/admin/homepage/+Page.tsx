@@ -3447,6 +3447,240 @@ export default function HomepageAdminPage() {
           </Card>
         )}
 
+        {/* ── Product Page Carousel Title (Minimal only) ──────────── */}
+        {isMinimal && (
+          <Card>
+            <CardHeader>
+              <CardTitle className='text-base'>Product Page Carousel Title</CardTitle>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <Label className='text-xs'>Title (English)</Label>
+                  <Input
+                    value={content.productCarouselTitle ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        productCarouselTitle: e.target.value,
+                      }))
+                    }
+                    placeholder='More Products'
+                  />
+                </div>
+                <div>
+                  <Label className='text-xs'>Title (Arabic)</Label>
+                  <Input
+                    dir='rtl'
+                    value={content.productCarouselTitleAr ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        productCarouselTitleAr: e.target.value,
+                      }))
+                    }
+                    placeholder='منتجات أخرى'
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── About Us Section (Minimal only) ──────────── */}
+        {isMinimal && (
+          <Card>
+            <CardHeader>
+              <div className='flex items-center justify-between'>
+                <CardTitle className='text-base'>About Us Page</CardTitle>
+                <Switch
+                  checked={content.aboutUs?.enabled ?? false}
+                  onCheckedChange={(checked) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      aboutUs: {
+                        ...prev.aboutUs!,
+                        enabled: checked,
+                        title: prev.aboutUs?.title ?? "About Us",
+                        description: prev.aboutUs?.description ?? "",
+                      },
+                    }))
+                  }
+                />
+              </div>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <Label className='text-xs'>Title (English)</Label>
+                  <Input
+                    value={content.aboutUs?.title ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        aboutUs: {
+                          ...prev.aboutUs!,
+                          enabled: prev.aboutUs?.enabled ?? false,
+                          title: e.target.value,
+                          description: prev.aboutUs?.description ?? "",
+                        },
+                      }))
+                    }
+                    placeholder='About Us'
+                    disabled={!(content.aboutUs?.enabled ?? false)}
+                  />
+                </div>
+                <div>
+                  <Label className='text-xs'>Title (Arabic)</Label>
+                  <Input
+                    dir='rtl'
+                    value={content.aboutUs?.titleAr ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        aboutUs: {
+                          ...prev.aboutUs!,
+                          enabled: prev.aboutUs?.enabled ?? false,
+                          title: prev.aboutUs?.title ?? "About Us",
+                          titleAr: e.target.value,
+                          description: prev.aboutUs?.description ?? "",
+                        },
+                      }))
+                    }
+                    placeholder='من نحن'
+                    disabled={!(content.aboutUs?.enabled ?? false)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label className='text-xs'>Description (English)</Label>
+                <Textarea
+                  value={content.aboutUs?.description ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      aboutUs: {
+                        ...prev.aboutUs!,
+                        enabled: prev.aboutUs?.enabled ?? false,
+                        title: prev.aboutUs?.title ?? "About Us",
+                        description: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='Tell your story...'
+                  rows={6}
+                  disabled={!(content.aboutUs?.enabled ?? false)}
+                />
+              </div>
+
+              <div>
+                <Label className='text-xs'>Description (Arabic)</Label>
+                <Textarea
+                  dir='rtl'
+                  value={content.aboutUs?.descriptionAr ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      aboutUs: {
+                        ...prev.aboutUs!,
+                        enabled: prev.aboutUs?.enabled ?? false,
+                        title: prev.aboutUs?.title ?? "About Us",
+                        description: prev.aboutUs?.description ?? "",
+                        descriptionAr: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='أخبر قصتك...'
+                  rows={6}
+                  disabled={!(content.aboutUs?.enabled ?? false)}
+                />
+              </div>
+
+              <div>
+                <Label className='text-xs'>Image</Label>
+                <div className='flex gap-2 mt-1'>
+                  <Input
+                    value={content.aboutUs?.imageUrl ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        aboutUs: {
+                          ...prev.aboutUs!,
+                          enabled: prev.aboutUs?.enabled ?? false,
+                          title: prev.aboutUs?.title ?? "About Us",
+                          description: prev.aboutUs?.description ?? "",
+                          imageUrl: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder='Image URL or upload'
+                    className='text-sm'
+                    disabled={!(content.aboutUs?.enabled ?? false)}
+                  />
+                  <input
+                    type='file'
+                    id='about-us-image-upload'
+                    accept='image/jpeg,image/jpg,image/png,image/webp'
+                    className='hidden'
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 5 * 1024 * 1024) {
+                        toast.error("File too large. Max 5MB.");
+                        return;
+                      }
+                      try {
+                        const buffer = new Uint8Array(await file.arrayBuffer());
+                        const result = await trpc.homepage.uploadHeroImage.mutate({
+                          file: { name: file.name, type: file.type, buffer },
+                        });
+                        if (result.success && result.data) {
+                          setContent((prev) => ({
+                            ...prev,
+                            aboutUs: {
+                              ...prev.aboutUs!,
+                              enabled: prev.aboutUs?.enabled ?? false,
+                              title: prev.aboutUs?.title ?? "About Us",
+                              description: prev.aboutUs?.description ?? "",
+                              imageUrl: result.data.url,
+                            },
+                          }));
+                          toast.success("About Us image uploaded!");
+                        }
+                      } catch {
+                        toast.error("Upload failed");
+                      }
+                      e.target.value = "";
+                    }}
+                  />
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    disabled={!(content.aboutUs?.enabled ?? false)}
+                    onClick={() => document.getElementById("about-us-image-upload")?.click()}>
+                    <Upload className='w-4 h-4' />
+                  </Button>
+                </div>
+                {content.aboutUs?.imageUrl && (
+                  <div className='mt-2'>
+                    <img
+                      src={
+                        content.aboutUs.imageUrl.startsWith("http") || content.aboutUs.imageUrl.startsWith("/")
+                          ? content.aboutUs.imageUrl
+                          : `/uploads/${content.aboutUs.imageUrl}`
+                      }
+                      alt='About Us preview'
+                      className='w-32 h-40 object-cover rounded border'
+                    />
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* ── i18n Translation Overrides — Other UI Labels ──────────── */}
         {isMinimal && (
           <Card>

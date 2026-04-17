@@ -1,5 +1,5 @@
-import { useContext, useState, useRef, useEffect } from "react";
-import { Search, ShoppingCart, User, X, Menu, Globe, LogOut, Mail, ChevronDown } from "lucide-react";
+import { useContext, useState, useRef, useEffect, useCallback } from "react";
+import { Search, ShoppingCart, User, X, Menu, Globe, LogOut, Mail, ChevronDown, Loader2 } from "lucide-react";
 import { Link } from "#root/components/utils/Link";
 import { AuthContext } from "#root/context/AuthContext";
 import { useCart } from "#root/lib/context/CartContext";
@@ -11,6 +11,7 @@ import { navigate } from "vike/client/router";
 import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
+import { STORE_CURRENCY } from "#root/shared/config/branding";
 import {
   Sheet,
   SheetTrigger,
@@ -37,6 +38,14 @@ export function MinimalNavbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
 
+  // Live search state
+  const [liveResults, setLiveResults] = useState<{
+    products: { id: string; name: string; price: number; imageUrl?: string }[];
+    categories: { id: string; name: string; slug?: string }[];
+  }>({ products: [], categories: [] });
+  const [isSearching, setIsSearching] = useState(false);
+  const searchDropdownRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     trpc.category.view.query().then((res) => {
       if (res.success && res.result) {
@@ -44,6 +53,56 @@ export function MinimalNavbar() {
       }
     }).catch(() => {});
   }, []);
+
+  // Live search with debounce
+  useEffect(() => {
+    if (!searchQuery.trim() || searchQuery.trim().length < 2) {
+      setLiveResults({ products: [], categories: [] });
+      setIsSearching(false);
+      return;
+    }
+    setIsSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const q = searchQuery.trim().toLowerCase();
+        const [productRes] = await Promise.all([
+          trpc.product.search.query({ search: q, limit: 5, includeOutOfStock: false }),
+        ]);
+        const matchedProducts = productRes.success && productRes.result
+          ? productRes.result.items.map((p: any) => ({
+              id: p.id,
+              name: p.name,
+              price: Number(p.price),
+              imageUrl: p.imageUrl ? `/uploads/${p.imageUrl}` : p.images?.[0]?.url ? `/uploads/${p.images[0].url}` : undefined,
+            }))
+          : [];
+        const matchedCategories = categories.filter((c) =>
+          c.name.toLowerCase().includes(q),
+        );
+        setLiveResults({ products: matchedProducts, categories: matchedCategories });
+      } catch {
+        /* ignore */
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, categories]);
+
+  // Close search dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchDropdownRef.current && !searchDropdownRef.current.contains(e.target as Node)) {
+        if (isSearchOpen && !searchInputRef.current?.contains(e.target as Node)) {
+          setIsSearchOpen(false);
+          setSearchQuery("");
+          setLiveResults({ products: [], categories: [] });
+        }
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isSearchOpen]);
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -154,6 +213,123 @@ export function MinimalNavbar() {
                   </span>
                 )}
               </Link>
+
+              {/* Desktop Search */}
+              <div className='hidden lg:block relative' ref={searchDropdownRef}>
+                {isSearchOpen ? (
+                  <div className='flex items-center'>
+                    <form onSubmit={handleSearchSubmit} className='flex items-center'>
+                      <div className='relative'>
+                        <Search className='absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400' />
+                        <input
+                          ref={searchInputRef}
+                          type='text'
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder={t("nav.search")}
+                          autoFocus
+                          className='w-48 ps-8 pe-8 py-1.5 text-sm border border-gray-200 outline-none focus:border-gray-900 transition-colors bg-white'
+                        />
+                        <button
+                          type='button'
+                          onClick={() => {
+                            setIsSearchOpen(false);
+                            setSearchQuery("");
+                            setLiveResults({ products: [], categories: [] });
+                          }}
+                          className='absolute end-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black'>
+                          <X className='w-3.5 h-3.5' />
+                        </button>
+                      </div>
+                    </form>
+                    {/* Live results dropdown */}
+                    {(searchQuery.trim().length >= 2) && (
+                      <div className='absolute top-full start-0 mt-1 w-72 bg-white border border-gray-200 shadow-lg z-50 max-h-80 overflow-y-auto'>
+                        {isSearching ? (
+                          <div className='flex items-center justify-center py-4'>
+                            <Loader2 className='w-4 h-4 animate-spin text-gray-400' />
+                          </div>
+                        ) : (
+                          <>
+                            {liveResults.categories.length > 0 && (
+                              <div className='px-3 py-2 border-b border-gray-100'>
+                                <p className='text-[10px] uppercase tracking-wider text-gray-400 mb-1'>
+                                  {locale === "ar" ? "الأقسام" : "Categories"}
+                                </p>
+                                {liveResults.categories.map((cat) => (
+                                  <Link
+                                    key={cat.id}
+                                    href={`/shop?category=${cat.slug || cat.id}`}
+                                    className='block py-1.5 text-sm text-gray-700 hover:text-black transition-colors'
+                                    onClick={() => {
+                                      setIsSearchOpen(false);
+                                      setSearchQuery("");
+                                      setLiveResults({ products: [], categories: [] });
+                                    }}>
+                                    {cat.name}
+                                  </Link>
+                                ))}
+                              </div>
+                            )}
+                            {liveResults.products.length > 0 && (
+                              <div className='px-3 py-2'>
+                                <p className='text-[10px] uppercase tracking-wider text-gray-400 mb-1'>
+                                  {locale === "ar" ? "المنتجات" : "Products"}
+                                </p>
+                                {liveResults.products.map((p) => (
+                                  <Link
+                                    key={p.id}
+                                    href={`/featured/products/${p.id}`}
+                                    className='flex items-center gap-3 py-2 hover:bg-gray-50 -mx-3 px-3 transition-colors'
+                                    onClick={() => {
+                                      setIsSearchOpen(false);
+                                      setSearchQuery("");
+                                      setLiveResults({ products: [], categories: [] });
+                                    }}>
+                                    {p.imageUrl && (
+                                      <img src={p.imageUrl} alt={p.name} className='w-10 h-10 object-cover bg-gray-50' />
+                                    )}
+                                    <div className='flex-1 min-w-0'>
+                                      <p className='text-sm text-gray-800 truncate'>{p.name}</p>
+                                      <p className='text-xs text-gray-500'>{p.price.toFixed(2)} {STORE_CURRENCY}</p>
+                                    </div>
+                                  </Link>
+                                ))}
+                              </div>
+                            )}
+                            {liveResults.products.length === 0 && liveResults.categories.length === 0 && (
+                              <p className='px-3 py-4 text-sm text-gray-400 text-center'>
+                                {locale === "ar" ? "لا توجد نتائج" : "No results found"}
+                              </p>
+                            )}
+                            {searchQuery.trim().length >= 2 && (
+                              <div className='border-t border-gray-100 px-3 py-2'>
+                                <button
+                                  type='button'
+                                  onClick={() => handleSearchSubmit()}
+                                  className='text-xs text-gray-500 hover:text-black transition-colors w-full text-center'>
+                                  {locale === "ar" ? "عرض جميع النتائج" : "View all results"} →
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    type='button'
+                    onClick={() => {
+                      setIsSearchOpen(true);
+                      setTimeout(() => searchInputRef.current?.focus(), 100);
+                    }}
+                    className='p-2 text-gray-700 hover:text-black transition-colors'
+                    aria-label={t("nav.search")}>
+                    <Search className='w-[18px] h-[18px]' />
+                  </button>
+                )}
+              </div>
               
 
               {/* Language toggle */}
@@ -185,7 +361,7 @@ export function MinimalNavbar() {
                         {link.label}
                       </button>
                       {openDropdown === link.id && (
-                        <div dir="ltr" className='absolute top-full start-0 mt-0 min-w-[180px] bg-white border border-gray-200 shadow-lg z-50'>
+                        <div dir="ltr" className='absolute top-full start-0 mt-0 min-w-[180px] bg-white border border-gray-200 shadow-lg z-50 animate-in fade-in slide-in-from-top-1 duration-200'>
                           {dropdownCats.map((cat) => (
                             <Link
                               key={cat.id}
@@ -284,7 +460,7 @@ export function MinimalNavbar() {
                                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                                   </button>
                                   {isExpanded && (
-                                    <div className='flex flex-col gap-2 mt-2 ps-4'>
+                                    <div className='flex flex-col gap-2 mt-2 ps-4 animate-in fade-in slide-in-from-top-1 duration-200'>
                                       {dropdownCats.map((cat) => (
                                         <Link
                                           key={cat.id}

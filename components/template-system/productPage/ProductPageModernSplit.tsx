@@ -57,6 +57,8 @@ export interface ProductSpecification {
 export interface ProductPageProduct extends FeaturedProduct {
   description?: string;
   longDescription?: string;
+  inspiredBy?: string;
+  sortOrder?: number;
   rating?: number;
   reviewCount?: number;
   sku?: string;

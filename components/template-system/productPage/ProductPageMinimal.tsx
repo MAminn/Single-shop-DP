@@ -33,6 +33,10 @@ import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext
 import { Link } from "#root/components/utils/Link";
 import { getProductUrl } from "#root/lib/utils/route-helpers";
 import { STORE_CURRENCY } from "#root/shared/config/branding";
+import { trpc } from "#root/shared/trpc/client";
+import { toast } from "sonner";
+import { getStoreOwnerId } from "#root/shared/config/store";
+import type { HomepageContent } from "#root/shared/types/homepage-content";
 
 /* ═══════════════════════════════════════════════════════════════════
    Props
@@ -84,6 +88,40 @@ export function ProductPageMinimal({
   const isAr = locale === "ar";
   const layoutSettings = useLayoutSettings();
   const { addItem } = useCart();
+
+  /* ── CMS carousel title ── */
+  const [carouselTitle, setCarouselTitle] = useState("");
+  useEffect(() => {
+    const merchantId = getStoreOwnerId();
+    trpc.homepage.getContent
+      .query({ merchantId, templateId: "landing-minimal" })
+      .then((res) => {
+        if (res.success && res.result) {
+          const c = res.result as HomepageContent;
+          const title = isAr
+            ? (c.productCarouselTitleAr || c.productCarouselTitle || "")
+            : (c.productCarouselTitle || "");
+          setCarouselTitle(title);
+        }
+      })
+      .catch(() => {});
+  }, [isAr]);
+
+  /* ── Merged category products ── */
+  const mergedCategoryProducts = (() => {
+    if (!categoryGroups || categoryGroups.length === 0) return [];
+    const seen = new Set<string>();
+    const all: FeaturedProduct[] = [];
+    for (const group of categoryGroups) {
+      for (const p of group.products) {
+        if (!seen.has(p.id)) {
+          seen.add(p.id);
+          all.push(p);
+        }
+      }
+    }
+    return all;
+  })();
 
   const toggleAddOn = useCallback((productId: string) => {
     setSelectedAddOns((prev) => {
@@ -369,11 +407,20 @@ export function ProductPageMinimal({
               </div>
             )}
 
-            {/* Star Rating */}
-            <MinimalStarRating
-              rating={product.rating ?? 0}
-              count={product.reviewCount}
-            />
+            {/* Star Rating — clickable, scrolls to reviews & opens form */}
+            <button
+              type='button'
+              className='cursor-pointer hover:opacity-80 transition-opacity'
+              onClick={() => {
+                document.getElementById("product-reviews-section")?.scrollIntoView({ behavior: "smooth" });
+                setTimeout(() => window.dispatchEvent(new CustomEvent("open-review-form")), 400);
+              }}
+            >
+              <MinimalStarRating
+                rating={product.rating ?? 0}
+                count={product.reviewCount}
+              />
+            </button>
 
             {/* Price */}
             <div>
@@ -396,6 +443,17 @@ export function ProductPageMinimal({
                 {t("price_includes_tax")}
               </p>
             </div>
+
+            {/* Inspired By — directly under price */}
+            {product.inspiredBy && (
+              <div>
+                <p className='text-xs text-gray-500 uppercase tracking-wide mb-1'>Inspired by</p>
+                <ColoredDescription
+                  text={product.inspiredBy}
+                  className='text-sm text-gray-700 italic'
+                />
+              </div>
+            )}
 
             {/* Stock status */}
             {product.available ? (
@@ -420,19 +478,16 @@ export function ProductPageMinimal({
               ) : null;
             })()}
 
-            {/* ── Category Carousels (inline, matchperfumes style) ── */}
-            {categoryGroups && categoryGroups.length > 0 && (
+            {/* ── Category Carousel (merged, single) ── */}
+            {mergedCategoryProducts.length > 0 && (
               <div className='space-y-6 pt-2'>
-                {categoryGroups.map((group) => (
-                  <InlineCategoryCarousel
-                    key={group.categoryId}
-                    title={group.categoryName}
-                    products={group.products}
-                    currentProductId={product.id}
-                    selectedIds={selectedAddOns}
-                    onToggle={toggleAddOn}
-                  />
-                ))}
+                <InlineCategoryCarousel
+                  title={carouselTitle || (isAr ? "منتجات أخرى" : "More Products")}
+                  products={mergedCategoryProducts}
+                  currentProductId={product.id}
+                  selectedIds={selectedAddOns}
+                  onToggle={toggleAddOn}
+                />
               </div>
             )}
 
@@ -530,6 +585,11 @@ export function ProductPageMinimal({
       </div>
 
       {/* ═══════════════════════════════════════════════
+          REVIEWS SECTION
+          ═══════════════════════════════════════════════ */}
+      <ProductReviewsSection productId={product.id} />
+
+      {/* ═══════════════════════════════════════════════
           BOTTOM SECTION — "Products you may like" Carousel
           Full-width, separate section
           ═══════════════════════════════════════════════ */}
@@ -538,6 +598,197 @@ export function ProductPageMinimal({
           products={bottomCarouselProducts}
           title={t("product.you_may_also_like")}
         />
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Product Reviews Section — form + list
+   ═══════════════════════════════════════════════════════════════════ */
+
+function ProductReviewsSection({ productId }: { productId: string }) {
+  const { t, locale } = useMinimalI18n();
+  const isAr = locale === "ar";
+  const [reviews, setReviews] = useState<
+    { id: string; userName: string; rating: number; comment: string; createdAt: string }[]
+  >([]);
+  const [avgRating, setAvgRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [showForm, setShowForm] = useState(false);
+  const [formName, setFormName] = useState("");
+  const [formRating, setFormRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [formComment, setFormComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchReviews = useCallback(() => {
+    trpc.product.getReviews
+      .query({ productId })
+      .then((res) => {
+        if (res.success && res.result) {
+          setReviews(res.result.reviews as any);
+          setAvgRating(res.result.averageRating);
+          setTotalReviews(res.result.totalReviews);
+        }
+      })
+      .catch(() => {});
+  }, [productId]);
+
+  useEffect(() => {
+    fetchReviews();
+  }, [fetchReviews]);
+
+  /* Listen for star-click scroll event from the top of the page */
+  useEffect(() => {
+    const handler = () => setShowForm(true);
+    window.addEventListener("open-review-form", handler);
+    return () => window.removeEventListener("open-review-form", handler);
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formName.trim() || formRating === 0 || !formComment.trim()) {
+      toast.error(isAr ? "يرجى تعبئة جميع الحقول" : "Please fill in all fields");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await trpc.product.createReview.mutate({
+        productId,
+        userName: formName.trim(),
+        rating: formRating,
+        comment: formComment.trim(),
+      });
+      if (res.success) {
+        toast.success(isAr ? "شكراً لتقييمك!" : "Thank you for your review!");
+        setFormName("");
+        setFormRating(0);
+        setFormComment("");
+        setShowForm(false);
+        fetchReviews();
+      }
+    } catch {
+      toast.error(isAr ? "حدث خطأ" : "Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div id='product-reviews-section' className='max-w-screen-xl mx-auto px-4 sm:px-6 py-12 border-t border-gray-100'>
+      {/* Header */}
+      <div className='flex items-center justify-between mb-8'>
+        <div>
+          <h2 className='text-xl font-medium text-gray-900'>
+            {isAr ? "التقييمات" : "Reviews"}
+          </h2>
+          <div className='flex items-center gap-2 mt-1'>
+            <MinimalStarRating rating={avgRating} />
+            <span className='text-sm text-gray-500'>
+              {avgRating.toFixed(1)} ({totalReviews})
+            </span>
+          </div>
+        </div>
+        <Button
+          variant='outline'
+          size='sm'
+          className='rounded-none border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
+          onClick={() => setShowForm(!showForm)}>
+          {showForm
+            ? (isAr ? "إلغاء" : "Cancel")
+            : (isAr ? "أضف تقييم" : "Write a Review")}
+        </Button>
+      </div>
+
+      {/* Form */}
+      {showForm && (
+        <form onSubmit={handleSubmit} className='mb-10 space-y-4 max-w-lg'>
+          <div>
+            <label className='block text-sm text-gray-700 mb-1'>
+              {isAr ? "الاسم" : "Your Name"}
+            </label>
+            <input
+              type='text'
+              value={formName}
+              onChange={(e) => setFormName(e.target.value)}
+              maxLength={50}
+              className='w-full px-3 py-2 text-sm border border-gray-200 outline-none focus:border-gray-900 transition-colors'
+              placeholder={isAr ? "أدخل اسمك" : "Enter your name"}
+            />
+          </div>
+          <div>
+            <label className='block text-sm text-gray-700 mb-1'>
+              {isAr ? "التقييم" : "Rating"}
+            </label>
+            <div className='flex gap-1'>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type='button'
+                  onClick={() => setFormRating(star)}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  className='p-0.5 transition-transform hover:scale-110'>
+                  <Star
+                    className={`w-6 h-6 ${
+                      star <= (hoverRating || formRating)
+                        ? "fill-gray-900 text-gray-900"
+                        : "text-gray-300"
+                    } transition-colors`}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className='block text-sm text-gray-700 mb-1'>
+              {isAr ? "التعليق" : "Comment"}
+            </label>
+            <textarea
+              value={formComment}
+              onChange={(e) => setFormComment(e.target.value)}
+              maxLength={500}
+              rows={3}
+              className='w-full px-3 py-2 text-sm border border-gray-200 outline-none focus:border-gray-900 transition-colors resize-none'
+              placeholder={isAr ? "شاركنا رأيك..." : "Share your thoughts..."}
+            />
+          </div>
+          <Button
+            type='submit'
+            disabled={submitting}
+            className='bg-gray-900 hover:bg-gray-800 text-white rounded-none px-8 py-2'>
+            {submitting
+              ? (isAr ? "جاري الإرسال..." : "Submitting...")
+              : (isAr ? "إرسال التقييم" : "Submit Review")}
+          </Button>
+        </form>
+      )}
+
+      {/* Review list */}
+      {reviews.length === 0 ? (
+        <p className='text-sm text-gray-400'>
+          {isAr ? "لا توجد تقييمات بعد. كن أول من يقيّم!" : "No reviews yet. Be the first to review!"}
+        </p>
+      ) : (
+        <div className='space-y-6'>
+          {reviews.map((review) => (
+            <div key={review.id} className='border-b border-gray-100 pb-5'>
+              <div className='flex items-center justify-between mb-1'>
+                <span className='text-sm font-medium text-gray-900'>{review.userName}</span>
+                <span className='text-xs text-gray-400'>
+                  {new Date(review.createdAt).toLocaleDateString(isAr ? "ar-EG" : "en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </span>
+              </div>
+              <MinimalStarRating rating={review.rating} />
+              <p className='text-sm text-gray-600 mt-2 leading-relaxed'>{review.comment}</p>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

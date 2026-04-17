@@ -134,6 +134,7 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
             imageUrl: file.diskname,
             categoryId: product.categoryId,
             categoryName: category.name,
+            sortOrder: product.sortOrder,
           })
           .from(product)
           .leftJoin(file, eq(product.imageId, file.id))
@@ -177,8 +178,12 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
         } else if (input.sortBy === "price-desc") {
           productsQuery.orderBy(desc(product.price));
         } else {
-          // Default: newest first
-          productsQuery.orderBy(desc(product.createdAt));
+          // Default: sort by sortOrder (nulls last), then newest first
+          productsQuery.orderBy(
+            sql`${product.sortOrder} IS NULL`,
+            product.sortOrder,
+            desc(product.createdAt),
+          );
         }
 
         // Run both queries

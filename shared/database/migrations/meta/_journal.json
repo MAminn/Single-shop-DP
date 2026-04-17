@@ -162,6 +162,20 @@
       "when": 1776258022043,
       "tag": "0022_chunky_matthew_murdock",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1776381294550,
+      "tag": "0023_regular_nemesis",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1776383291898,
+      "tag": "0024_goofy_hiroim",
+      "breakpoints": true
     }
   ]
 }

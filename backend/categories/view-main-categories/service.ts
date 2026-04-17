@@ -21,6 +21,7 @@ export const viewMainCategories = () =>
             type: category.type,
             imageId: category.imageId,
             filename: file.diskname,
+            showOnLanding: category.showOnLanding,
           })
           .from(category)
           .leftJoin(file, eq(category.imageId, file.id))
@@ -36,6 +37,7 @@ export const viewMainCategories = () =>
             type: string;
             imageId: string | null;
             filename: string | null;
+            showOnLanding: boolean;
             subcategoryCount: number;
           }
         >();
@@ -49,6 +51,7 @@ export const viewMainCategories = () =>
               type: cat.type,
               imageId: cat.imageId,
               filename: cat.filename,
+              showOnLanding: cat.showOnLanding,
               subcategoryCount: 0,
             });
           } else {

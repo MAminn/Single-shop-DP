@@ -1,5 +1,8 @@
 @import "@fontsource/poppins/400.css";
 @import "@fontsource-variable/roboto-flex";
+@import "@fontsource/rubik/400.css";
+@import "@fontsource/rubik/500.css";
+@import "@fontsource/rubik/700.css";
 @import "tailwindcss";
 
 @plugin "tailwindcss-animate";
@@ -21,6 +24,12 @@
 
 /* Body/description text in the minimal template uses Poppins instead of LaRojaTV.
    Headings, buttons, nav links keep the branded font. */
+/* Arabic text uses Rubik for better Arabic readability */
+.minimal-template[dir="rtl"],
+.minimal-template [dir="rtl"] {
+  font-family: "Rubik", "Poppins", sans-serif;
+}
+
 .minimal-template p,
 .minimal-template dd,
 .minimal-template li,
@@ -28,6 +37,22 @@
 .minimal-template blockquote,
 .minimal-template figcaption {
   font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Arabic body text also uses Rubik */
+.minimal-template[dir="rtl"] p,
+.minimal-template[dir="rtl"] dd,
+.minimal-template[dir="rtl"] li,
+.minimal-template[dir="rtl"] td,
+.minimal-template[dir="rtl"] blockquote,
+.minimal-template[dir="rtl"] figcaption,
+.minimal-template [dir="rtl"] p,
+.minimal-template [dir="rtl"] dd,
+.minimal-template [dir="rtl"] li,
+.minimal-template [dir="rtl"] td,
+.minimal-template [dir="rtl"] blockquote,
+.minimal-template [dir="rtl"] figcaption {
+  font-family: "Rubik", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 /* Links */

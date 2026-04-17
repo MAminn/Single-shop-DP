@@ -315,3 +315,54 @@ export const deleteMainCategory = (
       }),
     );
   });
+
+/**
+ * Toggle Show On Landing
+ * Toggles the showOnLanding flag for a main category
+ */
+export const toggleCategoryLandingSchema = z.object({
+  id: z.string().uuid(),
+  showOnLanding: z.boolean(),
+});
+
+export const toggleCategoryLanding = (
+  input: z.infer<typeof toggleCategoryLandingSchema>,
+  session?: ClientSession,
+) =>
+  Effect.gen(function* ($) {
+    if (!session || session.role !== "admin") {
+      return yield* $(
+        Effect.fail(
+          new ServerError({
+            tag: "Unauthorized",
+            statusCode: 401,
+            clientMessage: "Admin access required",
+          }),
+        ),
+      );
+    }
+
+    return yield* $(
+      query(async (db) => {
+        const updated = await db
+          .update(category)
+          .set({
+            showOnLanding: input.showOnLanding,
+            updatedAt: new Date(),
+          })
+          .where(eq(category.id, input.id))
+          .returning()
+          .then((data) => data[0]);
+
+        if (!updated) {
+          throw new ServerError({
+            tag: "NotFound",
+            statusCode: 404,
+            clientMessage: "Category not found",
+          });
+        }
+
+        return updated;
+      }),
+    );
+  });

@@ -206,6 +206,7 @@ export const category = pgTable("category", {
   }),
   type: text("type").notNull().default("general"), // Changed from enum to text for dynamic categories
   deleted: boolean("deleted").notNull().default(false),
+  showOnLanding: boolean("show_on_landing").notNull().default(true),
 });
 
 export const categoryLogAction = pgEnum("category_log_action", [
@@ -283,6 +284,10 @@ export const product = pgTable("product", {
     .notNull(),
   stock: integer("stock").notNull().default(0),
   deleted: boolean("deleted").notNull().default(false),
+  /** Optional "inspired by" text supporting [color:#hex]text[/color] syntax */
+  inspiredBy: text("inspired_by"),
+  /** Display order within a category (lower = shown first, null = default) */
+  sortOrder: integer("sort_order"),
 });
 
 export const productVariant = pgTable("product_variant", {

@@ -174,6 +174,7 @@ export default function ProductDetailPage() {
           : null,
         stock: product.stock || 0,
         description: product.description ?? "No description available.",
+        inspiredBy: product.inspiredBy || undefined,
         imageUrl: product.images?.[0]?.url ?? undefined,
         images: product.images ?? [],
         categoryName: product.categoryName ?? null,

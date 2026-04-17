@@ -41,6 +41,9 @@ importers:
       '@fontsource/roboto':
         specifier: ^5.2.5
         version: 5.2.9
+      '@fontsource/rubik':
+        specifier: ^5.2.8
+        version: 5.2.8
       '@hono/node-server':
         specifier: ^1.13.8
         version: 1.19.8(hono@4.11.3)
@@ -1246,6 +1249,9 @@ packages:
 
   '@fontsource/roboto@5.2.9':
     resolution: {integrity: sha512-ZTkyHiPk74B/aj8BZWbsxD5Yu+Lq+nR64eV4wirlrac2qXR7jYk2h6JlLYuOuoruTkGQWNw2fMuKNavw7/rg0w==}
+
+  '@fontsource/rubik@5.2.8':
+    resolution: {integrity: sha512-PIc8QR7FqWPcYhbdRiGff56vQlKqg/ytES1YqecSq1GkgxiH4TBshrFvDEOZ9JonUF9m1qQ+qXxJj7wD5zgXEw==}
 
   '@hono/node-server@1.19.8':
     resolution: {integrity: sha512-0/g2lIOPzX8f3vzW1ggQgvG5mjtFBDBHFAzI5SFAi2DzSqS9luJwqg9T6O/gKYLi+inS7eNxBeIFkkghIPvrMA==}
@@ -5832,6 +5838,8 @@ snapshots:
   '@fontsource/poppins@5.2.7': {}
 
   '@fontsource/roboto@5.2.9': {}
+
+  '@fontsource/rubik@5.2.8': {}
 
   '@hono/node-server@1.19.8(hono@4.11.3)':
     dependencies:

@@ -133,5 +133,11 @@ function mergeWithDefaults(
       clean.contactBanner ?? DEFAULT_HOMEPAGE_CONTENT.contactBanner,
     bottomCarousel:
       clean.bottomCarousel ?? DEFAULT_HOMEPAGE_CONTENT.bottomCarousel,
+    aboutUs:
+      clean.aboutUs ?? DEFAULT_HOMEPAGE_CONTENT.aboutUs,
+    productCarouselTitle:
+      clean.productCarouselTitle ?? DEFAULT_HOMEPAGE_CONTENT.productCarouselTitle,
+    productCarouselTitleAr:
+      clean.productCarouselTitleAr ?? DEFAULT_HOMEPAGE_CONTENT.productCarouselTitleAr,
   };
 }

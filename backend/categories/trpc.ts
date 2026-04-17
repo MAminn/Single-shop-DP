@@ -10,6 +10,7 @@ import {
   createMainCategoryProcedure,
   renameMainCategoryProcedure,
   deleteMainCategoryProcedure,
+  toggleCategoryLandingProcedure,
 } from "./main-category-crud/trpc";
 
 export const categoriesRouter = t.router({
@@ -24,4 +25,5 @@ export const categoriesRouter = t.router({
   createMain: createMainCategoryProcedure,
   renameMain: renameMainCategoryProcedure,
   deleteMain: deleteMainCategoryProcedure,
+  toggleLanding: toggleCategoryLandingProcedure,
 });

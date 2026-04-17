@@ -10,6 +10,8 @@ import {
   renameMainCategorySchema,
   deleteMainCategory,
   deleteMainCategorySchema,
+  toggleCategoryLanding,
+  toggleCategoryLandingSchema,
 } from "./service";
 
 export const createMainCategoryProcedure = adminProcedure
@@ -33,5 +35,15 @@ export const deleteMainCategoryProcedure = adminProcedure
   .mutation(async ({ ctx, input }) => {
     return await runBackendEffect(
       deleteMainCategory(input, ctx.clientSession).pipe(provideDatabase(ctx)),
+    ).then(serializeBackendEffectResult);
+  });
+
+export const toggleCategoryLandingProcedure = adminProcedure
+  .input(toggleCategoryLandingSchema)
+  .mutation(async ({ ctx, input }) => {
+    return await runBackendEffect(
+      toggleCategoryLanding(input, ctx.clientSession).pipe(
+        provideDatabase(ctx),
+      ),
     ).then(serializeBackendEffectResult);
   });

@@ -17,6 +17,7 @@ export const viewCategories = () =>
             imageId: category.imageId,
             filename: file.diskname,
             type: category.type,
+            showOnLanding: category.showOnLanding,
             productCount: count(product.id),
           })
           .from(category)
