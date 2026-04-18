@@ -83,6 +83,22 @@
   font-family: "Rubik", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
+/* Arabic headings always use Rubik medium (500) for optimal readability */
+.minimal-template[dir="rtl"] h1,
+.minimal-template[dir="rtl"] h2,
+.minimal-template[dir="rtl"] h3,
+.minimal-template[dir="rtl"] h4,
+.minimal-template[dir="rtl"] h5,
+.minimal-template[dir="rtl"] h6,
+.minimal-template [dir="rtl"] h1,
+.minimal-template [dir="rtl"] h2,
+.minimal-template [dir="rtl"] h3,
+.minimal-template [dir="rtl"] h4,
+.minimal-template [dir="rtl"] h5,
+.minimal-template [dir="rtl"] h6 {
+  font-weight: 500 !important;
+}
+
 /* Links */
 a:where(:not([class*="text-"])) {
   text-decoration: none;
