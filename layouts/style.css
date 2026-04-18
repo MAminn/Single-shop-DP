@@ -2,6 +2,7 @@
 @import "@fontsource-variable/roboto-flex";
 @import "@fontsource/rubik/400.css";
 @import "@fontsource/rubik/500.css";
+@import "@fontsource/rubik/600.css";
 @import "@fontsource/rubik/700.css";
 @import "tailwindcss";
 
@@ -24,10 +25,11 @@
 
 /* Body/description text in the minimal template uses Poppins instead of LaRojaTV.
    Headings, buttons, nav links keep the branded font. */
-/* Arabic text uses Rubik for better Arabic readability */
+/* Arabic text uses Rubik for better Arabic readability — enforced on ALL elements */
 .minimal-template[dir="rtl"],
-.minimal-template [dir="rtl"] {
-  font-family: "Rubik", "Poppins", sans-serif;
+.minimal-template [dir="rtl"],
+.minimal-template:where([dir="rtl"]) * {
+  font-family: "Rubik", "Poppins", sans-serif !important;
 }
 
 .minimal-template p,
@@ -39,20 +41,46 @@
   font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Arabic body text also uses Rubik */
+/* Arabic body text also uses Rubik — overrides Poppins body rule */
 .minimal-template[dir="rtl"] p,
 .minimal-template[dir="rtl"] dd,
 .minimal-template[dir="rtl"] li,
 .minimal-template[dir="rtl"] td,
 .minimal-template[dir="rtl"] blockquote,
 .minimal-template[dir="rtl"] figcaption,
+.minimal-template[dir="rtl"] h1,
+.minimal-template[dir="rtl"] h2,
+.minimal-template[dir="rtl"] h3,
+.minimal-template[dir="rtl"] h4,
+.minimal-template[dir="rtl"] h5,
+.minimal-template[dir="rtl"] h6,
+.minimal-template[dir="rtl"] button,
+.minimal-template[dir="rtl"] input,
+.minimal-template[dir="rtl"] select,
+.minimal-template[dir="rtl"] textarea,
+.minimal-template[dir="rtl"] a,
+.minimal-template[dir="rtl"] span,
+.minimal-template[dir="rtl"] label,
 .minimal-template [dir="rtl"] p,
 .minimal-template [dir="rtl"] dd,
 .minimal-template [dir="rtl"] li,
 .minimal-template [dir="rtl"] td,
 .minimal-template [dir="rtl"] blockquote,
-.minimal-template [dir="rtl"] figcaption {
-  font-family: "Rubik", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+.minimal-template [dir="rtl"] figcaption,
+.minimal-template [dir="rtl"] h1,
+.minimal-template [dir="rtl"] h2,
+.minimal-template [dir="rtl"] h3,
+.minimal-template [dir="rtl"] h4,
+.minimal-template [dir="rtl"] h5,
+.minimal-template [dir="rtl"] h6,
+.minimal-template [dir="rtl"] button,
+.minimal-template [dir="rtl"] input,
+.minimal-template [dir="rtl"] select,
+.minimal-template [dir="rtl"] textarea,
+.minimal-template [dir="rtl"] a,
+.minimal-template [dir="rtl"] span,
+.minimal-template [dir="rtl"] label {
+  font-family: "Rubik", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
 /* Links */

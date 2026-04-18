@@ -13,6 +13,7 @@ import {
   Radio,
   PanelTop,
   Link2,
+  Star,
 } from "lucide-react";
 
 import {
@@ -74,6 +75,11 @@ export function DashboardSidebar() {
       label: "Promo Codes",
       href: "/dashboard/promo-codes",
       icon: TicketPercent,
+    },
+    {
+      label: "Reviews",
+      href: "/dashboard/reviews",
+      icon: Star,
     },
     {
       label: "Homepage",

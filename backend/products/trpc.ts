@@ -8,8 +8,9 @@ import { topSellingProcedure } from "./get-top-selling/trpc";
 import { totalRevenueProcedure } from "./get-total-revenue/trpc";
 import { searchProductsProcedure } from "./search-products/trpc";
 import { viewProductsProcedure } from "./view-products/trpc";
-import { viewReviewsProcedure } from "./view-reviews/trpc";
+import { viewReviewsProcedure, viewAllReviewsProcedure } from "./view-reviews/trpc";
 import { createReviewProcedure } from "./create-review/trpc";
+import { deleteReviewProcedure } from "./delete-review/trpc";
 import { getProductImagesProcedure } from "./get-product-images/trpc";
 import { getProductByIdProcedure } from "./get-product-by-id/trpc";
 
@@ -23,7 +24,9 @@ export const productRouter = t.router({
   revenue: totalRevenueProcedure,
   search: searchProductsProcedure,
   getReviews: viewReviewsProcedure,
+  getAllReviews: viewAllReviewsProcedure,
   createReview: createReviewProcedure,
+  deleteReview: deleteReviewProcedure,
   getProductImages: getProductImagesProcedure,
   getCategories: getCategoriesProcedure,
   getById: getProductByIdProcedure,

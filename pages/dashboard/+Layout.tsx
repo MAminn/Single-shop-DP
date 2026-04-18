@@ -48,6 +48,9 @@ function Content({ children }: { children: React.ReactNode }) {
     if (pathname.includes("/dashboard/products")) {
       return "products";
     }
+    if (pathname.includes("/dashboard/reviews")) {
+      return "reviews";
+    }
     if (pathname.includes("/dashboard/admin/homepage")) {
       return "homepage";
     }
