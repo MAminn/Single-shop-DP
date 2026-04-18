@@ -10,6 +10,7 @@ import {
 import {
   and,
   desc,
+  asc,
   eq,
   ilike,
   inArray,
@@ -174,14 +175,14 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
         if (input.sortBy === "newest") {
           productsQuery.orderBy(desc(product.createdAt));
         } else if (input.sortBy === "price-asc") {
-          productsQuery.orderBy(product.price);
+          productsQuery.orderBy(asc(product.price));
         } else if (input.sortBy === "price-desc") {
           productsQuery.orderBy(desc(product.price));
         } else {
-          // Default: sort by sortOrder (nulls last), then newest first
+          // Default: sort by sortOrder (0 and null last), then newest first
           productsQuery.orderBy(
-            sql`${product.sortOrder} IS NULL`,
-            product.sortOrder,
+            sql`(${product.sortOrder} IS NULL OR ${product.sortOrder} = 0)`,
+            asc(product.sortOrder),
             desc(product.createdAt),
           );
         }

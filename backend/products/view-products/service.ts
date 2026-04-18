@@ -7,7 +7,7 @@ import {
   productVariant,
   productCategory,
 } from "#root/shared/database/drizzle/schema";
-import { and, asc, count, eq, ilike, inArray, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 
@@ -98,6 +98,13 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
                       ? product.discountPrice
                       : product.stock,
               ),
+            );
+          } else {
+            // Default: sort by sortOrder (0 and null last), then newest first
+            pQuery.orderBy(
+              sql`(${product.sortOrder} IS NULL OR ${product.sortOrder} = 0)`,
+              asc(product.sortOrder),
+              desc(product.createdAt),
             );
           }
 
