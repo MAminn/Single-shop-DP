@@ -112,7 +112,7 @@ async function buildServer() {
 
   // Global rate limiting — generous default, tighter limits on auth routes below
   await instance.register(import("@fastify/rate-limit"), {
-    max: 200,
+    max: 600,
     timeWindow: "1 minute",
   });
 

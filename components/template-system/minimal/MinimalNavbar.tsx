@@ -10,6 +10,7 @@ import { Marquee } from "#root/components/ui/marquee";
 import { navigate } from "vike/client/router";
 import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
+import { getProductUrl } from "#root/lib/utils/route-helpers";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import { STORE_CURRENCY } from "#root/shared/config/branding";
 import {
@@ -279,7 +280,7 @@ export function MinimalNavbar() {
                                 {liveResults.products.map((p) => (
                                   <Link
                                     key={p.id}
-                                    href={`/featured/products/${p.id}`}
+                                    href={getProductUrl(p.id)}
                                     className='flex items-center gap-3 py-2 hover:bg-gray-50 -mx-3 px-3 transition-colors'
                                     onClick={() => {
                                       setIsSearchOpen(false);
@@ -440,6 +441,70 @@ export function MinimalNavbar() {
                             />
                           </div>
                         </form>
+                        {/* Mobile live results */}
+                        {searchQuery.trim().length >= 2 && (
+                          <div className='mt-2 bg-white border border-gray-200 max-h-60 overflow-y-auto'>
+                            {isSearching ? (
+                              <div className='flex items-center justify-center py-4'>
+                                <Loader2 className='w-4 h-4 animate-spin text-gray-400' />
+                              </div>
+                            ) : (
+                              <>
+                                {liveResults.categories.length > 0 && (
+                                  <div className='px-3 py-2 border-b border-gray-100'>
+                                    <p className='text-[10px] uppercase tracking-wider text-gray-400 mb-1'>
+                                      {locale === "ar" ? "الأقسام" : "Categories"}
+                                    </p>
+                                    {liveResults.categories.map((cat) => (
+                                      <Link
+                                        key={cat.id}
+                                        href={`/shop?category=${cat.slug || cat.id}`}
+                                        className='block py-1.5 text-sm text-gray-700 hover:text-black transition-colors'
+                                        onClick={() => {
+                                          setSearchQuery("");
+                                          setLiveResults({ products: [], categories: [] });
+                                          setIsSheetOpen(false);
+                                        }}>
+                                        {cat.name}
+                                      </Link>
+                                    ))}
+                                  </div>
+                                )}
+                                {liveResults.products.length > 0 && (
+                                  <div className='px-3 py-2'>
+                                    <p className='text-[10px] uppercase tracking-wider text-gray-400 mb-1'>
+                                      {locale === "ar" ? "المنتجات" : "Products"}
+                                    </p>
+                                    {liveResults.products.map((p) => (
+                                      <Link
+                                        key={p.id}
+                                        href={getProductUrl(p.id)}
+                                        className='flex items-center gap-3 py-2 hover:bg-gray-50 -mx-3 px-3 transition-colors'
+                                        onClick={() => {
+                                          setSearchQuery("");
+                                          setLiveResults({ products: [], categories: [] });
+                                          setIsSheetOpen(false);
+                                        }}>
+                                        {p.imageUrl && (
+                                          <img src={p.imageUrl} alt={p.name} className='w-10 h-10 object-cover bg-gray-50' />
+                                        )}
+                                        <div className='flex-1 min-w-0'>
+                                          <p className='text-sm text-gray-800 truncate'>{p.name}</p>
+                                          <p className='text-xs text-gray-500'>{p.price.toFixed(2)} {STORE_CURRENCY}</p>
+                                        </div>
+                                      </Link>
+                                    ))}
+                                  </div>
+                                )}
+                                {liveResults.products.length === 0 && liveResults.categories.length === 0 && (
+                                  <p className='px-3 py-4 text-sm text-gray-400 text-center'>
+                                    {locale === "ar" ? "لا توجد نتائج" : "No results found"}
+                                  </p>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       {/* Mobile nav links */}

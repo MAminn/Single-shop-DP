@@ -139,5 +139,7 @@ function mergeWithDefaults(
       clean.productCarouselTitle ?? DEFAULT_HOMEPAGE_CONTENT.productCarouselTitle,
     productCarouselTitleAr:
       clean.productCarouselTitleAr ?? DEFAULT_HOMEPAGE_CONTENT.productCarouselTitleAr,
+    testimonials:
+      clean.testimonials ?? DEFAULT_HOMEPAGE_CONTENT.testimonials,
   };
 }

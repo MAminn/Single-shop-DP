@@ -248,6 +248,19 @@ export interface HomepageContent {
   /** Product page inline carousel custom title */
   productCarouselTitle?: string;
   productCarouselTitleAr?: string;
+  /** CMS-controlled testimonials (minimal template) */
+  testimonials?: {
+    enabled: boolean;
+    title?: string;
+    titleAr?: string;
+    items: {
+      name: string;
+      nameAr?: string;
+      rating: number;
+      review: string;
+      reviewAr?: string;
+    }[];
+  };
 }
 
 /**

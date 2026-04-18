@@ -1,37 +1,53 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
+import { trpc } from "#root/shared/trpc/client";
+import { getStoreOwnerId } from "#root/shared/config/store";
+import type { HomepageContent } from "#root/shared/types/homepage-content";
 
-const TESTIMONIALS = [
+interface Testimonial {
+  name: string;
+  nameEn: string;
+  review: string;
+  reviewEn: string;
+  rating: number;
+}
+
+const DEFAULT_TESTIMONIALS: Testimonial[] = [
   {
     name: "نورة العتيبي",
     nameEn: "Sarah Mitchell",
     review: "من أفضل المنتجات اللي استخدمتها وبصراحة يستاهل أضعاف سعره، جودة عالية وتوصيل سريع",
     reviewEn: "Absolutely love the quality! Fast shipping and the product exceeded my expectations. Will definitely order again.",
+    rating: 5,
   },
   {
     name: "محمد المحسن",
     nameEn: "James Cooper",
     review: "تجربة شراء ممتازة من البداية للنهاية، خدمة عملاء رائعة والمنتج طلع أحلى من الصور",
     reviewEn: "Excellent shopping experience from start to finish. Customer service was outstanding and the product looks even better in person.",
+    rating: 5,
   },
   {
     name: "فرح أحمد",
     nameEn: "Emily Chen",
     review: "بصراحة تميز وإتقان سواء على مستوى التقديم أو على مستوى جودة المنتجات، شكراً جزيلاً",
     reviewEn: "The attention to detail is remarkable. Premium quality packaging and the product itself is simply stunning. Highly recommended!",
+    rating: 5,
   },
   {
     name: "مهند المري",
     nameEn: "David Wilson",
     review: "ممتاز! المنتج وصل بسرعة والجودة فوق الممتازة، أنصح الكل يجربه بدون تردد",
     reviewEn: "Top-notch product and incredibly fast delivery. The quality speaks for itself — I've already recommended it to all my friends.",
+    rating: 5,
   },
   {
     name: "ريم الشمري",
     nameEn: "Olivia Taylor",
     review: "يجنن! كل شي كان مرتب ومغلف بشكل أنيق، والمنتج نفسه جودته عالية جداً",
     reviewEn: "Everything was beautifully packaged and presented. The product quality is exceptional — worth every penny!",
+    rating: 5,
   },
 ];
 
@@ -41,6 +57,36 @@ export function MinimalTestimonialsSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(DEFAULT_TESTIMONIALS);
+  const [sectionTitle, setSectionTitle] = useState("");
+
+  /* ── Fetch CMS testimonials ── */
+  useEffect(() => {
+    const merchantId = getStoreOwnerId();
+    trpc.homepage.getContent
+      .query({ merchantId, templateId: "landing-minimal" })
+      .then((res) => {
+        if (res.success && res.result) {
+          const c = res.result as HomepageContent;
+          if (c.testimonials?.enabled && c.testimonials.items.length > 0) {
+            setTestimonials(
+              c.testimonials.items.map((item) => ({
+                name: item.nameAr || item.name,
+                nameEn: item.name,
+                review: item.reviewAr || item.review,
+                reviewEn: item.review,
+                rating: item.rating,
+              })),
+            );
+          }
+          const title = isAr
+            ? (c.testimonials?.titleAr || c.testimonials?.title || "")
+            : (c.testimonials?.title || "");
+          if (title) setSectionTitle(title);
+        }
+      })
+      .catch(() => {});
+  }, [isAr]);
 
   const checkScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -78,7 +124,7 @@ export function MinimalTestimonialsSection() {
       <div className="max-w-[1400px] mx-auto">
         <div className="text-center mb-10 sm:mb-14 px-4">
           <h2 className="text-2xl sm:text-3xl font-light text-stone-900 tracking-tight inline-block relative pb-3">
-            {t("testimonials")}
+            {sectionTitle || t("testimonials")}
             <span className="absolute bottom-0 left-1/4 right-1/4 h-[2px] bg-stone-900" />
           </h2>
         </div>
@@ -105,7 +151,7 @@ export function MinimalTestimonialsSection() {
             ref={scrollRef}
             className="flex gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 px-4 sm:px-6"
           >
-            {TESTIMONIALS.map((item, i) => (
+            {testimonials.map((item, i) => (
               <div
                 key={i}
                 data-testimonial
@@ -121,7 +167,7 @@ export function MinimalTestimonialsSection() {
                 </h3>
                 <div className="flex items-center gap-0.5 mb-3">
                   {[...Array(5)].map((_, s) => (
-                    <svg key={s} className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                    <svg key={s} className={`w-4 h-4 ${s < item.rating ? "text-amber-400" : "text-gray-200"}`} fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                   ))}

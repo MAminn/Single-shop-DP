@@ -171,6 +171,18 @@ const HomepageContentSchema = z.object({
     .nullish(),
   productCarouselTitle: z.string().nullish(),
   productCarouselTitleAr: z.string().nullish(),
+  testimonials: z.object({
+    enabled: z.boolean(),
+    title: z.string().nullish(),
+    titleAr: z.string().nullish(),
+    items: z.array(z.object({
+      name: z.string(),
+      nameAr: z.string().nullish(),
+      rating: z.number().min(1).max(5),
+      review: z.string(),
+      reviewAr: z.string().nullish(),
+    })),
+  }).nullish(),
 });
 
 export const homepageRouter = router({

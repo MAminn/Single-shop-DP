@@ -3487,6 +3487,214 @@ export default function HomepageAdminPage() {
           </Card>
         )}
 
+        {/* ── Testimonials (Minimal only) ──────────── */}
+        {isMinimal && (
+          <Card>
+            <CardHeader>
+              <div className='flex items-center justify-between'>
+                <CardTitle className='text-base'>Testimonials</CardTitle>
+                <Switch
+                  checked={content.testimonials?.enabled ?? false}
+                  onCheckedChange={(checked) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      testimonials: {
+                        ...prev.testimonials!,
+                        enabled: checked,
+                        items: prev.testimonials?.items ?? [],
+                      },
+                    }))
+                  }
+                />
+              </div>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <Label className='text-xs'>Section Title (English)</Label>
+                  <Input
+                    value={content.testimonials?.title ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        testimonials: {
+                          ...prev.testimonials!,
+                          enabled: prev.testimonials?.enabled ?? false,
+                          items: prev.testimonials?.items ?? [],
+                          title: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder='What Our Customers Say'
+                    disabled={!(content.testimonials?.enabled ?? false)}
+                  />
+                </div>
+                <div>
+                  <Label className='text-xs'>Section Title (Arabic)</Label>
+                  <Input
+                    dir='rtl'
+                    value={content.testimonials?.titleAr ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        testimonials: {
+                          ...prev.testimonials!,
+                          enabled: prev.testimonials?.enabled ?? false,
+                          items: prev.testimonials?.items ?? [],
+                          titleAr: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder='آراء عملائنا'
+                    disabled={!(content.testimonials?.enabled ?? false)}
+                  />
+                </div>
+              </div>
+
+              {/* Testimonial items */}
+              <div className='space-y-4'>
+                {(content.testimonials?.items ?? []).map((item, idx) => (
+                  <div key={idx} className='border rounded-lg p-4 space-y-3 bg-gray-50'>
+                    <div className='flex items-center justify-between'>
+                      <span className='text-sm font-medium'>Review #{idx + 1}</span>
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='sm'
+                        className='text-red-500 hover:text-red-700'
+                        disabled={!(content.testimonials?.enabled ?? false)}
+                        onClick={() =>
+                          setContent((prev) => ({
+                            ...prev,
+                            testimonials: {
+                              ...prev.testimonials!,
+                              enabled: prev.testimonials?.enabled ?? false,
+                              items: (prev.testimonials?.items ?? []).filter((_, i) => i !== idx),
+                            },
+                          }))
+                        }>
+                        Remove
+                      </Button>
+                    </div>
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div>
+                        <Label className='text-xs'>Name (English)</Label>
+                        <Input
+                          value={item.name}
+                          onChange={(e) =>
+                            setContent((prev) => {
+                              const items = [...(prev.testimonials?.items ?? [])];
+                              items[idx] = { ...items[idx], name: e.target.value };
+                              return { ...prev, testimonials: { ...prev.testimonials!, enabled: prev.testimonials?.enabled ?? false, items } };
+                            })
+                          }
+                          placeholder='John Doe'
+                          disabled={!(content.testimonials?.enabled ?? false)}
+                        />
+                      </div>
+                      <div>
+                        <Label className='text-xs'>Name (Arabic)</Label>
+                        <Input
+                          dir='rtl'
+                          value={item.nameAr ?? ""}
+                          onChange={(e) =>
+                            setContent((prev) => {
+                              const items = [...(prev.testimonials?.items ?? [])];
+                              items[idx] = { ...items[idx], nameAr: e.target.value };
+                              return { ...prev, testimonials: { ...prev.testimonials!, enabled: prev.testimonials?.enabled ?? false, items } };
+                            })
+                          }
+                          placeholder='محمد أحمد'
+                          disabled={!(content.testimonials?.enabled ?? false)}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label className='text-xs'>Stars (1-5)</Label>
+                      <div className='flex gap-1 mt-1'>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type='button'
+                            disabled={!(content.testimonials?.enabled ?? false)}
+                            onClick={() =>
+                              setContent((prev) => {
+                                const items = [...(prev.testimonials?.items ?? [])];
+                                items[idx] = { ...items[idx], rating: star };
+                                return { ...prev, testimonials: { ...prev.testimonials!, enabled: prev.testimonials?.enabled ?? false, items } };
+                              })
+                            }
+                            className='p-0.5 disabled:opacity-50'>
+                            <svg className={`w-5 h-5 ${star <= item.rating ? "text-amber-400" : "text-gray-300"}`} fill='currentColor' viewBox='0 0 20 20'>
+                              <path d='M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z' />
+                            </svg>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div>
+                        <Label className='text-xs'>Review (English)</Label>
+                        <Textarea
+                          value={item.review}
+                          onChange={(e) =>
+                            setContent((prev) => {
+                              const items = [...(prev.testimonials?.items ?? [])];
+                              items[idx] = { ...items[idx], review: e.target.value };
+                              return { ...prev, testimonials: { ...prev.testimonials!, enabled: prev.testimonials?.enabled ?? false, items } };
+                            })
+                          }
+                          rows={2}
+                          placeholder='Great product...'
+                          disabled={!(content.testimonials?.enabled ?? false)}
+                        />
+                      </div>
+                      <div>
+                        <Label className='text-xs'>Review (Arabic)</Label>
+                        <Textarea
+                          dir='rtl'
+                          value={item.reviewAr ?? ""}
+                          onChange={(e) =>
+                            setContent((prev) => {
+                              const items = [...(prev.testimonials?.items ?? [])];
+                              items[idx] = { ...items[idx], reviewAr: e.target.value };
+                              return { ...prev, testimonials: { ...prev.testimonials!, enabled: prev.testimonials?.enabled ?? false, items } };
+                            })
+                          }
+                          rows={2}
+                          placeholder='منتج رائع...'
+                          disabled={!(content.testimonials?.enabled ?? false)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                disabled={!(content.testimonials?.enabled ?? false)}
+                onClick={() =>
+                  setContent((prev) => ({
+                    ...prev,
+                    testimonials: {
+                      ...prev.testimonials!,
+                      enabled: prev.testimonials?.enabled ?? false,
+                      items: [
+                        ...(prev.testimonials?.items ?? []),
+                        { name: "", nameAr: "", rating: 5, review: "", reviewAr: "" },
+                      ],
+                    },
+                  }))
+                }>
+                + Add Testimonial
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* ── About Us Section (Minimal only) ──────────── */}
         {isMinimal && (
           <Card>
