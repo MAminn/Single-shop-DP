@@ -1202,7 +1202,7 @@ export const storeSettings = pgTable("store_settings", {
   linkTreeConfig: jsonb("link_tree_config").default({}),
   variantPresets: jsonb("variant_presets")
     .default([])
-    .$type<Array<{ id: string; name: string; values: string[] }>>(),
+    .$type<Array<{ id: string; name: string; values: string[]; defaultValue?: string; strikethroughValues?: string[] }>>(),
   updatedAt: timestamp("updated_at", {
     withTimezone: true,
     mode: "date",

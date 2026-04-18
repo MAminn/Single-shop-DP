@@ -27,6 +27,8 @@ export default function SettingsPage() {
     id: string;
     name: string;
     values: string[];
+    defaultValue?: string;
+    strikethroughValues?: string[];
   }
   const [variantPresets, setVariantPresets] = useState<VariantPreset[]>([]);
   const [isSavingPresets, setIsSavingPresets] = useState(false);
@@ -89,7 +91,7 @@ export default function SettingsPage() {
   const addPreset = () => {
     setVariantPresets((prev) => [
       ...prev,
-      { id: v7(), name: "", values: [] },
+      { id: v7(), name: "", values: [], defaultValue: undefined, strikethroughValues: [] },
     ]);
   };
 
@@ -120,9 +122,40 @@ export default function SettingsPage() {
     setVariantPresets((prev) =>
       prev.map((p) =>
         p.id === presetId
-          ? { ...p, values: p.values.filter((v) => v !== value) }
+          ? {
+              ...p,
+              values: p.values.filter((v) => v !== value),
+              defaultValue: p.defaultValue === value ? undefined : p.defaultValue,
+              strikethroughValues: (p.strikethroughValues || []).filter((v) => v !== value),
+            }
           : p,
       ),
+    );
+  };
+
+  const toggleDefaultValue = (presetId: string, value: string) => {
+    setVariantPresets((prev) =>
+      prev.map((p) =>
+        p.id === presetId
+          ? { ...p, defaultValue: p.defaultValue === value ? undefined : value }
+          : p,
+      ),
+    );
+  };
+
+  const toggleStrikethrough = (presetId: string, value: string) => {
+    setVariantPresets((prev) =>
+      prev.map((p) => {
+        if (p.id !== presetId) return p;
+        const current = p.strikethroughValues || [];
+        const has = current.includes(value);
+        return {
+          ...p,
+          strikethroughValues: has
+            ? current.filter((v) => v !== value)
+            : [...current, value],
+        };
+      }),
     );
   };
 
@@ -230,6 +263,8 @@ export default function SettingsPage() {
           <CardDescription>
             Define reusable variant templates (e.g. &quot;Size: S, M, L,
             XL&quot;) that can be quickly applied when creating products.
+            Use ★ to set a default value (auto-selected for customers) and S̶ to
+            add a strikethrough effect on a value.
           </CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>
@@ -253,19 +288,43 @@ export default function SettingsPage() {
                 </Button>
               </div>
               <div className='flex flex-wrap gap-1.5'>
-                {preset.values.map((val) => (
-                  <span
-                    key={val}
-                    className='inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium'>
-                    {val}
-                    <button
-                      type='button'
-                      onClick={() => removePresetValue(preset.id, val)}
-                      className='hover:text-destructive ml-0.5'>
-                      ×
-                    </button>
-                  </span>
-                ))}
+                {preset.values.map((val) => {
+                  const isDefault = preset.defaultValue === val;
+                  const isStrikethrough = (preset.strikethroughValues || []).includes(val);
+                  return (
+                    <span
+                      key={val}
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium border ${
+                        isDefault
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : isStrikethrough
+                            ? 'bg-secondary text-muted-foreground border-secondary line-through'
+                            : 'bg-secondary border-secondary'
+                      }`}>
+                      {val}
+                      <button
+                        type='button'
+                        onClick={() => toggleDefaultValue(preset.id, val)}
+                        title={isDefault ? 'Remove as default' : 'Set as default (auto-selected)'}
+                        className={`ml-0.5 text-[10px] ${isDefault ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                        {isDefault ? '★' : '☆'}
+                      </button>
+                      <button
+                        type='button'
+                        onClick={() => toggleStrikethrough(preset.id, val)}
+                        title={isStrikethrough ? 'Remove strikethrough' : 'Add strikethrough'}
+                        className={`text-[10px] ${isStrikethrough ? 'text-destructive' : 'text-muted-foreground hover:text-foreground'}`}>
+                        S̶
+                      </button>
+                      <button
+                        type='button'
+                        onClick={() => removePresetValue(preset.id, val)}
+                        className='hover:text-destructive ml-0.5'>
+                        ×
+                      </button>
+                    </span>
+                  );
+                })}
               </div>
               <div className='flex gap-2'>
                 <Input

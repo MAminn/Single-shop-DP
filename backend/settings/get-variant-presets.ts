@@ -19,5 +19,7 @@ export const getVariantPresets = () =>
       id: string;
       name: string;
       values: string[];
+      defaultValue?: string;
+      strikethroughValues?: string[];
     }>;
   });

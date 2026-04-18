@@ -91,6 +91,9 @@ export function ProductPageMinimal({
 
   /* ── CMS carousel title ── */
   const [carouselTitle, setCarouselTitle] = useState("");
+  /** Strikethrough map: variantName → values that should show line-through */
+  const [strikethroughMap, setStrikethroughMap] = useState<Record<string, string[]>>({});
+
   useEffect(() => {
     const merchantId = getStoreOwnerId();
     trpc.homepage.getContent
@@ -106,6 +109,49 @@ export function ProductPageMinimal({
       })
       .catch(() => {});
   }, [isAr]);
+
+  /* ── Fetch variant presets for auto-select defaults + strikethrough ── */
+  useEffect(() => {
+    if (!product?.variants?.length) return;
+    trpc.settings.getVariantPresets
+      .query()
+      .then((res) => {
+        if (!res.success || !Array.isArray(res.result)) return;
+        const presets = res.result as Array<{
+          id: string;
+          name: string;
+          values: string[];
+          defaultValue?: string;
+          strikethroughValues?: string[];
+        }>;
+
+        // Build strikethrough map
+        const stMap: Record<string, string[]> = {};
+        for (const preset of presets) {
+          if (preset.strikethroughValues?.length) {
+            stMap[preset.name] = preset.strikethroughValues;
+          }
+        }
+        setStrikethroughMap(stMap);
+
+        // Auto-select default values (only if not already selected)
+        setSelectedVariants((prev) => {
+          const updated = { ...prev };
+          for (const variant of product.variants || []) {
+            if (!updated[variant.name]) {
+              const preset = presets.find(
+                (p) => p.name.toLowerCase() === variant.name.toLowerCase(),
+              );
+              if (preset?.defaultValue && variant.values.includes(preset.defaultValue)) {
+                updated[variant.name] = preset.defaultValue;
+              }
+            }
+          }
+          return updated;
+        });
+      })
+      .catch(() => {});
+  }, [product?.variants]);
 
   /* ── Merged category products ── */
   const mergedCategoryProducts = (() => {
@@ -339,25 +385,25 @@ export function ProductPageMinimal({
           </div>
 
           {/* ── COLUMN 2: Product Info + Inline Carousels ── */}
-          <div className='space-y-6'>
+          <div className='space-y-3'>
             {/* Product Name + Share/Wishlist on same row */}
-            <div className='flex items-start gap-3'>
-              <h1 className='flex-1 text-3xl lg:text-4xl font-medium text-gray-900 leading-tight'>
+            <div className='flex items-start gap-2'>
+              <h1 className='flex-1 text-xl lg:text-2xl font-medium text-gray-900 leading-tight'>
                 {product.name}
               </h1>
-              <div className='flex items-center gap-2 flex-shrink-0 pt-1'>
+              <div className='flex items-center gap-1.5 flex-shrink-0 pt-0.5'>
                 <button
                   onClick={() => setShowShareMenu(!showShareMenu)}
-                  className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 transition-colors'
+                  className='w-7 h-7 flex items-center justify-center border border-gray-200 hover:border-gray-900 transition-colors'
                   aria-label={t("product.share")}>
-                  <Share2 className='w-4 h-4 text-gray-600' />
+                  <Share2 className='w-3 h-3 text-gray-600' />
                 </button>
                 {showWishlist && (
                   <button
                     onClick={() => onAddToWishlist?.(product)}
-                    className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 transition-colors'
+                    className='w-7 h-7 flex items-center justify-center border border-gray-200 hover:border-gray-900 transition-colors'
                     aria-label={t("product.save")}>
-                    <Heart className='w-4 h-4 text-gray-600' />
+                    <Heart className='w-3 h-3 text-gray-600' />
                   </button>
                 )}
               </div>
@@ -365,31 +411,31 @@ export function ProductPageMinimal({
 
             {/* Share menu dropdown */}
             {showShareMenu && (
-              <div className='flex items-center gap-3 pb-2'>
+              <div className='flex items-center gap-2 pb-1'>
                 <a
                   href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
+                  className='w-7 h-7 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
                   aria-label='Share on Facebook'>
-                  <Facebook className='w-4 h-4' />
+                  <Facebook className='w-3 h-3' />
                 </a>
                 <a
                   href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}&text=${encodeURIComponent(product.name)}`}
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
+                  className='w-7 h-7 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
                   aria-label='Share on Twitter'>
-                  <Twitter className='w-4 h-4' />
+                  <Twitter className='w-3 h-3' />
                 </a>
                 <a
                   href={`https://wa.me/?text=${encodeURIComponent(product.name + " " + (typeof window !== "undefined" ? window.location.href : ""))}`}
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
+                  className='w-7 h-7 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
                   aria-label='Share on WhatsApp'>
                   <svg
-                    className='w-4 h-4'
+                    className='w-3 h-3'
                     viewBox='0 0 24 24'
                     fill='currentColor'>
                     <path d='M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z' />
@@ -400,9 +446,9 @@ export function ProductPageMinimal({
                     if (typeof navigator !== "undefined")
                       navigator.clipboard.writeText(window.location.href);
                   }}
-                  className='w-9 h-9 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
+                  className='w-7 h-7 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-colors'
                   aria-label='Copy link'>
-                  <LinkIcon className='w-4 h-4' />
+                  <LinkIcon className='w-3 h-3' />
                 </button>
               </div>
             )}
@@ -425,21 +471,21 @@ export function ProductPageMinimal({
             {/* Price */}
             <div>
               {hasDiscount ? (
-                <div className='flex items-baseline gap-3'>
-                  <span className='text-2xl font-semibold text-gray-900'>
+                <div className='flex items-baseline gap-2'>
+                  <span className='text-lg font-semibold text-gray-900'>
                     {(product.discountPrice as number).toFixed(2)}{" "}
                     {STORE_CURRENCY}
                   </span>
-                  <span className='text-lg text-gray-400 line-through'>
+                  <span className='text-sm text-gray-400 line-through'>
                     {product.price.toFixed(2)} {STORE_CURRENCY}
                   </span>
                 </div>
               ) : (
-                <span className='text-2xl font-semibold text-gray-900'>
+                <span className='text-lg font-semibold text-gray-900'>
                   {product.price.toFixed(2)} {STORE_CURRENCY}
                 </span>
               )}
-              <p className='text-xs text-gray-400 mt-1'>
+              <p className='text-[10px] text-gray-400 mt-0.5'>
                 {t("price_includes_tax")}
               </p>
             </div>
@@ -447,22 +493,22 @@ export function ProductPageMinimal({
             {/* Inspired By — directly under price */}
             {product.inspiredBy && (
               <div>
-                <p className='text-xs text-gray-500 uppercase tracking-wide mb-1'>Inspired by</p>
+                <p className='text-[10px] text-gray-500 uppercase tracking-wide mb-0.5'>Inspired by</p>
                 <ColoredDescription
                   text={product.inspiredBy}
-                  className='text-sm text-gray-700 italic'
+                  className='text-xs text-gray-700 italic'
                 />
               </div>
             )}
 
             {/* Stock status */}
             {product.available ? (
-              <p className='text-sm text-emerald-600 font-medium flex items-center gap-1.5'>
-                <Check className='w-4 h-4' />
+              <p className='text-xs text-emerald-600 font-medium flex items-center gap-1'>
+                <Check className='w-3 h-3' />
                 {t("in_stock")}
               </p>
             ) : (
-              <p className='text-sm text-red-500 font-medium'>
+              <p className='text-xs text-red-500 font-medium'>
                 {t("out_of_stock")}
               </p>
             )}
@@ -474,13 +520,13 @@ export function ProductPageMinimal({
                   ? layoutSettings.header.promoTextAr
                   : layoutSettings.header.promoText;
               return promoText ? (
-                <p className='text-sm  font-medium'>{promoText}</p>
+                <p className='text-xs font-medium'>{promoText}</p>
               ) : null;
             })()}
 
             {/* ── Category Carousel (merged, single) ── */}
             {mergedCategoryProducts.length > 0 && (
-              <div className='space-y-6 pt-2'>
+              <div className='space-y-3 pt-1'>
                 <InlineCategoryCarousel
                   title={carouselTitle || (isAr ? "منتجات أخرى" : "More Products")}
                   products={mergedCategoryProducts}
@@ -493,10 +539,10 @@ export function ProductPageMinimal({
 
             {/* Description */}
             {product.description && (
-              <div className='pt-4 border-t border-gray-100'>
+              <div className='pt-2 border-t border-gray-100'>
                 <ColoredDescription
                   text={product.description}
-                  className='text-sm text-gray-700 leading-relaxed whitespace-pre-line'
+                  className='text-xs text-gray-700 leading-relaxed whitespace-pre-line'
                 />
                 {product.longDescription && (
                   <ExpandableText text={product.longDescription} />
@@ -506,13 +552,13 @@ export function ProductPageMinimal({
 
             {/* Specifications */}
             {product.specifications && product.specifications.length > 0 && (
-              <div className='space-y-2 pt-2'>
+              <div className='space-y-1 pt-1'>
                 {product.specifications.map((spec, idx) => (
                   <div
                     key={idx}
-                    className='flex justify-between items-baseline py-2 border-b border-gray-100 last:border-0'>
-                    <span className='text-sm text-gray-500'>{spec.label}</span>
-                    <span className='text-sm text-gray-900 font-medium'>
+                    className='flex justify-between items-baseline py-1 border-b border-gray-100 last:border-0'>
+                    <span className='text-xs text-gray-500'>{spec.label}</span>
+                    <span className='text-xs text-gray-900 font-medium'>
                       {spec.value}
                     </span>
                   </div>
@@ -521,12 +567,12 @@ export function ProductPageMinimal({
             )}
 
             {/* Price again + Quantity + Add to Cart */}
-            <div className='pt-4 border-t border-gray-100 space-y-4'>
+            <div className='pt-2 border-t border-gray-100 space-y-3'>
               <div className='flex items-baseline justify-between'>
-                <span className='text-sm text-gray-500'>
+                <span className='text-xs text-gray-500'>
                   {t("price") || "Price"}
                 </span>
-                <span className='text-xl font-semibold text-gray-900'>
+                <span className='text-base font-semibold text-gray-900'>
                   {displayPrice.toFixed(2)} {STORE_CURRENCY}
                 </span>
               </div>
@@ -534,26 +580,26 @@ export function ProductPageMinimal({
               {/* Quantity */}
               {product.available && (
                 <div className='flex items-center justify-between'>
-                  <span className='text-sm text-gray-500'>
+                  <span className='text-xs text-gray-500'>
                     {t("product.quantity")}
                   </span>
                   <div className='flex items-center border border-gray-200 rounded-full'>
                     <button
                       onClick={incrementQty}
                       disabled={quantity >= maxQty}
-                      className='w-10 h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors rounded-s-full'
+                      className='w-8 h-8 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors rounded-s-full'
                       aria-label='Increase quantity'>
-                      <Plus className='w-4 h-4' />
+                      <Plus className='w-3 h-3' />
                     </button>
-                    <span className='w-10 h-10 flex items-center justify-center text-sm font-medium tabular-nums border-x border-gray-200'>
+                    <span className='w-8 h-8 flex items-center justify-center text-xs font-medium tabular-nums border-x border-gray-200'>
                       {quantity}
                     </span>
                     <button
                       onClick={decrementQty}
                       disabled={quantity <= 1}
-                      className='w-10 h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors rounded-e-full'
+                      className='w-8 h-8 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors rounded-e-full'
                       aria-label='Decrease quantity'>
-                      <Minus className='w-4 h-4' />
+                      <Minus className='w-3 h-3' />
                     </button>
                   </div>
                 </div>
@@ -567,6 +613,7 @@ export function ProductPageMinimal({
                   onVariantChange={(name, value) =>
                     setSelectedVariants((prev) => ({ ...prev, [name]: value }))
                   }
+                  strikethroughMap={strikethroughMap}
                 />
               )}
 
@@ -574,7 +621,7 @@ export function ProductPageMinimal({
               <Button
                 ref={addToCartBtnRef}
                 size='lg'
-                className='w-full bg-gray-900 hover:bg-gray-800 text-white rounded-none py-6 text-base font-medium shadow-none hover:shadow-lg transition-all'
+                className='w-full bg-gray-900 hover:bg-gray-800 text-white rounded-none py-4 text-sm font-medium shadow-none hover:shadow-lg transition-all'
                 onClick={handleAddToCart}
                 disabled={!product.available || !allVariantsSelected}>
                 {product.available ? t("add_to_cart") : t("out_of_stock")}

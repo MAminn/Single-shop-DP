@@ -7,6 +7,8 @@ interface VariantPreset {
   id: string;
   name: string;
   values: string[];
+  defaultValue?: string;
+  strikethroughValues?: string[];
 }
 
 export const updateVariantPresets = (presets: VariantPreset[]) =>

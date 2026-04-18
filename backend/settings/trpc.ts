@@ -84,6 +84,8 @@ export const settingsRouter = router({
             id: z.string(),
             name: z.string().min(1).max(255),
             values: z.array(z.string().min(1).max(255)),
+            defaultValue: z.string().max(255).optional(),
+            strikethroughValues: z.array(z.string().max(255)).optional(),
           }),
         ),
       }),
