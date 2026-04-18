@@ -13,6 +13,10 @@ interface HeroCarouselProps {
   slides: HeroSlide[];
   /** Auto-play interval in ms (default 5000) */
   interval?: number;
+  /** Use object-contain instead of object-cover (for constrained containers) */
+  contain?: boolean;
+  /** Let the carousel height be determined by the image (no fixed aspect ratio) */
+  autoHeight?: boolean;
   className?: string;
 }
 
@@ -23,6 +27,8 @@ interface HeroCarouselProps {
 export function HeroCarousel({
   slides,
   interval = 5000,
+  contain = false,
+  autoHeight = false,
   className,
 }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0);
@@ -65,7 +71,11 @@ export function HeroCarousel({
 
   return (
     <div
-      className={cn("relative w-full overflow-hidden aspect-[16/9] max-h-[650px]", className)}
+      className={cn(
+        "relative w-full overflow-hidden",
+        !autoHeight && "aspect-[16/9] max-h-[650px]",
+        className,
+      )}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
@@ -78,23 +88,28 @@ export function HeroCarousel({
         <div
           key={i}
           className={cn(
-            "absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out",
-            i === current ? "opacity-100 z-10" : "opacity-0 z-0",
+            "w-full transition-opacity duration-700 ease-in-out",
+            autoHeight
+              ? i === current ? "relative opacity-100 z-10" : "absolute inset-0 opacity-0 z-0"
+              : i === current ? "absolute inset-0 opacity-100 z-10" : "absolute inset-0 opacity-0 z-0",
           )}
           aria-hidden={i !== current}>
           {(() => {
             const Inner = slide.linkUrl ? "a" : "div";
             const innerProps = slide.linkUrl ? { href: slide.linkUrl } : {};
             return (
-              <Inner {...innerProps} className='block w-full h-full'>
+              <Inner {...innerProps} className={cn('block w-full', !autoHeight && 'h-full')}>
                 {/* Desktop image */}
                 <img
                   src={slide.imageUrl}
                   alt={slide.alt || `Slide ${i + 1}`}
                   className={cn(
-                    "w-full h-full object-cover",
+                    "w-full",
+                    autoHeight ? "" : "h-full",
+                    !autoHeight && (contain ? "object-contain" : "object-cover"),
                     slide.mobileImageUrl ? "!hidden md:!block" : "",
                   )}
+                  style={autoHeight ? { display: 'block', width: '100%', height: 'auto' } : undefined}
                   loading={i === 0 ? "eager" : "lazy"}
                 />
                 {/* Mobile image (fallback to desktop) */}
@@ -102,7 +117,12 @@ export function HeroCarousel({
                   <img
                     src={slide.mobileImageUrl}
                     alt={slide.alt || `Slide ${i + 1}`}
-                    className='w-full h-full object-cover block md:!hidden'
+                    className={cn(
+                      "w-full block md:!hidden",
+                      autoHeight ? "" : "h-full",
+                      !autoHeight && (contain ? "object-contain" : "object-cover"),
+                    )}
+                    style={autoHeight ? { display: 'block', width: '100%', height: 'auto' } : undefined}
                     loading={i === 0 ? "eager" : "lazy"}
                   />
                 )}

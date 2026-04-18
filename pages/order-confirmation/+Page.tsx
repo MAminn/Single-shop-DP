@@ -117,7 +117,9 @@ export default function OrderConfirmationPage() {
 
   return (
     <div className='min-h-screen bg-gray-50 flex items-center justify-center px-4 py-16'>
-      <div className='max-w-lg w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-8 pb-10 md:p-12 md:pb-14 text-center'>
+      <div
+        className='max-w-2xl w-full bg-white rounded-2xl shadow-sm border border-gray-100 text-center flex flex-col'
+        style={{ padding: '2rem 2rem 3.5rem', }}>
         {/* Icon */}
         {isPaymentSuccess && (
           <div className='mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6'>
@@ -242,7 +244,7 @@ export default function OrderConfirmationPage() {
         )}
 
         {/* Actions */}
-        <div className='flex flex-col sm:flex-row gap-3 justify-center'>
+        <div className='flex flex-col sm:flex-row gap-3 justify-center mt-6'>
           <Button asChild variant='outline' className='gap-2'>
             <Link href='/'>
               <Home className='w-4 h-4' />

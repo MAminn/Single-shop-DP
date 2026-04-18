@@ -434,7 +434,7 @@ export default function Orders() {
         </Card>
 
         <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-          <DialogContent className='max-w-5xl max-h-[90vh] overflow-y-auto'>
+          <DialogContent className='sm:max-w-5xl max-h-[90vh] overflow-y-auto'>
             {selectedOrder && (
               <>
                 <DialogHeader>

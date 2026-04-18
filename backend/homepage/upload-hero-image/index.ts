@@ -78,13 +78,12 @@ export const uploadHeroImage = ({
             })
             .toFile(filePath);
         } else {
-          // For hero: crop to 1920x1080 landscape
+          // Preserve original aspect ratio, only cap the width at 1920px
           await sharpInstance
             .resize({
               width: 1920,
-              height: 1080,
-              fit: "cover",
-              position: "center",
+              fit: "inside",
+              withoutEnlargement: true,
             })
             .webp({
               quality: 90,

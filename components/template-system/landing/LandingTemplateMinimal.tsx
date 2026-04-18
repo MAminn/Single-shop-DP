@@ -555,8 +555,8 @@ export function LandingTemplateMinimal({
             alt: s.alt,
           }));
         return content.bottomCarousel?.enabled !== false && bottomSlides.length > 0 ? (
-          <div className='max-w-[1400px] mx-auto'>
-            <HeroCarousel slides={bottomSlides} interval={5000} />
+          <div className='max-w-[1400px] mx-auto '>
+            <HeroCarousel slides={bottomSlides} interval={5000} autoHeight />
           </div>
         ) : null;
       })()}
