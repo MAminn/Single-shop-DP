@@ -4,6 +4,11 @@ import { Card, CardContent } from "#root/components/ui/card";
 import { Badge } from "#root/components/ui/badge";
 import { HomeFeaturedProducts } from "../home/HomeFeaturedProducts";
 import type { FeaturedProduct } from "../home/HomeFeaturedProducts";
+import type { CategoryStripItem } from "#root/components/shop/CategoryStrip";
+import {
+  NewArrivals,
+  type NewArrivalProduct,
+} from "#root/components/shop/NewArrivals";
 import {
   ShoppingBag,
   Truck,
@@ -33,6 +38,31 @@ export interface LandingTemplateClassicProps {
    * Featured products data (fetched dynamically)
    */
   featuredProducts?: FeaturedProduct[];
+
+  /**
+   * Discounted / on-sale products
+   */
+  discountedProducts?: FeaturedProduct[];
+
+  /**
+   * New arrivals products (latest added)
+   */
+  newArrivals?: NewArrivalProduct[];
+
+  /**
+   * Loading state for new arrivals
+   */
+  newArrivalsLoading?: boolean;
+
+  /**
+   * Categories data
+   */
+  categories?: CategoryStripItem[];
+
+  /**
+   * Loading state for categories
+   */
+  categoriesLoading?: boolean;
 
   /**
    * Additional CSS classes
@@ -74,6 +104,11 @@ const ICON_MAP: Record<
 export function LandingTemplateClassic({
   content,
   featuredProducts,
+  discountedProducts,
+  newArrivals,
+  newArrivalsLoading = false,
+  categories,
+  categoriesLoading = false,
   className = "",
   onCtaClick,
 }: LandingTemplateClassicProps) {
@@ -192,25 +227,56 @@ export function LandingTemplateClassic({
               </p>
             </div>
 
-            {/* Category Cards Placeholder */}
-            <div className='grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8'>
-              {["Electronics", "Fashion", "Home & Garden", "Sports"].map(
-                (category, index) => (
-                  <Card
-                    key={index}
-                    className='group cursor-pointer hover:shadow-lg transition-all duration-300 border-2 hover:border-blue-600'>
+            {categories && categories.length > 0 ? (
+              <div className='grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8'>
+                {categories.map((cat) => {
+                  const resolvedImage = cat.imageUrl?.startsWith("http")
+                    ? cat.imageUrl
+                    : cat.imageUrl
+                      ? `/uploads/${cat.imageUrl}`
+                      : null;
+                  return (
+                    <a
+                      key={cat.id}
+                      href={`/categories/${cat.slug}`}
+                      className='group'>
+                      <Card className='group-hover:shadow-lg transition-all duration-300 border-2 group-hover:border-stone-600 overflow-hidden'>
+                        {resolvedImage && (
+                          <div className='aspect-square overflow-hidden'>
+                            <img
+                              src={resolvedImage}
+                              alt={cat.name}
+                              className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-105'
+                            />
+                          </div>
+                        )}
+                        <CardContent className='p-4 text-center'>
+                          {!resolvedImage && (
+                            <div className='w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-stone-100 to-stone-200 rounded-full flex items-center justify-center'>
+                              <ShoppingBag className='w-8 h-8 text-stone-600' />
+                            </div>
+                          )}
+                          <h3 className='font-semibold text-gray-900 group-hover:text-stone-700 transition-colors'>
+                            {cat.name}
+                          </h3>
+                        </CardContent>
+                      </Card>
+                    </a>
+                  );
+                })}
+              </div>
+            ) : categoriesLoading ? (
+              <div className='grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8'>
+                {Array.from({ length: 4 }, (_, i) => (
+                  <Card key={i} className='animate-pulse'>
                     <CardContent className='p-6 text-center'>
-                      <div className='w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center group-hover:from-blue-600 group-hover:to-blue-700 transition-all'>
-                        <ShoppingBag className='w-8 h-8 text-blue-600 group-hover:text-white transition-colors' />
-                      </div>
-                      <h3 className='font-semibold text-gray-900 group-hover:text-blue-600 transition-colors'>
-                        {category}
-                      </h3>
+                      <div className='w-16 h-16 mx-auto mb-4 bg-stone-200 rounded-full' />
+                      <div className='h-4 bg-stone-200 rounded w-24 mx-auto' />
                     </CardContent>
                   </Card>
-                ),
-              )}
-            </div>
+                ))}
+              </div>
+            ) : null}
           </div>
         </section>
       )}
@@ -243,6 +309,69 @@ export function LandingTemplateClassic({
         </section>
       )}
 
+      {/* New Arrivals Section */}
+      {(newArrivalsLoading || (newArrivals && newArrivals.length > 0)) && content.newArrivals?.enabled !== false && (
+        <section className='py-12 sm:py-16 lg:py-20 bg-white'>
+          <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
+            <div className='flex items-end justify-between mb-10'>
+              <div>
+                <h2 className='text-3xl lg:text-5xl font-light text-stone-900 leading-[1.15] tracking-tight mb-2'>
+                  {content.newArrivals?.title || "New Arrivals"}
+                </h2>
+              </div>
+              <a
+                href={`${content.newArrivals?.viewAllLink || '/shop'}${(content.newArrivals?.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=newarrivals`}
+                className='text-sm text-stone-600 hover:text-stone-900 font-light transition-colors flex items-center gap-1'>
+                {content.newArrivals?.viewAllText || "View All"}
+                <ArrowRight className='w-4 h-4' />
+              </a>
+            </div>
+            <NewArrivals
+              products={newArrivals}
+              isLoading={newArrivalsLoading}
+              showHeader={false}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* Discounted Products Section */}
+      {content.discountedProducts?.enabled && discountedProducts && discountedProducts.length > 0 && (
+        <section className='py-12 sm:py-16 lg:py-20 bg-gray-50'>
+          <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
+            <div className='flex items-end justify-between mb-10'>
+              <div>
+                <h2 className='text-3xl lg:text-5xl font-light text-stone-900 leading-[1.15] tracking-tight mb-2'>
+                  {content.discountedProducts.title}
+                </h2>
+              </div>
+              <Button
+                variant='tertiary'
+                size='md'
+                onClick={handleCtaClick(`${content.discountedProducts.viewAllLink || '/shop'}${(content.discountedProducts.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=offers`)}
+                asChild={!onCtaClick}>
+                {onCtaClick ? (
+                  <>
+                    {content.discountedProducts.viewAllText || "View All"}
+                    <ArrowRight className='ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform' />
+                  </>
+                ) : (
+                  <a href={`${content.discountedProducts.viewAllLink || '/shop'}${(content.discountedProducts.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=offers`}>
+                    {content.discountedProducts.viewAllText || "View All"}
+                    <ArrowRight className='ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform' />
+                  </a>
+                )}
+              </Button>
+            </div>
+            <HomeFeaturedProducts
+              title=''
+              products={discountedProducts}
+              showViewAllButton={false}
+            />
+          </div>
+        </section>
+      )}
+
       {/* Featured Products */}
       {content.featuredProducts.enabled && (
         <section className='py-12 sm:py-16 lg:py-20 bg-gray-50'>
@@ -259,7 +388,7 @@ export function LandingTemplateClassic({
               <Button
                 variant='tertiary'
                 size='md'
-                onClick={handleCtaClick(content.featuredProducts.viewAllLink)}
+                onClick={handleCtaClick(`${content.featuredProducts.viewAllLink || '/shop'}${(content.featuredProducts.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=featured`)}
                 asChild={!onCtaClick}>
                 {onCtaClick ? (
                   <>
@@ -267,7 +396,7 @@ export function LandingTemplateClassic({
                     <ArrowRight className='ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform' />
                   </>
                 ) : (
-                  <a href={content.featuredProducts.viewAllLink}>
+                  <a href={`${content.featuredProducts.viewAllLink || '/shop'}${(content.featuredProducts.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=featured`}>
                     {content.featuredProducts.viewAllText}
                     <ArrowRight className='ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform' />
                   </a>
@@ -286,12 +415,12 @@ export function LandingTemplateClassic({
                 variant='secondary'
                 size='md'
                 className='w-full'
-                onClick={handleCtaClick(content.featuredProducts.viewAllLink)}
+                onClick={handleCtaClick(`${content.featuredProducts.viewAllLink || '/shop'}${(content.featuredProducts.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=featured`)}
                 asChild={!onCtaClick}>
                 {onCtaClick ? (
                   <>{content.featuredProducts.viewAllText}</>
                 ) : (
-                  <a href={content.featuredProducts.viewAllLink}>
+                  <a href={`${content.featuredProducts.viewAllLink || '/shop'}${(content.featuredProducts.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=featured`}>
                     {content.featuredProducts.viewAllText}
                   </a>
                 )}

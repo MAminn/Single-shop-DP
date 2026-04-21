@@ -103,6 +103,7 @@ const ICON_MAP: Record<
 export function LandingTemplateModern({
   content,
   featuredProducts,
+  discountedProducts,
   categories,
   categoriesLoading = false,
   newArrivals,
@@ -342,28 +343,62 @@ export function LandingTemplateModern({
       )}
 
       {/* New Arrivals Section */}
-      <section className='py-16 md:py-24 bg-white'>
-        <div className='container mx-auto px-6 sm:px-8 lg:px-12'>
-          <p className='text-xs tracking-[0.2em] text-neutral-400 uppercase'>
-            New Arrivals
-          </p>
-          <div className='flex justify-between items-end mt-2'>
-            <h2 className='text-2xl font-light'>Just Landed</h2>
-            <a
-              href='/shop'
-              className='text-sm text-neutral-500 hover:text-neutral-900 transition-colors duration-300'>
-              View All <ArrowRight className='inline w-4 h-4 ml-1' />
-            </a>
+      {(newArrivalsLoading || (newArrivals && newArrivals.length > 0)) && content.newArrivals?.enabled !== false && (
+        <section className='py-16 md:py-24 bg-white'>
+          <div className='container mx-auto px-6 sm:px-8 lg:px-12'>
+            <p className='text-xs tracking-[0.2em] text-neutral-400 uppercase'>
+              New Arrivals
+            </p>
+            <div className='flex justify-between items-end mt-2'>
+              <h2 className='text-2xl font-light'>
+                {content.newArrivals?.title || "Just Landed"}
+              </h2>
+              <a
+                href={`${content.newArrivals?.viewAllLink || '/shop'}${(content.newArrivals?.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=newarrivals`}
+                className='text-sm text-neutral-500 hover:text-neutral-900 transition-colors duration-300'>
+                {content.newArrivals?.viewAllText || "View All"} <ArrowRight className='inline w-4 h-4 ml-1' />
+              </a>
+            </div>
+            <div className='mt-10'>
+              <NewArrivals
+                products={newArrivals}
+                isLoading={newArrivalsLoading}
+                showHeader={false}
+              />
+            </div>
           </div>
-          <div className='mt-10'>
-            <NewArrivals
-              products={newArrivals}
-              isLoading={newArrivalsLoading}
-              showHeader={false}
-            />
+        </section>
+      )}
+
+      {/* Discounted Products Section */}
+      {content.discountedProducts?.enabled && discountedProducts && discountedProducts.length > 0 && (
+        <section className='py-16 md:py-24 bg-neutral-50'>
+          <div className='container mx-auto px-6 sm:px-8 lg:px-12'>
+            <p className='text-xs tracking-[0.2em] text-neutral-400 uppercase'>
+              Offers
+            </p>
+            <div className='flex justify-between items-end mt-2'>
+              <h2 className='text-2xl font-light'>
+                {content.discountedProducts.title}
+              </h2>
+              <a
+                href={`${content.discountedProducts.viewAllLink || '/shop'}${(content.discountedProducts.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=offers`}
+                className='text-sm text-neutral-500 hover:text-neutral-900 transition-colors duration-300'>
+                {content.discountedProducts.viewAllText || "View All"}{" "}
+                <ArrowRight className='inline w-4 h-4 ml-1' />
+              </a>
+            </div>
+            <div className='mt-10 [&>section]:bg-transparent [&>section]:py-0 [&>section>div]:px-0 [&>section>div]:mx-0 [&>section>div]:max-w-none [&>section>div>.text-center]:hidden [&_.grid]:xl:grid-cols-3 [&_.grid]:gap-8 [&_.grid]:mb-0'>
+              <HomeFeaturedProducts
+                title=''
+                products={discountedProducts}
+                showViewAllButton={false}
+                maxProducts={6}
+              />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Featured Products Section */}
       {content.featuredProducts.enabled && (
@@ -377,7 +412,7 @@ export function LandingTemplateModern({
                 {content.featuredProducts.title}
               </h2>
               <a
-                href={content.featuredProducts.viewAllLink}
+                href={`${content.featuredProducts.viewAllLink || '/shop'}${(content.featuredProducts.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=featured`}
                 className='text-sm text-neutral-500 hover:text-neutral-900 transition-colors duration-300'>
                 {content.featuredProducts.viewAllText || "View All"}{" "}
                 <ArrowRight className='inline w-4 h-4 ml-1' />
@@ -397,15 +432,15 @@ export function LandingTemplateModern({
               {onCtaClick ? (
                 <button
                   type='button'
-                  onClick={handleCtaClick(content.featuredProducts.viewAllLink)}
+                  onClick={handleCtaClick(`${content.featuredProducts.viewAllLink || '/shop'}${(content.featuredProducts.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=featured`)}
                   className='inline-flex items-center rounded-full border border-neutral-900 text-neutral-900 hover:bg-neutral-900 hover:text-white px-8 py-3 text-sm font-medium tracking-wide transition-colors duration-300'>
                   View All Products
                 </button>
               ) : (
                 <a
-                  href={content.featuredProducts.viewAllLink}
+                  href={`${content.featuredProducts.viewAllLink || '/shop'}${(content.featuredProducts.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=featured`}
                   className='inline-flex items-center rounded-full border border-neutral-900 text-neutral-900 hover:bg-neutral-900 hover:text-white px-8 py-3 text-sm font-medium tracking-wide transition-colors duration-300'>
-                  View All Products
+                  {content.featuredProducts.viewAllText || "View All Products"}
                 </a>
               )}
             </div>

@@ -2270,9 +2270,8 @@ export default function HomepageAdminPage() {
           </Card>
         )}
 
-        {/* Discounted Products Section — minimal only */}
-        {isMinimal && (
-          <Card>
+        {/* Discounted Products Section */}
+        <Card>
             <CardHeader>
               <div className='flex items-center justify-between'>
                 <CardTitle>Discounted Products (Offers)</CardTitle>
@@ -2323,6 +2322,7 @@ export default function HomepageAdminPage() {
                   placeholder='Offers'
                   disabled={!(content.discountedProducts?.enabled ?? true)}
                 />
+                {isMinimal && (
                 <div className='mt-1'>
                   <Label className='text-xs text-muted-foreground flex items-center gap-1'>
                     <Languages className='w-3 h-3' /> Arabic
@@ -2350,6 +2350,7 @@ export default function HomepageAdminPage() {
                     disabled={!(content.discountedProducts?.enabled ?? true)}
                   />
                 </div>
+                )}
               </div>
               <div>
                 <Label htmlFor='discounted-view-all'>
@@ -2374,6 +2375,7 @@ export default function HomepageAdminPage() {
                   placeholder='View All'
                   disabled={!(content.discountedProducts?.enabled ?? true)}
                 />
+                {isMinimal && (
                 <div className='mt-1'>
                   <Label className='text-xs text-muted-foreground flex items-center gap-1'>
                     <Languages className='w-3 h-3' /> Arabic
@@ -2401,6 +2403,7 @@ export default function HomepageAdminPage() {
                     disabled={!(content.discountedProducts?.enabled ?? true)}
                   />
                 </div>
+                )}
               </div>
               <div className='bg-muted p-3 rounded-md'>
                 <p className='text-sm text-muted-foreground'>
@@ -2431,7 +2434,6 @@ export default function HomepageAdminPage() {
               />
             </CardContent>
           </Card>
-        )}
 
         {/* Featured Products Section */}
         <Card>
@@ -2459,7 +2461,7 @@ export default function HomepageAdminPage() {
           <CardContent className='space-y-4'>
             <div>
               <Label htmlFor='featured-title'>
-                Section Title{isMinimal ? " (English)" : ""}
+                Section Title (English)
               </Label>
               <Input
                 id='featured-title'
@@ -2477,7 +2479,7 @@ export default function HomepageAdminPage() {
                 disabled={!content.featuredProducts.enabled}
               />
               {isMinimal && (
-                <div className='mt-1'>
+              <div className='mt-1'>
                   <Label className='text-xs text-muted-foreground flex items-center gap-1'>
                     <Languages className='w-3 h-3' /> Arabic
                   </Label>
@@ -2521,8 +2523,7 @@ export default function HomepageAdminPage() {
               />
             </div>
 
-            {isMinimal && (
-              <div>
+            <div>
                 <Label htmlFor='featured-view-all'>
                   View All Text (English)
                 </Label>
@@ -2541,6 +2542,7 @@ export default function HomepageAdminPage() {
                   placeholder='View All Products'
                   disabled={!content.featuredProducts.enabled}
                 />
+                {isMinimal && (
                 <div className='mt-1'>
                   <Label className='text-xs text-muted-foreground flex items-center gap-1'>
                     <Languages className='w-3 h-3' /> Arabic
@@ -2562,18 +2564,16 @@ export default function HomepageAdminPage() {
                     disabled={!content.featuredProducts.enabled}
                   />
                 </div>
+                )}
               </div>
-            )}
 
             <div className='bg-muted p-3 rounded-md'>
               <p className='text-sm text-muted-foreground'>
-                <strong>Note:</strong> Products are automatically fetched from
-                your catalog. This section only controls the title and subtitle
-                text.
+                <strong>Note:</strong> Use the product picker below to manually
+                select which products appear in this section.
               </p>
             </div>
-            {isMinimal && (
-              <HomepageProductPicker
+            <HomepageProductPicker
                 selectedIds={
                   content.featuredProducts?.productIds ?? []
                 }
@@ -2588,13 +2588,11 @@ export default function HomepageAdminPage() {
                 }
                 disabled={!content.featuredProducts.enabled}
               />
-            )}
           </CardContent>
         </Card>
 
-        {/* New Arrivals Section — minimal only */}
-        {isMinimal && (
-          <Card>
+        {/* New Arrivals Section */}
+        <Card>
             <CardHeader>
               <div className='flex items-center justify-between'>
                 <CardTitle>New Arrivals</CardTitle>
@@ -2643,6 +2641,7 @@ export default function HomepageAdminPage() {
                   placeholder='New Arrivals'
                   disabled={!(content.newArrivals?.enabled ?? true)}
                 />
+                {isMinimal && (
                 <div className='mt-1'>
                   <Label className='text-xs text-muted-foreground flex items-center gap-1'>
                     <Languages className='w-3 h-3' /> Arabic
@@ -2669,6 +2668,7 @@ export default function HomepageAdminPage() {
                     disabled={!(content.newArrivals?.enabled ?? true)}
                   />
                 </div>
+                )}
               </div>
               <div>
                 <Label htmlFor='newarrivals-view-all'>
@@ -2692,6 +2692,7 @@ export default function HomepageAdminPage() {
                   placeholder='View All'
                   disabled={!(content.newArrivals?.enabled ?? true)}
                 />
+                {isMinimal && (
                 <div className='mt-1'>
                   <Label className='text-xs text-muted-foreground flex items-center gap-1'>
                     <Languages className='w-3 h-3' /> Arabic
@@ -2718,6 +2719,7 @@ export default function HomepageAdminPage() {
                     disabled={!(content.newArrivals?.enabled ?? true)}
                   />
                 </div>
+                )}
               </div>
               <div className='bg-muted p-3 rounded-md'>
                 <p className='text-sm text-muted-foreground'>
@@ -2747,7 +2749,6 @@ export default function HomepageAdminPage() {
               />
             </CardContent>
           </Card>
-        )}
 
         {/* ── Bottom Carousel (above testimonials, Minimal only) ──────────── */}
         {isMinimal && (
@@ -3584,7 +3585,7 @@ export default function HomepageAdminPage() {
                           onChange={(e) =>
                             setContent((prev) => {
                               const items = [...(prev.testimonials?.items ?? [])];
-                              items[idx] = { ...items[idx], name: e.target.value };
+                              items[idx] = { ...items[idx], name: e.target.value } as typeof items[number];
                               return { ...prev, testimonials: { ...prev.testimonials!, enabled: prev.testimonials?.enabled ?? false, items } };
                             })
                           }
@@ -3600,7 +3601,7 @@ export default function HomepageAdminPage() {
                           onChange={(e) =>
                             setContent((prev) => {
                               const items = [...(prev.testimonials?.items ?? [])];
-                              items[idx] = { ...items[idx], nameAr: e.target.value };
+                              items[idx] = { ...items[idx], nameAr: e.target.value } as typeof items[number];
                               return { ...prev, testimonials: { ...prev.testimonials!, enabled: prev.testimonials?.enabled ?? false, items } };
                             })
                           }
@@ -3620,7 +3621,7 @@ export default function HomepageAdminPage() {
                             onClick={() =>
                               setContent((prev) => {
                                 const items = [...(prev.testimonials?.items ?? [])];
-                                items[idx] = { ...items[idx], rating: star };
+                                items[idx] = { ...items[idx], rating: star } as typeof items[number];
                                 return { ...prev, testimonials: { ...prev.testimonials!, enabled: prev.testimonials?.enabled ?? false, items } };
                               })
                             }
@@ -3640,7 +3641,7 @@ export default function HomepageAdminPage() {
                           onChange={(e) =>
                             setContent((prev) => {
                               const items = [...(prev.testimonials?.items ?? [])];
-                              items[idx] = { ...items[idx], review: e.target.value };
+                              items[idx] = { ...items[idx], review: e.target.value } as typeof items[number];
                               return { ...prev, testimonials: { ...prev.testimonials!, enabled: prev.testimonials?.enabled ?? false, items } };
                             })
                           }
@@ -3657,7 +3658,7 @@ export default function HomepageAdminPage() {
                           onChange={(e) =>
                             setContent((prev) => {
                               const items = [...(prev.testimonials?.items ?? [])];
-                              items[idx] = { ...items[idx], reviewAr: e.target.value };
+                              items[idx] = { ...items[idx], reviewAr: e.target.value } as typeof items[number];
                               return { ...prev, testimonials: { ...prev.testimonials!, enabled: prev.testimonials?.enabled ?? false, items } };
                             })
                           }

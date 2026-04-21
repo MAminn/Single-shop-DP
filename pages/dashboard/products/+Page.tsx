@@ -397,6 +397,8 @@ export default function Products() {
                 discountPrice: selectedProductData.product.discountPrice
                   ? Number(selectedProductData.product.discountPrice)
                   : null,
+                inspiredBy: selectedProductData.product.inspiredBy ?? undefined,
+                sortOrder: selectedProductData.product.sortOrder ?? undefined,
                 imageId: selectedProductData.file?.id ?? "",
                 productImages: productImages,
                 categoryIds: selectedProductCategories,

@@ -100,7 +100,7 @@ export default function ShopPage() {
         const merchantId = getStoreOwnerId();
         const result = await trpc.homepage.getContent.query({
           merchantId,
-          templateId: "landing-minimal",
+          templateId: getTemplateId("landing") || "landing-minimal",
         });
         if (cancelled) return;
 

@@ -32,6 +32,7 @@ import { ParallaxImage } from "../motion/ParallaxImage";
 export interface LandingTemplateEditorialProps {
   content: HomepageContent;
   featuredProducts?: FeaturedProduct[];
+  discountedProducts?: FeaturedProduct[];
   categories?: CategoryStripItem[];
   categoriesLoading?: boolean;
   newArrivals?: NewArrivalProduct[];
@@ -216,6 +217,7 @@ function SkeletonTileGrid({ count = 8 }: { count?: number }) {
 export function LandingTemplateEditorial({
   content,
   featuredProducts,
+  discountedProducts,
   categories,
   categoriesLoading = false,
   newArrivals,
@@ -529,18 +531,27 @@ export function LandingTemplateEditorial({
         {/* ============================================================ */}
         {/*  NEW ARRIVALS                                                */}
         {/* ============================================================ */}
-        {(newArrivalsLoading || (newArrivals && newArrivals.length > 0)) && (
+        {(newArrivalsLoading || (newArrivals && newArrivals.length > 0)) && content.newArrivals?.enabled !== false && (
           <section className='py-16 sm:py-20 bg-stone-50'>
             <div className='mx-auto max-w-6xl px-4 sm:px-6 lg:px-10'>
-              <p className='text-xs tracking-[0.32em] uppercase text-stone-500'>
-                New In
-              </p>
-              <h2 className='mt-3 text-3xl font-semibold tracking-tight text-stone-900 sm:text-4xl leading-tight'>
-                Just Arrived
-              </h2>
-              <p className='mt-3 text-sm text-stone-600 leading-relaxed'>
-                The latest additions to our collection.
-              </p>
+              <div className='flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4'>
+                <div>
+                  <p className='text-xs tracking-[0.32em] uppercase text-stone-500'>
+                    New In
+                  </p>
+                  <h2 className='mt-3 text-3xl font-semibold tracking-tight text-stone-900 sm:text-4xl leading-tight'>
+                    {content.newArrivals?.title || "Just Arrived"}
+                  </h2>
+                  <p className='mt-3 text-sm text-stone-600 leading-relaxed'>
+                    The latest additions to our collection.
+                  </p>
+                </div>
+                <a
+                  href={`${content.newArrivals?.viewAllLink || '/shop'}${(content.newArrivals?.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=newarrivals`}
+                  className='inline-flex text-sm font-medium text-stone-900 underline underline-offset-8 decoration-stone-900/20 hover:decoration-stone-900/40 transition-colors shrink-0'>
+                  {content.newArrivals?.viewAllText || "View All"}
+                </a>
+              </div>
               <div className='mt-10'>
                 {newArrivalsLoading ? (
                   <SkeletonTileGrid count={4} />
@@ -553,6 +564,51 @@ export function LandingTemplateEditorial({
                     ))}
                   </StaggerContainer>
                 )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ============================================================ */}
+        {/*  DISCOUNTED PRODUCTS                                         */}
+        {/* ============================================================ */}
+        {content.discountedProducts?.enabled && discountedProducts && discountedProducts.length > 0 && (
+          <section className='py-16 sm:py-20 bg-white'>
+            <div className='mx-auto max-w-6xl px-4 sm:px-6 lg:px-10'>
+              <div className='flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4'>
+                <div>
+                  <p className='text-xs tracking-[0.32em] uppercase text-stone-500'>
+                    Offers
+                  </p>
+                  <h2 className='mt-3 text-3xl font-semibold tracking-tight text-stone-900 sm:text-4xl leading-tight'>
+                    {content.discountedProducts.title}
+                  </h2>
+                </div>
+                {onCtaClick ? (
+                  <button
+                    type='button'
+                    onClick={() =>
+                      onCtaClick(`${content.discountedProducts!.viewAllLink || '/shop'}${(content.discountedProducts!.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=offers`)
+                    }
+                    className='inline-flex text-sm font-medium text-stone-900 underline underline-offset-8 decoration-stone-900/20 hover:decoration-stone-900/40 transition-colors shrink-0'>
+                    {content.discountedProducts.viewAllText || "View All"}
+                  </button>
+                ) : (
+                  <a
+                    href={`${content.discountedProducts.viewAllLink || '/shop'}${(content.discountedProducts.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=offers`}
+                    className='inline-flex text-sm font-medium text-stone-900 underline underline-offset-8 decoration-stone-900/20 hover:decoration-stone-900/40 transition-colors shrink-0'>
+                    {content.discountedProducts.viewAllText || "View All"}
+                  </a>
+                )}
+              </div>
+              <div className='mt-10'>
+                <StaggerContainer className='grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4'>
+                  {discountedProducts.map((product) => (
+                    <StaggerItem key={product.id}>
+                      <EditorialProductTile product={product} />
+                    </StaggerItem>
+                  ))}
+                </StaggerContainer>
               </div>
             </div>
           </section>
@@ -578,23 +634,22 @@ export function LandingTemplateEditorial({
                     </p>
                   )}
                 </div>
-                {content.featuredProducts.viewAllLink &&
-                  (onCtaClick ? (
-                    <button
-                      type='button'
-                      onClick={() =>
-                        onCtaClick(content.featuredProducts.viewAllLink)
-                      }
-                      className='inline-flex text-sm font-medium text-stone-900 underline underline-offset-8 decoration-stone-900/20 hover:decoration-stone-900/40 transition-colors'>
-                      {content.featuredProducts.viewAllText || "View All"}
-                    </button>
-                  ) : (
-                    <a
-                      href={content.featuredProducts.viewAllLink}
-                      className='inline-flex text-sm font-medium text-stone-900 underline underline-offset-8 decoration-stone-900/20 hover:decoration-stone-900/40 transition-colors'>
-                      {content.featuredProducts.viewAllText || "View All"}
-                    </a>
-                  ))}
+                {onCtaClick ? (
+                  <button
+                    type='button'
+                    onClick={() =>
+                      onCtaClick(`${content.featuredProducts.viewAllLink || '/shop'}${(content.featuredProducts.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=featured`)
+                    }
+                    className='inline-flex text-sm font-medium text-stone-900 underline underline-offset-8 decoration-stone-900/20 hover:decoration-stone-900/40 transition-colors'>
+                    {content.featuredProducts.viewAllText || "View All"}
+                  </button>
+                ) : (
+                  <a
+                    href={`${content.featuredProducts.viewAllLink || '/shop'}${(content.featuredProducts.viewAllLink || '/shop').includes('?') ? '&' : '?'}section=featured`}
+                    className='inline-flex text-sm font-medium text-stone-900 underline underline-offset-8 decoration-stone-900/20 hover:decoration-stone-900/40 transition-colors'>
+                    {content.featuredProducts.viewAllText || "View All"}
+                  </a>
+                )}
               </div>
               <div className='mt-10'>
                 {!featuredProducts ? (
