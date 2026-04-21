@@ -301,7 +301,7 @@ export const productVariant = pgTable("product_variant", {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-  values: jsonb("values").notNull().default([]).$type<string[]>(),
+  values: jsonb("values").notNull().default([]).$type<{ value: string; priceModifier?: number }[]>(),
 });
 
 export const orderStatus = pgEnum("order_status", [
@@ -489,6 +489,8 @@ export const productImage = pgTable("product_image", {
       onUpdate: "cascade",
     }),
   isPrimary: boolean("is_primary").notNull().default(false),
+  /** Display order — lower value = shown first */
+  sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at", {
     withTimezone: true,
     mode: "date",

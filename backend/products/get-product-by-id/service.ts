@@ -67,7 +67,7 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
           .from(productImage)
           .innerJoin(file, eq(productImage.fileId, file.id))
           .where(eq(productImage.productId, foundProduct.id))
-          .orderBy(productImage.isPrimary); // Optional: order by primary flag
+          .orderBy(productImage.sortOrder, productImage.isPrimary); // Order by sort then primary
 
         // Fetch all associated categories for this product
         const categories = await db
@@ -128,7 +128,9 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
           })),
           variants: variants.map((v) => ({
             name: v.name,
-            values: v.values,
+            values: (v.values as any[]).map((val) =>
+              typeof val === "string" ? { value: val, priceModifier: 0 } : val,
+            ),
           })),
           rating: 0,
           reviewCount: 0,

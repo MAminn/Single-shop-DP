@@ -1,5 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useState, useEffect } from "react";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import { trpc } from "#root/shared/trpc/client";
 import { getStoreOwnerId } from "#root/shared/config/store";
@@ -54,9 +53,6 @@ const DEFAULT_TESTIMONIALS: Testimonial[] = [
 export function MinimalTestimonialsSection() {
   const { t, locale } = useMinimalI18n();
   const isAr = locale === "ar";
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
   const [testimonials, setTestimonials] = useState<Testimonial[]>(DEFAULT_TESTIMONIALS);
   const [sectionTitle, setSectionTitle] = useState("");
 
@@ -88,39 +84,11 @@ export function MinimalTestimonialsSection() {
       .catch(() => {});
   }, [isAr]);
 
-  const checkScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 4);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
-  }, []);
-
-  useEffect(() => {
-    checkScroll();
-    const el = scrollRef.current;
-    if (!el) return;
-    el.addEventListener("scroll", checkScroll, { passive: true });
-    window.addEventListener("resize", checkScroll);
-    return () => {
-      el.removeEventListener("scroll", checkScroll);
-      window.removeEventListener("resize", checkScroll);
-    };
-  }, [checkScroll]);
-
-  const scroll = (direction: "left" | "right") => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const card = el.querySelector("[data-testimonial]");
-    const cardWidth = card?.clientWidth ?? 320;
-    const gap = 24;
-    el.scrollBy({
-      left: direction === "right" ? cardWidth + gap : -(cardWidth + gap),
-      behavior: "smooth",
-    });
-  };
+  // Duplicate testimonials once so the marquee loops seamlessly
+  const loopItems = [...testimonials, ...testimonials];
 
   return (
-    <section className="py-14 sm:py-20 bg-stone-50">
+    <section className="py-14 sm:py-20 bg-stone-50 overflow-hidden">
       <div className="max-w-[1400px] mx-auto">
         <div className="text-center mb-10 sm:mb-14 px-4">
           <h2 className="text-2xl sm:text-3xl font-light text-stone-900 tracking-tight inline-block relative pb-3">
@@ -129,33 +97,23 @@ export function MinimalTestimonialsSection() {
           </h2>
         </div>
 
-        <div className="relative">
-          <button
-            onClick={() => scroll("left")}
-            disabled={!canScrollLeft}
-            className="absolute -start-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-9 h-9 items-center justify-center border border-stone-200 bg-white hover:border-stone-900 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => scroll("right")}
-            disabled={!canScrollRight}
-            className="absolute -end-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex w-9 h-9 items-center justify-center border border-stone-200 bg-white hover:border-stone-900 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-
+        <div
+          className="relative"
+          style={{
+            maskImage:
+              "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+            WebkitMaskImage:
+              "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+          }}
+        >
           <div
-            ref={scrollRef}
-            className="flex gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 px-4 sm:px-6"
+            className="flex gap-6 w-max animate-marquee hover:[animation-play-state:paused]"
+            style={{ "--marquee-duration": `${testimonials.length * 6}s` } as React.CSSProperties}
           >
-            {testimonials.map((item, i) => (
+            {loopItems.map((item, i) => (
               <div
                 key={i}
-                data-testimonial
-                className="flex-none w-[280px] sm:w-[320px] snap-start bg-white border border-stone-100 p-6 flex flex-col items-center text-center"
+                className="flex-none w-[280px] sm:w-[320px] bg-white border border-stone-100 p-6 flex flex-col items-center text-center"
               >
                 <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mb-4">
                   <svg className="w-8 h-8 text-stone-400" fill="currentColor" viewBox="0 0 24 24">

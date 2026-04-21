@@ -357,7 +357,7 @@ export function MinimalNavbar() {
                       onMouseLeave={() => setOpenDropdown(null)}>
                       <button
                         type='button'
-                        className='flex items-center gap-1 px-3 py-1.5 text-[13px] font-normal text-gray-700 hover:text-black transition-colors tracking-wide'>
+                        className='flex items-center gap-1 px-3 py-1.5 text-[15px] font-semibold text-gray-800 hover:text-black transition-colors tracking-wide'>
                         <ChevronDown className='w-3 h-3' />
                         {link.label}
                       </button>
@@ -380,7 +380,7 @@ export function MinimalNavbar() {
                   <Link
                     key={link.id}
                     href={link.to}
-                    className='px-3 py-1.5 text-[13px] font-normal text-gray-700 hover:text-black transition-colors tracking-wide'>
+                    className='px-3 py-1.5 text-[15px] font-semibold text-gray-800 hover:text-black transition-colors tracking-wide'>
                     {link.label}
                   </Link>
                 );

@@ -142,7 +142,8 @@ export function ProductPageMinimal({
               const preset = presets.find(
                 (p) => p.name.toLowerCase() === variant.name.toLowerCase(),
               );
-              if (preset?.defaultValue && variant.values.includes(preset.defaultValue)) {
+              const valueStrings = variant.values.map((v) => v.value);
+              if (preset?.defaultValue && valueStrings.includes(preset.defaultValue)) {
                 updated[variant.name] = preset.defaultValue;
               }
             }
@@ -221,6 +222,18 @@ export function ProductPageMinimal({
     !product.variants?.length ||
     product.variants.every((v) => selectedVariants[v.name]);
 
+  // Compute display price including selected variant modifiers
+  const displayPrice = (() => {
+    const base = hasDiscount ? (product.discountPrice as number) : product.price;
+    const modifierSum = (product.variants ?? []).reduce((sum, variant) => {
+      const selectedValue = selectedVariants[variant.name];
+      if (!selectedValue) return sum;
+      const option = variant.values.find((v) => v.value === selectedValue);
+      return sum + (option?.priceModifier ?? 0);
+    }, 0);
+    return base + modifierSum;
+  })();
+
   const handleAddToCart = () => {
     if (onAddToCart) {
       // Fly animation from the main product image
@@ -229,7 +242,20 @@ export function ProductPageMinimal({
         images[selectedImage]?.url || product.imageUrl || "",
       );
 
-      onAddToCart(product, selectedVariants);
+      // Add the main product directly with the modifier-adjusted price
+      addItem(
+        {
+          id: product.id,
+          name: product.name,
+          price: displayPrice,
+          stock: product.stock,
+          imageUrl: product.imageUrl,
+          categoryName: product.categoryName ?? undefined,
+          available: product.available,
+        },
+        quantity,
+        selectedVariants,
+      );
 
       // Also add selected add-on products from inline carousels
       if (selectedAddOns.size > 0 && categoryGroups) {
@@ -274,10 +300,6 @@ export function ProductPageMinimal({
       onImageClick(images[index]?.url || "", index);
     }
   };
-
-  const displayPrice = hasDiscount
-    ? (product.discountPrice as number)
-    : product.price;
 
   // Bottom carousel: use allProducts or fall back to relatedProducts
   const bottomCarouselProducts = (

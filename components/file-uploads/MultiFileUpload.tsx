@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "../ui/input";
 import { toast } from "sonner";
-import { Loader2Icon, Upload, X } from "lucide-react";
+import { Loader2Icon, Upload, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "../ui/button";
 
 interface FileMetadata {
@@ -131,6 +131,14 @@ export const MultiFileUploadInput = ({
     }
   };
 
+  const moveImage = (index: number, direction: "left" | "right") => {
+    const newFiles = [...value];
+    const targetIndex = direction === "left" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newFiles.length) return;
+    [newFiles[index], newFiles[targetIndex]] = [newFiles[targetIndex]!, newFiles[index]!];
+    onChange(newFiles);
+  };
+
   const removeFile = (fileId: string) => {
     const newFiles = value.filter((file) => file.id !== fileId);
 
@@ -226,6 +234,26 @@ export const MultiFileUploadInput = ({
                 </div>
               )}
               <div className="absolute p-2 inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                <div className="flex gap-1 w-full">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="flex-1 text-[8px] px-1"
+                    disabled={index === 0}
+                    onClick={() => moveImage(index, "left")}
+                  >
+                    <ChevronLeft className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="flex-1 text-[8px] px-1"
+                    disabled={index === value.length - 1}
+                    onClick={() => moveImage(index, "right")}
+                  >
+                    <ChevronRight className="h-3 w-3" />
+                  </Button>
+                </div>
                 {!file.isPrimary && (
                   <Button
                     size="sm"
@@ -248,6 +276,11 @@ export const MultiFileUploadInput = ({
               {file.isPrimary && (
                 <div className="absolute top-0 left-0 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-br">
                   Primary
+                </div>
+              )}
+              {!file.isPrimary && (
+                <div className="absolute top-0 left-0 bg-black/40 text-white text-xs px-1.5 py-0.5 rounded-br">
+                  #{index + 1}
                 </div>
               )}
             </div>

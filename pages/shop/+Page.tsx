@@ -59,6 +59,12 @@ export default function ShopPage() {
       return;
     }
 
+    // Reset to prevent stale categoryId from blocking the fetch guard
+    // until the new categoryParam resolves
+    setCategoryId(undefined);
+    setCategoryName(undefined);
+    setCurrentPage(1);
+
     let cancelled = false;
 
     const resolve = async () => {

@@ -10,6 +10,7 @@ import { Input } from "#root/components/ui/input";
 import { Separator } from "#root/components/ui/separator";
 import { Trash2, Plus, Minus, ShoppingCart, ArrowRight } from "lucide-react";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
+import { usePageContext } from "vike-react/usePageContext";
 
 /**
  * Cart item interface
@@ -68,6 +69,8 @@ export function CartPageModernTemplate({
 }: CartPageModernTemplateProps) {
   const [couponCode, setCouponCode] = React.useState("");
   const { t } = useMinimalI18n();
+  const pageContext = usePageContext() as { clientSession?: { role?: string } };
+  const isAdmin = pageContext?.clientSession?.role === "admin";
 
   const handleApplyCoupon = () => {
     if (couponCode.trim() && onApplyCoupon) {
@@ -144,7 +147,7 @@ export function CartPageModernTemplate({
                       {currency}
                       {item.price.toFixed(2)}
                     </p>
-                    {item.stock !== null && item.stock !== undefined && (
+                    {item.stock !== null && item.stock !== undefined && (isAdmin || item.stock <= 0) && (
                       <p className='text-sm text-muted-foreground mt-1'>
                         {item.stock > 0
                           ? t("cart.in_stock").replace("{count}", String(item.stock))

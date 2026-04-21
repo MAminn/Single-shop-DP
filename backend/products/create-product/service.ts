@@ -27,7 +27,15 @@ export const createProductSchema = z.object({
     .array(
       z.object({
         name: z.string().nonempty().max(255),
-        values: z.array(z.string().nonempty().max(255)),
+        values: z.array(
+          z.union([
+            z.string().nonempty().max(255),
+            z.object({
+              value: z.string().nonempty().max(255),
+              priceModifier: z.number().min(0).max(100000).optional(),
+            }),
+          ]),
+        ),
       }),
     )
     .optional(),
@@ -108,12 +116,14 @@ export const createProduct = (
 
           // Handle product images
           if (data.productImages && data.productImages.length > 0) {
-            // Add all product images
-            for (const img of data.productImages) {
+            // Add all product images with sortOrder from array index
+            for (let i = 0; i < data.productImages.length; i++) {
+              const img = data.productImages[i]!;
               await tx.insert(productImage).values({
                 productId: newProduct.id,
                 fileId: img.id,
                 isPrimary: img.isPrimary || false,
+                sortOrder: i,
               });
             }
           } else if (data.imageId) {
@@ -122,6 +132,7 @@ export const createProduct = (
               productId: newProduct.id,
               fileId: data.imageId,
               isPrimary: true,
+              sortOrder: 0,
             });
           }
 
@@ -133,7 +144,10 @@ export const createProduct = (
                 data.variants.map((variant) => {
                   return {
                     name: variant.name,
-                    values: variant.values,
+                    // Normalize: string values → {value, priceModifier: 0}
+                    values: variant.values.map((v) =>
+                      typeof v === "string" ? { value: v, priceModifier: 0 } : v,
+                    ),
                     productId: newProduct.id,
                   };
                 }),

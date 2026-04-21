@@ -207,6 +207,7 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
           .from(productImage)
           .innerJoin(file, eq(productImage.fileId, file.id))
           .where(inArray(productImage.productId, productIds))
+          .orderBy(productImage.sortOrder, productImage.isPrimary)
           .execute();
 
         // Fetch all categories for these products

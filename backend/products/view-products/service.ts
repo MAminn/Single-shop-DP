@@ -163,9 +163,14 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
                 name: formatCategoryName(productData.category.name),
               },
               categories: associatedCategories,
-              variants: variants.filter(
-                (variant) => variant.productId === productData.product.id,
-              ),
+              variants: variants
+                .filter((variant) => variant.productId === productData.product.id)
+                .map((v) => ({
+                  name: v.name,
+                  values: (v.values as any[]).map((val) =>
+                    typeof val === "string" ? { value: val, priceModifier: 0 } : val,
+                  ),
+                })),
             };
           });
 

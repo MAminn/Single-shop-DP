@@ -28,7 +28,15 @@ export const editProductSchema = z.object({
     .array(
       z.object({
         name: z.string().nonempty().max(255),
-        values: z.array(z.string().nonempty().max(255)),
+        values: z.array(
+          z.union([
+            z.string().nonempty().max(255),
+            z.object({
+              value: z.string().nonempty().max(255),
+              priceModifier: z.number().min(0).max(100000).optional(),
+            }),
+          ]),
+        ),
       }),
     )
     .optional(),
@@ -129,12 +137,14 @@ export const editProduct = (
               .delete(productImage)
               .where(eq(productImage.productId, data.id));
 
-            // Then add the new images
-            for (const img of data.productImages) {
+            // Then add the new images with sortOrder from array index
+            for (let i = 0; i < data.productImages.length; i++) {
+              const img = data.productImages[i]!;
               await tx.insert(productImage).values({
                 productId: data.id,
                 fileId: img.id,
                 isPrimary: img.isPrimary || false,
+                sortOrder: i,
               });
             }
           }
@@ -173,19 +183,24 @@ export const editProduct = (
                   )
                   .then((data) => data[0]);
 
+                // Normalize: string values → {value, priceModifier: 0}
+                const normalizedValues = variant.values.map((v) =>
+                  typeof v === "string" ? { value: v, priceModifier: 0 } : v,
+                );
+
                 if (existingVariant) {
                   // Update existing variant
                   await tx
                     .update(productVariant)
                     .set({
-                      values: variant.values,
+                      values: normalizedValues,
                     })
                     .where(eq(productVariant.id, existingVariant.id));
                 } else {
                   // Insert new variant
                   await tx.insert(productVariant).values({
                     name: variant.name,
-                    values: variant.values,
+                    values: normalizedValues,
                     productId: data.id,
                   });
                 }

@@ -1,8 +1,14 @@
 import { cn } from "#root/lib/utils";
+import { STORE_CURRENCY } from "#root/shared/config/branding";
+
+export interface VariantValue {
+  value: string;
+  priceModifier?: number;
+}
 
 export interface VariantOption {
   name: string;
-  values: string[];
+  values: VariantValue[];
 }
 
 interface VariantSelectorProps {
@@ -36,7 +42,9 @@ export function VariantSelector({
               )}
             </p>
             <div className='flex flex-wrap gap-2'>
-              {variant.values.map((value) => {
+              {variant.values.map((variantValue) => {
+                const value = variantValue.value;
+                const modifier = variantValue.priceModifier ?? 0;
                 const isSelected = selectedVariants[variant.name] === value;
                 const isStrikethrough = strikes.includes(value);
                 return (
@@ -52,6 +60,11 @@ export function VariantSelector({
                       isStrikethrough && "line-through opacity-60",
                     )}>
                     {value}
+                    {modifier > 0 && (
+                      <span className={cn("ml-1 text-xs", isSelected ? "text-gray-300" : "text-gray-500")}>
+                        +{modifier} {STORE_CURRENCY}
+                      </span>
+                    )}
                   </button>
                 );
               })}

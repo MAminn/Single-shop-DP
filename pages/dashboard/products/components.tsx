@@ -32,7 +32,7 @@ import {
 import { Check, ChevronsUpDown, XIcon, Zap, Palette } from "lucide-react";
 import { FileUploadInput } from "#root/components/file-uploads/FileUpload";
 import { MultiFileUploadInput } from "#root/components/file-uploads/MultiFileUpload";
-import { TagsInput } from "#root/components/ui/tags-input";
+
 import { Label } from "#root/components/ui/label";
 import { Badge } from "#root/components/ui/badge";
 import { trpc } from "#root/shared/trpc/client";
@@ -63,7 +63,7 @@ export function ProductForm({
     productImages: FileMetadata[];
     categoryId: string;
     categoryIds: string[];
-    variants: { name: string; values: string[] }[];
+    variants: { name: string; values: { value: string; priceModifier?: number }[] }[];
     inspiredBy?: string;
     sortOrder?: number;
   }>;
@@ -105,7 +105,12 @@ export function ProductForm({
       .array(
         z.object({
           name: z.string(),
-          values: z.array(z.string()),
+          values: z.array(
+            z.object({
+              value: z.string(),
+              priceModifier: z.number().min(0).optional(),
+            }),
+          ),
         }),
       )
       .optional(),
@@ -621,8 +626,8 @@ export function VariantsInput({
   value,
   onChange,
 }: {
-  value: { name: string; values: string[] }[] | undefined;
-  onChange: (value: { name: string; values: string[] }[]) => void;
+  value: { name: string; values: { value: string; priceModifier?: number }[] }[] | undefined;
+  onChange: (value: { name: string; values: { value: string; priceModifier?: number }[] }[]) => void;
 }) {
   // Ensure value is always an array
   const variants = value || [];
@@ -643,7 +648,7 @@ export function VariantsInput({
           if ((!value || value.length === 0) && fetched.length > 0) {
             const autoApplied = fetched.map((p) => ({
               name: p.name,
-              values: [...p.values],
+              values: p.values.map((v) => ({ value: v, priceModifier: 0 })),
             }));
             onChange(autoApplied);
           }
@@ -658,16 +663,21 @@ export function VariantsInput({
       (v) => v.name.toLowerCase() === preset.name.toLowerCase(),
     );
     if (existingIndex >= 0) {
-      // Merge values
+      // Merge values (preserve existing modifiers, add new values with 0 modifier)
       const existing = variants[existingIndex]!;
-      const merged = [
-        ...new Set([...existing.values, ...preset.values]),
-      ];
+      const existingValueStrings = existing.values.map((v) => v.value);
+      const newVals = preset.values
+        .filter((v) => !existingValueStrings.includes(v))
+        .map((v) => ({ value: v, priceModifier: 0 }));
+      const merged = [...existing.values, ...newVals];
       const newValue = [...variants];
       newValue[existingIndex] = { ...existing, values: merged };
       onChange(newValue);
     } else {
-      onChange([...variants, { name: preset.name, values: [...preset.values] }]);
+      onChange([
+        ...variants,
+        { name: preset.name, values: preset.values.map((v) => ({ value: v, priceModifier: 0 })) },
+      ]);
     }
     setPresetsOpen(false);
     toast.success(`Applied "${preset.name}" preset`);
@@ -753,9 +763,9 @@ export function VariantInput({
 }: {
   value: {
     name: string;
-    values: string[];
+    values: { value: string; priceModifier?: number }[];
   };
-  onChange: (value: { name: string; values: string[] }) => void;
+  onChange: (value: { name: string; values: { value: string; priceModifier?: number }[] }) => void;
 }) {
   return (
     <div className='flex flex-col gap-2'>
@@ -768,14 +778,64 @@ export function VariantInput({
       </div>
 
       <div className='flex flex-col gap-1'>
-        <Label>Values</Label>
-        <TagsInput
-          className='outline-1 border-none'
-          value={value.values}
-          onValueChange={(v) => onChange({ ...value, values: v })}
-        />
-        <p className='text-sm text-muted-foreground'>
-          Press Enter to add a value
+        <Label>Values & Price Modifiers</Label>
+        <div className='space-y-2'>
+          {value.values.map((vv, idx) => (
+            <div key={idx} className='flex items-center gap-2'>
+              <Input
+                className='flex-1'
+                placeholder='Value (e.g. 100ml)'
+                value={vv.value}
+                onChange={(e) => {
+                  const updated = [...value.values];
+                  updated[idx] = { ...vv, value: e.target.value };
+                  onChange({ ...value, values: updated });
+                }}
+              />
+              <div className='flex items-center gap-1 w-36 flex-shrink-0'>
+                <span className='text-xs text-muted-foreground'>+</span>
+                <Input
+                  type='number'
+                  min={0}
+                  placeholder='0'
+                  className='w-full'
+                  value={vv.priceModifier ?? 0}
+                  onChange={(e) => {
+                    const updated = [...value.values];
+                    updated[idx] = { ...vv, priceModifier: Number(e.target.value) || 0 };
+                    onChange({ ...value, values: updated });
+                  }}
+                />
+                <span className='text-xs text-muted-foreground whitespace-nowrap'>EGP</span>
+              </div>
+              <Button
+                type='button'
+                size='icon'
+                variant='ghost'
+                className='h-8 w-8 text-destructive hover:text-destructive flex-shrink-0'
+                onClick={() => {
+                  const updated = value.values.filter((_, i) => i !== idx);
+                  onChange({ ...value, values: updated });
+                }}>
+                <XIcon className='w-3.5 h-3.5' />
+              </Button>
+            </div>
+          ))}
+          <Button
+            type='button'
+            size='sm'
+            variant='outline'
+            onClick={() =>
+              onChange({
+                ...value,
+                values: [...value.values, { value: '', priceModifier: 0 }],
+              })
+            }>
+            + Add Value
+          </Button>
+        </div>
+        <p className='text-xs text-muted-foreground'>
+          Set a price modifier (e.g. +50 EGP for 100ml) — added on top of base price
         </p>
       </div>
     </div>

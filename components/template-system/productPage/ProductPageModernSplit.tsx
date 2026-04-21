@@ -65,7 +65,7 @@ export interface ProductPageProduct extends FeaturedProduct {
   brand?: string;
   specifications?: ProductSpecification[];
   features?: ProductFeature[];
-  variants?: { name: string; values: string[] }[];
+  variants?: { name: string; values: { value: string; priceModifier?: number }[] }[];
 }
 
 /**
