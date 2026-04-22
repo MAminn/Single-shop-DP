@@ -13,6 +13,7 @@ import {
 } from "#root/shared/email/service.js";
 import { EmailVerificationTemplate } from "./email-template";
 import { MinimalEmailVerificationTemplate } from "#root/backend/emails/minimal/email-verification";
+import { ComingSoonWelcomeTemplate } from "#root/backend/emails/minimal/coming-soon-welcome";
 import { getEmailBranding } from "#root/backend/emails/branding";
 
 export const registerSchema = z
@@ -160,6 +161,49 @@ export const register = ({
         // Log error but don't expose to client - they'll still be able to use the system
         // and request a new verification email if needed
         console.error("Failed to send verification email:", error);
+      }
+    }
+
+    // If coming-soon mode is active and this is a regular user, send welcome email
+    if (role === "user") {
+      try {
+        const comingSoonRow = yield* $(
+          query(async (db) =>
+            db
+              .select({ comingSoonMode: Tables.storeSettings.comingSoonMode })
+              .from(Tables.storeSettings)
+              .where(eq(Tables.storeSettings.key, "default"))
+              .limit(1),
+          ),
+        );
+        const comingSoonActive = comingSoonRow[0]?.comingSoonMode ?? false;
+
+        if (comingSoonActive) {
+          const emailService = yield* $(EmailService);
+          const branding = yield* $(Effect.promise(() => getEmailBranding()));
+          const welcomeEmailHtml = yield* $(
+            renderEmailTemplate(
+              ComingSoonWelcomeTemplate({
+                storeName: branding.storeName,
+                logoUrl: branding.logoUrl,
+                userName: newUser.name,
+              }),
+            ),
+          );
+          try {
+            yield* $(
+              emailService.sendEmail(
+                newUser.email,
+                `Welcome to ${branding.storeName} — We'll be in touch!`,
+                welcomeEmailHtml,
+              ),
+            );
+          } catch (err) {
+            console.error("Failed to send coming-soon welcome email:", err);
+          }
+        }
+      } catch (err) {
+        console.error("Error checking coming-soon mode:", err);
       }
     }
 

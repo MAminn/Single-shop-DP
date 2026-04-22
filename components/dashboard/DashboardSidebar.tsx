@@ -82,6 +82,11 @@ export function DashboardSidebar() {
       icon: Star,
     },
     {
+      label: "Users",
+      href: "/dashboard/users",
+      icon: Users,
+    },
+    {
       label: "Homepage",
       href: "/dashboard/admin/homepage",
       icon: Home,

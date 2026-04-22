@@ -26,9 +26,9 @@
 /* Body/description text in the minimal template uses Poppins instead of LaRojaTV.
    Headings, buttons, nav links keep the branded font. */
 /* Arabic text uses Rubik for better Arabic readability — enforced on ALL elements */
-.minimal-template[dir="rtl"],
-.minimal-template [dir="rtl"],
-.minimal-template:where([dir="rtl"]) * {
+/* NOTE: dir="rtl" is set on <html> by MinimalI18nProvider, so selectors must be html[dir="rtl"] */
+html[dir="rtl"] .minimal-template,
+html[dir="rtl"] .minimal-template * {
   font-family: "Rubik", "Poppins", sans-serif !important;
 }
 
@@ -41,61 +41,13 @@
   font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Arabic body text also uses Rubik — overrides Poppins body rule */
-.minimal-template[dir="rtl"] p,
-.minimal-template[dir="rtl"] dd,
-.minimal-template[dir="rtl"] li,
-.minimal-template[dir="rtl"] td,
-.minimal-template[dir="rtl"] blockquote,
-.minimal-template[dir="rtl"] figcaption,
-.minimal-template[dir="rtl"] h1,
-.minimal-template[dir="rtl"] h2,
-.minimal-template[dir="rtl"] h3,
-.minimal-template[dir="rtl"] h4,
-.minimal-template[dir="rtl"] h5,
-.minimal-template[dir="rtl"] h6,
-.minimal-template[dir="rtl"] button,
-.minimal-template[dir="rtl"] input,
-.minimal-template[dir="rtl"] select,
-.minimal-template[dir="rtl"] textarea,
-.minimal-template[dir="rtl"] a,
-.minimal-template[dir="rtl"] span,
-.minimal-template[dir="rtl"] label,
-.minimal-template [dir="rtl"] p,
-.minimal-template [dir="rtl"] dd,
-.minimal-template [dir="rtl"] li,
-.minimal-template [dir="rtl"] td,
-.minimal-template [dir="rtl"] blockquote,
-.minimal-template [dir="rtl"] figcaption,
-.minimal-template [dir="rtl"] h1,
-.minimal-template [dir="rtl"] h2,
-.minimal-template [dir="rtl"] h3,
-.minimal-template [dir="rtl"] h4,
-.minimal-template [dir="rtl"] h5,
-.minimal-template [dir="rtl"] h6,
-.minimal-template [dir="rtl"] button,
-.minimal-template [dir="rtl"] input,
-.minimal-template [dir="rtl"] select,
-.minimal-template [dir="rtl"] textarea,
-.minimal-template [dir="rtl"] a,
-.minimal-template [dir="rtl"] span,
-.minimal-template [dir="rtl"] label {
-  font-family: "Rubik", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-}
-
 /* Arabic headings always use Rubik medium (500) for optimal readability */
-.minimal-template[dir="rtl"] h1,
-.minimal-template[dir="rtl"] h2,
-.minimal-template[dir="rtl"] h3,
-.minimal-template[dir="rtl"] h4,
-.minimal-template[dir="rtl"] h5,
-.minimal-template[dir="rtl"] h6,
-.minimal-template [dir="rtl"] h1,
-.minimal-template [dir="rtl"] h2,
-.minimal-template [dir="rtl"] h3,
-.minimal-template [dir="rtl"] h4,
-.minimal-template [dir="rtl"] h5,
-.minimal-template [dir="rtl"] h6 {
+html[dir="rtl"] .minimal-template h1,
+html[dir="rtl"] .minimal-template h2,
+html[dir="rtl"] .minimal-template h3,
+html[dir="rtl"] .minimal-template h4,
+html[dir="rtl"] .minimal-template h5,
+html[dir="rtl"] .minimal-template h6 {
   font-weight: 500 !important;
 }
 
@@ -410,6 +362,20 @@ html[data-has-template-newsletter] [data-footer-newsletter] {
 }
 .animate-marquee {
   animation: marquee var(--marquee-duration, 240s) linear infinite;
+}
+
+/* ── Marquee half — for doubled-item lists (testimonials etc.)
+   Translates only -50% so the loop is seamless with no blank gap ── */
+@keyframes marquee-half {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+.animate-marquee-half {
+  animation: marquee-half var(--marquee-duration, 240s) linear infinite;
 }
 
 /* ── Hero carousel fade ── */

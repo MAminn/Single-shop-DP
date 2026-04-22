@@ -3,10 +3,15 @@ import { storeSettings } from "#root/shared/database/drizzle/schema";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 
+interface PresetValue {
+  value: string;
+  priceModifier?: number;
+}
+
 interface VariantPreset {
   id: string;
   name: string;
-  values: string[];
+  values: PresetValue[];
   defaultValue?: string;
   strikethroughValues?: string[];
 }

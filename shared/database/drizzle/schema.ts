@@ -1204,7 +1204,8 @@ export const storeSettings = pgTable("store_settings", {
   linkTreeConfig: jsonb("link_tree_config").default({}),
   variantPresets: jsonb("variant_presets")
     .default([])
-    .$type<Array<{ id: string; name: string; values: string[]; defaultValue?: string; strikethroughValues?: string[] }>>(),
+    .$type<Array<{ id: string; name: string; values: Array<{ value: string; priceModifier?: number }>; defaultValue?: string; strikethroughValues?: string[] }>>(),
+  comingSoonMode: boolean("coming_soon_mode").notNull().default(false),
   updatedAt: timestamp("updated_at", {
     withTimezone: true,
     mode: "date",

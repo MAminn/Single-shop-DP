@@ -137,13 +137,13 @@ export function HeroCarousel({
         <>
           <button
             onClick={prev}
-            className='absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-white/20 backdrop-blur-sm hover:bg-white/40 transition-colors rounded-full'
+            className='absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 hidden md:flex w-10 h-10 sm:w-12 sm:h-12 items-center justify-center bg-white/20 backdrop-blur-sm hover:bg-white/40 transition-colors rounded-full'
             aria-label='Previous slide'>
             <ChevronLeft className='w-5 h-5 sm:w-6 sm:h-6 text-white' />
           </button>
           <button
             onClick={next}
-            className='absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-white/20 backdrop-blur-sm hover:bg-white/40 transition-colors rounded-full'
+            className='absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 hidden md:flex w-10 h-10 sm:w-12 sm:h-12 items-center justify-center bg-white/20 backdrop-blur-sm hover:bg-white/40 transition-colors rounded-full'
             aria-label='Next slide'>
             <ChevronRight className='w-5 h-5 sm:w-6 sm:h-6 text-white' />
           </button>

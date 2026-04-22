@@ -15,11 +15,22 @@ export const getVariantPresets = () =>
       ),
     );
 
-    return (rows[0]?.variantPresets ?? []) as Array<{
+    type PresetValue = { value: string; priceModifier?: number };
+    type Preset = { id: string; name: string; values: PresetValue[]; defaultValue?: string; strikethroughValues?: string[] };
+
+    const raw = (rows[0]?.variantPresets ?? []) as Array<{
       id: string;
       name: string;
-      values: string[];
+      values: (string | PresetValue)[];
       defaultValue?: string;
       strikethroughValues?: string[];
     }>;
+
+    // Normalize: old presets stored values as plain strings — convert to objects
+    return raw.map((p) => ({
+      ...p,
+      values: p.values.map((v) =>
+        typeof v === "string" ? { value: v } : v,
+      ) as PresetValue[],
+    })) as Preset[];
   });

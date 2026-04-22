@@ -20,6 +20,7 @@ import { paymentRouter } from "#root/backend/payments/trpc";
 import { settingsRouter } from "#root/backend/settings/trpc";
 import { analyticsRouter } from "#root/backend/analytics/trpc";
 import { contactRouter } from "#root/backend/contact/trpc";
+import { usersRouter } from "#root/backend/users/trpc";
 import { publicProcedure, router, t } from "./server";
 
 const authRouter = t.router({
@@ -50,6 +51,7 @@ export const appRouter = router({
   settings: settingsRouter,
   analytics: analyticsRouter,
   contact: contactRouter,
+  users: usersRouter,
 });
 
 export type AppRouter = typeof appRouter;

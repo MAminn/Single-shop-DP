@@ -84,7 +84,7 @@ export function MinimalRegisterPage() {
     <section className='min-h-screen flex items-center justify-center bg-white px-4 py-12'>
       <div className='w-full max-w-[480px]'>
         {/* Card */}
-        <div className='border border-stone-200 bg-white p-8 sm:p-10'>
+        <div className='border border-stone-200 bg-white p-8 sm:p-12'>
           {isRegistered ? (
             /* Success state */
             <div className='flex flex-col items-center gap-5 text-center py-6'>
@@ -109,16 +109,16 @@ export function MinimalRegisterPage() {
           ) : (
             <>
               {/* Header */}
-              <div className='text-center mb-8'>
-                <h1 className='text-2xl sm:text-[28px] font-light text-stone-900 tracking-tight mb-2'>
+              <div className='text-center mb-10'>
+                <h1 className='text-2xl sm:text-[28px] font-light text-stone-900 tracking-tight mb-3'>
                   {t("register.title")}
                 </h1>
                 <p className='text-sm text-stone-500'>{t("register.subtitle")}</p>
               </div>
 
-              <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-5'>
+              <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-7'>
                 {/* Name + Email side-by-side on sm+ */}
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-7'>
                   {/* Name */}
                   <div>
                     <label
@@ -187,7 +187,7 @@ export function MinimalRegisterPage() {
                 </div>
 
                 {/* Password + Confirm side-by-side on sm+ */}
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-7'>
                   {/* Password */}
                   <div>
                     <label

@@ -51,6 +51,9 @@ function Content({ children }: { children: React.ReactNode }) {
     if (pathname.includes("/dashboard/reviews")) {
       return "reviews";
     }
+    if (pathname.includes("/dashboard/users")) {
+      return "users";
+    }
     if (pathname.includes("/dashboard/admin/homepage")) {
       return "homepage";
     }
@@ -94,6 +97,10 @@ function Content({ children }: { children: React.ReactNode }) {
           {
             label: "Settings",
             href: "/dashboard/settings",
+          },
+          {
+            label: "Users",
+            href: "/dashboard/users",
           },
         ]
       : []),

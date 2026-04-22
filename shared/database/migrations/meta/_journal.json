@@ -183,6 +183,13 @@
       "when": 1776783177891,
       "tag": "0025_conscious_spitfire",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1776864322895,
+      "tag": "0026_confused_wither",
+      "breakpoints": true
     }
   ]
 }

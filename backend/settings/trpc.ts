@@ -17,6 +17,8 @@ import { getLinkTreeConfig } from "./get-link-tree-config";
 import { updateLinkTreeConfig } from "./update-link-tree-config";
 import { getVariantPresets } from "./get-variant-presets";
 import { updateVariantPresets } from "./update-variant-presets";
+import { getComingSoonMode } from "./get-coming-soon";
+import { setComingSoonMode } from "./set-coming-soon";
 import { linkTreeConfigSchema } from "#root/shared/types/link-tree";
 
 export const settingsRouter = router({
@@ -83,7 +85,12 @@ export const settingsRouter = router({
           z.object({
             id: z.string(),
             name: z.string().min(1).max(255),
-            values: z.array(z.string().min(1).max(255)),
+            values: z.array(
+              z.object({
+                value: z.string().min(1).max(255),
+                priceModifier: z.number().optional(),
+              }),
+            ),
             defaultValue: z.string().max(255).optional(),
             strikethroughValues: z.array(z.string().max(255)).optional(),
           }),
@@ -93,6 +100,22 @@ export const settingsRouter = router({
     .mutation(async ({ ctx, input }) => {
       return runBackendEffect(
         updateVariantPresets(input.presets).pipe(provideDatabase(ctx)),
+      ).then(serializeBackendEffectResult);
+    }),
+
+  /** Public: anyone can check coming-soon mode (used by storefront) */
+  getComingSoonMode: publicProcedure.query(async ({ ctx }) => {
+    return runBackendEffect(
+      getComingSoonMode().pipe(provideDatabase(ctx)),
+    ).then(serializeBackendEffectResult);
+  }),
+
+  /** Admin-only: toggle coming-soon mode */
+  setComingSoonMode: adminProcedure
+    .input(z.object({ enabled: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      return runBackendEffect(
+        setComingSoonMode(input.enabled).pipe(provideDatabase(ctx)),
       ).then(serializeBackendEffectResult);
     }),
 });

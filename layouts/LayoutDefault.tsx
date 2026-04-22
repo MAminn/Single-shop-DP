@@ -2,9 +2,10 @@ import Navbar from "#root/components/globals/Navbar.jsx";
 import { EditorialNavbar } from "#root/components/template-system/editorial/EditorialNavbar";
 import { MinimalNavbar } from "#root/components/template-system/minimal/MinimalNavbar";
 import { MinimalFooter } from "#root/components/template-system/minimal/MinimalFooter";
+import { MinimalComingSoonPage } from "#root/components/template-system/minimal/MinimalComingSoonPage";
 import { MinimalI18nProvider } from "#root/lib/i18n/MinimalI18nContext";
 import { Footer } from "#root/components/globals/Footer";
-import { useEffect, useState, memo } from "react";
+import { useContext, useEffect, useState, memo } from "react";
 import "./style.css";
 import { trpc } from "#root/shared/trpc/client.js";
 import { toast, Toaster } from "sonner";
@@ -192,6 +193,26 @@ function LayoutShell({
 
   const isMinimal = layoutSettings.header.navbarStyle === "minimal";
 
+  // ── Coming-soon gate (minimal template only) ──────────────────────────────
+  const { session } = useContext(AuthContext);
+  const isAdmin = session?.role === "admin";
+  const [comingSoonMode, setComingSoonMode] = useState(false);
+  const BYPASS_PATHS = ["/login", "/register", "/api", "/dashboard"];
+
+  useEffect(() => {
+    if (!isMinimal) return;
+    trpc.settings.getComingSoonMode.query().then((res) => {
+      if (res.success) setComingSoonMode(res.result);
+    }).catch(() => {});
+  }, [isMinimal]);
+
+  const shouldShowComingSoon =
+    isMinimal &&
+    !isDashboardRoute &&
+    comingSoonMode &&
+    !isAdmin &&
+    !BYPASS_PATHS.some((p) => pageContext.urlPathname.startsWith(p));
+
   const renderNavbar = () => {
     switch (layoutSettings.header.navbarStyle) {
       case "editorial":
@@ -202,6 +223,19 @@ function LayoutShell({
         return <Navbar lang='en' />;
     }
   };
+
+  // If coming-soon mode is active for a non-admin, show the coming-soon page
+  if (shouldShowComingSoon) {
+    return isMinimal ? (
+      <MinimalI18nProvider overrides={layoutSettings.translationOverrides}>
+        <LayoutSettingsContext.Provider value={layoutSettings}>
+          <MinimalComingSoonPage />
+          <Toaster />
+          <ShadcnToaster />
+        </LayoutSettingsContext.Provider>
+      </MinimalI18nProvider>
+    ) : null;
+  }
 
   const inner = (
     <LayoutSettingsContext.Provider value={layoutSettings}>

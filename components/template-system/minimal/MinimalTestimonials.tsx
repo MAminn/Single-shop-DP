@@ -84,8 +84,14 @@ export function MinimalTestimonialsSection() {
       .catch(() => {});
   }, [isAr]);
 
-  // Duplicate testimonials once so the marquee loops seamlessly
-  const loopItems = [...testimonials, ...testimonials];
+  // Ensure the track is always wide enough to fill the viewport seamlessly.
+  // We need each "half" of the doubled list to be at least ~viewport-wide.
+  // A card is ~344px (320 + 24 margin). 8 cards ≈ 2752px > any common viewport.
+  const MIN_PER_HALF = 8;
+  const repeatCount = Math.ceil(MIN_PER_HALF / Math.max(1, testimonials.length));
+  const singleSet = Array.from({ length: repeatCount }, () => testimonials).flat();
+  // Doubled so translate(-50%) lands exactly at the start of the second copy
+  const loopItems = [...singleSet, ...singleSet];
 
   return (
     <section className="py-14 sm:py-20 bg-stone-50 overflow-hidden">
@@ -107,13 +113,13 @@ export function MinimalTestimonialsSection() {
           }}
         >
           <div
-            className="flex gap-6 w-max animate-marquee hover:[animation-play-state:paused]"
-            style={{ "--marquee-duration": `${testimonials.length * 6}s` } as React.CSSProperties}
+            className="flex w-max animate-marquee-half hover:[animation-play-state:paused]"
+            style={{ "--marquee-duration": `${singleSet.length * 10}s` } as React.CSSProperties}
           >
             {loopItems.map((item, i) => (
               <div
                 key={i}
-                className="flex-none w-[280px] sm:w-[320px] bg-white border border-stone-100 p-6 flex flex-col items-center text-center"
+                className="flex-none w-[280px] sm:w-[320px] mr-6 bg-white border border-stone-100 p-6 flex flex-col items-center text-center"
               >
                 <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mb-4">
                   <svg className="w-8 h-8 text-stone-400" fill="currentColor" viewBox="0 0 24 24">

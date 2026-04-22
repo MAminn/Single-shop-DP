@@ -13,7 +13,15 @@ import {
 import { Button } from "#root/components/ui/button";
 import { Input } from "#root/components/ui/input";
 import { Label } from "#root/components/ui/label";
-import { Loader2, Save, Truck, Plus, Trash2, Tags } from "lucide-react";
+import { Loader2, Save, Truck, Plus, Trash2, Tags, Globe, PackageX } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#root/components/ui/dialog";
 import { STORE_CURRENCY } from "#root/shared/config/branding";
 import { v7 } from "uuid";
 
@@ -23,18 +31,32 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Variant presets state
+  interface PresetValue {
+    value: string;
+    priceModifier?: number;
+  }
   interface VariantPreset {
     id: string;
     name: string;
-    values: string[];
+    values: PresetValue[];
     defaultValue?: string;
     strikethroughValues?: string[];
   }
   const [variantPresets, setVariantPresets] = useState<VariantPreset[]>([]);
   const [isSavingPresets, setIsSavingPresets] = useState(false);
-  const [newValueInputs, setNewValueInputs] = useState<Record<string, string>>(
-    {},
-  );
+  const [applyingPresetId, setApplyingPresetId] = useState<string | null>(null);
+  const [newValueInputs, setNewValueInputs] = useState<Record<string, string>>({});
+  const [newPriceInputs, setNewPriceInputs] = useState<Record<string, string>>({});
+  // Track names of presets removed during this editing session so we can clean up products on save
+  const [removedPresetNames, setRemovedPresetNames] = useState<string[]>([]);
+
+  // Delete preset dialog
+  const [deleteDialog, setDeleteDialog] = useState<{ preset: VariantPreset } | null>(null);
+  const [isDeletingPreset, setIsDeletingPreset] = useState<"settings-only" | "with-products" | null>(null);
+
+  // Coming-soon mode state
+  const [comingSoonMode, setComingSoonModeState] = useState(false);
+  const [isTogglingComingSoon, setIsTogglingComingSoon] = useState(false);
 
   // Fetch current shipping fee on mount
   useEffect(() => {
@@ -44,6 +66,9 @@ export default function SettingsPage() {
         const [feeResult, presetsResult] = await Promise.all([
           trpc.settings.getShippingFee.query(),
           trpc.settings.getVariantPresets.query(),
+          trpc.settings.getComingSoonMode.query().then((r) => {
+            if (r.success) setComingSoonModeState(r.result);
+          }).catch(() => {}),
         ]);
         if (cancelled) return;
         if (feeResult.success) {
@@ -95,8 +120,38 @@ export default function SettingsPage() {
     ]);
   };
 
-  const removePreset = (id: string) => {
-    setVariantPresets((prev) => prev.filter((p) => p.id !== id));
+  /** Immediately removes preset from DB. If withProducts=true also deletes the variant from all products. */
+  const deletePresetNow = async (preset: VariantPreset, withProducts: boolean) => {
+    setIsDeletingPreset(withProducts ? "with-products" : "settings-only");
+    try {
+      const remaining = variantPresets.filter((p) => p.id !== preset.id);
+      const valid = remaining.filter((p) => p.name.trim() && p.values.length > 0);
+      const saveResult = await trpc.settings.updateVariantPresets.mutate({ presets: valid });
+      if (!saveResult.success) throw new Error("Failed to update presets");
+
+      if (withProducts && preset.name.trim()) {
+        await trpc.product.removeVariantFromAllProducts.mutate({ name: preset.name });
+      }
+
+      // Re-fetch authoritative state
+      const fresh = await trpc.settings.getVariantPresets.query();
+      if (fresh.success) setVariantPresets(fresh.result as VariantPreset[]);
+
+      // Also remove from the tracked removedPresetNames if it was there
+      setRemovedPresetNames((prev) => prev.filter((n) => n !== preset.name));
+
+      toast.success(
+        withProducts
+          ? `"${preset.name}" deleted from settings and removed from all products`
+          : `"${preset.name}" removed from presets`,
+      );
+      setDeleteDialog(null);
+    } catch (err) {
+      console.error("Failed to delete preset:", err);
+      toast.error("Failed to delete preset");
+    } finally {
+      setIsDeletingPreset(null);
+    }
   };
 
   const updatePresetName = (id: string, name: string) => {
@@ -108,78 +163,125 @@ export default function SettingsPage() {
   const addPresetValue = (presetId: string) => {
     const val = (newValueInputs[presetId] ?? "").trim();
     if (!val) return;
+    const rawPrice = newPriceInputs[presetId]?.trim();
+    const priceModifier =
+      rawPrice ? (Number.isNaN(Number(rawPrice)) ? undefined : Number(rawPrice)) : undefined;
     setVariantPresets((prev) =>
       prev.map((p) =>
-        p.id === presetId && !p.values.includes(val)
-          ? { ...p, values: [...p.values, val] }
+        p.id === presetId && !p.values.some((v) => v.value === val)
+          ? { ...p, values: [...p.values, { value: val, priceModifier }] }
           : p,
       ),
     );
     setNewValueInputs((prev) => ({ ...prev, [presetId]: "" }));
+    setNewPriceInputs((prev) => ({ ...prev, [presetId]: "" }));
   };
 
-  const removePresetValue = (presetId: string, value: string) => {
+  const removePresetValue = (presetId: string, valueStr: string) => {
     setVariantPresets((prev) =>
       prev.map((p) =>
         p.id === presetId
           ? {
               ...p,
-              values: p.values.filter((v) => v !== value),
-              defaultValue: p.defaultValue === value ? undefined : p.defaultValue,
-              strikethroughValues: (p.strikethroughValues || []).filter((v) => v !== value),
+              values: p.values.filter((v) => v.value !== valueStr),
+              defaultValue: p.defaultValue === valueStr ? undefined : p.defaultValue,
+              strikethroughValues: (p.strikethroughValues || []).filter((v) => v !== valueStr),
             }
           : p,
       ),
     );
   };
 
-  const toggleDefaultValue = (presetId: string, value: string) => {
+  const toggleDefaultValue = (presetId: string, valueStr: string) => {
     setVariantPresets((prev) =>
       prev.map((p) =>
         p.id === presetId
-          ? { ...p, defaultValue: p.defaultValue === value ? undefined : value }
+          ? { ...p, defaultValue: p.defaultValue === valueStr ? undefined : valueStr }
           : p,
       ),
     );
   };
 
-  const toggleStrikethrough = (presetId: string, value: string) => {
+  const toggleStrikethrough = (presetId: string, valueStr: string) => {
     setVariantPresets((prev) =>
       prev.map((p) => {
         if (p.id !== presetId) return p;
         const current = p.strikethroughValues || [];
-        const has = current.includes(value);
+        const has = current.includes(valueStr);
         return {
           ...p,
           strikethroughValues: has
-            ? current.filter((v) => v !== value)
-            : [...current, value],
+            ? current.filter((v) => v !== valueStr)
+            : [...current, valueStr],
         };
       }),
     );
   };
 
+  /** Shared: saves valid presets to DB, removes deleted preset names from all products, then re-fetches to sync state */
+  const savePresetsAndCleanup = async (toRemoveNames: string[] = removedPresetNames) => {
+    const valid = variantPresets.filter((p) => p.name.trim() && p.values.length > 0);
+    const saveResult = await trpc.settings.updateVariantPresets.mutate({ presets: valid });
+    if (!saveResult.success) {
+      throw new Error("Failed to save variant presets");
+    }
+
+    // Remove deleted preset variants from all products
+    for (const name of toRemoveNames) {
+      try {
+        await trpc.product.removeVariantFromAllProducts.mutate({ name });
+      } catch (err) {
+        console.error(`Failed to remove variant "${name}" from products:`, err);
+      }
+    }
+    setRemovedPresetNames([]);
+
+    // Re-fetch from DB to get normalised, authoritative state
+    const fresh = await trpc.settings.getVariantPresets.query();
+    if (fresh.success) {
+      setVariantPresets(fresh.result as VariantPreset[]);
+    }
+  };
+
   const handleSavePresets = async () => {
-    // Filter out incomplete presets
-    const valid = variantPresets.filter(
-      (p) => p.name.trim() && p.values.length > 0,
-    );
     setIsSavingPresets(true);
     try {
-      const result = await trpc.settings.updateVariantPresets.mutate({
-        presets: valid,
-      });
-      if (result.success) {
-        toast.success("Variant presets saved");
-        setVariantPresets(result.result as typeof variantPresets);
-      } else {
-        toast.error("Failed to save variant presets");
-      }
+      await savePresetsAndCleanup();
+      toast.success("Variant presets saved");
     } catch (err) {
       console.error("Failed to save variant presets:", err);
       toast.error("Failed to save variant presets");
     } finally {
       setIsSavingPresets(false);
+    }
+  };
+
+  const handleApplyPresetToAll = async (presetId: string) => {
+    const preset = variantPresets.find((p) => p.id === presetId);
+    if (!preset || !preset.name.trim() || preset.values.length === 0) {
+      toast.error("Add a name and at least one value before applying");
+      return;
+    }
+    setApplyingPresetId(presetId);
+    try {
+      // Save + cleanup first so the preset persists in DB
+      await savePresetsAndCleanup([]);
+
+      // Apply this specific preset to all products
+      const result = await trpc.product.applyPresetToAll.mutate({
+        name: preset.name,
+        values: preset.values,
+      });
+      if (result.success) {
+        toast.success(`Saved & applied "${preset.name}" to ${result.result.updatedCount} products`);
+      } else {
+        toast.error("Failed to apply preset to products");
+      }
+    } catch (err) {
+      console.error("Failed to apply preset to all products:", err);
+      toast.error("Failed to apply preset to products");
+    } finally {
+      setApplyingPresetId(null);
     }
   };
 
@@ -280,20 +382,34 @@ export default function SettingsPage() {
                   className='flex-1'
                 />
                 <Button
+                  variant='outline'
+                  size='sm'
+                  title='Apply this preset to ALL products (adds or updates this variant on every product)'
+                  disabled={applyingPresetId === preset.id}
+                  onClick={() => handleApplyPresetToAll(preset.id)}
+                  className='h-8 text-xs'>
+                  {applyingPresetId === preset.id ? (
+                    <Loader2 className='h-3 w-3 animate-spin' />
+                  ) : (
+                    "Apply to All"
+                  )}
+                </Button>
+                <Button
                   variant='ghost'
                   size='icon'
-                  onClick={() => removePreset(preset.id)}
+                  title='Delete preset'
+                  onClick={() => setDeleteDialog({ preset })}
                   className='text-destructive hover:text-destructive h-8 w-8'>
                   <Trash2 className='h-4 w-4' />
                 </Button>
               </div>
               <div className='flex flex-wrap gap-1.5'>
                 {preset.values.map((val) => {
-                  const isDefault = preset.defaultValue === val;
-                  const isStrikethrough = (preset.strikethroughValues || []).includes(val);
+                  const isDefault = preset.defaultValue === val.value;
+                  const isStrikethrough = (preset.strikethroughValues || []).includes(val.value);
                   return (
                     <span
-                      key={val}
+                      key={val.value}
                       className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium border ${
                         isDefault
                           ? 'bg-primary text-primary-foreground border-primary'
@@ -301,24 +417,24 @@ export default function SettingsPage() {
                             ? 'bg-secondary text-muted-foreground border-secondary line-through'
                             : 'bg-secondary border-secondary'
                       }`}>
-                      {val}
+                      {val.value}{val.priceModifier ? ` +${val.priceModifier}` : ""}
                       <button
                         type='button'
-                        onClick={() => toggleDefaultValue(preset.id, val)}
+                        onClick={() => toggleDefaultValue(preset.id, val.value)}
                         title={isDefault ? 'Remove as default' : 'Set as default (auto-selected)'}
                         className={`ml-0.5 text-[10px] ${isDefault ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
                         {isDefault ? '★' : '☆'}
                       </button>
                       <button
                         type='button'
-                        onClick={() => toggleStrikethrough(preset.id, val)}
+                        onClick={() => toggleStrikethrough(preset.id, val.value)}
                         title={isStrikethrough ? 'Remove strikethrough' : 'Add strikethrough'}
                         className={`text-[10px] ${isStrikethrough ? 'text-destructive' : 'text-muted-foreground hover:text-foreground'}`}>
                         S̶
                       </button>
                       <button
                         type='button'
-                        onClick={() => removePresetValue(preset.id, val)}
+                        onClick={() => removePresetValue(preset.id, val.value)}
                         className='hover:text-destructive ml-0.5'>
                         ×
                       </button>
@@ -328,7 +444,7 @@ export default function SettingsPage() {
               </div>
               <div className='flex gap-2'>
                 <Input
-                  placeholder='Add value and press Enter'
+                  placeholder='Value (e.g. Small)'
                   value={newValueInputs[preset.id] ?? ""}
                   onChange={(e) =>
                     setNewValueInputs((prev) => ({
@@ -343,6 +459,24 @@ export default function SettingsPage() {
                     }
                   }}
                   className='flex-1 h-8 text-sm'
+                />
+                <Input
+                  placeholder='+price'
+                  type='number'
+                  value={newPriceInputs[preset.id] ?? ""}
+                  onChange={(e) =>
+                    setNewPriceInputs((prev) => ({
+                      ...prev,
+                      [preset.id]: e.target.value,
+                    }))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addPresetValue(preset.id);
+                    }
+                  }}
+                  className='w-24 h-8 text-sm'
                 />
                 <Button
                   variant='outline'
@@ -375,6 +509,101 @@ export default function SettingsPage() {
                   Save Presets
                 </>
               )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Delete Preset Dialog */}
+      <Dialog open={!!deleteDialog} onOpenChange={(open) => { if (!open && !isDeletingPreset) setDeleteDialog(null); }}>
+        <DialogContent className='max-w-md'>
+          <DialogHeader>
+            <DialogTitle>Delete &quot;{deleteDialog?.preset.name}&quot;</DialogTitle>
+            <DialogDescription>
+              Choose how you want to delete this preset. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className='space-y-3 py-2'>
+            <button
+              type='button'
+              disabled={!!isDeletingPreset}
+              onClick={() => deleteDialog && deletePresetNow(deleteDialog.preset, false)}
+              className='w-full text-left border rounded-lg p-4 hover:bg-muted transition-colors disabled:opacity-50'>
+              <div className='flex items-start gap-3'>
+                <Trash2 className='h-5 w-5 mt-0.5 text-muted-foreground shrink-0' />
+                <div>
+                  <p className='text-sm font-medium'>Remove from presets only</p>
+                  <p className='text-xs text-muted-foreground mt-0.5'>
+                    Deletes the preset from your settings. Products that already have this variant are unchanged.
+                  </p>
+                </div>
+                {isDeletingPreset === "settings-only" && <Loader2 className='h-4 w-4 animate-spin ml-auto shrink-0' />}
+              </div>
+            </button>
+            <button
+              type='button'
+              disabled={!!isDeletingPreset}
+              onClick={() => deleteDialog && deletePresetNow(deleteDialog.preset, true)}
+              className='w-full text-left border border-destructive/30 rounded-lg p-4 hover:bg-destructive/5 transition-colors disabled:opacity-50'>
+              <div className='flex items-start gap-3'>
+                <PackageX className='h-5 w-5 mt-0.5 text-destructive shrink-0' />
+                <div>
+                  <p className='text-sm font-medium text-destructive'>Remove from presets + all products</p>
+                  <p className='text-xs text-muted-foreground mt-0.5'>
+                    Also deletes the &quot;{deleteDialog?.preset.name}&quot; variant from every product it was applied to.
+                  </p>
+                </div>
+                {isDeletingPreset === "with-products" && <Loader2 className='h-4 w-4 animate-spin ml-auto shrink-0 text-destructive' />}
+              </div>
+            </button>
+          </div>
+          <DialogFooter>
+            <Button variant='outline' disabled={!!isDeletingPreset} onClick={() => setDeleteDialog(null)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Coming-Soon Mode */}
+      <Card>
+        <CardHeader>
+          <CardTitle className='flex items-center gap-2 text-base'>
+            <Globe className='h-4 w-4' />
+            Coming Soon Mode
+          </CardTitle>
+          <CardDescription>
+            When enabled, visitors see a "coming soon" registration page instead of your store. Admins can still browse normally.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className='flex items-center justify-between'>
+            <div>
+              <p className='text-sm font-medium'>
+                Status:{" "}
+                <span className={comingSoonMode ? "text-amber-600" : "text-green-600"}>
+                  {comingSoonMode ? "Active — store hidden from public" : "Inactive — store is live"}
+                </span>
+              </p>
+            </div>
+            <Button
+              variant={comingSoonMode ? "destructive" : "default"}
+              disabled={isTogglingComingSoon}
+              onClick={async () => {
+                setIsTogglingComingSoon(true);
+                try {
+                  const newVal = !comingSoonMode;
+                  await trpc.settings.setComingSoonMode.mutate({ enabled: newVal });
+                  setComingSoonModeState(newVal);
+                  toast.success(newVal ? "Coming soon mode activated" : "Store is now live");
+                } catch {
+                  toast.error("Failed to update coming soon mode");
+                } finally {
+                  setIsTogglingComingSoon(false);
+                }
+              }}>
+              {isTogglingComingSoon && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
+              {comingSoonMode ? "Deactivate — Go Live" : "Activate Coming Soon"}
             </Button>
           </div>
         </CardContent>
