@@ -81,49 +81,79 @@ export function CartPageMinimalTemplate({
                   <div key={item.id} className={`py-5 sm:py-6 transition-opacity ${isUpdating ? "opacity-60 pointer-events-none" : ""}`}>
 
                     {/* Mobile layout */}
-                    <div className="flex gap-4 sm:hidden">
-                      {item.imageUrl ? (
-                        <img
-                          src={item.imageUrl}
-                          alt={item.name}
-                          className="w-20 h-20 object-cover bg-gray-50 shrink-0"
-                        />
-                      ) : (
-                        <div className="w-20 h-20 bg-gray-50 flex items-center justify-center shrink-0">
-                          <ShoppingCart className="w-6 h-6 text-gray-200" />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="text-[14px] font-medium text-gray-900 leading-snug">{item.name}</p>
-                            {item.variant && <p className="text-[12px] text-gray-400 mt-0.5">{item.variant}</p>}
+                    <div className="flex gap-3 sm:hidden">
+                      {/* Image */}
+                      <div className="w-[88px] h-[88px] shrink-0 bg-gray-50 overflow-hidden">
+                        {item.imageUrl ? (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <ShoppingCart className="w-6 h-6 text-gray-200" />
                           </div>
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0 flex flex-col gap-1">
+                        {/* Name row + delete */}
+                        <div className="flex items-start gap-1">
+                          <p
+                            className="flex-1 text-[14px] font-medium leading-snug break-words overflow-hidden"
+                            style={{ color: "#111827", fontFamily: "'Poppins', sans-serif" }}>
+                            {item.name}
+                          </p>
                           <button
                             type="button"
                             onClick={() => onRemoveItem?.(item.id)}
-                            className="shrink-0 p-1 text-gray-300 hover:text-red-500 transition-colors -mt-0.5">
-                            <Trash2 className="w-4 h-4" />
+                            aria-label="Remove item"
+                            className="shrink-0 w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors -mr-1">
+                            <Trash2 className="w-[15px] h-[15px]" />
                           </button>
                         </div>
-                        <p className="text-[14px] font-semibold text-gray-900 mt-2">{lineTotal.toFixed(2)} {currency}</p>
-                        {/* Quantity controls */}
-                        <div className="flex items-center gap-0 mt-3 border border-gray-200 w-fit">
-                          <button
-                            type="button"
-                            onClick={() => onQuantityChange?.(item.id, Math.max(1, item.quantity - 1))}
-                            className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"
-                            disabled={item.quantity <= 1}>
-                            <Minus className="w-3 h-3" />
-                          </button>
-                          <span className="w-8 text-center text-[13px] font-medium text-gray-900">{item.quantity}</span>
-                          <button
-                            type="button"
-                            onClick={() => onQuantityChange?.(item.id, item.quantity + 1)}
-                            className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"
-                            disabled={item.stock != null && item.quantity >= item.stock}>
-                            <Plus className="w-3 h-3" />
-                          </button>
+
+                        {item.variant && (
+                          <p className="text-[11px] text-gray-400 leading-none">{item.variant}</p>
+                        )}
+
+                        {/* Unit price */}
+                        <p className="text-[12px] text-gray-400">
+                          {item.price.toFixed(2)} {currency} each
+                        </p>
+
+                        {/* Qty + line total */}
+                        <div className="flex items-center justify-between mt-auto pt-1">
+                          <div className="flex items-center border border-gray-200 w-fit">
+                            <button
+                              type="button"
+                              onClick={() => onQuantityChange?.(item.id, Math.max(1, item.quantity - 1))}
+                              aria-label="Decrease quantity"
+                              className="w-[38px] h-[38px] flex items-center justify-center text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                              disabled={item.quantity <= 1}>
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span
+                              className="w-8 text-center text-[13px] font-medium"
+                              style={{ color: "#111827", fontFamily: "'Poppins', sans-serif" }}>
+                              {item.quantity}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => onQuantityChange?.(item.id, item.quantity + 1)}
+                              aria-label="Increase quantity"
+                              className="w-[38px] h-[38px] flex items-center justify-center text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                              disabled={item.stock != null && item.quantity >= item.stock}>
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+                          <p
+                            className="text-[15px] font-semibold"
+                            style={{ color: "#111827", fontFamily: "'Poppins', sans-serif" }}>
+                            {lineTotal.toFixed(2)} {currency}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -137,7 +167,11 @@ export function CartPageMinimalTemplate({
                           <div className="w-16 h-16 bg-gray-50 shrink-0" />
                         )}
                         <div className="min-w-0">
-                          <p className="text-[14px] font-medium text-gray-900 truncate">{item.name}</p>
+                          <p
+                            className="text-[14px] font-medium break-words"
+                            style={{ color: "#111827", fontFamily: "'Poppins', sans-serif" }}>
+                            {item.name}
+                          </p>
                           {item.variant && <p className="text-[12px] text-gray-400 mt-0.5">{item.variant}</p>}
                           <p className="text-[12px] text-gray-500 mt-0.5">{item.price.toFixed(2)} {currency} each</p>
                         </div>
@@ -146,24 +180,35 @@ export function CartPageMinimalTemplate({
                         <button
                           type="button"
                           onClick={() => onQuantityChange?.(item.id, Math.max(1, item.quantity - 1))}
-                          className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"
+                          aria-label="Decrease quantity"
+                          className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"
                           disabled={item.quantity <= 1}>
                           <Minus className="w-3 h-3" />
                         </button>
-                        <span className="w-8 text-center text-[13px] font-medium text-gray-900">{item.quantity}</span>
+                        <span
+                          className="w-8 text-center text-[13px] font-medium"
+                          style={{ color: "#111827", fontFamily: "'Poppins', sans-serif" }}>
+                          {item.quantity}
+                        </span>
                         <button
                           type="button"
                           onClick={() => onQuantityChange?.(item.id, item.quantity + 1)}
-                          className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"
+                          aria-label="Increase quantity"
+                          className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"
                           disabled={item.stock != null && item.quantity >= item.stock}>
                           <Plus className="w-3 h-3" />
                         </button>
                       </div>
-                      <p className="text-[14px] font-semibold text-gray-900 text-right">{lineTotal.toFixed(2)} {currency}</p>
+                      <p
+                        className="text-[14px] font-semibold text-right"
+                        style={{ color: "#111827", fontFamily: "'Poppins', sans-serif" }}>
+                        {lineTotal.toFixed(2)} {currency}
+                      </p>
                       <button
                         type="button"
                         onClick={() => onRemoveItem?.(item.id)}
-                        className="p-1.5 text-gray-300 hover:text-red-500 transition-colors justify-self-end">
+                        aria-label="Remove item"
+                        className="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors justify-self-end">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
