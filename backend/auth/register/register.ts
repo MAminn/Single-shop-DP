@@ -185,8 +185,6 @@ export const register = ({
             renderEmailTemplate(
               ComingSoonWelcomeTemplate({
                 storeName: branding.storeName,
-                logoUrl: branding.logoUrl,
-                userName: newUser.name,
               }),
             ),
           );

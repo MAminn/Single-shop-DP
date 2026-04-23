@@ -13,7 +13,7 @@ import {
 import { Button } from "#root/components/ui/button";
 import { Input } from "#root/components/ui/input";
 import { Label } from "#root/components/ui/label";
-import { Loader2, Save, Truck, Plus, Trash2, Tags, Globe, PackageX } from "lucide-react";
+import { Loader2, Save, Truck, Plus, Trash2, Tags, Globe, PackageX, Mail, Send, Users } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -58,6 +58,14 @@ export default function SettingsPage() {
   const [comingSoonMode, setComingSoonModeState] = useState(false);
   const [isTogglingComingSoon, setIsTogglingComingSoon] = useState(false);
 
+  // Coming-soon subscribers state
+  interface Subscriber { id: string; email: string; subscribedAt: Date | null; notifiedAt: Date | null }
+  const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
+  const [isLoadingSubscribers, setIsLoadingSubscribers] = useState(false);
+  const [goLiveSubject, setGoLiveSubject] = useState("");
+  const [goLiveBody, setGoLiveBody] = useState("");
+  const [isSendingGoLive, setIsSendingGoLive] = useState(false);
+
   // Fetch current shipping fee on mount
   useEffect(() => {
     let cancelled = false;
@@ -68,6 +76,9 @@ export default function SettingsPage() {
           trpc.settings.getVariantPresets.query(),
           trpc.settings.getComingSoonMode.query().then((r) => {
             if (r.success) setComingSoonModeState(r.result);
+          }).catch(() => {}),
+          trpc.settings.getComingSoonSubscribers.query().then((r) => {
+            if (r.success) setSubscribers(r.result as Subscriber[]);
           }).catch(() => {}),
         ]);
         if (cancelled) return;
@@ -587,7 +598,7 @@ export default function SettingsPage() {
               </p>
             </div>
             <Button
-              variant={comingSoonMode ? "destructive" : "default"}
+              variant={comingSoonMode ? "destructive" : "primary"}
               disabled={isTogglingComingSoon}
               onClick={async () => {
                 setIsTogglingComingSoon(true);
@@ -604,6 +615,117 @@ export default function SettingsPage() {
               }}>
               {isTogglingComingSoon && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
               {comingSoonMode ? "Deactivate — Go Live" : "Activate Coming Soon"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Coming-Soon Subscribers */}
+      <Card>
+        <CardHeader>
+          <CardTitle className='flex items-center gap-2 text-base'>
+            <Users className='h-4 w-4' />
+            Coming Soon Subscribers
+          </CardTitle>
+          <CardDescription>
+            Emails collected during coming-soon mode. Send a broadcast when you go live.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-6'>
+          {/* Subscriber list */}
+          <div className='space-y-2'>
+            <div className='flex items-center justify-between mb-1'>
+              <p className='text-sm font-medium'>{subscribers.length} subscriber{subscribers.length !== 1 ? "s" : ""}</p>
+              <Button
+                variant='outline'
+                size='sm'
+                disabled={isLoadingSubscribers}
+                onClick={async () => {
+                  setIsLoadingSubscribers(true);
+                  try {
+                    const r = await trpc.settings.getComingSoonSubscribers.query();
+                    if (r.success) setSubscribers(r.result as Subscriber[]);
+                  } catch {
+                    toast.error("Failed to reload subscribers");
+                  } finally {
+                    setIsLoadingSubscribers(false);
+                  }
+                }}>
+                {isLoadingSubscribers ? <Loader2 className='h-3.5 w-3.5 animate-spin' /> : "Refresh"}
+              </Button>
+            </div>
+            {subscribers.length > 0 ? (
+              <div className='border rounded-md divide-y max-h-48 overflow-y-auto text-sm'>
+                {subscribers.map((s) => (
+                  <div key={s.id} className='flex items-center justify-between px-3 py-2'>
+                    <span className='text-stone-700'>{s.email}</span>
+                    <span className='text-xs text-stone-400'>
+                      {s.notifiedAt ? (
+                        <span className='text-green-600'>Notified</span>
+                      ) : (
+                        <span className='text-stone-400'>{s.subscribedAt ? new Date(s.subscribedAt).toLocaleDateString() : "—"}</span>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className='text-sm text-stone-400'>No subscribers yet.</p>
+            )}
+          </div>
+
+          {/* Go-live broadcast */}
+          <div className='space-y-3 border-t pt-4'>
+            <p className='text-sm font-medium flex items-center gap-1.5'>
+              <Mail className='h-4 w-4' />
+              Broadcast to un-notified subscribers
+            </p>
+            <div className='space-y-2'>
+              <Label className='text-xs uppercase tracking-widest text-stone-400'>Subject</Label>
+              <Input
+                value={goLiveSubject}
+                onChange={(e) => setGoLiveSubject(e.target.value)}
+                placeholder="We're live! Here's your 15% off code"
+                disabled={isSendingGoLive}
+              />
+            </div>
+            <div className='space-y-2'>
+              <Label className='text-xs uppercase tracking-widest text-stone-400'>Email body (HTML or plain text)</Label>
+              <textarea
+                value={goLiveBody}
+                onChange={(e) => setGoLiveBody(e.target.value)}
+                placeholder="Paste your HTML or write your message here..."
+                disabled={isSendingGoLive}
+                rows={5}
+                className='w-full text-sm border border-stone-200 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-stone-900 resize-y'
+              />
+            </div>
+            <Button
+              disabled={isSendingGoLive || !goLiveSubject.trim() || !goLiveBody.trim()}
+              onClick={async () => {
+                setIsSendingGoLive(true);
+                try {
+                  const r = await trpc.settings.notifySubscribersGoLive.mutate({
+                    subject: goLiveSubject,
+                    htmlContent: goLiveBody,
+                  });
+                  if (r.success) {
+                    toast.success(`Sent to ${r.result.sent} of ${r.result.total} subscriber(s)`);
+                    // Refresh list to show notifiedAt timestamps
+                    const updated = await trpc.settings.getComingSoonSubscribers.query();
+                    if (updated.success) setSubscribers(updated.result as Subscriber[]);
+                  }
+                } catch {
+                  toast.error("Failed to send broadcast");
+                } finally {
+                  setIsSendingGoLive(false);
+                }
+              }}>
+              {isSendingGoLive ? (
+                <><Loader2 className='mr-2 h-4 w-4 animate-spin' />Sending…</>
+              ) : (
+                <><Send className='mr-2 h-4 w-4' />Send Broadcast</>
+              )}
             </Button>
           </div>
         </CardContent>

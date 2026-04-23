@@ -117,7 +117,7 @@ export function ProductPageMinimal({
       .query()
       .then((res) => {
         if (!res.success || !Array.isArray(res.result)) return;
-        const presets = res.result as Array<{
+        const presets = res.result as unknown as Array<{
           id: string;
           name: string;
           values: string[];

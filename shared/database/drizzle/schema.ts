@@ -1246,3 +1246,23 @@ export const layoutSettings = pgTable(
     ),
   ],
 );
+
+// ─── Coming-Soon Subscribers ───────────────────────────────────────────────
+// Stores emails collected during coming-soon mode so the admin can later
+// blast a "we're live" email with a promo code or announcement.
+export const comingSoonSubscribers = pgTable("coming_soon_subscribers", {
+  id: uuid("id")
+    .$defaultFn(() => v7())
+    .primaryKey(),
+  email: text("email").unique().notNull(),
+  subscribedAt: timestamp("subscribed_at", {
+    withTimezone: true,
+    mode: "date",
+  })
+    .defaultNow()
+    .notNull(),
+  notifiedAt: timestamp("notified_at", {
+    withTimezone: true,
+    mode: "date",
+  }),
+});

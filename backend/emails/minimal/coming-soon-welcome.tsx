@@ -5,7 +5,6 @@ import {
   Heading,
   Hr,
   Html,
-  Img,
   Preview,
   Section,
   Text,
@@ -15,54 +14,49 @@ import * as React from "react";
 
 interface ComingSoonWelcomeProps {
   storeName: string;
-  logoUrl?: string;
-  userName: string;
 }
 
 export const ComingSoonWelcomeTemplate = ({
   storeName,
-  logoUrl,
-  userName,
 }: ComingSoonWelcomeProps) => {
   return (
     <Html>
       <Head>
         <title>Welcome to {storeName}</title>
-        <Preview>You're on the early access list for {storeName}!</Preview>
+        <Preview>You're here early — and we love that.</Preview>
       </Head>
       <Body style={main}>
         <Container style={container}>
           {/* Header */}
           <Section style={header}>
-            {logoUrl ? (
-              <Img
-                src={logoUrl}
-                alt={storeName}
-                height="48"
-                style={{ margin: "0 auto", display: "block", objectFit: "contain", maxWidth: "200px" }}
-              />
-            ) : (
-              <Heading as="h1" style={logoText}>
-                {storeName}
-              </Heading>
-            )}
+            <Heading as="h1" style={logoText}>
+              {storeName}
+            </Heading>
           </Section>
 
           <Hr style={divider} />
 
           <Section style={section}>
-            <Heading as="h2" style={sectionTitle}>
-              You're on the list!
-            </Heading>
-            <Text style={paragraph}>Hello {userName},</Text>
             <Text style={paragraph}>
-              Thank you for signing up! We've received your registration and you're officially on our early access list.
+              So you're here early, we love that.
             </Text>
             <Text style={paragraph}>
-              We're putting the final touches on {storeName} and we'll reach out as soon as we're fully launched. Stay tuned — exciting things are coming!
+              You just secured your spot .. and your 15% off.
             </Text>
             <Text style={paragraph}>
-              In the meantime, if you have any questions feel free to reply to this email.
+              We're almost ready to show you what we've been building, and honestly we can't wait.
+            </Text>
+            <Text style={paragraph}>
+              Your time matters to us.
+            </Text>
+            <Text style={paragraph}>
+              So the wait won't be long.
+            </Text>
+            <Text style={paragraph}>
+              Welcome to synt..
+            </Text>
+            <Text style={signature}>
+              —Synt team
             </Text>
           </Section>
 
@@ -96,6 +90,7 @@ const header: React.CSSProperties = {
   textAlign: "center",
 };
 
+
 const logoText: React.CSSProperties = {
   fontSize: "24px",
   fontWeight: "300",
@@ -114,18 +109,19 @@ const section: React.CSSProperties = {
   padding: "32px 40px",
 };
 
-const sectionTitle: React.CSSProperties = {
-  fontSize: "20px",
-  fontWeight: "400",
-  color: "#1a1a1a",
-  marginBottom: "16px",
-};
-
 const paragraph: React.CSSProperties = {
   fontSize: "15px",
   lineHeight: "1.7",
   color: "#4a4a4a",
   margin: "0 0 12px",
+};
+
+const signature: React.CSSProperties = {
+  fontSize: "15px",
+  lineHeight: "1.7",
+  color: "#1a1a1a",
+  fontStyle: "italic",
+  margin: "16px 0 0",
 };
 
 const footer: React.CSSProperties = {

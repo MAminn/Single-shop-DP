@@ -642,7 +642,7 @@ export function VariantsInput({
       .query()
       .then((result) => {
         if (result.success && Array.isArray(result.result)) {
-          const fetched = result.result as { id: string; name: string; values: string[] }[];
+          const fetched = result.result as unknown as { id: string; name: string; values: string[] }[];
           setPresets(fetched);
           // Auto-apply all presets when creating a new product (empty variants)
           if ((!value || value.length === 0) && fetched.length > 0) {

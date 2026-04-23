@@ -108,11 +108,41 @@ export const makeEmailService = (input: {
                   );
                 });
 
+                // Gmail (and most clients) block base64 data URIs in email HTML.
+                // Convert any embedded data URIs to CID inline attachments instead.
+                const inlineAttachments: Array<{
+                  filename: string;
+                  content: Buffer;
+                  cid: string;
+                }> = [];
+                let processedBody = body;
+                let attachIdx = 0;
+                processedBody = body.replace(
+                  /src="(data:(image\/[^;]+);base64,([^"]+))"/g,
+                  (_match, _dataUri, mimeType, base64Data) => {
+                    const ext =
+                      (mimeType as string)
+                        .split("/")[1]
+                        ?.replace("jpeg", "jpg") ?? "png";
+                    const cid = `inline-img-${attachIdx++}`;
+                    inlineAttachments.push({
+                      filename: `logo.${ext}`,
+                      content: Buffer.from(base64Data as string, "base64"),
+                      cid,
+                    });
+                    return `src="cid:${cid}"`;
+                  },
+                );
+
                 const sendPromise = transport.sendMail({
                   from: input.smtpUser,
                   to,
                   subject,
-                  html: body,
+                  html: processedBody,
+                  attachments:
+                    inlineAttachments.length > 0
+                      ? inlineAttachments
+                      : undefined,
                 });
 
                 // Race between timeout and actual sending

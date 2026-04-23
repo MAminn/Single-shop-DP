@@ -49,13 +49,14 @@ export function VariantSelector({
                   <button
                     key={value}
                     type='button'
-                    onClick={() => onVariantChange(variant.name, value)}
+                    onClick={() => !isStrikethrough && onVariantChange(variant.name, value)}
+                    disabled={isStrikethrough}
                     className={cn(
                       "px-4 py-2 text-sm rounded-full border transition-all duration-150",
-                      isSelected
+                      isSelected && !isStrikethrough
                         ? "bg-gray-900 text-white border-gray-900"
                         : "bg-white text-gray-700 border-gray-300 hover:border-gray-900 hover:text-gray-900",
-                      isStrikethrough && "line-through opacity-60",
+                      isStrikethrough && "line-through opacity-50 cursor-not-allowed pointer-events-none",
                     )}>
                     {value}
                   </button>

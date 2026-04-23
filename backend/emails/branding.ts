@@ -1,6 +1,46 @@
 import { getLayoutSettings } from "#root/backend/layout/get-layout-settings/index";
 import { getStoreOwnerId } from "#root/shared/config/store";
 import { STORE_NAME, STORE_CURRENCY } from "#root/shared/config/branding";
+import { readFile, existsSync } from "node:fs";
+import { resolve, extname, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
+
+const readFileAsync = promisify(readFile);
+
+const MIME: Record<string, string> = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".svg": "image/svg+xml",
+};
+
+/** Resolve the repo root (works both from source and from build output). */
+function getRepoRoot(): string {
+  const dir = dirname(fileURLToPath(import.meta.url));
+  // source: backend/emails/ → two levels up to root
+  // build:  build/backend/emails/ → three levels up to root
+  const isBuild = dir.includes("build");
+  return resolve(dir, isBuild ? "../../.." : "../..");
+}
+
+/** Reads an uploaded image from disk and returns a base64 data URI. */
+async function logoToDataUri(filename: string): Promise<string | undefined> {
+  try {
+    // Strip any leading /uploads/ prefix that may have been stored
+    const bare = filename.replace(/^\/?uploads\//, "");
+    const filePath = resolve(getRepoRoot(), "uploads", bare);
+    if (!existsSync(filePath)) return undefined;
+    const buf = await readFileAsync(filePath);
+    const ext = extname(filePath).toLowerCase();
+    const mime = MIME[ext] ?? "image/jpeg";
+    return `data:${mime};base64,${buf.toString("base64")}`;
+  } catch {
+    return undefined;
+  }
+}
 
 export interface EmailBranding {
   storeName: string;
@@ -16,8 +56,6 @@ export interface EmailBranding {
  * email, currency, and whether the minimal template is active.
  */
 export async function getEmailBranding(): Promise<EmailBranding> {
-  const baseUrl = process.env.BASE_URL || process.env.PUBLIC_ORIGIN || "http://127.0.0.1:3000";
-
   try {
     const settings = await getLayoutSettings(getStoreOwnerId(), "landing-minimal");
     const isMinimal = settings.header.navbarStyle === "minimal";
@@ -26,12 +64,16 @@ export async function getEmailBranding(): Promise<EmailBranding> {
     let logoUrl: string | undefined;
     if (settings.header.logoUrl) {
       const raw = settings.header.logoUrl;
-      if (raw.startsWith("http")) {
+      if (raw.startsWith("data:")) {
+        // Already a data URI
         logoUrl = raw;
-      } else if (raw.startsWith("/")) {
-        logoUrl = `${baseUrl}${raw}`;
+      } else if (raw.startsWith("http")) {
+        // Absolute external URL — use as-is
+        logoUrl = raw;
       } else {
-        logoUrl = `${baseUrl}/uploads/${raw}`;
+        // Local upload — read from disk and embed as base64
+        const bare = raw.startsWith("/uploads/") ? raw.slice("/uploads/".length) : raw;
+        logoUrl = await logoToDataUri(bare);
       }
     }
 

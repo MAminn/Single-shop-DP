@@ -20,6 +20,13 @@ import { updateVariantPresets } from "./update-variant-presets";
 import { getComingSoonMode } from "./get-coming-soon";
 import { setComingSoonMode } from "./set-coming-soon";
 import { linkTreeConfigSchema } from "#root/shared/types/link-tree";
+import { Effect } from "effect";
+import { EmailService, renderEmailTemplate } from "#root/shared/email/service.js";
+import { ComingSoonWelcomeTemplate } from "#root/backend/emails/minimal/coming-soon-welcome";
+import { getEmailBranding } from "#root/backend/emails/branding";
+import { query } from "#root/shared/database/drizzle/db.js";
+import * as Tables from "#root/shared/database/drizzle/schema.js";
+import { desc, eq, isNull } from "drizzle-orm";
 
 export const settingsRouter = router({
   /** Public: anyone (including the cart page) can read the shipping fee */
@@ -117,5 +124,143 @@ export const settingsRouter = router({
       return runBackendEffect(
         setComingSoonMode(input.enabled).pipe(provideDatabase(ctx)),
       ).then(serializeBackendEffectResult);
+    }),
+
+  /** Public: subscribe an email to the coming-soon list and send welcome email */
+  subscribeComingSoon: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ ctx, input }) => {
+      // DB: upsert subscriber
+      const dbResult = await runBackendEffect(
+        Effect.gen(function* ($) {
+          const existing = yield* $(
+            query((db) =>
+              db
+                .select({ id: Tables.comingSoonSubscribers.id })
+                .from(Tables.comingSoonSubscribers)
+                .where(eq(Tables.comingSoonSubscribers.email, input.email))
+                .limit(1),
+            ),
+          );
+
+          if (existing.length === 0) {
+            yield* $(
+              query((db) =>
+                db.insert(Tables.comingSoonSubscribers).values({ email: input.email }),
+              ),
+            );
+          }
+
+          return { inserted: existing.length === 0 };
+        }).pipe(provideDatabase(ctx)),
+      ).then(serializeBackendEffectResult);
+
+      if (!dbResult.success) return dbResult;
+
+      // Email: send welcome (outside of runBackendEffect so EmailService is provided)
+      try {
+        const branding = await getEmailBranding();
+        const htmlResult = await Effect.runPromise(
+          renderEmailTemplate(
+            ComingSoonWelcomeTemplate({
+              storeName: branding.storeName,
+            }),
+          ),
+        );
+        await Effect.runPromise(
+          Effect.gen(function* ($) {
+            const emailService = yield* $(EmailService);
+            yield* $(
+              emailService.sendEmail(
+                input.email,
+                `Welcome to ${branding.storeName} — You're early!`,
+                htmlResult,
+              ),
+            );
+          }).pipe(Effect.provideService(EmailService, ctx.emailService)),
+        );
+      } catch (err) {
+        console.error("Failed to send coming-soon welcome email:", err);
+      }
+
+      return { success: true as const, result: { success: true } };
+    }),
+
+  /** Admin: get all coming-soon subscribers */
+  getComingSoonSubscribers: adminProcedure.query(async ({ ctx }) => {
+    return runBackendEffect(
+      Effect.gen(function* ($) {
+        const rows = yield* $(
+          query((db) =>
+            db
+              .select({
+                id: Tables.comingSoonSubscribers.id,
+                email: Tables.comingSoonSubscribers.email,
+                subscribedAt: Tables.comingSoonSubscribers.subscribedAt,
+                notifiedAt: Tables.comingSoonSubscribers.notifiedAt,
+              })
+              .from(Tables.comingSoonSubscribers)
+              .orderBy(desc(Tables.comingSoonSubscribers.subscribedAt)),
+          ),
+        );
+
+        return rows;
+      }).pipe(provideDatabase(ctx)),
+    ).then(serializeBackendEffectResult);
+  }),
+
+  /** Admin: blast "we're live" email to all subscribers who haven't been notified yet */
+  notifySubscribersGoLive: adminProcedure
+    .input(
+      z.object({
+        subject: z.string().min(1),
+        htmlContent: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Fetch un-notified subscribers from DB
+      const subsResult = await runBackendEffect(
+        query((db) =>
+          db
+            .select({ id: Tables.comingSoonSubscribers.id, email: Tables.comingSoonSubscribers.email })
+            .from(Tables.comingSoonSubscribers)
+            .where(isNull(Tables.comingSoonSubscribers.notifiedAt)),
+        ).pipe(provideDatabase(ctx)),
+      ).then(serializeBackendEffectResult);
+
+      if (!subsResult.success) return subsResult;
+
+      const subscribers = subsResult.result;
+      let sent = 0;
+
+      // Send emails outside of runBackendEffect
+      await Effect.runPromise(
+        Effect.gen(function* ($) {
+          const emailService = yield* $(EmailService);
+          for (const sub of subscribers) {
+            try {
+              yield* $(emailService.sendEmail(sub.email, input.subject, input.htmlContent));
+              sent++;
+            } catch (err) {
+              console.error(`Failed to send go-live email to ${sub.email}:`, err);
+            }
+          }
+        }).pipe(Effect.provideService(EmailService, ctx.emailService)),
+      );
+
+      // Bulk-mark notified in DB
+      if (sent > 0) {
+        const now = new Date();
+        await runBackendEffect(
+          query((db) =>
+            db
+              .update(Tables.comingSoonSubscribers)
+              .set({ notifiedAt: now })
+              .where(isNull(Tables.comingSoonSubscribers.notifiedAt)),
+          ).pipe(provideDatabase(ctx)),
+        );
+      }
+
+      return { success: true as const, result: { sent, total: subscribers.length } };
     }),
 });
