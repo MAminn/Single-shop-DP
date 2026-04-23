@@ -15,13 +15,12 @@ import { v7 } from "uuid";
 export const userRole = pgEnum("user_role", ["admin", "vendor", "user"]);
 
 export const user = pgTable("user", {
-  id: uuid("id")
-    .$defaultFn(() => v7())
-    .primaryKey(),
+  id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").unique().notNull(),
-  passwordDigest: text("password").notNull(),
-  phone: text("phone").notNull(),
+  passwordDigest: text("password"),
+  phone: text("phone").notNull().default(""),
+  emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true, mode: "date" }),
   vendorId: uuid("vendor_id").references(() => vendor.id, {
     onDelete: "restrict",
     onUpdate: "cascade",
@@ -34,6 +33,10 @@ export const user = pgTable("user", {
     mode: "date",
   }),
   profilePicture: text("profile_picture"),
+  image: text("image"),
+  banned: boolean("banned").default(false),
+  banReason: text("ban_reason"),
+  banExpires: timestamp("ban_expires", { withTimezone: true, mode: "date" }),
   createdAt: timestamp("created_at", {
     withTimezone: true,
     mode: "date",
@@ -47,31 +50,64 @@ export const user = pgTable("user", {
 });
 
 export const session = pgTable("session", {
-  id: uuid("id")
-    .primaryKey()
-    .$defaultFn(() => v7()),
+  id: text("id").primaryKey(),
   token: text("token").unique().notNull(),
-  userId: uuid("user_id")
+  userId: text("user_id")
     .notNull()
     .references(() => user.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
   createdAt: timestamp("created_at", {
     withTimezone: true,
     mode: "date",
-  }),
+  }).defaultNow(),
+  updatedAt: timestamp("updated_at", {
+    withTimezone: true,
+    mode: "date",
+  }).defaultNow().notNull(),
   expiresAt: timestamp("expires_at", {
     withTimezone: true,
     mode: "date",
   }).notNull(),
 });
 
+/** better-auth: OAuth accounts / credential account (password stored here) */
+export const account = pgTable("account", {
+  id: text("id").primaryKey(),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade", onUpdate: "cascade" }),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true, mode: "date" }),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { withTimezone: true, mode: "date" }),
+  scope: text("scope"),
+  password: text("password"),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+});
+
+/** better-auth: Email verification tokens */
+export const verification = pgTable("verification", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow(),
+});
+
 export const passwordResetToken = pgTable("password_reset_token", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => v7()),
-  userId: uuid("user_id")
+  userId: text("user_id")
     .notNull()
     .references(() => user.id, {
       onDelete: "cascade",
@@ -146,7 +182,7 @@ export const vendorLog = pgTable("vendor_log", {
       onDelete: "restrict",
       onUpdate: "cascade",
     }),
-  userId: uuid("user_id")
+  userId: text("user_id")
     .notNull()
     .references(() => user.id, {
       onDelete: "restrict",
@@ -225,7 +261,7 @@ export const categoryLog = pgTable("category_log", {
       onDelete: "restrict",
       onUpdate: "cascade",
     }),
-  userId: uuid("user_id")
+  userId: text("user_id")
     .notNull()
     .references(() => user.id, {
       onDelete: "restrict",
@@ -331,7 +367,7 @@ export const order = pgTable("order", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => v7()),
-  userId: uuid("user_id").references(() => user.id, {
+  userId: text("user_id").references(() => user.id, {
     onDelete: "restrict",
     onUpdate: "cascade",
   }),
@@ -452,7 +488,7 @@ export const productReview = pgTable("product_review", {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-  userId: uuid("user_id").references(() => user.id, {
+  userId: text("user_id").references(() => user.id, {
     onDelete: "set null",
     onUpdate: "cascade",
   }),
@@ -575,7 +611,7 @@ export const template = pgTable("template", {
   status: templateStatus("status").notNull().default("draft"),
   version: text("version").notNull().default("1.0.0"),
   isDefault: boolean("is_default").notNull().default(false),
-  createdBy: uuid("created_by")
+  createdBy: text("created_by")
     .notNull()
     .references(() => user.id, {
       onDelete: "restrict",
@@ -615,7 +651,7 @@ export const templateAssignment = pgTable("template_assignment", {
   config: jsonb("config").default({}), // Instance-specific configuration
   isActive: boolean("is_active").notNull().default(true),
   priority: integer("priority").notNull().default(0), // For ordering when multiple templates apply
-  assignedBy: uuid("assigned_by")
+  assignedBy: text("assigned_by")
     .notNull()
     .references(() => user.id, {
       onDelete: "restrict",
@@ -725,7 +761,7 @@ export const promoCode = pgTable(
       .notNull()
       .default(true),
 
-    createdBy: uuid("created_by").references(() => user.id, {
+    createdBy: text("created_by").references(() => user.id, {
       onDelete: "set null",
       onUpdate: "cascade",
     }),
@@ -834,7 +870,7 @@ export const authLog = pgTable("auth_log", {
   id: uuid("id")
     .$defaultFn(() => v7())
     .primaryKey(),
-  userId: uuid("user_id").references(() => user.id, {
+  userId: text("user_id").references(() => user.id, {
     onDelete: "set null",
     onUpdate: "cascade",
   }),
@@ -869,7 +905,7 @@ export const orderLog = pgTable("order_log", {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-  userId: uuid("user_id").references(() => user.id, {
+  userId: text("user_id").references(() => user.id, {
     onDelete: "set null",
     onUpdate: "cascade",
   }),
@@ -1032,7 +1068,7 @@ export const trackingEvent = pgTable("tracking_event", {
     .$defaultFn(() => v7())
     .primaryKey(),
   sessionId: text("session_id").notNull(),
-  userId: uuid("user_id").references(() => user.id, {
+  userId: text("user_id").references(() => user.id, {
     onDelete: "set null",
     onUpdate: "cascade",
   }),
@@ -1131,7 +1167,7 @@ export const attributionTouchpoint = pgTable("attribution_touchpoint", {
     .$defaultFn(() => v7())
     .primaryKey(),
   sessionId: text("session_id").notNull(),
-  userId: uuid("user_id").references(() => user.id, {
+  userId: text("user_id").references(() => user.id, {
     onDelete: "set null",
     onUpdate: "cascade",
   }),
@@ -1168,7 +1204,7 @@ export const trackingConsent = pgTable("tracking_consent", {
     .$defaultFn(() => v7())
     .primaryKey(),
   sessionId: text("session_id").notNull(),
-  userId: uuid("user_id").references(() => user.id, {
+  userId: text("user_id").references(() => user.id, {
     onDelete: "set null",
     onUpdate: "cascade",
   }),

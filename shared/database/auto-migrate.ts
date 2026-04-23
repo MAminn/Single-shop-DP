@@ -135,6 +135,18 @@ export async function runMigrations(): Promise<void> {
             return s;
           })
           .filter((s) => s.length > 0 && !s.startsWith("--"));
+
+        // Drizzle generates ALTER COLUMN TYPE statements alphabetically by table name.
+        // This breaks FK constraints: PostgreSQL requires the referenced (parent) column
+        // to be altered BEFORE any FK child columns that reference it.
+        // Sort so that ALTER TABLE "user" (the only PK referenced by FKs) comes first.
+        const isParentAlter = (s: string) =>
+          /ALTER TABLE "user" ALTER COLUMN/i.test(s);
+        statements.sort((a, b) => {
+          if (isParentAlter(a) && !isParentAlter(b)) return -1;
+          if (!isParentAlter(a) && isParentAlter(b)) return 1;
+          return 0;
+        });
       } else {
         // Run the entire file as a single statement — this handles
         // multi-statement custom scripts (they rely on their own semicolons).
@@ -144,39 +156,143 @@ export async function runMigrations(): Promise<void> {
 
       let migrationFailed = false;
 
-      for (const statement of statements) {
-        try {
-          await client.query(statement);
-        } catch (error: any) {
-          const msg = String(error.message || "").toLowerCase();
-          const code = error.code;
+      // ── FK-aware type-change handling ────────────────────────────────────
+      // When a migration contains SET DATA TYPE statements, PostgreSQL will
+      // reject changing a referenced PK column while FK constraints exist, and
+      // reject changing FK columns to a type that doesn't match the parent.
+      // Fix: drop all affected FK constraints, run the type changes, recreate them.
+      const hasTypeChanges = statements.some((s) =>
+        /SET DATA TYPE/i.test(s),
+      );
 
-          // PostgreSQL error codes for idempotent DDL scenarios:
-          // 42P07 = duplicate_table (relation already exists)
-          // 42701 = duplicate_column (column already exists)
-          // 42710 = duplicate_object (type/constraint/index already exists)
-          // 42704 = undefined_object (constraint/type does not exist — safe to skip for DROP IF EXISTS)
-          const isIgnorable =
-            code === "42P07" ||
-            code === "42701" ||
-            code === "42710" ||
-            code === "42704" ||
-            msg.includes("already exists") ||
-            msg.includes("duplicate key value");
+      if (hasTypeChanges) {
+        const affectedTables = [
+          ...new Set(
+            statements
+              .filter((s) => /SET DATA TYPE/i.test(s))
+              .map((s) => s.match(/ALTER TABLE "([^"]+)"/)?.[1])
+              .filter((t): t is string => Boolean(t)),
+          ),
+        ];
 
-          if (isIgnorable) {
-            console.log(
-              `⚠️  [Auto-Migrate] Skipping statement (${code || "unknown"}): ${msg.slice(0, 120)}`,
+        // Query all FK constraints where the table OR the referenced table is affected
+        const fkResult = await client.query(
+          `SELECT
+             tc.constraint_name,
+             tc.table_name,
+             kcu.column_name,
+             ccu.table_name  AS foreign_table_name,
+             ccu.column_name AS foreign_column_name,
+             rc.update_rule,
+             rc.delete_rule
+           FROM information_schema.table_constraints AS tc
+           JOIN information_schema.key_column_usage AS kcu
+             ON tc.constraint_name = kcu.constraint_name
+            AND tc.table_schema    = kcu.table_schema
+           JOIN information_schema.constraint_column_usage AS ccu
+             ON ccu.constraint_name = tc.constraint_name
+            AND ccu.table_schema    = tc.table_schema
+           JOIN information_schema.referential_constraints AS rc
+             ON rc.constraint_name  = tc.constraint_name
+            AND rc.constraint_schema = tc.table_schema
+           WHERE tc.constraint_type = 'FOREIGN KEY'
+             AND tc.table_schema = 'public'
+             AND (tc.table_name = ANY($1) OR ccu.table_name = ANY($1))`,
+          [affectedTables],
+        );
+
+        const fkConstraints = fkResult.rows as Array<{
+          constraint_name: string;
+          table_name: string;
+          column_name: string;
+          foreign_table_name: string;
+          foreign_column_name: string;
+          update_rule: string;
+          delete_rule: string;
+        }>;
+
+        // Drop all affected FK constraints
+        for (const fk of fkConstraints) {
+          try {
+            await client.query(
+              `ALTER TABLE "${fk.table_name}" DROP CONSTRAINT IF EXISTS "${fk.constraint_name}"`,
             );
-            continue;
+          } catch (e: any) {
+            console.warn(`  [Auto-Migrate] Could not drop FK ${fk.constraint_name}: ${e.message}`);
           }
+        }
 
-          // Log but don't throw — continue to next migrations
-          console.error(
-            `❌ [Auto-Migrate] Statement failed in ${file} (${code || "unknown"}): ${msg.slice(0, 200)}`,
-          );
-          migrationFailed = true;
-          break;
+        // Run all the type-change statements
+        for (const statement of statements) {
+          try {
+            await client.query(statement);
+          } catch (error: any) {
+            const msg = String(error.message || "").toLowerCase();
+            const code = error.code;
+            const isIgnorable =
+              code === "42P07" || code === "42701" || code === "42710" ||
+              code === "42704" || msg.includes("already exists") ||
+              msg.includes("duplicate key value");
+            if (isIgnorable) {
+              console.log(`⚠️  [Auto-Migrate] Skipping (${code}): ${msg.slice(0, 120)}`);
+              continue;
+            }
+            console.error(`❌ [Auto-Migrate] Statement failed in ${file} (${code}): ${msg.slice(0, 200)}`);
+            migrationFailed = true;
+            break;
+          }
+        }
+
+        // Recreate all FK constraints (even if some statements failed — best effort)
+        for (const fk of fkConstraints) {
+          try {
+            await client.query(
+              `ALTER TABLE "${fk.table_name}"
+               ADD CONSTRAINT "${fk.constraint_name}"
+               FOREIGN KEY ("${fk.column_name}")
+               REFERENCES "${fk.foreign_table_name}"("${fk.foreign_column_name}")
+               ON UPDATE ${fk.update_rule} ON DELETE ${fk.delete_rule}`,
+            );
+          } catch (e: any) {
+            console.warn(`  [Auto-Migrate] Could not recreate FK ${fk.constraint_name}: ${e.message}`);
+          }
+        }
+      } else {
+        // Normal path — no type changes, run statements as-is
+        for (const statement of statements) {
+          try {
+            await client.query(statement);
+          } catch (error: any) {
+            const msg = String(error.message || "").toLowerCase();
+            const code = error.code;
+
+            // PostgreSQL error codes for idempotent DDL scenarios:
+            // 42P07 = duplicate_table (relation already exists)
+            // 42701 = duplicate_column (column already exists)
+            // 42710 = duplicate_object (type/constraint/index already exists)
+            // 42704 = undefined_object (constraint/type does not exist — safe to skip for DROP IF EXISTS)
+            const isIgnorable =
+              code === "42P07" ||
+              code === "42701" ||
+              code === "42710" ||
+              code === "42704" ||
+              msg.includes("already exists") ||
+              msg.includes("duplicate key value");
+
+            if (isIgnorable) {
+              console.log(
+                `⚠️  [Auto-Migrate] Skipping statement (${code || "unknown"}): ${msg.slice(0, 120)}`,
+              );
+              continue;
+            }
+
+            // Log but don't throw — continue to next migrations
+            console.error(
+              `❌ [Auto-Migrate] Statement failed in ${file} (${code || "unknown"}): ${msg.slice(0, 200)}`,
+            );
+            migrationFailed = true;
+            break;
+          }
         }
       }
 

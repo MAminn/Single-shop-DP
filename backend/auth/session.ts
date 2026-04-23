@@ -35,6 +35,7 @@ export function createSession(token: string, userId: string) {
     );
 
     const newSession: NewSession = {
+      id: crypto.randomUUID(),
       token: sessionToken,
       userId,
       expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),

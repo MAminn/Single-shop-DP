@@ -1,21 +1,8 @@
-import { Effect } from "effect";
-import { z } from "zod";
-import { validateSessionToken } from "./session";
-import {
-  runBackendEffect,
-  serializeBackendEffectResult,
-} from "#root/shared/backend/effect.js";
-import { DatabaseClientService } from "#root/shared/database/drizzle/db.js";
+import { auth } from "./auth.server.js";
 import type { FastifyInstance, FastifyPluginCallback } from "fastify";
-import { register } from "./register/register";
-import {
-  EmailService,
-  createDummyEmailService,
-} from "#root/shared/email/service.js";
-
-const saveTokenSchema = z.object({
-  token: z.string().nonempty(),
-});
+import { eq, sql, and } from "drizzle-orm";
+import { user as userTable, account } from "#root/shared/database/drizzle/schema.js";
+import { hashPassword } from "better-auth/crypto";
 
 export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
   // Normalize env vars (Coolify sometimes adds leading '=')
@@ -25,121 +12,93 @@ export const authFastifyPlugin = ((app: FastifyInstance, _, done) => {
     .trim();
 
   if (!adminEmail || !adminPassword) {
-    throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be set");
+    console.warn("[Auth] ADMIN_EMAIL and ADMIN_PASSWORD not set — skipping admin bootstrap");
+    done();
+    return;
   }
 
   console.log(`[Auth] Bootstrapping admin with email: ${adminEmail}`);
 
-  // Create a dummy email service for admin registration
-  const dummyEmailService = createDummyEmailService(app.log);
+  // Bootstrap admin user via better-auth on startup
+  Promise.resolve().then(async () => {
+    try {
+      // Check if admin already exists
+      const existing = await app.db
+        .select({ id: userTable.id, role: userTable.role })
+        .from(userTable)
+        .where(eq(sql`lower(${userTable.email})`, adminEmail.toLowerCase()))
+        .limit(1);
 
-  runBackendEffect(
-    register({
-      email: adminEmail,
-      name: "Admin",
-      password: adminPassword,
-      phone: "+201001112233",
-      role: "admin",
-      confirmPassword: adminPassword,
-    }).pipe(
-      Effect.provideService(DatabaseClientService, app.db),
-      Effect.provideService(EmailService, dummyEmailService),
-    ),
-  )
-    .then(serializeBackendEffectResult)
-    .then((result) => {
-      if (result.success) {
-        console.log("[Auth] Admin account created successfully");
-      } else if (result.error === "User already exists") {
-        console.log("[Auth] Admin already exists, skipping bootstrap");
-      } else {
-        console.log("[Auth] Admin bootstrap result:", result.error);
+      if (existing.length > 0) {
+        const existingRecord = existing[0]!;
+
+        // Always force-sync: role, emailVerified, and password from env
+        await app.db
+          .update(userTable)
+          .set({ role: "admin", emailVerified: true })
+          .where(eq(userTable.id, existingRecord.id));
+
+        // Upsert the credential account row with a fresh scrypt hash
+        const hashedPassword = await hashPassword(adminPassword);
+        const existingAccount = await app.db
+          .select({ id: account.id })
+          .from(account)
+          .where(and(eq(account.userId, existingRecord.id), eq(account.providerId, "credential")))
+          .limit(1);
+
+        if (existingAccount.length > 0 && existingAccount[0]) {
+          await app.db
+            .update(account)
+            .set({ password: hashedPassword, updatedAt: new Date() })
+            .where(eq(account.id, existingAccount[0].id));
+        } else {
+          await app.db.insert(account).values({
+            id: crypto.randomUUID(),
+            accountId: adminEmail,
+            providerId: "credential",
+            userId: existingRecord.id,
+            password: hashedPassword,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+        }
+
+        console.log("[Auth] Admin account synced from env (password, role, emailVerified)");
+        return;
       }
-    })
-    .catch((err) => {
+
+      // Create admin via better-auth signup
+      const result = await auth.api.signUpEmail({
+        body: {
+          email: adminEmail,
+          password: adminPassword,
+          name: "Admin",
+          phone: "+201001112233",
+        },
+        asResponse: false,
+      });
+
+      if (result?.user?.id) {
+        // Set role to admin and mark email as verified
+        await app.db
+          .update(userTable)
+          .set({ role: "admin", emailVerified: true })
+          .where(eq(userTable.id, result.user.id));
+        console.log("[Auth] Admin account created successfully");
+      }
+    } catch (err) {
       console.error("[Auth] Admin bootstrap error:", err);
-    });
-
-  /**
-   * Helper: build cookie options based on the actual request protocol.
-   * With `trustProxy: true`, `req.protocol` correctly reports "https"
-   * even behind a TLS-terminating reverse proxy (Traefik / Coolify).
-   */
-  function cookieOpts(req: import("fastify").FastifyRequest, maxAge?: number) {
-    const secure = req.protocol === "https";
-    return {
-      httpOnly: true,
-      secure,
-      sameSite: "lax" as const,
-      path: "/",
-      ...(maxAge != null ? { maxAge } : {}),
-    };
-  }
-
-  // ── POST /token — set session cookie after login ──────────────────
-  app.post("/token", async (req, res) => {
-    const validation = saveTokenSchema.safeParse(req.body);
-
-    if (!validation.success) {
-      return res.status(400).send({ success: false, error: "Invalid data" });
     }
-
-    const { token } = validation.data;
-
-    const getClientSession = await runBackendEffect(
-      validateSessionToken(token).pipe(
-        Effect.provideService(DatabaseClientService, req.db),
-      ),
-    ).then(serializeBackendEffectResult);
-
-    if (!getClientSession.success) {
-      return res.status(400).send(getClientSession);
-    }
-
-    const clientSession = getClientSession.result;
-
-    // Ensure expiresAt is a Date so getTime() works reliably
-    const expiresAt =
-      clientSession.expiresAt instanceof Date
-        ? clientSession.expiresAt
-        : new Date(clientSession.expiresAt);
-    const maxAge = Math.ceil((expiresAt.getTime() - Date.now()) / 1000);
-
-    res.setCookie(
-      "session",
-      token,
-      cookieOpts(req, maxAge > 0 ? maxAge : 60 * 60 * 24 * 30),
-    );
-
-    return res.status(200).send({
-      success: true,
-      result: clientSession,
-    });
   });
 
-  // ── GET /me — return current session from cookie (client-side restore) ─
+  // GET /api/auth/me — compatibility endpoint for SSR session restore
   app.get("/me", async (req, res) => {
-    // The auth middleware already validated the cookie and set clientSession
     if (!req.clientSession) {
-      return res
-        .status(401)
-        .send({ success: false, error: "Not authenticated" });
+      return res.status(401).send({ success: false, error: "Not authenticated" });
     }
-
-    return res.status(200).send({
-      success: true,
-      result: req.clientSession,
-    });
-  });
-
-  // ── DELETE /token — clear session cookie on logout ────────────────
-  app.delete("/token", async (req, res) => {
-    res.clearCookie("session", cookieOpts(req));
-
-    return res.status(200).send({
-      success: true,
-    });
+    return res.status(200).send({ success: true, result: req.clientSession });
   });
 
   done();
 }) satisfies FastifyPluginCallback;
+

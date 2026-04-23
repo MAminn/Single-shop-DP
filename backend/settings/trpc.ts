@@ -263,4 +263,33 @@ export const settingsRouter = router({
 
       return { success: true as const, result: { sent, total: subscribers.length } };
     }),
+
+  /** Admin: send a one-off broadcast to an arbitrary list of emails (no DB marking) */
+  sendBroadcast: adminProcedure
+    .input(
+      z.object({
+        emails: z.array(z.string().email()).min(1),
+        subject: z.string().min(1),
+        htmlContent: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      let sent = 0;
+
+      await Effect.runPromise(
+        Effect.gen(function* ($) {
+          const emailService = yield* $(EmailService);
+          for (const email of input.emails) {
+            try {
+              yield* $(emailService.sendEmail(email, input.subject, input.htmlContent));
+              sent++;
+            } catch (err) {
+              console.error(`Failed to send broadcast to ${email}:`, err);
+            }
+          }
+        }).pipe(Effect.provideService(EmailService, ctx.emailService)),
+      );
+
+      return { success: true as const, result: { sent, total: input.emails.length } };
+    }),
 });

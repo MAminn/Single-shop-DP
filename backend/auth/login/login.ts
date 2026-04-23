@@ -77,7 +77,7 @@ export const login = (email: string, password: string) =>
     }
 
     const passwordMatch = yield* $(
-      verifyPassword(user.passwordDigest, password),
+      verifyPassword(user.passwordDigest ?? "", password),
     );
 
     if (!passwordMatch) {

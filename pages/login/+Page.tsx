@@ -1,17 +1,16 @@
 import AnimatedContent from "#root/components/utils/AnimatedContent";
 import { Button } from "#root/components/ui/button";
-import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
-import { navigate } from "vike/client/router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Input } from "#root/components/ui/input";
 import { Link } from "#root/components/utils/Link";
 import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext";
 import { MinimalLoginPage } from "#root/components/template-system/minimal/MinimalLoginPage";
+import { authClient } from "#root/lib/auth-client.js";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -42,46 +41,35 @@ export default function Page() {
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      const loginResult = await trpc.auth.login.mutate(values);
-
-      if (!loginResult.success) {
-        toast.error(loginResult.error);
-        setIsSubmitting(false);
-        return;
-      }
-
-      const token = loginResult.result;
-
-      // Determine where to redirect based on the token response
-      const tokenResponse = await fetch("/api/auth/token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token }),
+      const result = await authClient.signIn.email({
+        email: values.email,
+        password: values.password,
       });
 
-      if (!tokenResponse.ok) {
-        toast.error("Failed to set session cookie");
+      if (result.error) {
+        const raw = result.error.message || "";
+        const friendly =
+          raw.toLowerCase().includes("invalid") || raw.toLowerCase().includes("password") || raw.toLowerCase().includes("credentials")
+            ? "Incorrect email or password."
+            : raw.toLowerCase().includes("not found") || raw.toLowerCase().includes("user")
+            ? "No account found with that email."
+            : "Login failed. Please try again.";
+        toast.error(friendly);
         setIsSubmitting(false);
         return;
       }
-
-      const tokenData = await tokenResponse.json();
 
       toast.success("Login successful");
 
-      // Redirect based on role: admin → dashboard, user → home
-      const role = tokenData?.result?.role;
+      // Redirect based on role
+      const role = (result.data?.user as { role?: string } | null)?.role;
       if (role === "admin") {
         window.location.href = "/dashboard";
       } else {
         window.location.href = "/";
       }
     } catch (error) {
-      toast.error(
-        "Something went wrong, please refresh the page and try again.",
-      );
+      toast.error("Something went wrong. Please refresh the page and try again.");
       setIsSubmitting(false);
     }
   };
@@ -118,6 +106,7 @@ export default function Page() {
 
         <form
           onSubmit={form.handleSubmit(onSubmit)}
+          autoComplete='on'
           className='relative flex flex-col gap-8 w-full'>
           {/* Email input */}
           <div className='relative'>
@@ -131,6 +120,7 @@ export default function Page() {
                 {...form.register("email")}
                 id='email'
                 type='email'
+                autoComplete='email'
                 placeholder='your@email.com'
                 className='border-0 border-b border-[#D9D3CC] bg-transparent rounded-none px-0 py-3 w-full text-[15px] focus:outline-none focus:ring-0 focus:border-[#C4A574] transition-all duration-500 placeholder:text-[#BFB5AA] text-[#2B231D] font-light'
                 disabled={isSubmitting}
@@ -155,6 +145,7 @@ export default function Page() {
                 {...form.register("password")}
                 id='password'
                 type={showPassword ? "text" : "password"}
+                autoComplete='current-password'
                 placeholder='Enter password'
                 className='border-0 border-b border-[#D9D3CC] bg-transparent rounded-none px-0 py-3 w-full pr-10 text-[15px] focus:outline-none focus:ring-0 focus:border-[#C4A574] transition-all duration-500 placeholder:text-[#BFB5AA] text-[#2B231D] font-light'
                 disabled={isSubmitting}

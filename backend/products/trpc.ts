@@ -1,7 +1,7 @@
-import { t, adminProcedure } from "#root/shared/trpc/server";
+import { t, adminProcedure, publicProcedure } from "#root/shared/trpc/server";
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
-import { product, productVariant } from "#root/shared/database/drizzle/schema";
+import { eq, and, inArray } from "drizzle-orm";
+import { product, productVariant, productImage, file as fileTable } from "#root/shared/database/drizzle/schema";
 import { createProductProcedure } from "./create-product/trpc";
 import { deleteProductProcedure } from "./delete-product/trpc";
 import { editProductProcedure } from "./edit-product/trpc";
@@ -33,6 +33,63 @@ export const productRouter = t.router({
   getProductImages: getProductImagesProcedure,
   getCategories: getCategoriesProcedure,
   getById: getProductByIdProcedure,
+  /** Fetch multiple products by IDs — used by the wishlist tab */
+  getByIds: publicProcedure
+    .input(z.object({ ids: z.array(z.string().uuid()).max(100) }))
+    .query(async ({ ctx, input }) => {
+      if (input.ids.length === 0) return { success: true as const, result: [] };
+      try {
+        const rows = await ctx.db
+          .select({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            discountPrice: product.discountPrice,
+            stock: product.stock,
+            imageUrl: fileTable.diskname,
+          })
+          .from(product)
+          .leftJoin(fileTable, eq(product.imageId, fileTable.id))
+          .where(
+            and(
+              eq(product.deleted, false),
+              inArray(product.id, input.ids),
+            ),
+          );
+
+        // Also fetch primary images from productImage table for products that have them
+        const productIds = rows.map((r) => r.id);
+        const primaryImages = productIds.length > 0
+          ? await ctx.db
+              .select({ productId: productImage.productId, url: fileTable.diskname })
+              .from(productImage)
+              .innerJoin(fileTable, eq(productImage.fileId, fileTable.id))
+              .where(
+                and(
+                  inArray(productImage.productId, productIds),
+                  eq(productImage.isPrimary, true),
+                ),
+              )
+          : [];
+
+        const primaryImageMap = new Map(primaryImages.map((pi) => [pi.productId, pi.url]));
+
+        return {
+          success: true as const,
+          result: rows.map((r) => ({
+            id: r.id,
+            name: r.name,
+            price: Number(r.price),
+            discountPrice: r.discountPrice ? Number(r.discountPrice) : null,
+            stock: r.stock ?? 0,
+            available: (r.stock ?? 0) > 0,
+            imageUrl: primaryImageMap.get(r.id) ?? r.imageUrl ?? null,
+          })),
+        };
+      } catch {
+        return { success: false as const, error: "Failed to fetch products" };
+      }
+    }),
   /** Admin-only: apply/update a variant preset across ALL non-deleted products */
   applyPresetToAll: adminProcedure
     .input(

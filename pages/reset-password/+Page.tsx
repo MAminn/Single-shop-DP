@@ -1,14 +1,13 @@
 import { Button } from "#root/components/ui/button";
 import { Input } from "#root/components/ui/input";
-import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
-import { navigate } from "vike/client/router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { Eye, EyeOff, CheckCircle, AlertCircle } from "lucide-react";
 import { Link } from "#root/components/utils/Link";
+import { authClient } from "#root/lib/auth-client.js";
 
 function useSearchParams() {
   if (typeof window === "undefined") return new URLSearchParams();
@@ -48,13 +47,13 @@ export default function Page() {
     if (!token) return;
     setIsSubmitting(true);
     try {
-      const result = await trpc.auth.resetPassword.mutate({
+      const result = await authClient.resetPassword({
+        newPassword: values.password,
         token,
-        password: values.password,
       });
 
-      if (!result.success) {
-        toast.error(result.error || "Failed to reset password");
+      if (result.error) {
+        toast.error(result.error.message || "Failed to reset password");
         setIsSubmitting(false);
         return;
       }
@@ -127,7 +126,7 @@ export default function Page() {
             </div>
             <Button
               className='w-full bg-[#2B231D] hover:bg-[#3A3028] text-[#F8F6F3] font-normal text-[14px] tracking-[0.04em] py-7 rounded-[14px] transition-all duration-500 shadow-[0_4px_16px_rgba(43,35,29,0.12)] hover:shadow-[0_6px_24px_rgba(43,35,29,0.18)] uppercase mt-2'
-              onClick={() => navigate("/login")}>
+              onClick={() => { window.location.href = "/login"; }}>
               Go to Login
             </Button>
           </div>

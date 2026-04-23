@@ -8,6 +8,7 @@ import "dotenv/config";
 import { fastifyTRPCMiddleware } from "#root/shared/trpc/middleware.server.js";
 import { authFasitfyMiddleware } from "#root/backend/auth/middleware.js";
 import { authFastifyPlugin } from "#root/backend/auth/api.js";
+import { auth } from "#root/backend/auth/auth.server.js";
 import { uploadFileApiPlugin } from "#root/backend/file/upload-file/api";
 import { emailServiceMiddleware } from "#root/shared/email/middleware.server";
 import { fincartWebhookPlugin } from "#root/backend/orders/fincart-webhook/api.js";
@@ -206,6 +207,33 @@ async function buildServer() {
   await instance.register(emailServiceMiddleware);
 
   await instance.register(authFasitfyMiddleware);
+
+  // Mount better-auth HTTP handler at /api/auth/*
+  // Use auth.handler (Web fetch API) instead of toNodeHandler so Fastify's already-parsed
+  // body is re-serialised into a proper Request — no raw stream consumption issues.
+  instance.all("/api/auth/*", async (req, reply) => {
+    const origin = `${req.protocol}://${req.headers.host || "localhost"}`;
+    const url = new URL(req.url, origin);
+
+    const headers = new Headers();
+    for (const [key, val] of Object.entries(req.headers)) {
+      if (val == null) continue;
+      if (Array.isArray(val)) { for (const v of val) headers.append(key, v); }
+      else headers.set(key, val);
+    }
+
+    const hasBody = req.method !== "GET" && req.method !== "HEAD" && req.body != null;
+    const body = hasBody ? JSON.stringify(req.body) : undefined;
+    if (hasBody) headers.set("content-type", "application/json");
+
+    const request = new Request(url, { method: req.method, headers, body });
+    const response = await auth.handler(request);
+
+    void reply.status(response.status);
+    for (const [key, val] of response.headers.entries()) void reply.header(key, val);
+    const text = await response.text();
+    return reply.send(text);
+  });
 
   await instance.register(fastifyTRPCMiddleware);
 

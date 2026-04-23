@@ -5,7 +5,7 @@ import { z } from "zod";
 import { Eye, EyeOff, ArrowLeft, CheckCircle } from "lucide-react";
 import { Input } from "#root/components/ui/input";
 import { Link } from "#root/components/utils/Link";
-import { trpc } from "#root/shared/trpc/client";
+import { authClient } from "#root/lib/auth-client.js";
 import { toast } from "sonner";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import {
@@ -59,14 +59,18 @@ export function MinimalRegisterPage() {
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      await trpc.auth.register.mutate({
-        name: values.name,
+      const result = await authClient.signUp.email({
         email: values.email,
-        phone: values.phone,
         password: values.password,
-        confirmPassword: values.confirmPassword,
-        role: "user",
-      });
+        name: values.name,
+        phone: values.phone,
+      } as Parameters<typeof authClient.signUp.email>[0]);
+
+      if (result.error) {
+        toast.error(result.error.message || "Registration failed");
+        setIsSubmitting(false);
+        return;
+      }
       setIsRegistered(true);
       toast.success("Registration successful!");
     } catch (error: unknown) {

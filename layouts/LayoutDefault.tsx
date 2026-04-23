@@ -7,12 +7,10 @@ import { MinimalI18nProvider } from "#root/lib/i18n/MinimalI18nContext";
 import { Footer } from "#root/components/globals/Footer";
 import { useContext, useEffect, useState, memo } from "react";
 import "./style.css";
-import { trpc } from "#root/shared/trpc/client.js";
 import { toast, Toaster } from "sonner";
 import { CartToastContainer } from "#root/components/ui/cart-toast";
 import type { ClientSession } from "#root/backend/auth/shared/entities.js";
 import { usePageContext } from "vike-react/usePageContext";
-import { TRPCClientError } from "@trpc/client";
 import { AuthContext } from "#root/context/AuthContext.js";
 import { CartProvider } from "#root/lib/context/CartContext";
 import {
@@ -29,6 +27,8 @@ import { LayoutSettingsContext } from "#root/frontend/contexts/LayoutSettingsCon
 import type { LayoutSettings } from "#root/shared/types/layout-settings";
 import { DEFAULT_LAYOUT_SETTINGS } from "#root/shared/types/layout-settings";
 import { getStoreOwnerId } from "#root/shared/config/store";
+import { trpc } from "#root/shared/trpc/client.js";
+import { authClient } from "#root/lib/auth-client.js";
 
 /**
  * Conditionally render the global footer.
@@ -108,25 +108,13 @@ const Content = memo(({ children }: { children: React.ReactNode }) => {
   }, []); // runs once on mount
 
   const logout = async () => {
-    if (!session) return;
     try {
-      await trpc.auth.logout.mutate({
-        token: session.token,
-      });
-      await fetch("/api/auth/token", {
-        method: "DELETE",
-      });
+      await authClient.signOut();
     } catch (err) {
-      if (err instanceof TRPCClientError) {
-        toast.error(err.message);
-      } else {
-        toast.error(
-          "Something went wrong, please refresh the page and try again.",
-        );
-      }
+      console.error("Logout error:", err);
     }
-
     setSession(null);
+    window.location.href = "/";
   };
 
   const isDashboardRoute = pageContext.urlPathname.startsWith("/dashboard");

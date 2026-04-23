@@ -1,5 +1,5 @@
 import { useContext, useState, useRef, useEffect, useCallback } from "react";
-import { Search, ShoppingCart, User, X, Menu, Globe, LogOut, Mail, ChevronDown, Loader2 } from "lucide-react";
+import { Search, ShoppingCart, User, X, Menu, Globe, LogOut, Mail, ChevronDown, Loader2, Package, Heart, LayoutDashboard } from "lucide-react";
 import { Link } from "#root/components/utils/Link";
 import { AuthContext } from "#root/context/AuthContext";
 import { useCart } from "#root/lib/context/CartContext";
@@ -18,6 +18,13 @@ import {
   SheetTrigger,
   SheetContent,
 } from "#root/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "#root/components/ui/dropdown-menu";
 
 /**
  * Minimal Navbar — clean design inspired by matchperfumes.com.
@@ -185,22 +192,53 @@ export function MinimalNavbar() {
                   <User className='w-[18px] h-[18px]' />
                 </Link>
               ) : (
-                <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
                     <button
-                    type='button'
-                    onClick={() => logout()}
-                    className='p-2 text-gray-700 hover:text-black transition-colors cursor-pointer'
-                    aria-label={t("nav.logout")}>
-                    <LogOut className='w-[18px] h-[18px]' />
-                  </button>
-                  <Link
-                    href='/dashboard'
-                    className='p-2 text-gray-700 hover:text-black transition-colors'
-                    aria-label={t("nav.dashboard")}>
-                    <User className='w-[18px] h-[18px]' />
-                  </Link>
-                  
-                </>
+                      type="button"
+                      className='p-1.5 w-8 h-8 rounded-full bg-gray-900 text-white text-xs font-medium flex items-center justify-center hover:bg-gray-700 transition-colors'
+                      aria-label="Account menu">
+                      {session.name ? session.name.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-52 z-[10001]">
+                    <div className="px-3 py-2 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900 truncate">{session.name || "Account"}</p>
+                      <p className="text-xs text-gray-400 truncate">{session.email}</p>
+                    </div>
+                    <DropdownMenuItem asChild>
+                      <Link href="/account" className="flex items-center gap-2.5 cursor-pointer">
+                        <User className="w-4 h-4 text-gray-500" /> My Account
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/account?tab=orders" className="flex items-center gap-2.5 cursor-pointer">
+                        <Package className="w-4 h-4 text-gray-500" /> Orders
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/account?tab=wishlist" className="flex items-center gap-2.5 cursor-pointer">
+                        <Heart className="w-4 h-4 text-gray-500" /> Wishlist
+                      </Link>
+                    </DropdownMenuItem>
+                    {session.role === "admin" && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                          <Link href="/dashboard" className="flex items-center gap-2.5 cursor-pointer">
+                            <LayoutDashboard className="w-4 h-4 text-gray-500" /> Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => logout()}
+                      className="flex items-center gap-2.5 cursor-pointer text-red-600 focus:text-red-600">
+                      <LogOut className="w-4 h-4" /> Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
                 {/* Cart */}
               <Link
@@ -564,21 +602,26 @@ export function MinimalNavbar() {
                         </button>
 
                         {session && (
-                          <div className='border-t border-gray-100 pt-5 mt-6'>
-                            <Link
-                              href='/dashboard'
-                              className='text-sm text-gray-600 hover:text-black block mb-4'
-                              onClick={handleCloseSheet}>
-                              {t("nav.dashboard")}
+                          <div className='border-t border-gray-100 pt-5 mt-6 space-y-4'>
+                            <Link href='/account' className='flex items-center gap-2.5 text-sm text-gray-600 hover:text-black' onClick={handleCloseSheet}>
+                              <User className="w-4 h-4" /> My Account
                             </Link>
+                            <Link href='/account?tab=orders' className='flex items-center gap-2.5 text-sm text-gray-600 hover:text-black' onClick={handleCloseSheet}>
+                              <Package className="w-4 h-4" /> Orders
+                            </Link>
+                            <Link href='/account?tab=wishlist' className='flex items-center gap-2.5 text-sm text-gray-600 hover:text-black' onClick={handleCloseSheet}>
+                              <Heart className="w-4 h-4" /> Wishlist
+                            </Link>
+                            {session.role === "admin" && (
+                              <Link href='/dashboard' className='flex items-center gap-2.5 text-sm text-gray-600 hover:text-black' onClick={handleCloseSheet}>
+                                <LayoutDashboard className="w-4 h-4" /> Dashboard
+                              </Link>
+                            )}
                             <button
-                              onClick={() => {
-                                logout();
-                                handleCloseSheet();
-                              }}
-                              className='text-sm text-gray-600 hover:text-black'
+                              onClick={() => { logout(); handleCloseSheet(); }}
+                              className='flex items-center gap-2.5 text-sm text-red-600 hover:text-red-700'
                               type='button'>
-                              {t("nav.logout")}
+                              <LogOut className="w-4 h-4" /> Logout
                             </button>
                           </div>
                         )}

@@ -93,6 +93,7 @@ export const register = ({
         return await db
           .insert(Tables.user)
           .values({
+            id: crypto.randomUUID(),
             email,
             passwordDigest,
             name,

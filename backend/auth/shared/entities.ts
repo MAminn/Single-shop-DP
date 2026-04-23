@@ -5,5 +5,8 @@ export interface ClientSession {
   name: string;
   phone: string;
   expiresAt: Date;
-  role: "admin" | "user";
+  role: "admin" | "vendor" | "user";
+  emailVerified?: boolean;
+  profilePicture?: string | null;
+  image?: string | null;
 }

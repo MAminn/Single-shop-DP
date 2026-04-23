@@ -47,6 +47,7 @@ import { SortingEditorialTemplate } from "./sorting/SortingEditorialTemplate";
 import type { SortingEditorialTemplateProps } from "./sorting/SortingEditorialTemplate";
 import { CartPageEditorialTemplate } from "./cartPage/CartPageEditorialTemplate";
 import type { CartPageEditorialTemplateProps } from "./cartPage/CartPageEditorialTemplate";
+import { CartPageMinimalTemplate } from "./cartPage/CartPageMinimalTemplate";
 import { CheckoutPageEditorialTemplate } from "./checkoutPage/CheckoutPageEditorialTemplate";
 import type { CheckoutPageEditorialTemplateProps } from "./checkoutPage/CheckoutPageEditorialTemplate";
 import { SearchResultsEditorial } from "./searchResults/SearchResultsEditorial";
@@ -285,6 +286,13 @@ export const templateConfig: TemplateConfig = {
       component:
         CartPageEditorialTemplate as React.FC<CartPageEditorialTemplateProps>,
       previewComponent: CartPageEditorialPreview,
+    },
+    {
+      id: "cart-minimal",
+      label: "Minimal Cart Page",
+      component:
+        CartPageMinimalTemplate as React.FC<CartPageModernTemplateProps>,
+      previewComponent: CartPageModernPreview,
     },
   ],
 

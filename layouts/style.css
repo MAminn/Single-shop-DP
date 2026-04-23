@@ -37,7 +37,10 @@ html[dir="rtl"] .minimal-template * {
 .minimal-template li,
 .minimal-template td,
 .minimal-template blockquote,
-.minimal-template figcaption {
+.minimal-template figcaption,
+.minimal-template input,
+.minimal-template textarea,
+.minimal-template select {
   font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 

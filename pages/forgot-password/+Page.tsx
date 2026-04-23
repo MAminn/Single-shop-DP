@@ -1,6 +1,5 @@
 import { Button } from "#root/components/ui/button";
 import { Input } from "#root/components/ui/input";
-import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -10,6 +9,7 @@ import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
 import { Link } from "#root/components/utils/Link";
 import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext";
 import { MinimalForgotPasswordPage } from "#root/components/template-system/minimal/MinimalForgotPasswordPage";
+import { authClient } from "#root/lib/auth-client.js";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -36,10 +36,13 @@ export default function Page() {
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      const result = await trpc.auth.requestPasswordReset.mutate(values);
+      const result = await authClient.requestPasswordReset({
+        email: values.email,
+        redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/reset-password`,
+      });
 
-      if (!result.success) {
-        toast.error(result.error || "Something went wrong");
+      if (result.error) {
+        toast.error(result.error.message || "Something went wrong");
         setIsSubmitting(false);
         return;
       }

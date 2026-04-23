@@ -6,7 +6,7 @@ import { Button } from "#root/components/ui/button";
 import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
 import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext";
-import soonImage from "#root/assets/soon-website-synt.jpg.jpeg";
+import soonImage from "#root/assets/soon-website-v2.jpg.jpeg";
 
 const emailSchema = z.string().email();
 
@@ -64,22 +64,21 @@ export function MinimalComingSoonPage() {
         </h1> */}
 
         {/* Hero image */}
-        <div className="w-full max-w-[460px] mb-8">
+        <div className="w-full max-w-[460px]">
           <img
             src={soonImage}
             alt={storeName}
             className="w-full object-cover"
           />
+          <p className="text-xs text-stone-600 mb-7">Drop your email — be the first to know when we launch.</p>
         </div>
 
         {/* Email capture card */}
         <div className="w-full max-w-[460px] border border-stone-200 bg-white p-8 sm:p-10 text-left">
-          <h2 className="text-lg font-light tracking-wide text-stone-900 mb-1">Get early access</h2>
-          <p className="text-xs text-stone-400 mb-7">Drop your email — be the first to know when we launch.</p>
 
           <form onSubmit={onSubmit} className="flex flex-col gap-4">
             <div>
-              <label className="block text-[11px] uppercase tracking-widest text-stone-400 mb-2">
+              <label className="block text-[11px] uppercase tracking-widest text-stone-600 mb-2">
                 Email
               </label>
               <Input

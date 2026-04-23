@@ -4,12 +4,12 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { Link } from "#root/components/utils/Link";
 import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext";
 import { MinimalRegisterPage } from "#root/components/template-system/minimal/MinimalRegisterPage";
+import { authClient } from "#root/lib/auth-client.js";
 
 const formSchema = z
   .object({
@@ -56,14 +56,18 @@ export default function Page() {
     setIsSubmitting(true);
 
     try {
-      await trpc.auth.register.mutate({
-        name: values.name,
+      const result = await authClient.signUp.email({
         email: values.email,
-        phone: values.phone,
         password: values.password,
-        confirmPassword: values.confirmPassword,
-        role: "user",
-      });
+        name: values.name,
+        phone: values.phone,
+      } as Parameters<typeof authClient.signUp.email>[0]);
+
+      if (result.error) {
+        toast.error(result.error.message || "Registration failed");
+        setIsSubmitting(false);
+        return;
+      }
 
       setIsRegistered(true);
       toast.success(

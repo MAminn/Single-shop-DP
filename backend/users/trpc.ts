@@ -1,7 +1,10 @@
 import { adminProcedure, publicProcedure, router } from "#root/shared/trpc/server";
 import { z } from "zod";
-import { eq, desc, ilike, or, count } from "drizzle-orm";
-import { user, order, orderItem } from "#root/shared/database/drizzle/schema";
+import { eq, and, desc, ilike, or, count } from "drizzle-orm";
+import { hashPassword } from "better-auth/crypto";
+import { user, order, orderItem, account, session } from "#root/shared/database/drizzle/schema";
+import { auth } from "#root/backend/auth/auth.server.js";
+import { TRPCError } from "@trpc/server";
 
 export const usersRouter = router({
   /** Admin-only: list all registered users with pagination */
@@ -58,7 +61,7 @@ export const usersRouter = router({
 
   /** Admin-only: get a single user with their full order history */
   getById: adminProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       const db = ctx.db;
 
@@ -104,5 +107,200 @@ export const usersRouter = router({
           })),
         },
       };
+    }),
+
+  /** Admin-only: create a new user */
+  create: adminProcedure
+    .input(
+      z.object({
+        name: z.string().min(1, "Name is required"),
+        email: z.string().email("Invalid email"),
+        password: z.string().min(8, "Password must be at least 8 characters"),
+        phone: z.string().default(""),
+        role: z.enum(["admin", "vendor", "user"]).default("user"),
+        emailVerified: z.boolean().default(false),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = ctx.db;
+
+      // Check email uniqueness
+      const existing = await db
+        .select({ id: user.id })
+        .from(user)
+        .where(eq(user.email, input.email.toLowerCase()))
+        .limit(1);
+
+      if (existing.length > 0) {
+        throw new TRPCError({ code: "CONFLICT", message: "Email already in use" });
+      }
+
+      // Create user via better-auth API
+      const result = await auth.api.signUpEmail({
+        body: {
+          email: input.email,
+          password: input.password,
+          name: input.name,
+          phone: input.phone,
+        },
+        asResponse: false,
+      }).catch((err: unknown) => {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: err instanceof Error ? err.message : "Failed to create user",
+        });
+      });
+
+      if (!result?.user?.id) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create user" });
+      }
+
+      // Set role and emailVerified
+      await db
+        .update(user)
+        .set({
+          role: input.role,
+          emailVerified: input.emailVerified,
+          phone: input.phone,
+          updatedAt: new Date(),
+        })
+        .where(eq(user.id, result.user.id));
+
+      return { success: true as const, result: { id: result.user.id } };
+    }),
+
+  /** Admin-only: update a user's profile details */
+  update: adminProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+        name: z.string().min(1).optional(),
+        email: z.string().email().optional(),
+        phone: z.string().optional(),
+        role: z.enum(["admin", "vendor", "user"]).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = ctx.db;
+      const { id, ...fields } = input;
+
+      const existing = await db.select({ id: user.id }).from(user).where(eq(user.id, id)).limit(1);
+      if (!existing.length) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      }
+
+      await db
+        .update(user)
+        .set({ ...fields, updatedAt: new Date() })
+        .where(eq(user.id, id));
+
+      return { success: true as const };
+    }),
+
+  /** Admin-only: delete a user and cascade their sessions */
+  delete: adminProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const db = ctx.db;
+
+      const existing = await db.select({ id: user.id }).from(user).where(eq(user.id, input.id)).limit(1);
+      if (!existing.length) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      }
+
+      // Delete sessions and account rows first (cascade not always reliable for better-auth tables)
+      await db.delete(session).where(eq(session.userId, input.id));
+      await db.delete(account).where(eq(account.userId, input.id));
+      await db.delete(user).where(eq(user.id, input.id));
+
+      return { success: true as const };
+    }),
+
+  /** Admin-only: set email verification status */
+  setVerified: adminProcedure
+    .input(z.object({ id: z.string().min(1), verified: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .update(user)
+        .set({ emailVerified: input.verified, updatedAt: new Date() })
+        .where(eq(user.id, input.id));
+      return { success: true as const };
+    }),
+
+  /** Admin-only: admin sets a new password for a user */
+  adminSetPassword: adminProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+        newPassword: z.string().min(8, "Password must be at least 8 characters"),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = ctx.db;
+
+      const userRow = await db
+        .select({ id: user.id, email: user.email })
+        .from(user)
+        .where(eq(user.id, input.id))
+        .limit(1);
+
+      if (!userRow.length) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      }
+
+      const hashedPassword = await hashPassword(input.newPassword);
+
+      // Upsert: update existing credential account, or insert one if missing
+      // (covers old users who have no account row yet — admin resets their password
+      // which creates the account row so they can log in with the new password).
+      const existingAccount = await ctx.db
+        .select({ id: account.id })
+        .from(account)
+        .where(and(eq(account.userId, input.id), eq(account.providerId, "credential")))
+        .limit(1);
+
+      if (existingAccount.length > 0 && existingAccount[0]) {
+        await ctx.db
+          .update(account)
+          .set({ password: hashedPassword, updatedAt: new Date() })
+          .where(eq(account.id, existingAccount[0].id));
+      } else {
+        const targetUser = userRow[0]!;
+        await ctx.db.insert(account).values({
+          id: crypto.randomUUID(),
+          accountId: targetUser.email,
+          providerId: "credential",
+          userId: input.id,
+          password: hashedPassword,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+
+      return { success: true as const };
+    }),
+
+  /** Admin-only: get all user emails in one shot (for broadcast targeting) */
+  getAllEmails: adminProcedure.query(async ({ ctx }) => {
+    const rows = await ctx.db
+      .select({ email: user.email })
+      .from(user)
+      .orderBy(user.email);
+    return { success: true as const, result: { emails: rows.map((r) => r.email) } };
+  }),
+
+  /** Admin-only: ban/unban a user */
+  setBanned: adminProcedure
+    .input(z.object({ id: z.string().min(1), banned: z.boolean(), reason: z.string().optional() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .update(user)
+        .set({
+          banned: input.banned,
+          banReason: input.banned ? (input.reason ?? null) : null,
+          updatedAt: new Date(),
+        })
+        .where(eq(user.id, input.id));
+      return { success: true as const };
     }),
 });

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
 import { Input } from "#root/components/ui/input";
 import { Link } from "#root/components/utils/Link";
-import { trpc } from "#root/shared/trpc/client";
+import { authClient } from "#root/lib/auth-client.js";
 import { toast } from "sonner";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import {
@@ -41,37 +41,33 @@ export function MinimalLoginPage() {
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      const loginResult = await trpc.auth.login.mutate(values);
-      if (!loginResult.success) {
-        toast.error(loginResult.error);
-        setIsSubmitting(false);
-        return;
-      }
-
-      const token = loginResult.result;
-      const tokenResponse = await fetch("/api/auth/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
+      const result = await authClient.signIn.email({
+        email: values.email,
+        password: values.password,
       });
 
-      if (!tokenResponse.ok) {
-        toast.error("Failed to set session cookie");
+      if (result.error) {
+        const raw = result.error.message || "";
+        const friendly =
+          raw.toLowerCase().includes("invalid") || raw.toLowerCase().includes("password") || raw.toLowerCase().includes("credentials")
+            ? "Incorrect email or password."
+            : raw.toLowerCase().includes("not found") || raw.toLowerCase().includes("user")
+            ? "No account found with that email."
+            : "Login failed. Please try again.";
+        toast.error(friendly);
         setIsSubmitting(false);
         return;
       }
 
-      const tokenData = await tokenResponse.json();
       toast.success("Login successful");
-
-      const role = tokenData?.result?.role;
+      const role = (result.data?.user as { role?: string } | null)?.role;
       if (role === "admin") {
         window.location.href = "/dashboard";
       } else {
         window.location.href = "/";
       }
     } catch {
-      toast.error("Something went wrong, please refresh the page and try again.");
+      toast.error("Something went wrong. Please refresh the page and try again.");
       setIsSubmitting(false);
     }
   };
@@ -89,7 +85,7 @@ export function MinimalLoginPage() {
             <p className='text-sm text-stone-500'>{t("login.subtitle")}</p>
           </div>
 
-          <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-6'>
+          <form onSubmit={form.handleSubmit(onSubmit)} autoComplete='on' className='flex flex-col gap-6'>
             {/* Email */}
             <div>
               <label
@@ -101,6 +97,7 @@ export function MinimalLoginPage() {
                 {...form.register("email")}
                 id='login-email'
                 type='email'
+                autoComplete='email'
                 placeholder={t("login.email_placeholder")}
                 className='border-0 border-b border-stone-300 bg-transparent rounded-none px-0 py-3 text-sm focus:outline-none focus:ring-0 focus:border-stone-900 transition-colors placeholder:text-stone-400 text-stone-900'
                 disabled={isSubmitting}
@@ -124,6 +121,7 @@ export function MinimalLoginPage() {
                   {...form.register("password")}
                   id='login-password'
                   type={showPassword ? "text" : "password"}
+                  autoComplete='current-password'
                   placeholder={t("login.password_placeholder")}
                   className='border-0 border-b border-stone-300 bg-transparent rounded-none px-0 py-3 pe-10 text-sm focus:outline-none focus:ring-0 focus:border-stone-900 transition-colors placeholder:text-stone-400 text-stone-900'
                   disabled={isSubmitting}

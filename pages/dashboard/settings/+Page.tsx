@@ -66,6 +66,10 @@ export default function SettingsPage() {
   const [goLiveBody, setGoLiveBody] = useState("");
   const [isSendingGoLive, setIsSendingGoLive] = useState(false);
 
+  // Broadcast target: null = coming-soon subscribers, string[] = all registered users
+  const [allUserEmails, setAllUserEmails] = useState<string[] | null>(null);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+
   // Fetch current shipping fee on mount
   useEffect(() => {
     let cancelled = false;
@@ -636,23 +640,56 @@ export default function SettingsPage() {
           <div className='space-y-2'>
             <div className='flex items-center justify-between mb-1'>
               <p className='text-sm font-medium'>{subscribers.length} subscriber{subscribers.length !== 1 ? "s" : ""}</p>
-              <Button
-                variant='outline'
-                size='sm'
-                disabled={isLoadingSubscribers}
-                onClick={async () => {
-                  setIsLoadingSubscribers(true);
-                  try {
-                    const r = await trpc.settings.getComingSoonSubscribers.query();
-                    if (r.success) setSubscribers(r.result as Subscriber[]);
-                  } catch {
-                    toast.error("Failed to reload subscribers");
-                  } finally {
-                    setIsLoadingSubscribers(false);
-                  }
-                }}>
-                {isLoadingSubscribers ? <Loader2 className='h-3.5 w-3.5 animate-spin' /> : "Refresh"}
-              </Button>
+              <div className='flex items-center gap-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  disabled={isLoadingSubscribers}
+                  onClick={async () => {
+                    setIsLoadingSubscribers(true);
+                    try {
+                      const r = await trpc.settings.getComingSoonSubscribers.query();
+                      if (r.success) setSubscribers(r.result as Subscriber[]);
+                    } catch {
+                      toast.error("Failed to reload subscribers");
+                    } finally {
+                      setIsLoadingSubscribers(false);
+                    }
+                  }}>
+                  {isLoadingSubscribers ? <Loader2 className='h-3.5 w-3.5 animate-spin' /> : "Refresh"}
+                </Button>
+                <Button
+                  variant={allUserEmails ? "primary" : "outline"}
+                  size='sm'
+                  disabled={isLoadingUsers}
+                  onClick={async () => {
+                    if (allUserEmails) {
+                      // Toggle off — go back to subscribers mode
+                      setAllUserEmails(null);
+                      return;
+                    }
+                    setIsLoadingUsers(true);
+                    try {
+                      const r = await trpc.users.getAllEmails.query();
+                      if (r.success) {
+                        setAllUserEmails(r.result.emails);
+                        toast.success(`Loaded ${r.result.emails.length} registered user email(s)`);
+                      }
+                    } catch {
+                      toast.error("Failed to load users");
+                    } finally {
+                      setIsLoadingUsers(false);
+                    }
+                  }}>
+                  {isLoadingUsers ? (
+                    <Loader2 className='h-3.5 w-3.5 animate-spin' />
+                  ) : allUserEmails ? (
+                    <><Users className='h-3.5 w-3.5 mr-1' />{allUserEmails.length} users loaded ✕</>
+                  ) : (
+                    <><Users className='h-3.5 w-3.5 mr-1' />Load All Users</>
+                  )}
+                </Button>
+              </div>
             </div>
             {subscribers.length > 0 ? (
               <div className='border rounded-md divide-y max-h-48 overflow-y-auto text-sm'>
@@ -672,13 +709,27 @@ export default function SettingsPage() {
             ) : (
               <p className='text-sm text-stone-400'>No subscribers yet.</p>
             )}
+
+            {/* All-users preview overlay */}
+            {allUserEmails && (
+              <div className='border border-stone-900 rounded-md divide-y max-h-48 overflow-y-auto text-sm mt-2'>
+                <div className='px-3 py-2 bg-stone-50 text-xs font-medium text-stone-500 sticky top-0 border-b'>
+                  All registered users ({allUserEmails.length})
+                </div>
+                {allUserEmails.map((email) => (
+                  <div key={email} className='px-3 py-2 text-stone-700'>{email}</div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Go-live broadcast */}
           <div className='space-y-3 border-t pt-4'>
             <p className='text-sm font-medium flex items-center gap-1.5'>
               <Mail className='h-4 w-4' />
-              Broadcast to un-notified subscribers
+              {allUserEmails
+                ? <>Broadcast to all registered users <span className='ml-1 text-xs font-normal text-stone-500'>({allUserEmails.length})</span></>
+                : "Broadcast to un-notified subscribers"}
             </p>
             <div className='space-y-2'>
               <Label className='text-xs uppercase tracking-widest text-stone-400'>Subject</Label>
@@ -705,15 +756,35 @@ export default function SettingsPage() {
               onClick={async () => {
                 setIsSendingGoLive(true);
                 try {
-                  const r = await trpc.settings.notifySubscribersGoLive.mutate({
-                    subject: goLiveSubject,
-                    htmlContent: goLiveBody,
-                  });
-                  if (r.success) {
-                    toast.success(`Sent to ${r.result.sent} of ${r.result.total} subscriber(s)`);
-                    // Refresh list to show notifiedAt timestamps
-                    const updated = await trpc.settings.getComingSoonSubscribers.query();
-                    if (updated.success) setSubscribers(updated.result as Subscriber[]);
+                  if (allUserEmails) {
+                    // Filter out any malformed DB emails before sending
+                    const validEmails = allUserEmails.filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+                    const skipped = allUserEmails.length - validEmails.length;
+                    if (validEmails.length === 0) {
+                      toast.error("No valid email addresses to send to");
+                      return;
+                    }
+                    // Send to all registered users
+                    const r = await trpc.settings.sendBroadcast.mutate({
+                      emails: validEmails,
+                      subject: goLiveSubject,
+                      htmlContent: goLiveBody,
+                    });
+                    if (r.success) {
+                      toast.success(`Sent to ${r.result.sent} of ${r.result.total} user(s)${skipped > 0 ? ` (${skipped} invalid address${skipped > 1 ? "es" : ""} skipped)` : ""}`);
+                    }
+                  } else {
+                    // Send to un-notified coming-soon subscribers
+                    const r = await trpc.settings.notifySubscribersGoLive.mutate({
+                      subject: goLiveSubject,
+                      htmlContent: goLiveBody,
+                    });
+                    if (r.success) {
+                      toast.success(`Sent to ${r.result.sent} of ${r.result.total} subscriber(s)`);
+                      // Refresh list to show notifiedAt timestamps
+                      const updated = await trpc.settings.getComingSoonSubscribers.query();
+                      if (updated.success) setSubscribers(updated.result as Subscriber[]);
+                    }
                   }
                 } catch {
                   toast.error("Failed to send broadcast");

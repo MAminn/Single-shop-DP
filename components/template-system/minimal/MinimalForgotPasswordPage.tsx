@@ -5,7 +5,7 @@ import { z } from "zod";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 import { Input } from "#root/components/ui/input";
 import { Link } from "#root/components/utils/Link";
-import { trpc } from "#root/shared/trpc/client";
+import { authClient } from "#root/lib/auth-client.js";
 import { toast } from "sonner";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import {
@@ -40,9 +40,12 @@ export function MinimalForgotPasswordPage() {
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      const result = await trpc.auth.requestPasswordReset.mutate(values);
-      if (!result.success) {
-        toast.error(result.error || "Something went wrong");
+      const result = await authClient.requestPasswordReset({
+        email: values.email,
+        redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/reset-password`,
+      });
+      if (result.error) {
+        toast.error(result.error.message || "Something went wrong");
         setIsSubmitting(false);
         return;
       }

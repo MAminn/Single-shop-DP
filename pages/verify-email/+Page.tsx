@@ -1,7 +1,7 @@
 import AnimatedContent from "#root/components/utils/AnimatedContent";
 import { Button } from "#root/components/ui/button.jsx";
 import { useState, useEffect } from "react";
-import { trpc } from "#root/shared/trpc/client";
+import { authClient } from "#root/lib/auth-client";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useSearchParams } from "#root/hooks/useSearchParams";
 
@@ -22,12 +22,12 @@ export default function Page() {
           return;
         }
 
-        const result = await trpc.auth.verifyEmail.mutate({ token });
-        if (result.success) {
+        const result = await authClient.verifyEmail({ query: { token } });
+        if (result.data) {
           setVerificationStatus("success");
         } else {
           setVerificationStatus("error");
-          setErrorMessage(result.error || "Verification failed");
+          setErrorMessage(result.error?.message || "Verification failed");
         }
       } catch (error) {
         setVerificationStatus("error");
