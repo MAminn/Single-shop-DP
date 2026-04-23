@@ -125,8 +125,8 @@ export function CartPageMinimalTemplate({
                         </p>
 
                         {/* Qty + line total */}
-                        <div className="flex items-center justify-between mt-auto pt-1">
-                          <div className="flex items-center border border-gray-200 w-fit">
+                        <div className="flex flex-col items-center mt-auto pt-1">
+                          <div className="flex  items-center border border-gray-200 w-fit">
                             <button
                               type="button"
                               onClick={() => onQuantityChange?.(item.id, Math.max(1, item.quantity - 1))}
