@@ -165,14 +165,18 @@ export const NewOrderEmailTemplate = ({
               <Column style={infoLabelCell}>City:</Column>
               <Column style={infoValueCell}>{city}</Column>
             </Row>
-            <Row>
-              <Column style={infoLabelCell}>State:</Column>
-              <Column style={infoValueCell}>{state}</Column>
-            </Row>
-            <Row>
-              <Column style={infoLabelCell}>Postal Code:</Column>
-              <Column style={infoValueCell}>{postalCode}</Column>
-            </Row>
+            {state && state.trim() ? (
+              <Row>
+                <Column style={infoLabelCell}>State:</Column>
+                <Column style={infoValueCell}>{state}</Column>
+              </Row>
+            ) : null}
+            {postalCode && postalCode.trim() ? (
+              <Row>
+                <Column style={infoLabelCell}>Postal Code:</Column>
+                <Column style={infoValueCell}>{postalCode}</Column>
+              </Row>
+            ) : null}
             <Row>
               <Column style={infoLabelCell}>Country:</Column>
               <Column style={infoValueCell}>{country}</Column>

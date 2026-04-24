@@ -270,11 +270,10 @@ export function CheckoutPageEditorialTemplate({
                           <Label
                             htmlFor='checkout-postal'
                             className='text-xs text-stone-500 mb-1.5 block'>
-                            Postal Code *
+                            Postal Code
                           </Label>
                           <Input
                             id='checkout-postal'
-                            required
                             value={formValues.postalCode}
                             onChange={(e) =>
                               updateField("postalCode", e.target.value)

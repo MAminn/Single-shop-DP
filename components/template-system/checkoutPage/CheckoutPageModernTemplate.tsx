@@ -159,8 +159,6 @@ export function CheckoutPageModernTemplate({
     }
     if (!form.address.trim()) errors.address = t("validation.address_required");
     if (!form.city.trim()) errors.city = t("validation.city_required");
-    if (!form.state.trim()) errors.state = t("validation.state_required");
-    if (!form.postalCode.trim()) errors.postalCode = t("validation.postal_code_required");
     if (!form.country.trim()) errors.country = t("validation.country_required");
 
     setFieldErrors(errors);
@@ -186,7 +184,9 @@ export function CheckoutPageModernTemplate({
 
   return (
     <div className='container mx-auto px-4 py-8'>
-      <h1 className='text-xl md:text-3xl font-bold mb-8'>{t("checkout.title")}</h1>
+      <h1 className='text-xl md:text-3xl font-bold mb-8'>
+        {t("checkout.title")}
+      </h1>
 
       {errorMessage && (
         <Alert variant='destructive' className='mb-6'>
@@ -337,12 +337,7 @@ export function CheckoutPageModernTemplate({
                     )}
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='state'>
-                      {t("checkout.state")}{" "}
-                      <span className='text-destructive'>
-                        {t("checkout.required")}
-                      </span>
-                    </Label>
+                    <Label htmlFor='state'>{t("checkout.state")}</Label>
                     <Input
                       id='state'
                       placeholder='Cairo Governorate'
@@ -360,10 +355,7 @@ export function CheckoutPageModernTemplate({
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div className='space-y-2'>
                     <Label htmlFor='postalCode'>
-                      {t("checkout.postal_code")}{" "}
-                      <span className='text-destructive'>
-                        {t("checkout.required")}
-                      </span>
+                      {t("checkout.postal_code")}
                     </Label>
                     <Input
                       id='postalCode'
@@ -372,7 +364,9 @@ export function CheckoutPageModernTemplate({
                       onChange={(e) =>
                         updateField("postalCode", e.target.value)
                       }
-                      className={fieldErrors.postalCode ? "border-destructive" : ""}
+                      className={
+                        fieldErrors.postalCode ? "border-destructive" : ""
+                      }
                     />
                     {fieldErrors.postalCode && (
                       <p className='text-sm text-destructive'>
@@ -392,7 +386,9 @@ export function CheckoutPageModernTemplate({
                       placeholder='Egypt'
                       value={form.country}
                       onChange={(e) => updateField("country", e.target.value)}
-                      className={fieldErrors.country ? "border-destructive" : ""}
+                      className={
+                        fieldErrors.country ? "border-destructive" : ""
+                      }
                     />
                     {fieldErrors.country && (
                       <p className='text-sm text-destructive'>
