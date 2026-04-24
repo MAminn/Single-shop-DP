@@ -109,6 +109,7 @@ export function ProductForm({
             z.object({
               value: z.string(),
               priceModifier: z.number().min(0).optional(),
+              enabledOverride: z.boolean().optional(),
             }),
           ),
         }),
@@ -626,14 +627,14 @@ export function VariantsInput({
   value,
   onChange,
 }: {
-  value: { name: string; values: { value: string; priceModifier?: number }[] }[] | undefined;
-  onChange: (value: { name: string; values: { value: string; priceModifier?: number }[] }[]) => void;
+  value: { name: string; values: { value: string; priceModifier?: number; enabledOverride?: boolean }[] }[] | undefined;
+  onChange: (value: { name: string; values: { value: string; priceModifier?: number; enabledOverride?: boolean }[] }[]) => void;
 }) {
   // Ensure value is always an array
   const variants = value || [];
 
   const [presets, setPresets] = useState<
-    { id: string; name: string; values: string[] }[]
+    { id: string; name: string; values: string[]; strikethroughValues?: string[] }[]
   >([]);
   const [presetsOpen, setPresetsOpen] = useState(false);
 
@@ -642,7 +643,7 @@ export function VariantsInput({
       .query()
       .then((result) => {
         if (result.success && Array.isArray(result.result)) {
-          const fetched = result.result as unknown as { id: string; name: string; values: string[] }[];
+          const fetched = result.result as unknown as { id: string; name: string; values: string[]; strikethroughValues?: string[] }[];
           setPresets(fetched);
           // Auto-apply all presets when creating a new product (empty variants)
           if ((!value || value.length === 0) && fetched.length > 0) {
@@ -698,6 +699,10 @@ export function VariantsInput({
               newValue[i] = v;
               onChange(newValue);
             }}
+            globalStrikethroughValues={
+              presets.find((p) => p.name.toLowerCase() === v.name.toLowerCase())
+                ?.strikethroughValues ?? []
+            }
           />
           <Button
             size='sm'
@@ -760,12 +765,15 @@ export function VariantsInput({
 export function VariantInput({
   value,
   onChange,
+  globalStrikethroughValues = [],
 }: {
   value: {
     name: string;
-    values: { value: string; priceModifier?: number }[];
+    values: { value: string; priceModifier?: number; enabledOverride?: boolean }[];
   };
-  onChange: (value: { name: string; values: { value: string; priceModifier?: number }[] }) => void;
+  onChange: (value: { name: string; values: { value: string; priceModifier?: number; enabledOverride?: boolean }[] }) => void;
+  /** Values that are globally strikethrough for this variant name (from preset) */
+  globalStrikethroughValues?: string[];
 }) {
   return (
     <div className='flex flex-col gap-2'>
@@ -780,7 +788,10 @@ export function VariantInput({
       <div className='flex flex-col gap-1'>
         <Label>Values & Price Modifiers</Label>
         <div className='space-y-2'>
-          {value.values.map((vv, idx) => (
+          {value.values.map((vv, idx) => {
+            const isGloballyStruck = globalStrikethroughValues.includes(vv.value);
+            const isOverridden = vv.enabledOverride === true;
+            return (
             <div key={idx} className='flex items-center gap-2'>
               <Input
                 className='flex-1'
@@ -808,6 +819,24 @@ export function VariantInput({
                 />
                 <span className='text-xs text-muted-foreground whitespace-nowrap'>EGP</span>
               </div>
+              {/* Override toggle — only shown for globally-strikethrough values */}
+              {isGloballyStruck && (
+                <button
+                  type='button'
+                  title={isOverridden ? 'Currently enabled for this product (click to re-apply global strikethrough)' : 'Globally disabled — click to enable for this product only'}
+                  onClick={() => {
+                    const updated = [...value.values];
+                    updated[idx] = { ...vv, enabledOverride: !isOverridden };
+                    onChange({ ...value, values: updated });
+                  }}
+                  className={`flex-shrink-0 text-[10px] px-1.5 py-0.5 rounded border font-medium transition-colors ${
+                    isOverridden
+                      ? 'border-green-500 text-green-600 bg-green-50 hover:bg-green-100'
+                      : 'border-orange-400 text-orange-500 bg-orange-50 hover:bg-orange-100 line-through'
+                  }`}>
+                  {isOverridden ? 'ON' : 'OFF'}
+                </button>
+              )}
               <Button
                 type='button'
                 size='icon'
@@ -820,7 +849,8 @@ export function VariantInput({
                 <XIcon className='w-3.5 h-3.5' />
               </Button>
             </div>
-          ))}
+            );
+          })}
           <Button
             type='button'
             size='sm'

@@ -337,7 +337,7 @@ export const productVariant = pgTable("product_variant", {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-  values: jsonb("values").notNull().default([]).$type<{ value: string; priceModifier?: number }[]>(),
+  values: jsonb("values").notNull().default([]).$type<{ value: string; priceModifier?: number; enabledOverride?: boolean }[]>(),
 });
 
 export const orderStatus = pgEnum("order_status", [

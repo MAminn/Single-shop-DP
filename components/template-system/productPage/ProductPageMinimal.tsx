@@ -125,13 +125,29 @@ export function ProductPageMinimal({
           strikethroughValues?: string[];
         }>;
 
-        // Build strikethrough map
+        // Build strikethrough map from presets
         const stMap: Record<string, string[]> = {};
         for (const preset of presets) {
           if (preset.strikethroughValues?.length) {
             stMap[preset.name] = preset.strikethroughValues;
           }
         }
+
+        // Apply product-level overrides — remove values the admin has explicitly
+        // un-strikethrough'd on this specific product
+        for (const variant of product.variants || []) {
+          if (!stMap[variant.name]) continue;
+          const overriddenValues = variant.values
+            .filter((v) => v.enabledOverride === true)
+            .map((v) => v.value);
+          if (overriddenValues.length > 0) {
+            stMap[variant.name] = stMap[variant.name].filter(
+              (sv) => !overriddenValues.includes(sv),
+            );
+            if (stMap[variant.name].length === 0) delete stMap[variant.name];
+          }
+        }
+
         setStrikethroughMap(stMap);
 
         // Auto-select default values (only if not already selected)

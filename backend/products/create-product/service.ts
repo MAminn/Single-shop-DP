@@ -33,6 +33,7 @@ export const createProductSchema = z.object({
             z.object({
               value: z.string().nonempty().max(255),
               priceModifier: z.number().min(0).max(100000).optional(),
+              enabledOverride: z.boolean().optional(),
             }),
           ]),
         ),
