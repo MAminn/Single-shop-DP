@@ -223,6 +223,38 @@ export function LandingTemplateModern({
         locale='en'
       />
 
+      {/* Discounted Products Section — placed right after testimonials */}
+      {content.discountedProducts?.enabled &&
+        discountedProducts &&
+        discountedProducts.length > 0 && (
+          <section className='py-16 md:py-24 bg-neutral-50'>
+            <div className='container mx-auto px-6 sm:px-8 lg:px-12'>
+              <p className='text-xs tracking-[0.2em] text-neutral-400 uppercase'>
+                Offers
+              </p>
+              <div className='flex justify-between items-end mt-2'>
+                <h2 className='text-2xl font-light'>
+                  {content.discountedProducts.title}
+                </h2>
+                <a
+                  href={`${content.discountedProducts.viewAllLink || "/shop"}${(content.discountedProducts.viewAllLink || "/shop").includes("?") ? "&" : "?"}section=offers`}
+                  className='text-sm text-neutral-500 hover:text-neutral-900 transition-colors duration-300'>
+                  {content.discountedProducts.viewAllText || "View All"}{" "}
+                  <ArrowRight className='inline w-4 h-4 ml-1' />
+                </a>
+              </div>
+              <div className='mt-10 [&>section]:bg-transparent [&>section]:py-0 [&>section>div]:px-0 [&>section>div]:mx-0 [&>section>div]:max-w-none [&>section>div>.text-center]:hidden [&_.grid]:xl:grid-cols-3 [&_.grid]:gap-8 [&_.grid]:mb-0'>
+                <HomeFeaturedProducts
+                  title=''
+                  products={discountedProducts}
+                  showViewAllButton={false}
+                  maxProducts={6}
+                />
+              </div>
+            </div>
+          </section>
+        )}
+
       {/* Categories Section — Asymmetric Grid */}
       {categoriesLoading ? (
         <CategoryStripSkeleton />
@@ -374,38 +406,6 @@ export function LandingTemplateModern({
                   products={newArrivals}
                   isLoading={newArrivalsLoading}
                   showHeader={false}
-                />
-              </div>
-            </div>
-          </section>
-        )}
-
-      {/* Discounted Products Section */}
-      {content.discountedProducts?.enabled &&
-        discountedProducts &&
-        discountedProducts.length > 0 && (
-          <section className='py-16 md:py-24 bg-neutral-50'>
-            <div className='container mx-auto px-6 sm:px-8 lg:px-12'>
-              <p className='text-xs tracking-[0.2em] text-neutral-400 uppercase'>
-                Offers
-              </p>
-              <div className='flex justify-between items-end mt-2'>
-                <h2 className='text-2xl font-light'>
-                  {content.discountedProducts.title}
-                </h2>
-                <a
-                  href={`${content.discountedProducts.viewAllLink || "/shop"}${(content.discountedProducts.viewAllLink || "/shop").includes("?") ? "&" : "?"}section=offers`}
-                  className='text-sm text-neutral-500 hover:text-neutral-900 transition-colors duration-300'>
-                  {content.discountedProducts.viewAllText || "View All"}{" "}
-                  <ArrowRight className='inline w-4 h-4 ml-1' />
-                </a>
-              </div>
-              <div className='mt-10 [&>section]:bg-transparent [&>section]:py-0 [&>section>div]:px-0 [&>section>div]:mx-0 [&>section>div]:max-w-none [&>section>div>.text-center]:hidden [&_.grid]:xl:grid-cols-3 [&_.grid]:gap-8 [&_.grid]:mb-0'>
-                <HomeFeaturedProducts
-                  title=''
-                  products={discountedProducts}
-                  showViewAllButton={false}
-                  maxProducts={6}
                 />
               </div>
             </div>
