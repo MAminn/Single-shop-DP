@@ -265,7 +265,7 @@ export function LandingTemplateModern({
               {content.categories.title || "Shop by Category"}
             </p>
 
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+            <div className='flex overflow-x-auto snap-x snap-mandatory scroll-smooth -mx-6 px-6 pb-2 gap-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-2 lg:grid-cols-3 md:overflow-visible md:snap-none md:mx-0 md:px-0 md:pb-0'>
               {categories.map((cat, i) => {
                 const resolvedImage = cat.imageUrl?.startsWith("http")
                   ? cat.imageUrl
@@ -277,7 +277,7 @@ export function LandingTemplateModern({
                   <a
                     key={cat.id}
                     href={`/categories/${cat.slug}`}
-                    className={`group relative overflow-hidden min-h-62.5 md:min-h-75 ${
+                    className={`group relative overflow-hidden min-h-62.5 md:min-h-75 snap-start shrink-0 basis-[75%] sm:basis-[55%] md:basis-auto md:shrink md:snap-align-none ${
                       i === 0 ? "md:row-span-2 md:min-h-0" : ""
                     }`}>
                     {/* Background image */}
