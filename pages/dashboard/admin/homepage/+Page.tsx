@@ -2272,46 +2272,20 @@ export default function HomepageAdminPage() {
 
         {/* Discounted Products Section */}
         <Card>
-            <CardHeader>
-              <div className='flex items-center justify-between'>
-                <CardTitle>Discounted Products (Offers)</CardTitle>
-                <div className='flex items-center gap-2'>
-                  <Label htmlFor='discounted-enabled'>Enabled</Label>
-                  <Switch
-                    id='discounted-enabled'
-                    checked={content.discountedProducts?.enabled ?? true}
-                    onCheckedChange={(checked) =>
-                      setContent((prev) => ({
-                        ...prev,
-                        discountedProducts: {
-                          enabled: checked,
-                          title: prev.discountedProducts?.title ?? "Offers",
-                          viewAllText:
-                            prev.discountedProducts?.viewAllText ?? "View All",
-                          viewAllLink:
-                            prev.discountedProducts?.viewAllLink ?? "/shop",
-                        },
-                      }))
-                    }
-                  />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className='space-y-4'>
-              <div>
-                <Label htmlFor='discounted-title'>
-                  Section Title (English)
-                </Label>
-                <Input
-                  id='discounted-title'
-                  value={content.discountedProducts?.title ?? "Offers"}
-                  onChange={(e) =>
+          <CardHeader>
+            <div className='flex items-center justify-between'>
+              <CardTitle>Discounted Products (Offers)</CardTitle>
+              <div className='flex items-center gap-2'>
+                <Label htmlFor='discounted-enabled'>Enabled</Label>
+                <Switch
+                  id='discounted-enabled'
+                  checked={content.discountedProducts?.enabled ?? true}
+                  onCheckedChange={(checked) =>
                     setContent((prev) => ({
                       ...prev,
                       discountedProducts: {
-                        ...prev.discountedProducts!,
-                        enabled: prev.discountedProducts?.enabled ?? true,
-                        title: e.target.value,
+                        enabled: checked,
+                        title: prev.discountedProducts?.title ?? "Offers",
                         viewAllText:
                           prev.discountedProducts?.viewAllText ?? "View All",
                         viewAllLink:
@@ -2319,10 +2293,34 @@ export default function HomepageAdminPage() {
                       },
                     }))
                   }
-                  placeholder='Offers'
-                  disabled={!(content.discountedProducts?.enabled ?? true)}
                 />
-                {isMinimal && (
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <div>
+              <Label htmlFor='discounted-title'>Section Title (English)</Label>
+              <Input
+                id='discounted-title'
+                value={content.discountedProducts?.title ?? "Offers"}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    discountedProducts: {
+                      ...prev.discountedProducts!,
+                      enabled: prev.discountedProducts?.enabled ?? true,
+                      title: e.target.value,
+                      viewAllText:
+                        prev.discountedProducts?.viewAllText ?? "View All",
+                      viewAllLink:
+                        prev.discountedProducts?.viewAllLink ?? "/shop",
+                    },
+                  }))
+                }
+                placeholder='Offers'
+                disabled={!(content.discountedProducts?.enabled ?? true)}
+              />
+              {isMinimal && (
                 <div className='mt-1'>
                   <Label className='text-xs text-muted-foreground flex items-center gap-1'>
                     <Languages className='w-3 h-3' /> Arabic
@@ -2350,32 +2348,32 @@ export default function HomepageAdminPage() {
                     disabled={!(content.discountedProducts?.enabled ?? true)}
                   />
                 </div>
-                )}
-              </div>
-              <div>
-                <Label htmlFor='discounted-view-all'>
-                  View All Text (English)
-                </Label>
-                <Input
-                  id='discounted-view-all'
-                  value={content.discountedProducts?.viewAllText ?? "View All"}
-                  onChange={(e) =>
-                    setContent((prev) => ({
-                      ...prev,
-                      discountedProducts: {
-                        ...prev.discountedProducts!,
-                        enabled: prev.discountedProducts?.enabled ?? true,
-                        title: prev.discountedProducts?.title ?? "Offers",
-                        viewAllText: e.target.value,
-                        viewAllLink:
-                          prev.discountedProducts?.viewAllLink ?? "/shop",
-                      },
-                    }))
-                  }
-                  placeholder='View All'
-                  disabled={!(content.discountedProducts?.enabled ?? true)}
-                />
-                {isMinimal && (
+              )}
+            </div>
+            <div>
+              <Label htmlFor='discounted-view-all'>
+                View All Text (English)
+              </Label>
+              <Input
+                id='discounted-view-all'
+                value={content.discountedProducts?.viewAllText ?? "View All"}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    discountedProducts: {
+                      ...prev.discountedProducts!,
+                      enabled: prev.discountedProducts?.enabled ?? true,
+                      title: prev.discountedProducts?.title ?? "Offers",
+                      viewAllText: e.target.value,
+                      viewAllLink:
+                        prev.discountedProducts?.viewAllLink ?? "/shop",
+                    },
+                  }))
+                }
+                placeholder='View All'
+                disabled={!(content.discountedProducts?.enabled ?? true)}
+              />
+              {isMinimal && (
                 <div className='mt-1'>
                   <Label className='text-xs text-muted-foreground flex items-center gap-1'>
                     <Languages className='w-3 h-3' /> Arabic
@@ -2403,37 +2401,35 @@ export default function HomepageAdminPage() {
                     disabled={!(content.discountedProducts?.enabled ?? true)}
                   />
                 </div>
-                )}
-              </div>
-              <div className='bg-muted p-3 rounded-md'>
-                <p className='text-sm text-muted-foreground'>
-                  <strong>Note:</strong> Products are automatically fetched —
-                  only items with a discount price are shown.
-                </p>
-              </div>
-              <HomepageProductPicker
-                selectedIds={
-                  content.discountedProducts?.productIds ?? []
-                }
-                onChange={(ids) =>
-                  setContent((prev) => ({
-                    ...prev,
-                    discountedProducts: {
-                      ...prev.discountedProducts!,
-                      enabled: prev.discountedProducts?.enabled ?? true,
-                      title: prev.discountedProducts?.title ?? "Offers",
-                      viewAllText:
-                        prev.discountedProducts?.viewAllText ?? "View All",
-                      viewAllLink:
-                        prev.discountedProducts?.viewAllLink ?? "/shop",
-                      productIds: ids.length > 0 ? ids : undefined,
-                    },
-                  }))
-                }
-                disabled={!(content.discountedProducts?.enabled ?? true)}
-              />
-            </CardContent>
-          </Card>
+              )}
+            </div>
+            <div className='bg-muted p-3 rounded-md'>
+              <p className='text-sm text-muted-foreground'>
+                <strong>Note:</strong> Products are automatically fetched — only
+                items with a discount price are shown.
+              </p>
+            </div>
+            <HomepageProductPicker
+              selectedIds={content.discountedProducts?.productIds ?? []}
+              onChange={(ids) =>
+                setContent((prev) => ({
+                  ...prev,
+                  discountedProducts: {
+                    ...prev.discountedProducts!,
+                    enabled: prev.discountedProducts?.enabled ?? true,
+                    title: prev.discountedProducts?.title ?? "Offers",
+                    viewAllText:
+                      prev.discountedProducts?.viewAllText ?? "View All",
+                    viewAllLink:
+                      prev.discountedProducts?.viewAllLink ?? "/shop",
+                    productIds: ids.length > 0 ? ids : undefined,
+                  },
+                }))
+              }
+              disabled={!(content.discountedProducts?.enabled ?? true)}
+            />
+          </CardContent>
+        </Card>
 
         {/* Featured Products Section */}
         <Card>
@@ -2460,9 +2456,7 @@ export default function HomepageAdminPage() {
           </CardHeader>
           <CardContent className='space-y-4'>
             <div>
-              <Label htmlFor='featured-title'>
-                Section Title (English)
-              </Label>
+              <Label htmlFor='featured-title'>Section Title (English)</Label>
               <Input
                 id='featured-title'
                 value={content.featuredProducts.title}
@@ -2479,7 +2473,7 @@ export default function HomepageAdminPage() {
                 disabled={!content.featuredProducts.enabled}
               />
               {isMinimal && (
-              <div className='mt-1'>
+                <div className='mt-1'>
                   <Label className='text-xs text-muted-foreground flex items-center gap-1'>
                     <Languages className='w-3 h-3' /> Arabic
                   </Label>
@@ -2524,25 +2518,23 @@ export default function HomepageAdminPage() {
             </div>
 
             <div>
-                <Label htmlFor='featured-view-all'>
-                  View All Text (English)
-                </Label>
-                <Input
-                  id='featured-view-all'
-                  value={content.featuredProducts.viewAllText}
-                  onChange={(e) =>
-                    setContent((prev) => ({
-                      ...prev,
-                      featuredProducts: {
-                        ...prev.featuredProducts,
-                        viewAllText: e.target.value,
-                      },
-                    }))
-                  }
-                  placeholder='View All Products'
-                  disabled={!content.featuredProducts.enabled}
-                />
-                {isMinimal && (
+              <Label htmlFor='featured-view-all'>View All Text (English)</Label>
+              <Input
+                id='featured-view-all'
+                value={content.featuredProducts.viewAllText}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    featuredProducts: {
+                      ...prev.featuredProducts,
+                      viewAllText: e.target.value,
+                    },
+                  }))
+                }
+                placeholder='View All Products'
+                disabled={!content.featuredProducts.enabled}
+              />
+              {isMinimal && (
                 <div className='mt-1'>
                   <Label className='text-xs text-muted-foreground flex items-center gap-1'>
                     <Languages className='w-3 h-3' /> Arabic
@@ -2564,8 +2556,8 @@ export default function HomepageAdminPage() {
                     disabled={!content.featuredProducts.enabled}
                   />
                 </div>
-                )}
-              </div>
+              )}
+            </div>
 
             <div className='bg-muted p-3 rounded-md'>
               <p className='text-sm text-muted-foreground'>
@@ -2574,74 +2566,69 @@ export default function HomepageAdminPage() {
               </p>
             </div>
             <HomepageProductPicker
-                selectedIds={
-                  content.featuredProducts?.productIds ?? []
-                }
-                onChange={(ids) =>
-                  setContent((prev) => ({
-                    ...prev,
-                    featuredProducts: {
-                      ...prev.featuredProducts,
-                      productIds: ids.length > 0 ? ids : undefined,
-                    },
-                  }))
-                }
-                disabled={!content.featuredProducts.enabled}
-              />
+              selectedIds={content.featuredProducts?.productIds ?? []}
+              onChange={(ids) =>
+                setContent((prev) => ({
+                  ...prev,
+                  featuredProducts: {
+                    ...prev.featuredProducts,
+                    productIds: ids.length > 0 ? ids : undefined,
+                  },
+                }))
+              }
+              disabled={!content.featuredProducts.enabled}
+            />
           </CardContent>
         </Card>
 
         {/* New Arrivals Section */}
         <Card>
-            <CardHeader>
-              <div className='flex items-center justify-between'>
-                <CardTitle>New Arrivals</CardTitle>
-                <div className='flex items-center gap-2'>
-                  <Label htmlFor='newarrivals-enabled'>Enabled</Label>
-                  <Switch
-                    id='newarrivals-enabled'
-                    checked={content.newArrivals?.enabled ?? true}
-                    onCheckedChange={(checked) =>
-                      setContent((prev) => ({
-                        ...prev,
-                        newArrivals: {
-                          enabled: checked,
-                          title: prev.newArrivals?.title ?? "New Arrivals",
-                          viewAllText:
-                            prev.newArrivals?.viewAllText ?? "View All",
-                          viewAllLink: prev.newArrivals?.viewAllLink ?? "/shop",
-                        },
-                      }))
-                    }
-                  />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className='space-y-4'>
-              <div>
-                <Label htmlFor='newarrivals-title'>
-                  Section Title (English)
-                </Label>
-                <Input
-                  id='newarrivals-title'
-                  value={content.newArrivals?.title ?? "New Arrivals"}
-                  onChange={(e) =>
+          <CardHeader>
+            <div className='flex items-center justify-between'>
+              <CardTitle>New Arrivals</CardTitle>
+              <div className='flex items-center gap-2'>
+                <Label htmlFor='newarrivals-enabled'>Enabled</Label>
+                <Switch
+                  id='newarrivals-enabled'
+                  checked={content.newArrivals?.enabled ?? true}
+                  onCheckedChange={(checked) =>
                     setContent((prev) => ({
                       ...prev,
                       newArrivals: {
-                        ...prev.newArrivals!,
-                        enabled: prev.newArrivals?.enabled ?? true,
-                        title: e.target.value,
+                        enabled: checked,
+                        title: prev.newArrivals?.title ?? "New Arrivals",
                         viewAllText:
                           prev.newArrivals?.viewAllText ?? "View All",
                         viewAllLink: prev.newArrivals?.viewAllLink ?? "/shop",
                       },
                     }))
                   }
-                  placeholder='New Arrivals'
-                  disabled={!(content.newArrivals?.enabled ?? true)}
                 />
-                {isMinimal && (
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <div>
+              <Label htmlFor='newarrivals-title'>Section Title (English)</Label>
+              <Input
+                id='newarrivals-title'
+                value={content.newArrivals?.title ?? "New Arrivals"}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    newArrivals: {
+                      ...prev.newArrivals!,
+                      enabled: prev.newArrivals?.enabled ?? true,
+                      title: e.target.value,
+                      viewAllText: prev.newArrivals?.viewAllText ?? "View All",
+                      viewAllLink: prev.newArrivals?.viewAllLink ?? "/shop",
+                    },
+                  }))
+                }
+                placeholder='New Arrivals'
+                disabled={!(content.newArrivals?.enabled ?? true)}
+              />
+              {isMinimal && (
                 <div className='mt-1'>
                   <Label className='text-xs text-muted-foreground flex items-center gap-1'>
                     <Languages className='w-3 h-3' /> Arabic
@@ -2668,31 +2655,31 @@ export default function HomepageAdminPage() {
                     disabled={!(content.newArrivals?.enabled ?? true)}
                   />
                 </div>
-                )}
-              </div>
-              <div>
-                <Label htmlFor='newarrivals-view-all'>
-                  View All Text (English)
-                </Label>
-                <Input
-                  id='newarrivals-view-all'
-                  value={content.newArrivals?.viewAllText ?? "View All"}
-                  onChange={(e) =>
-                    setContent((prev) => ({
-                      ...prev,
-                      newArrivals: {
-                        ...prev.newArrivals!,
-                        enabled: prev.newArrivals?.enabled ?? true,
-                        title: prev.newArrivals?.title ?? "New Arrivals",
-                        viewAllText: e.target.value,
-                        viewAllLink: prev.newArrivals?.viewAllLink ?? "/shop",
-                      },
-                    }))
-                  }
-                  placeholder='View All'
-                  disabled={!(content.newArrivals?.enabled ?? true)}
-                />
-                {isMinimal && (
+              )}
+            </div>
+            <div>
+              <Label htmlFor='newarrivals-view-all'>
+                View All Text (English)
+              </Label>
+              <Input
+                id='newarrivals-view-all'
+                value={content.newArrivals?.viewAllText ?? "View All"}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    newArrivals: {
+                      ...prev.newArrivals!,
+                      enabled: prev.newArrivals?.enabled ?? true,
+                      title: prev.newArrivals?.title ?? "New Arrivals",
+                      viewAllText: e.target.value,
+                      viewAllLink: prev.newArrivals?.viewAllLink ?? "/shop",
+                    },
+                  }))
+                }
+                placeholder='View All'
+                disabled={!(content.newArrivals?.enabled ?? true)}
+              />
+              {isMinimal && (
                 <div className='mt-1'>
                   <Label className='text-xs text-muted-foreground flex items-center gap-1'>
                     <Languages className='w-3 h-3' /> Arabic
@@ -2719,43 +2706,42 @@ export default function HomepageAdminPage() {
                     disabled={!(content.newArrivals?.enabled ?? true)}
                   />
                 </div>
-                )}
-              </div>
-              <div className='bg-muted p-3 rounded-md'>
-                <p className='text-sm text-muted-foreground'>
-                  <strong>Note:</strong> Products are automatically fetched —
-                  only recently added items are shown.
-                </p>
-              </div>
-              <HomepageProductPicker
-                selectedIds={
-                  content.newArrivals?.productIds ?? []
-                }
-                onChange={(ids) =>
-                  setContent((prev) => ({
-                    ...prev,
-                    newArrivals: {
-                      ...prev.newArrivals!,
-                      enabled: prev.newArrivals?.enabled ?? true,
-                      title: prev.newArrivals?.title ?? "New Arrivals",
-                      viewAllText:
-                        prev.newArrivals?.viewAllText ?? "View All",
-                      viewAllLink: prev.newArrivals?.viewAllLink ?? "/shop",
-                      productIds: ids.length > 0 ? ids : undefined,
-                    },
-                  }))
-                }
-                disabled={!(content.newArrivals?.enabled ?? true)}
-              />
-            </CardContent>
-          </Card>
+              )}
+            </div>
+            <div className='bg-muted p-3 rounded-md'>
+              <p className='text-sm text-muted-foreground'>
+                <strong>Note:</strong> Products are automatically fetched — only
+                recently added items are shown.
+              </p>
+            </div>
+            <HomepageProductPicker
+              selectedIds={content.newArrivals?.productIds ?? []}
+              onChange={(ids) =>
+                setContent((prev) => ({
+                  ...prev,
+                  newArrivals: {
+                    ...prev.newArrivals!,
+                    enabled: prev.newArrivals?.enabled ?? true,
+                    title: prev.newArrivals?.title ?? "New Arrivals",
+                    viewAllText: prev.newArrivals?.viewAllText ?? "View All",
+                    viewAllLink: prev.newArrivals?.viewAllLink ?? "/shop",
+                    productIds: ids.length > 0 ? ids : undefined,
+                  },
+                }))
+              }
+              disabled={!(content.newArrivals?.enabled ?? true)}
+            />
+          </CardContent>
+        </Card>
 
         {/* ── Bottom Carousel (above testimonials, Minimal only) ──────────── */}
         {isMinimal && (
           <Card>
             <CardHeader>
               <div className='flex items-center justify-between'>
-                <CardTitle className='text-base'>Bottom Carousel (Above Testimonials)</CardTitle>
+                <CardTitle className='text-base'>
+                  Bottom Carousel (Above Testimonials)
+                </CardTitle>
                 <div className='flex items-center gap-3'>
                   <Switch
                     checked={content.bottomCarousel?.enabled ?? true}
@@ -2786,7 +2772,10 @@ export default function HomepageAdminPage() {
                         ...prev,
                         bottomCarousel: {
                           enabled: prev.bottomCarousel?.enabled ?? true,
-                          slides: [...(prev.bottomCarousel?.slides ?? []), newSlide],
+                          slides: [
+                            ...(prev.bottomCarousel?.slides ?? []),
+                            newSlide,
+                          ],
                         },
                       }));
                     }}>
@@ -2798,195 +2787,280 @@ export default function HomepageAdminPage() {
             </CardHeader>
             <CardContent className='space-y-4'>
               <p className='text-sm text-muted-foreground'>
-                A full-width image carousel displayed just above the testimonials section on the homepage.
+                A full-width image carousel displayed just above the
+                testimonials section on the homepage.
               </p>
 
               {(content.bottomCarousel?.slides ?? []).length === 0 ? (
                 <div className='text-center py-8 text-sm text-muted-foreground border border-dashed border-gray-200 rounded-lg'>
                   <ImageIcon className='w-8 h-8 mx-auto mb-2 text-gray-300' />
-                  <p>No slides yet. Add slides to create a carousel above the testimonials.</p>
+                  <p>
+                    No slides yet. Add slides to create a carousel above the
+                    testimonials.
+                  </p>
                 </div>
               ) : (
                 <div className='space-y-4'>
-                  {(content.bottomCarousel?.slides ?? []).map((slide, index) => (
-                    <div key={slide.id} className='border border-gray-200 rounded-lg p-4 space-y-3'>
-                      <div className='flex items-center justify-between'>
-                        <span className='text-sm font-medium text-gray-700'>Slide {index + 1}</span>
-                        <Button
-                          type='button'
-                          variant='ghost'
-                          size='icon'
-                          className='h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50'
-                          onClick={() => {
-                            setContent((prev) => ({
-                              ...prev,
-                              bottomCarousel: {
-                                enabled: prev.bottomCarousel?.enabled ?? true,
-                                slides: (prev.bottomCarousel?.slides ?? []).filter((s) => s.id !== slide.id),
-                              },
-                            }));
-                          }}>
-                          <Trash2 className='w-4 h-4' />
-                        </Button>
-                      </div>
-
-                      {/* Desktop image */}
-                      <div>
-                        <Label className='text-xs'>Desktop Image</Label>
-                        <div className='flex gap-2 mt-1'>
-                          <Input
-                            value={slide.imageUrl}
-                            onChange={(e) => {
+                  {(content.bottomCarousel?.slides ?? []).map(
+                    (slide, index) => (
+                      <div
+                        key={slide.id}
+                        className='border border-gray-200 rounded-lg p-4 space-y-3'>
+                        <div className='flex items-center justify-between'>
+                          <span className='text-sm font-medium text-gray-700'>
+                            Slide {index + 1}
+                          </span>
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            size='icon'
+                            className='h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50'
+                            onClick={() => {
                               setContent((prev) => ({
                                 ...prev,
                                 bottomCarousel: {
                                   enabled: prev.bottomCarousel?.enabled ?? true,
-                                  slides: (prev.bottomCarousel?.slides ?? []).map((s) =>
-                                    s.id === slide.id ? { ...s, imageUrl: e.target.value } : s,
-                                  ),
+                                  slides: (
+                                    prev.bottomCarousel?.slides ?? []
+                                  ).filter((s) => s.id !== slide.id),
                                 },
                               }));
-                            }}
-                            placeholder='/uploads/homepage/bottom-slide.webp'
-                            className='text-sm'
-                          />
-                          <input
-                            type='file'
-                            id={`bottom-slide-upload-${slide.id}`}
-                            accept='image/jpeg,image/jpg,image/png,image/webp'
-                            className='hidden'
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              if (file.size > 5 * 1024 * 1024) {
-                                toast.error("File too large. Max 5MB.");
-                                return;
-                              }
-                              try {
-                                const buffer = new Uint8Array(await file.arrayBuffer());
-                                const result = await trpc.homepage.uploadHeroImage.mutate({
-                                  file: { name: file.name, type: file.type, buffer },
-                                });
-                                if (result.success && result.data) {
-                                  setContent((prev) => ({
-                                    ...prev,
-                                    bottomCarousel: {
-                                      enabled: prev.bottomCarousel?.enabled ?? true,
-                                      slides: (prev.bottomCarousel?.slides ?? []).map((s) =>
-                                        s.id === slide.id ? { ...s, imageUrl: result.data.url } : s,
-                                      ),
-                                    },
-                                  }));
-                                  toast.success("Slide image uploaded!");
-                                }
-                              } catch {
-                                toast.error("Upload failed");
-                              }
-                              e.target.value = "";
-                            }}
-                          />
-                          <Button
-                            type='button'
-                            variant='outline'
-                            size='sm'
-                            onClick={() => document.getElementById(`bottom-slide-upload-${slide.id}`)?.click()}>
-                            <Upload className='w-4 h-4' />
+                            }}>
+                            <Trash2 className='w-4 h-4' />
                           </Button>
                         </div>
-                        {slide.imageUrl && (
-                          <div className='mt-2 h-20 rounded overflow-hidden border bg-muted'>
-                            <img src={slide.imageUrl} alt={`Slide ${index + 1}`} className='w-full h-full object-cover' />
+
+                        {/* Desktop image */}
+                        <div>
+                          <Label className='text-xs'>Desktop Image</Label>
+                          <div className='flex gap-2 mt-1'>
+                            <Input
+                              value={slide.imageUrl}
+                              onChange={(e) => {
+                                setContent((prev) => ({
+                                  ...prev,
+                                  bottomCarousel: {
+                                    enabled:
+                                      prev.bottomCarousel?.enabled ?? true,
+                                    slides: (
+                                      prev.bottomCarousel?.slides ?? []
+                                    ).map((s) =>
+                                      s.id === slide.id
+                                        ? { ...s, imageUrl: e.target.value }
+                                        : s,
+                                    ),
+                                  },
+                                }));
+                              }}
+                              placeholder='/uploads/homepage/bottom-slide.webp'
+                              className='text-sm'
+                            />
+                            <input
+                              type='file'
+                              id={`bottom-slide-upload-${slide.id}`}
+                              accept='image/jpeg,image/jpg,image/png,image/webp'
+                              className='hidden'
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                if (file.size > 5 * 1024 * 1024) {
+                                  toast.error("File too large. Max 5MB.");
+                                  return;
+                                }
+                                try {
+                                  const buffer = new Uint8Array(
+                                    await file.arrayBuffer(),
+                                  );
+                                  const result =
+                                    await trpc.homepage.uploadHeroImage.mutate({
+                                      file: {
+                                        name: file.name,
+                                        type: file.type,
+                                        buffer,
+                                      },
+                                    });
+                                  if (result.success && result.data) {
+                                    setContent((prev) => ({
+                                      ...prev,
+                                      bottomCarousel: {
+                                        enabled:
+                                          prev.bottomCarousel?.enabled ?? true,
+                                        slides: (
+                                          prev.bottomCarousel?.slides ?? []
+                                        ).map((s) =>
+                                          s.id === slide.id
+                                            ? {
+                                                ...s,
+                                                imageUrl: result.data.url,
+                                              }
+                                            : s,
+                                        ),
+                                      },
+                                    }));
+                                    toast.success("Slide image uploaded!");
+                                  }
+                                } catch {
+                                  toast.error("Upload failed");
+                                }
+                                e.target.value = "";
+                              }}
+                            />
+                            <Button
+                              type='button'
+                              variant='outline'
+                              size='sm'
+                              onClick={() =>
+                                document
+                                  .getElementById(
+                                    `bottom-slide-upload-${slide.id}`,
+                                  )
+                                  ?.click()
+                              }>
+                              <Upload className='w-4 h-4' />
+                            </Button>
                           </div>
-                        )}
-                      </div>
+                          {slide.imageUrl && (
+                            <div className='mt-2 h-20 rounded overflow-hidden border bg-muted'>
+                              <img
+                                src={slide.imageUrl}
+                                alt={`Slide ${index + 1}`}
+                                className='w-full h-full object-cover'
+                              />
+                            </div>
+                          )}
+                        </div>
 
-                      {/* Mobile image */}
-                      <div>
-                        <Label className='text-xs'>Mobile Image (optional)</Label>
-                        <div className='flex gap-2 mt-1'>
+                        {/* Mobile image */}
+                        <div>
+                          <Label className='text-xs'>
+                            Mobile Image (optional)
+                          </Label>
+                          <div className='flex gap-2 mt-1'>
+                            <Input
+                              value={slide.mobileImageUrl || ""}
+                              onChange={(e) => {
+                                setContent((prev) => ({
+                                  ...prev,
+                                  bottomCarousel: {
+                                    enabled:
+                                      prev.bottomCarousel?.enabled ?? true,
+                                    slides: (
+                                      prev.bottomCarousel?.slides ?? []
+                                    ).map((s) =>
+                                      s.id === slide.id
+                                        ? {
+                                            ...s,
+                                            mobileImageUrl:
+                                              e.target.value || undefined,
+                                          }
+                                        : s,
+                                    ),
+                                  },
+                                }));
+                              }}
+                              placeholder='Optional mobile-specific image'
+                              className='text-sm'
+                            />
+                            <input
+                              type='file'
+                              id={`bottom-slide-mobile-upload-${slide.id}`}
+                              accept='image/jpeg,image/jpg,image/png,image/webp'
+                              className='hidden'
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                if (file.size > 5 * 1024 * 1024) {
+                                  toast.error("File too large. Max 5MB.");
+                                  return;
+                                }
+                                try {
+                                  const buffer = new Uint8Array(
+                                    await file.arrayBuffer(),
+                                  );
+                                  const result =
+                                    await trpc.homepage.uploadMobileHeroImage.mutate(
+                                      {
+                                        file: {
+                                          name: file.name,
+                                          type: file.type,
+                                          buffer,
+                                        },
+                                      },
+                                    );
+                                  if (result.success && result.data) {
+                                    setContent((prev) => ({
+                                      ...prev,
+                                      bottomCarousel: {
+                                        enabled:
+                                          prev.bottomCarousel?.enabled ?? true,
+                                        slides: (
+                                          prev.bottomCarousel?.slides ?? []
+                                        ).map((s) =>
+                                          s.id === slide.id
+                                            ? {
+                                                ...s,
+                                                mobileImageUrl: result.data.url,
+                                              }
+                                            : s,
+                                        ),
+                                      },
+                                    }));
+                                    toast.success(
+                                      "Mobile slide image uploaded!",
+                                    );
+                                  }
+                                } catch {
+                                  toast.error("Upload failed");
+                                }
+                                e.target.value = "";
+                              }}
+                            />
+                            <Button
+                              type='button'
+                              variant='outline'
+                              size='sm'
+                              onClick={() =>
+                                document
+                                  .getElementById(
+                                    `bottom-slide-mobile-upload-${slide.id}`,
+                                  )
+                                  ?.click()
+                              }>
+                              <Upload className='w-4 h-4' />
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Link URL */}
+                        <div>
+                          <Label className='text-xs'>Link URL (optional)</Label>
                           <Input
-                            value={slide.mobileImageUrl || ""}
+                            value={slide.linkUrl || ""}
                             onChange={(e) => {
                               setContent((prev) => ({
                                 ...prev,
                                 bottomCarousel: {
                                   enabled: prev.bottomCarousel?.enabled ?? true,
-                                  slides: (prev.bottomCarousel?.slides ?? []).map((s) =>
-                                    s.id === slide.id ? { ...s, mobileImageUrl: e.target.value || undefined } : s,
+                                  slides: (
+                                    prev.bottomCarousel?.slides ?? []
+                                  ).map((s) =>
+                                    s.id === slide.id
+                                      ? {
+                                          ...s,
+                                          linkUrl: e.target.value || undefined,
+                                        }
+                                      : s,
                                   ),
                                 },
                               }));
                             }}
-                            placeholder='Optional mobile-specific image'
-                            className='text-sm'
+                            placeholder='/shop or https://...'
+                            className='text-sm mt-1'
                           />
-                          <input
-                            type='file'
-                            id={`bottom-slide-mobile-upload-${slide.id}`}
-                            accept='image/jpeg,image/jpg,image/png,image/webp'
-                            className='hidden'
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              if (file.size > 5 * 1024 * 1024) {
-                                toast.error("File too large. Max 5MB.");
-                                return;
-                              }
-                              try {
-                                const buffer = new Uint8Array(await file.arrayBuffer());
-                                const result = await trpc.homepage.uploadMobileHeroImage.mutate({
-                                  file: { name: file.name, type: file.type, buffer },
-                                });
-                                if (result.success && result.data) {
-                                  setContent((prev) => ({
-                                    ...prev,
-                                    bottomCarousel: {
-                                      enabled: prev.bottomCarousel?.enabled ?? true,
-                                      slides: (prev.bottomCarousel?.slides ?? []).map((s) =>
-                                        s.id === slide.id ? { ...s, mobileImageUrl: result.data.url } : s,
-                                      ),
-                                    },
-                                  }));
-                                  toast.success("Mobile slide image uploaded!");
-                                }
-                              } catch {
-                                toast.error("Upload failed");
-                              }
-                              e.target.value = "";
-                            }}
-                          />
-                          <Button
-                            type='button'
-                            variant='outline'
-                            size='sm'
-                            onClick={() => document.getElementById(`bottom-slide-mobile-upload-${slide.id}`)?.click()}>
-                            <Upload className='w-4 h-4' />
-                          </Button>
                         </div>
                       </div>
-
-                      {/* Link URL */}
-                      <div>
-                        <Label className='text-xs'>Link URL (optional)</Label>
-                        <Input
-                          value={slide.linkUrl || ""}
-                          onChange={(e) => {
-                            setContent((prev) => ({
-                              ...prev,
-                              bottomCarousel: {
-                                enabled: prev.bottomCarousel?.enabled ?? true,
-                                slides: (prev.bottomCarousel?.slides ?? []).map((s) =>
-                                  s.id === slide.id ? { ...s, linkUrl: e.target.value || undefined } : s,
-                                ),
-                              },
-                            }));
-                          }}
-                          placeholder='/shop or https://...'
-                          className='text-sm mt-1'
-                        />
-                      </div>
-                    </div>
-                  ))}
+                    ),
+                  )}
                 </div>
               )}
             </CardContent>
@@ -3452,7 +3526,9 @@ export default function HomepageAdminPage() {
         {isMinimal && (
           <Card>
             <CardHeader>
-              <CardTitle className='text-base'>Product Page Carousel Title</CardTitle>
+              <CardTitle className='text-base'>
+                Product Page Carousel Title
+              </CardTitle>
             </CardHeader>
             <CardContent className='space-y-4'>
               <div className='grid grid-cols-2 gap-4'>
@@ -3488,213 +3564,278 @@ export default function HomepageAdminPage() {
           </Card>
         )}
 
-        {/* ── Testimonials (Minimal only) ──────────── */}
-        {isMinimal && (
-          <Card>
-            <CardHeader>
-              <div className='flex items-center justify-between'>
-                <CardTitle className='text-base'>Testimonials</CardTitle>
-                <Switch
-                  checked={content.testimonials?.enabled ?? false}
-                  onCheckedChange={(checked) =>
-                    setContent((prev) => ({
-                      ...prev,
-                      testimonials: {
-                        ...prev.testimonials!,
-                        enabled: checked,
-                        items: prev.testimonials?.items ?? [],
-                      },
-                    }))
-                  }
-                />
-              </div>
-            </CardHeader>
-            <CardContent className='space-y-4'>
-              <div className='grid grid-cols-2 gap-4'>
-                <div>
-                  <Label className='text-xs'>Section Title (English)</Label>
-                  <Input
-                    value={content.testimonials?.title ?? ""}
-                    onChange={(e) =>
-                      setContent((prev) => ({
-                        ...prev,
-                        testimonials: {
-                          ...prev.testimonials!,
-                          enabled: prev.testimonials?.enabled ?? false,
-                          items: prev.testimonials?.items ?? [],
-                          title: e.target.value,
-                        },
-                      }))
-                    }
-                    placeholder='What Our Customers Say'
-                    disabled={!(content.testimonials?.enabled ?? false)}
-                  />
-                </div>
-                <div>
-                  <Label className='text-xs'>Section Title (Arabic)</Label>
-                  <Input
-                    dir='rtl'
-                    value={content.testimonials?.titleAr ?? ""}
-                    onChange={(e) =>
-                      setContent((prev) => ({
-                        ...prev,
-                        testimonials: {
-                          ...prev.testimonials!,
-                          enabled: prev.testimonials?.enabled ?? false,
-                          items: prev.testimonials?.items ?? [],
-                          titleAr: e.target.value,
-                        },
-                      }))
-                    }
-                    placeholder='آراء عملائنا'
-                    disabled={!(content.testimonials?.enabled ?? false)}
-                  />
-                </div>
-              </div>
-
-              {/* Testimonial items */}
-              <div className='space-y-4'>
-                {(content.testimonials?.items ?? []).map((item, idx) => (
-                  <div key={idx} className='border rounded-lg p-4 space-y-3 bg-gray-50'>
-                    <div className='flex items-center justify-between'>
-                      <span className='text-sm font-medium'>Review #{idx + 1}</span>
-                      <Button
-                        type='button'
-                        variant='ghost'
-                        size='sm'
-                        className='text-red-500 hover:text-red-700'
-                        disabled={!(content.testimonials?.enabled ?? false)}
-                        onClick={() =>
-                          setContent((prev) => ({
-                            ...prev,
-                            testimonials: {
-                              ...prev.testimonials!,
-                              enabled: prev.testimonials?.enabled ?? false,
-                              items: (prev.testimonials?.items ?? []).filter((_, i) => i !== idx),
-                            },
-                          }))
-                        }>
-                        Remove
-                      </Button>
-                    </div>
-                    <div className='grid grid-cols-2 gap-3'>
-                      <div>
-                        <Label className='text-xs'>Name (English)</Label>
-                        <Input
-                          value={item.name}
-                          onChange={(e) =>
-                            setContent((prev) => {
-                              const items = [...(prev.testimonials?.items ?? [])];
-                              items[idx] = { ...items[idx], name: e.target.value } as typeof items[number];
-                              return { ...prev, testimonials: { ...prev.testimonials!, enabled: prev.testimonials?.enabled ?? false, items } };
-                            })
-                          }
-                          placeholder='John Doe'
-                          disabled={!(content.testimonials?.enabled ?? false)}
-                        />
-                      </div>
-                      <div>
-                        <Label className='text-xs'>Name (Arabic)</Label>
-                        <Input
-                          dir='rtl'
-                          value={item.nameAr ?? ""}
-                          onChange={(e) =>
-                            setContent((prev) => {
-                              const items = [...(prev.testimonials?.items ?? [])];
-                              items[idx] = { ...items[idx], nameAr: e.target.value } as typeof items[number];
-                              return { ...prev, testimonials: { ...prev.testimonials!, enabled: prev.testimonials?.enabled ?? false, items } };
-                            })
-                          }
-                          placeholder='محمد أحمد'
-                          disabled={!(content.testimonials?.enabled ?? false)}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label className='text-xs'>Stars (1-5)</Label>
-                      <div className='flex gap-1 mt-1'>
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            type='button'
-                            disabled={!(content.testimonials?.enabled ?? false)}
-                            onClick={() =>
-                              setContent((prev) => {
-                                const items = [...(prev.testimonials?.items ?? [])];
-                                items[idx] = { ...items[idx], rating: star } as typeof items[number];
-                                return { ...prev, testimonials: { ...prev.testimonials!, enabled: prev.testimonials?.enabled ?? false, items } };
-                              })
-                            }
-                            className='p-0.5 disabled:opacity-50'>
-                            <svg className={`w-5 h-5 ${star <= item.rating ? "text-amber-400" : "text-gray-300"}`} fill='currentColor' viewBox='0 0 20 20'>
-                              <path d='M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z' />
-                            </svg>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className='grid grid-cols-2 gap-3'>
-                      <div>
-                        <Label className='text-xs'>Review (English)</Label>
-                        <Textarea
-                          value={item.review}
-                          onChange={(e) =>
-                            setContent((prev) => {
-                              const items = [...(prev.testimonials?.items ?? [])];
-                              items[idx] = { ...items[idx], review: e.target.value } as typeof items[number];
-                              return { ...prev, testimonials: { ...prev.testimonials!, enabled: prev.testimonials?.enabled ?? false, items } };
-                            })
-                          }
-                          rows={2}
-                          placeholder='Great product...'
-                          disabled={!(content.testimonials?.enabled ?? false)}
-                        />
-                      </div>
-                      <div>
-                        <Label className='text-xs'>Review (Arabic)</Label>
-                        <Textarea
-                          dir='rtl'
-                          value={item.reviewAr ?? ""}
-                          onChange={(e) =>
-                            setContent((prev) => {
-                              const items = [...(prev.testimonials?.items ?? [])];
-                              items[idx] = { ...items[idx], reviewAr: e.target.value } as typeof items[number];
-                              return { ...prev, testimonials: { ...prev.testimonials!, enabled: prev.testimonials?.enabled ?? false, items } };
-                            })
-                          }
-                          rows={2}
-                          placeholder='منتج رائع...'
-                          disabled={!(content.testimonials?.enabled ?? false)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <Button
-                type='button'
-                variant='outline'
-                size='sm'
-                disabled={!(content.testimonials?.enabled ?? false)}
-                onClick={() =>
+        {/* ── Testimonials ──────────── */}
+        <Card>
+          <CardHeader>
+            <div className='flex items-center justify-between'>
+              <CardTitle className='text-base'>Testimonials</CardTitle>
+              <Switch
+                checked={content.testimonials?.enabled ?? false}
+                onCheckedChange={(checked) =>
                   setContent((prev) => ({
                     ...prev,
                     testimonials: {
                       ...prev.testimonials!,
-                      enabled: prev.testimonials?.enabled ?? false,
-                      items: [
-                        ...(prev.testimonials?.items ?? []),
-                        { name: "", nameAr: "", rating: 5, review: "", reviewAr: "" },
-                      ],
+                      enabled: checked,
+                      items: prev.testimonials?.items ?? [],
                     },
                   }))
-                }>
-                + Add Testimonial
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+                }
+              />
+            </div>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <div className='grid grid-cols-2 gap-4'>
+              <div>
+                <Label className='text-xs'>Section Title (English)</Label>
+                <Input
+                  value={content.testimonials?.title ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      testimonials: {
+                        ...prev.testimonials!,
+                        enabled: prev.testimonials?.enabled ?? false,
+                        items: prev.testimonials?.items ?? [],
+                        title: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='What Our Customers Say'
+                  disabled={!(content.testimonials?.enabled ?? false)}
+                />
+              </div>
+              <div>
+                <Label className='text-xs'>Section Title (Arabic)</Label>
+                <Input
+                  dir='rtl'
+                  value={content.testimonials?.titleAr ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      testimonials: {
+                        ...prev.testimonials!,
+                        enabled: prev.testimonials?.enabled ?? false,
+                        items: prev.testimonials?.items ?? [],
+                        titleAr: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='آراء عملائنا'
+                  disabled={!(content.testimonials?.enabled ?? false)}
+                />
+              </div>
+            </div>
+
+            {/* Testimonial items */}
+            <div className='space-y-4'>
+              {(content.testimonials?.items ?? []).map((item, idx) => (
+                <div
+                  key={idx}
+                  className='border rounded-lg p-4 space-y-3 bg-gray-50'>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm font-medium'>
+                      Review #{idx + 1}
+                    </span>
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='sm'
+                      className='text-red-500 hover:text-red-700'
+                      disabled={!(content.testimonials?.enabled ?? false)}
+                      onClick={() =>
+                        setContent((prev) => ({
+                          ...prev,
+                          testimonials: {
+                            ...prev.testimonials!,
+                            enabled: prev.testimonials?.enabled ?? false,
+                            items: (prev.testimonials?.items ?? []).filter(
+                              (_, i) => i !== idx,
+                            ),
+                          },
+                        }))
+                      }>
+                      Remove
+                    </Button>
+                  </div>
+                  <div className='grid grid-cols-2 gap-3'>
+                    <div>
+                      <Label className='text-xs'>Name (English)</Label>
+                      <Input
+                        value={item.name}
+                        onChange={(e) =>
+                          setContent((prev) => {
+                            const items = [...(prev.testimonials?.items ?? [])];
+                            items[idx] = {
+                              ...items[idx],
+                              name: e.target.value,
+                            } as (typeof items)[number];
+                            return {
+                              ...prev,
+                              testimonials: {
+                                ...prev.testimonials!,
+                                enabled: prev.testimonials?.enabled ?? false,
+                                items,
+                              },
+                            };
+                          })
+                        }
+                        placeholder='John Doe'
+                        disabled={!(content.testimonials?.enabled ?? false)}
+                      />
+                    </div>
+                    <div>
+                      <Label className='text-xs'>Name (Arabic)</Label>
+                      <Input
+                        dir='rtl'
+                        value={item.nameAr ?? ""}
+                        onChange={(e) =>
+                          setContent((prev) => {
+                            const items = [...(prev.testimonials?.items ?? [])];
+                            items[idx] = {
+                              ...items[idx],
+                              nameAr: e.target.value,
+                            } as (typeof items)[number];
+                            return {
+                              ...prev,
+                              testimonials: {
+                                ...prev.testimonials!,
+                                enabled: prev.testimonials?.enabled ?? false,
+                                items,
+                              },
+                            };
+                          })
+                        }
+                        placeholder='محمد أحمد'
+                        disabled={!(content.testimonials?.enabled ?? false)}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className='text-xs'>Stars (1-5)</Label>
+                    <div className='flex gap-1 mt-1'>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type='button'
+                          disabled={!(content.testimonials?.enabled ?? false)}
+                          onClick={() =>
+                            setContent((prev) => {
+                              const items = [
+                                ...(prev.testimonials?.items ?? []),
+                              ];
+                              items[idx] = {
+                                ...items[idx],
+                                rating: star,
+                              } as (typeof items)[number];
+                              return {
+                                ...prev,
+                                testimonials: {
+                                  ...prev.testimonials!,
+                                  enabled: prev.testimonials?.enabled ?? false,
+                                  items,
+                                },
+                              };
+                            })
+                          }
+                          className='p-0.5 disabled:opacity-50'>
+                          <svg
+                            className={`w-5 h-5 ${star <= item.rating ? "text-amber-400" : "text-gray-300"}`}
+                            fill='currentColor'
+                            viewBox='0 0 20 20'>
+                            <path d='M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z' />
+                          </svg>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className='grid grid-cols-2 gap-3'>
+                    <div>
+                      <Label className='text-xs'>Review (English)</Label>
+                      <Textarea
+                        value={item.review}
+                        onChange={(e) =>
+                          setContent((prev) => {
+                            const items = [...(prev.testimonials?.items ?? [])];
+                            items[idx] = {
+                              ...items[idx],
+                              review: e.target.value,
+                            } as (typeof items)[number];
+                            return {
+                              ...prev,
+                              testimonials: {
+                                ...prev.testimonials!,
+                                enabled: prev.testimonials?.enabled ?? false,
+                                items,
+                              },
+                            };
+                          })
+                        }
+                        rows={2}
+                        placeholder='Great product...'
+                        disabled={!(content.testimonials?.enabled ?? false)}
+                      />
+                    </div>
+                    <div>
+                      <Label className='text-xs'>Review (Arabic)</Label>
+                      <Textarea
+                        dir='rtl'
+                        value={item.reviewAr ?? ""}
+                        onChange={(e) =>
+                          setContent((prev) => {
+                            const items = [...(prev.testimonials?.items ?? [])];
+                            items[idx] = {
+                              ...items[idx],
+                              reviewAr: e.target.value,
+                            } as (typeof items)[number];
+                            return {
+                              ...prev,
+                              testimonials: {
+                                ...prev.testimonials!,
+                                enabled: prev.testimonials?.enabled ?? false,
+                                items,
+                              },
+                            };
+                          })
+                        }
+                        rows={2}
+                        placeholder='منتج رائع...'
+                        disabled={!(content.testimonials?.enabled ?? false)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              disabled={!(content.testimonials?.enabled ?? false)}
+              onClick={() =>
+                setContent((prev) => ({
+                  ...prev,
+                  testimonials: {
+                    ...prev.testimonials!,
+                    enabled: prev.testimonials?.enabled ?? false,
+                    items: [
+                      ...(prev.testimonials?.items ?? []),
+                      {
+                        name: "",
+                        nameAr: "",
+                        rating: 5,
+                        review: "",
+                        reviewAr: "",
+                      },
+                    ],
+                  },
+                }))
+              }>
+              + Add Testimonial
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* ── About Us Section (Minimal only) ──────────── */}
         {isMinimal && (
@@ -3841,9 +3982,10 @@ export default function HomepageAdminPage() {
                       }
                       try {
                         const buffer = new Uint8Array(await file.arrayBuffer());
-                        const result = await trpc.homepage.uploadHeroImage.mutate({
-                          file: { name: file.name, type: file.type, buffer },
-                        });
+                        const result =
+                          await trpc.homepage.uploadHeroImage.mutate({
+                            file: { name: file.name, type: file.type, buffer },
+                          });
                         if (result.success && result.data) {
                           setContent((prev) => ({
                             ...prev,
@@ -3868,7 +4010,9 @@ export default function HomepageAdminPage() {
                     variant='outline'
                     size='sm'
                     disabled={!(content.aboutUs?.enabled ?? false)}
-                    onClick={() => document.getElementById("about-us-image-upload")?.click()}>
+                    onClick={() =>
+                      document.getElementById("about-us-image-upload")?.click()
+                    }>
                     <Upload className='w-4 h-4' />
                   </Button>
                 </div>
@@ -3876,7 +4020,8 @@ export default function HomepageAdminPage() {
                   <div className='mt-2'>
                     <img
                       src={
-                        content.aboutUs.imageUrl.startsWith("http") || content.aboutUs.imageUrl.startsWith("/")
+                        content.aboutUs.imageUrl.startsWith("http") ||
+                        content.aboutUs.imageUrl.startsWith("/")
                           ? content.aboutUs.imageUrl
                           : `/uploads/${content.aboutUs.imageUrl}`
                       }

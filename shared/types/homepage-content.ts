@@ -374,16 +374,80 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
     slides: [],
     heading: "We Would Love To Hear From You",
     headingAr: "نود أن نسمع منك",
-    description: "Have a question, feedback, or just want to say hello? Drop us a message and we'll get back to you as soon as possible.",
-    descriptionAr: "هل لديك سؤال أو ملاحظة أو تريد فقط أن تقول مرحبا؟ أرسل لنا رسالة وسنعود إليك في أقرب وقت ممكن.",
+    description:
+      "Have a question, feedback, or just want to say hello? Drop us a message and we'll get back to you as soon as possible.",
+    descriptionAr:
+      "هل لديك سؤال أو ملاحظة أو تريد فقط أن تقول مرحبا؟ أرسل لنا رسالة وسنعود إليك في أقرب وقت ممكن.",
     directionsUrl: "",
   },
   aboutUs: {
     enabled: false,
     title: "About Us",
     titleAr: "من نحن",
-    description: "Welcome to our store. We are passionate about bringing you the finest products.",
+    description:
+      "Welcome to our store. We are passionate about bringing you the finest products.",
     descriptionAr: "",
     imageUrl: "",
+  },
+  testimonials: {
+    enabled: true,
+    title: undefined,
+    titleAr: undefined,
+    items: [
+      {
+        name: "Sarah Mitchell",
+        nameAr: "نورة العتيبي",
+        rating: 5,
+        review:
+          "Absolutely love the quality! Fast shipping and the product exceeded my expectations. Will definitely order again.",
+        reviewAr:
+          "من أفضل المنتجات اللي استخدمتها وبصراحة يستاهل أضعاف سعره، جودة عالية وتوصيل سريع.",
+      },
+      {
+        name: "James Cooper",
+        nameAr: "محمد المحسن",
+        rating: 5,
+        review:
+          "Excellent shopping experience from start to finish. Customer service was outstanding and the product looks even better in person.",
+        reviewAr:
+          "تجربة شراء ممتازة من البداية للنهاية، خدمة عملاء رائعة والمنتج طلع أحلى من الصور.",
+      },
+      {
+        name: "Emily Chen",
+        nameAr: "فرح أحمد",
+        rating: 5,
+        review:
+          "The attention to detail is remarkable. Premium packaging and the product itself is simply stunning. Highly recommended!",
+        reviewAr:
+          "تميز وإتقان سواء على مستوى التقديم أو جودة المنتجات، شكراً جزيلاً.",
+      },
+      {
+        name: "David Wilson",
+        nameAr: "مهند المري",
+        rating: 4,
+        review:
+          "Fast delivery and solid quality. Returns were effortless when I needed to swap sizes — customer support made it painless.",
+        reviewAr:
+          "التوصيل سريع والجودة ممتازة، وتجربة الاستبدال كانت سهلة جداً بفضل خدمة العملاء.",
+      },
+      {
+        name: "Olivia Taylor",
+        nameAr: "ريم الشمري",
+        rating: 5,
+        review:
+          "Everything was beautifully packaged and presented. The product quality is exceptional — worth every penny.",
+        reviewAr:
+          "كل شيء كان مرتباً ومغلفاً بشكل أنيق، والمنتج نفسه جودته عالية جداً.",
+      },
+      {
+        name: "Marcus Reyes",
+        nameAr: "خالد السبيعي",
+        rating: 4,
+        review:
+          "Great value for the price. Shipping was a day faster than estimated and the item matched the photos exactly.",
+        reviewAr:
+          "قيمة ممتازة مقابل السعر، الشحن أسرع من المتوقع والمنتج مطابق تماماً للصور.",
+      },
+    ],
   },
 };
