@@ -1,4 +1,5 @@
-import { useEffect, type MouseEvent } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
+import { createPortal } from "react-dom";
 import { HomeFeaturedProducts } from "../home/HomeFeaturedProducts";
 import type { FeaturedProduct } from "../home/HomeFeaturedProducts";
 import {
@@ -130,26 +131,53 @@ export function LandingTemplateModern({
     };
   }, [hasNewsletter]);
 
+  // Portal target lives inside the global navbar chrome (above the navbar)
+  // so the promo banner stacks correctly as fixed chrome instead of being
+  // overlaid by the fixed navbar.
+  const [bannerSlot, setBannerSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const findSlot = () =>
+      setBannerSlot(document.getElementById("chrome-banner-slot"));
+    findSlot();
+    // Slot may mount slightly after this effect — observe document for it.
+    const obs = new MutationObserver(findSlot);
+    obs.observe(document.body, { childList: true, subtree: true });
+    return () => obs.disconnect();
+  }, []);
+
+  const promoBannerNode = (() => {
+    if (!content.promoBanner.enabled) return null;
+    const text = content.promoBanner.text?.trim() ?? "";
+    const linkText = content.promoBanner.linkText?.trim() ?? "";
+    const linkUrl = content.promoBanner.linkUrl?.trim() ?? "";
+    const hasLink = linkText && linkUrl;
+    // Don't render an empty bar (or one that's just a dangling em-dash).
+    if (!text && !hasLink) return null;
+
+    return (
+      <div className='w-full bg-neutral-900 text-white text-xs sm:text-sm'>
+        <div className='max-w-7xl mx-auto px-4 py-2 sm:py-2.5 text-center leading-tight tracking-wide'>
+          {text}
+          {text && hasLink && " — "}
+          {hasLink && (
+            <a
+              href={linkUrl}
+              className='underline underline-offset-2 hover:no-underline whitespace-nowrap'>
+              {linkText}
+            </a>
+          )}
+        </div>
+      </div>
+    );
+  })();
+
   return (
     <div className={`landing-template-modern ${className}`}>
-      {/* Promotional Banner — slim announcement whisper */}
-      {content.promoBanner.enabled && (
-        <div className='bg-neutral-900 text-white py-2 text-center'>
-          <p className='text-sm tracking-wide'>
-            {content.promoBanner.text}
-            {content.promoBanner.linkText && content.promoBanner.linkUrl && (
-              <>
-                {" "}
-                <a
-                  href={content.promoBanner.linkUrl}
-                  className='underline decoration-white/40 underline-offset-2 hover:decoration-white transition-colors'>
-                  {content.promoBanner.linkText}
-                </a>
-              </>
-            )}
-          </p>
-        </div>
-      )}
+      {/* Promotional banner is portaled into the global chrome (above the navbar).
+          Falls back to inline rendering during SSR / before the slot mounts. */}
+      {promoBannerNode &&
+        (bannerSlot ? createPortal(promoBannerNode, bannerSlot) : null)}
 
       {/* Hero Section — Editorial Bottom-Left Layout */}
       {content.hero.enabled && (

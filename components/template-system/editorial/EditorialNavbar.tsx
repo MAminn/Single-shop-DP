@@ -1,6 +1,16 @@
 import { useContext, useEffect, useState, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Menu, Search, ShoppingBag, X, User, Package, Heart, LogOut, LayoutDashboard } from "lucide-react";
+import {
+  Menu,
+  Search,
+  ShoppingBag,
+  X,
+  User,
+  Package,
+  Heart,
+  LogOut,
+  LayoutDashboard,
+} from "lucide-react";
 import { Link } from "#root/components/utils/Link";
 import {
   Sheet,
@@ -133,17 +143,13 @@ export function EditorialNavbar() {
     <>
       {/* Announcement bar — refined, restrained */}
       {announcementEnabled && announcementText && (
-        <div className='w-full bg-stone-900 text-white/70 text-center py-2 px-6 text-[10px] tracking-[0.28em] uppercase font-light z-10001 relative select-none'>
+        <div className='w-full bg-stone-900 text-white/70 text-center py-2 px-6 text-[10px] tracking-[0.28em] uppercase font-light select-none'>
           {announcementText}
         </div>
       )}
       <motion.nav
         aria-label='Editorial navigation'
-        className={`transition-[backdrop-filter] duration-500 ${isScrolled ? "backdrop-blur-2xl" : "backdrop-blur-0"} ${
-          isSolid
-            ? "sticky top-0 z-10000 py-5 lg:py-7"
-            : `fixed inset-x-0 z-10000 py-5 lg:py-7 ${announcementEnabled && announcementText ? "top-8.5" : "top-0"}`
-        }`}
+        className={`w-full py-5 lg:py-7 transition-[backdrop-filter] duration-500 ${isScrolled ? "backdrop-blur-2xl" : "backdrop-blur-0"}`}
         animate={{
           backgroundColor: isScrolled
             ? "rgba(255,255,255,0.96)"
@@ -207,25 +213,41 @@ export function EditorialNavbar() {
 
                       {session && (
                         <div className='border-t border-stone-200/60 pt-7 mb-6 space-y-5'>
-                          <Link href='/account' className='flex items-center gap-2.5 text-[11px] tracking-[0.2em] uppercase text-stone-500 hover:text-stone-800 transition-colors' onClick={handleCloseSheet}>
-                            <User className="w-3.5 h-3.5" /> My Account
+                          <Link
+                            href='/account'
+                            className='flex items-center gap-2.5 text-[11px] tracking-[0.2em] uppercase text-stone-500 hover:text-stone-800 transition-colors'
+                            onClick={handleCloseSheet}>
+                            <User className='w-3.5 h-3.5' /> My Account
                           </Link>
-                          <Link href='/account?tab=orders' className='flex items-center gap-2.5 text-[11px] tracking-[0.2em] uppercase text-stone-500 hover:text-stone-800 transition-colors' onClick={handleCloseSheet}>
-                            <Package className="w-3.5 h-3.5" /> Orders
+                          <Link
+                            href='/account?tab=orders'
+                            className='flex items-center gap-2.5 text-[11px] tracking-[0.2em] uppercase text-stone-500 hover:text-stone-800 transition-colors'
+                            onClick={handleCloseSheet}>
+                            <Package className='w-3.5 h-3.5' /> Orders
                           </Link>
-                          <Link href='/account?tab=wishlist' className='flex items-center gap-2.5 text-[11px] tracking-[0.2em] uppercase text-stone-500 hover:text-stone-800 transition-colors' onClick={handleCloseSheet}>
-                            <Heart className="w-3.5 h-3.5" /> Wishlist
+                          <Link
+                            href='/account?tab=wishlist'
+                            className='flex items-center gap-2.5 text-[11px] tracking-[0.2em] uppercase text-stone-500 hover:text-stone-800 transition-colors'
+                            onClick={handleCloseSheet}>
+                            <Heart className='w-3.5 h-3.5' /> Wishlist
                           </Link>
                           {session.role === "admin" && (
-                            <Link href='/dashboard' className='flex items-center gap-2.5 text-[11px] tracking-[0.2em] uppercase text-stone-500 hover:text-stone-800 transition-colors' onClick={handleCloseSheet}>
-                              <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
+                            <Link
+                              href='/dashboard'
+                              className='flex items-center gap-2.5 text-[11px] tracking-[0.2em] uppercase text-stone-500 hover:text-stone-800 transition-colors'
+                              onClick={handleCloseSheet}>
+                              <LayoutDashboard className='w-3.5 h-3.5' />{" "}
+                              Dashboard
                             </Link>
                           )}
                           <button
-                            onClick={() => { logout(); handleCloseSheet(); }}
+                            onClick={() => {
+                              logout();
+                              handleCloseSheet();
+                            }}
                             className='flex items-center gap-2.5 text-[11px] tracking-[0.2em] uppercase text-red-500 hover:text-red-700 transition-colors'
                             type='button'>
-                            <LogOut className="w-3.5 h-3.5" /> Sign Out
+                            <LogOut className='w-3.5 h-3.5' /> Sign Out
                           </button>
                         </div>
                       )}
@@ -312,53 +334,72 @@ export function EditorialNavbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    type="button"
+                    type='button'
                     className={`p-1 transition-colors duration-300 hidden lg:flex items-center justify-center w-7 h-7 rounded-full text-[11px] font-medium ${isScrolled ? "bg-stone-900 text-white" : "bg-white text-stone-900"}`}
-                    aria-label="Account menu">
-                    {session.name ? session.name.charAt(0).toUpperCase() : <User size={14} />}
+                    aria-label='Account menu'>
+                    {session.name ? (
+                      session.name.charAt(0).toUpperCase()
+                    ) : (
+                      <User size={14} />
+                    )}
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52 z-[10001]">
-                  <div className="px-3 py-2 border-b border-stone-100">
-                    <p className="text-sm font-medium text-stone-900 truncate">{session.name || "Account"}</p>
-                    <p className="text-xs text-stone-400 truncate">{session.email}</p>
+                <DropdownMenuContent align='end' className='w-52 z-[10001]'>
+                  <div className='px-3 py-2 border-b border-stone-100'>
+                    <p className='text-sm font-medium text-stone-900 truncate'>
+                      {session.name || "Account"}
+                    </p>
+                    <p className='text-xs text-stone-400 truncate'>
+                      {session.email}
+                    </p>
                   </div>
                   <DropdownMenuItem asChild>
-                    <Link href="/account" className="flex items-center gap-2.5 cursor-pointer">
-                      <User className="w-4 h-4 text-stone-500" /> My Account
+                    <Link
+                      href='/account'
+                      className='flex items-center gap-2.5 cursor-pointer'>
+                      <User className='w-4 h-4 text-stone-500' /> My Account
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/account?tab=orders" className="flex items-center gap-2.5 cursor-pointer">
-                      <Package className="w-4 h-4 text-stone-500" /> Orders
+                    <Link
+                      href='/account?tab=orders'
+                      className='flex items-center gap-2.5 cursor-pointer'>
+                      <Package className='w-4 h-4 text-stone-500' /> Orders
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/account?tab=wishlist" className="flex items-center gap-2.5 cursor-pointer">
-                      <Heart className="w-4 h-4 text-stone-500" /> Wishlist
+                    <Link
+                      href='/account?tab=wishlist'
+                      className='flex items-center gap-2.5 cursor-pointer'>
+                      <Heart className='w-4 h-4 text-stone-500' /> Wishlist
                     </Link>
                   </DropdownMenuItem>
                   {session.role === "admin" && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
-                        <Link href="/dashboard" className="flex items-center gap-2.5 cursor-pointer">
-                          <LayoutDashboard className="w-4 h-4 text-stone-500" /> Dashboard
+                        <Link
+                          href='/dashboard'
+                          className='flex items-center gap-2.5 cursor-pointer'>
+                          <LayoutDashboard className='w-4 h-4 text-stone-500' />{" "}
+                          Dashboard
                         </Link>
                       </DropdownMenuItem>
                     </>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout} className="flex items-center gap-2.5 cursor-pointer text-red-600 focus:text-red-600">
-                    <LogOut className="w-4 h-4" /> Sign Out
+                  <DropdownMenuItem
+                    onClick={logout}
+                    className='flex items-center gap-2.5 cursor-pointer text-red-600 focus:text-red-600'>
+                    <LogOut className='w-4 h-4' /> Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <Link
-                href="/login"
+                href='/login'
                 className={`p-1 transition-colors duration-300 hidden lg:block ${iconCls}`}
-                aria-label="Sign in">
+                aria-label='Sign in'>
                 <User size={18} strokeWidth={1.3} />
               </Link>
             )}
@@ -384,16 +425,20 @@ export function EditorialNavbar() {
             {/* Mobile user icon */}
             {session ? (
               <Link
-                href="/account"
+                href='/account'
                 className={`p-0.5 lg:hidden flex items-center justify-center w-7 h-7 rounded-full text-[11px] font-medium transition-colors duration-300 ${isScrolled ? "bg-stone-900 text-white" : "bg-white text-stone-900"}`}
-                aria-label="Account">
-                {session.name ? session.name.charAt(0).toUpperCase() : <User size={14} />}
+                aria-label='Account'>
+                {session.name ? (
+                  session.name.charAt(0).toUpperCase()
+                ) : (
+                  <User size={14} />
+                )}
               </Link>
             ) : (
               <Link
-                href="/login"
+                href='/login'
                 className={`p-1 lg:hidden transition-colors duration-300 ${iconCls}`}
-                aria-label="Sign in">
+                aria-label='Sign in'>
                 <User size={18} strokeWidth={1.3} />
               </Link>
             )}

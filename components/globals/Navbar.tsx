@@ -1,7 +1,19 @@
 import type React from "react";
 import { useContext, useEffect, useState, useRef } from "react";
 import { Button } from "#root/components/ui/button";
-import { Menu, ShoppingCart, Globe, User, Search, X, Package, Heart, Settings, LogOut, LayoutDashboard } from "lucide-react";
+import {
+  Menu,
+  ShoppingCart,
+  Globe,
+  User,
+  Search,
+  X,
+  Package,
+  Heart,
+  Settings,
+  LogOut,
+  LayoutDashboard,
+} from "lucide-react";
 import {
   Sheet,
   SheetTrigger,
@@ -158,13 +170,10 @@ const Navbar: React.FC<NavbarProps> = ({
   const announcementText = layoutSettings.header.announcementBarText;
 
   return (
-    // Single sticky/fixed wrapper: announcement bar + nav are siblings in
-    // normal flow, so the navbar can never overlap the banner — regardless of
-    // banner height (e.g. text wrapping to 2 lines on mobile).
-    <div
-      className={`w-full z-[10000] ${
-        isSolid ? "sticky top-0" : "fixed inset-x-0 top-0"
-      }`}>
+    // Banner + nav are flow siblings. Positioning (fixed top-0) is owned by
+    // the parent GlobalNavbarChrome wrapper so the navbar can never overlap
+    // the banner — no matter how many lines the banner text wraps to.
+    <>
       {/* Announcement bar */}
       {announcementEnabled && announcementText && (
         <div className='w-full bg-black text-white text-xs sm:text-sm'>
@@ -239,25 +248,40 @@ const Navbar: React.FC<NavbarProps> = ({
                       {/* Auth links if logged in */}
                       {session && (
                         <div className='border-t border-stone-200 pt-5 mb-6 space-y-4'>
-                          <Link href='/account' className='flex items-center gap-2.5 text-sm text-stone-700 hover:text-stone-900' onClick={handleCloseSheet}>
-                            <User className="w-4 h-4" /> My Account
+                          <Link
+                            href='/account'
+                            className='flex items-center gap-2.5 text-sm text-stone-700 hover:text-stone-900'
+                            onClick={handleCloseSheet}>
+                            <User className='w-4 h-4' /> My Account
                           </Link>
-                          <Link href='/account?tab=orders' className='flex items-center gap-2.5 text-sm text-stone-700 hover:text-stone-900' onClick={handleCloseSheet}>
-                            <Package className="w-4 h-4" /> Orders
+                          <Link
+                            href='/account?tab=orders'
+                            className='flex items-center gap-2.5 text-sm text-stone-700 hover:text-stone-900'
+                            onClick={handleCloseSheet}>
+                            <Package className='w-4 h-4' /> Orders
                           </Link>
-                          <Link href='/account?tab=wishlist' className='flex items-center gap-2.5 text-sm text-stone-700 hover:text-stone-900' onClick={handleCloseSheet}>
-                            <Heart className="w-4 h-4" /> Wishlist
+                          <Link
+                            href='/account?tab=wishlist'
+                            className='flex items-center gap-2.5 text-sm text-stone-700 hover:text-stone-900'
+                            onClick={handleCloseSheet}>
+                            <Heart className='w-4 h-4' /> Wishlist
                           </Link>
                           {session.role === "admin" && (
-                            <Link href='/dashboard' className='flex items-center gap-2.5 text-sm text-stone-700 hover:text-stone-900' onClick={handleCloseSheet}>
-                              <LayoutDashboard className="w-4 h-4" /> Dashboard
+                            <Link
+                              href='/dashboard'
+                              className='flex items-center gap-2.5 text-sm text-stone-700 hover:text-stone-900'
+                              onClick={handleCloseSheet}>
+                              <LayoutDashboard className='w-4 h-4' /> Dashboard
                             </Link>
                           )}
                           <button
-                            onClick={() => { logout(); handleCloseSheet(); }}
+                            onClick={() => {
+                              logout();
+                              handleCloseSheet();
+                            }}
                             className='flex items-center gap-2.5 text-sm text-red-600 hover:text-red-700'
                             type='button'>
-                            <LogOut className="w-4 h-4" /> Logout
+                            <LogOut className='w-4 h-4' /> Logout
                           </button>
                         </div>
                       )}
@@ -323,32 +347,46 @@ const Navbar: React.FC<NavbarProps> = ({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      type="button"
+                      type='button'
                       className={`w-9 h-9 rounded-full flex items-center justify-center font-medium text-sm transition-all duration-[240ms] ${isScrolled ? "bg-stone-900 text-white hover:bg-stone-700" : "bg-white text-black hover:bg-white/90"}`}
-                      aria-label="Account menu">
-                      {session.name ? session.name.charAt(0).toUpperCase() : <User size={16} />}
+                      aria-label='Account menu'>
+                      {session.name ? (
+                        session.name.charAt(0).toUpperCase()
+                      ) : (
+                        <User size={16} />
+                      )}
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-52 z-[10001]">
-                    <div className="px-3 py-2 border-b border-stone-100">
-                      <p className="text-sm font-medium text-stone-900 truncate">{session.name || "Account"}</p>
-                      <p className="text-xs text-stone-400 truncate">{session.email}</p>
+                  <DropdownMenuContent align='end' className='w-52 z-[10001]'>
+                    <div className='px-3 py-2 border-b border-stone-100'>
+                      <p className='text-sm font-medium text-stone-900 truncate'>
+                        {session.name || "Account"}
+                      </p>
+                      <p className='text-xs text-stone-400 truncate'>
+                        {session.email}
+                      </p>
                     </div>
                     <DropdownMenuItem asChild>
-                      <Link href="/account" className="flex items-center gap-2.5 cursor-pointer">
-                        <User className="w-4 h-4 text-stone-500" />
+                      <Link
+                        href='/account'
+                        className='flex items-center gap-2.5 cursor-pointer'>
+                        <User className='w-4 h-4 text-stone-500' />
                         My Account
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/account?tab=orders" className="flex items-center gap-2.5 cursor-pointer">
-                        <Package className="w-4 h-4 text-stone-500" />
+                      <Link
+                        href='/account?tab=orders'
+                        className='flex items-center gap-2.5 cursor-pointer'>
+                        <Package className='w-4 h-4 text-stone-500' />
                         Orders
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/account?tab=wishlist" className="flex items-center gap-2.5 cursor-pointer">
-                        <Heart className="w-4 h-4 text-stone-500" />
+                      <Link
+                        href='/account?tab=wishlist'
+                        className='flex items-center gap-2.5 cursor-pointer'>
+                        <Heart className='w-4 h-4 text-stone-500' />
                         Wishlist
                       </Link>
                     </DropdownMenuItem>
@@ -356,8 +394,10 @@ const Navbar: React.FC<NavbarProps> = ({
                       <>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
-                          <Link href="/dashboard" className="flex items-center gap-2.5 cursor-pointer">
-                            <LayoutDashboard className="w-4 h-4 text-stone-500" />
+                          <Link
+                            href='/dashboard'
+                            className='flex items-center gap-2.5 cursor-pointer'>
+                            <LayoutDashboard className='w-4 h-4 text-stone-500' />
                             Dashboard
                           </Link>
                         </DropdownMenuItem>
@@ -366,8 +406,8 @@ const Navbar: React.FC<NavbarProps> = ({
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={logout}
-                      className="flex items-center gap-2.5 cursor-pointer text-red-600 focus:text-red-600">
-                      <LogOut className="w-4 h-4" />
+                      className='flex items-center gap-2.5 cursor-pointer text-red-600 focus:text-red-600'>
+                      <LogOut className='w-4 h-4' />
                       Logout
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -470,13 +510,17 @@ const Navbar: React.FC<NavbarProps> = ({
               <Link
                 href='/account'
                 className={`lg:hidden w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm transition-all ${isScrolled ? "bg-stone-900 text-white" : "bg-white text-black"}`}>
-                {session.name ? session.name.charAt(0).toUpperCase() : <User size={14} />}
+                {session.name ? (
+                  session.name.charAt(0).toUpperCase()
+                ) : (
+                  <User size={14} />
+                )}
               </Link>
             )}
           </div>
         </div>
       </nav>
-    </div>
+    </>
   );
 };
 

@@ -5,7 +5,7 @@ import { MinimalFooter } from "#root/components/template-system/minimal/MinimalF
 import { MinimalComingSoonPage } from "#root/components/template-system/minimal/MinimalComingSoonPage";
 import { MinimalI18nProvider } from "#root/lib/i18n/MinimalI18nContext";
 import { Footer } from "#root/components/globals/Footer";
-import { useContext, useEffect, useState, memo } from "react";
+import { useContext, useEffect, useRef, useState, memo } from "react";
 import "./style.css";
 import { toast, Toaster } from "sonner";
 import { CartToastContainer } from "#root/components/ui/cart-toast";
@@ -189,9 +189,12 @@ function LayoutShell({
 
   useEffect(() => {
     if (!isMinimal) return;
-    trpc.settings.getComingSoonMode.query().then((res) => {
-      if (res.success) setComingSoonMode(res.result);
-    }).catch(() => {});
+    trpc.settings.getComingSoonMode
+      .query()
+      .then((res) => {
+        if (res.success) setComingSoonMode(res.result);
+      })
+      .catch(() => {});
   }, [isMinimal]);
 
   const shouldShowComingSoon =
@@ -233,7 +236,9 @@ function LayoutShell({
             id='page-content'
             className={`bg-background h-full text-foreground w-full font-poppins${isMinimal && !isDashboardRoute ? " minimal-template" : ""}`}>
             {!isDashboardRoute && (
-              <div id='global-navbar' className='sticky top-0 z-[10000]'>{renderNavbar()}</div>
+              <GlobalNavbarChrome navbarMode={navbarMode}>
+                {renderNavbar()}
+              </GlobalNavbarChrome>
             )}
             {isDashboardRoute ? (
               <div dir='ltr' style={{ direction: "ltr" }}>
@@ -276,6 +281,64 @@ function LayoutShell({
 
 // Display name for the memoized component
 Content.displayName = "Content";
+
+/**
+ * GlobalNavbarChrome
+ *
+ * Single fixed wrapper for the announcement banner + navbar so they stack as
+ * normal-flow siblings (no overlap regardless of how many lines the banner
+ * wraps to). A ResizeObserver tracks the chrome's actual height and applies a
+ * matching spacer below — only in solid mode. In overlay mode (homepage with
+ * hero), the chrome floats over the hero and no spacer is rendered.
+ */
+function GlobalNavbarChrome({
+  navbarMode,
+  children,
+}: {
+  navbarMode: ReturnType<typeof getNavbarMode>;
+  children: React.ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(0);
+  const isOverlay = navbarMode === "overlay";
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof window === "undefined") return;
+
+    const update = () => setHeight(el.getBoundingClientRect().height);
+    update();
+
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(update);
+      ro.observe(el);
+    }
+    window.addEventListener("resize", update, { passive: true });
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
+  return (
+    <>
+      <div
+        ref={ref}
+        id='global-navbar'
+        className='fixed inset-x-0 top-0 z-[10000]'>
+        {/* Slot for page-level promo/announcement banners (portal target).
+            Pages render their banner here so it stacks above the navbar
+            and the chrome's measured height includes it automatically. */}
+        <div id='chrome-banner-slot' />
+        {children}
+      </div>
+      {/* Spacer — only in solid mode so page content isn't hidden behind the
+          fixed chrome. Auto-adjusts as banner wraps to 1/2/3 lines. */}
+      {!isOverlay && <div aria-hidden='true' style={{ height }} />}
+    </>
+  );
+}
 
 export default function LayoutDefault({
   children,
