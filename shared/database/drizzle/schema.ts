@@ -1291,6 +1291,7 @@ export const comingSoonSubscribers = pgTable("coming_soon_subscribers", {
     .$defaultFn(() => v7())
     .primaryKey(),
   email: text("email").unique().notNull(),
+  phone: text("phone"),
   subscribedAt: timestamp("subscribed_at", {
     withTimezone: true,
     mode: "date",

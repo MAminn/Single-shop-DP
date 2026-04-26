@@ -59,7 +59,7 @@ export default function SettingsPage() {
   const [isTogglingComingSoon, setIsTogglingComingSoon] = useState(false);
 
   // Coming-soon subscribers state
-  interface Subscriber { id: string; email: string; subscribedAt: Date | null; notifiedAt: Date | null }
+  interface Subscriber { id: string; email: string; phone?: string | null; subscribedAt: Date | null; notifiedAt: Date | null }
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [isLoadingSubscribers, setIsLoadingSubscribers] = useState(false);
   const [goLiveSubject, setGoLiveSubject] = useState("");
@@ -694,15 +694,38 @@ export default function SettingsPage() {
             {subscribers.length > 0 ? (
               <div className='border rounded-md divide-y max-h-48 overflow-y-auto text-sm'>
                 {subscribers.map((s) => (
-                  <div key={s.id} className='flex items-center justify-between px-3 py-2'>
-                    <span className='text-stone-700'>{s.email}</span>
-                    <span className='text-xs text-stone-400'>
-                      {s.notifiedAt ? (
-                        <span className='text-green-600'>Notified</span>
-                      ) : (
-                        <span className='text-stone-400'>{s.subscribedAt ? new Date(s.subscribedAt).toLocaleDateString() : "—"}</span>
-                      )}
-                    </span>
+                  <div key={s.id} className='flex items-center justify-between px-3 py-2 gap-2'>
+                    <div className='flex flex-col min-w-0'>
+                      <span className='text-stone-700 truncate'>{s.email}</span>
+                      {s.phone && <span className='text-xs text-stone-400'>{s.phone}</span>}
+                    </div>
+                    <div className='flex items-center gap-2 shrink-0'>
+                      <span className='text-xs text-stone-400'>
+                        {s.notifiedAt ? (
+                          <span className='text-green-600'>Notified</span>
+                        ) : (
+                          <span className='text-stone-400'>{s.subscribedAt ? new Date(s.subscribedAt).toLocaleDateString() : "—"}</span>
+                        )}
+                      </span>
+                      <button
+                        type='button'
+                        title='Remove subscriber'
+                        onClick={async () => {
+                          try {
+                            const r = await trpc.settings.deleteComingSoonSubscriber.mutate({ id: s.id });
+                            if (r.success) {
+                              setSubscribers((prev) => prev.filter((x) => x.id !== s.id));
+                              toast.success("Subscriber removed");
+                            }
+                          } catch {
+                            toast.error("Failed to remove subscriber");
+                          }
+                        }}
+                        className='p-1 text-stone-400 hover:text-red-500 transition-colors'
+                      >
+                        <Trash2 className='h-3.5 w-3.5' />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

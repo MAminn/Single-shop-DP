@@ -218,6 +218,13 @@
       "when": 1776954473640,
       "tag": "0030_amazing_human_torch",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1777224748504,
+      "tag": "0031_even_franklin_richards",
+      "breakpoints": true
     }
   ]
 }

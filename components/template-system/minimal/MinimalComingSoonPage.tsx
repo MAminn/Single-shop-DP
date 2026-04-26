@@ -15,6 +15,7 @@ export function MinimalComingSoonPage() {
   const storeName = layoutSettings.siteTitle || "Our Store";
 
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [emailError, setEmailError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -29,7 +30,7 @@ export function MinimalComingSoonPage() {
     setEmailError("");
     setSubmitting(true);
     try {
-      await trpc.settings.subscribeComingSoon.mutate({ email });
+      await trpc.settings.subscribeComingSoon.mutate({ email, phone: phone.trim() || undefined });
       setDone(true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
@@ -92,6 +93,20 @@ export function MinimalComingSoonPage() {
               {emailError && (
                 <p className="text-red-500 text-xs mt-1">{emailError}</p>
               )}
+            </div>
+
+            <div>
+              <label className="block text-[11px] uppercase tracking-widest text-stone-600 mb-2">
+                Phone <span className="normal-case text-stone-400">(optional)</span>
+              </label>
+              <Input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+1 234 567 8900"
+                disabled={submitting}
+                className="border-0 border-b border-stone-300 rounded-none px-0 py-2.5 text-sm bg-transparent focus-visible:ring-0 focus-visible:border-stone-900 placeholder:text-stone-300"
+              />
             </div>
 
             <Button

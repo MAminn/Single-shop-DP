@@ -128,7 +128,7 @@ export const settingsRouter = router({
 
   /** Public: subscribe an email to the coming-soon list and send welcome email */
   subscribeComingSoon: publicProcedure
-    .input(z.object({ email: z.string().email() }))
+    .input(z.object({ email: z.string().email(), phone: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
       // DB: upsert subscriber
       const dbResult = await runBackendEffect(
@@ -146,7 +146,7 @@ export const settingsRouter = router({
           if (existing.length === 0) {
             yield* $(
               query((db) =>
-                db.insert(Tables.comingSoonSubscribers).values({ email: input.email }),
+                db.insert(Tables.comingSoonSubscribers).values({ email: input.email, phone: input.phone ?? null }),
               ),
             );
           }
@@ -196,6 +196,7 @@ export const settingsRouter = router({
               .select({
                 id: Tables.comingSoonSubscribers.id,
                 email: Tables.comingSoonSubscribers.email,
+                phone: Tables.comingSoonSubscribers.phone,
                 subscribedAt: Tables.comingSoonSubscribers.subscribedAt,
                 notifiedAt: Tables.comingSoonSubscribers.notifiedAt,
               })
@@ -208,6 +209,24 @@ export const settingsRouter = router({
       }).pipe(provideDatabase(ctx)),
     ).then(serializeBackendEffectResult);
   }),
+
+  /** Admin: delete a coming-soon subscriber */
+  deleteComingSoonSubscriber: adminProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return runBackendEffect(
+        Effect.gen(function* ($) {
+          yield* $(
+            query((db) =>
+              db
+                .delete(Tables.comingSoonSubscribers)
+                .where(eq(Tables.comingSoonSubscribers.id, input.id)),
+            ),
+          );
+          return { deleted: true };
+        }).pipe(provideDatabase(ctx)),
+      ).then(serializeBackendEffectResult);
+    }),
 
   /** Admin: blast "we're live" email to all subscribers who haven't been notified yet */
   notifySubscribersGoLive: adminProcedure
