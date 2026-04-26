@@ -1,15 +1,16 @@
-import { useContext, useEffect, useState, useRef } from "react";
+import { useContext, useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   Menu,
-  Search,
   ShoppingBag,
-  X,
   User,
   Package,
   Heart,
   LogOut,
   LayoutDashboard,
+  ChevronDown,
+  Tag,
+  Sparkles,
 } from "lucide-react";
 import { Link } from "#root/components/utils/Link";
 import {
@@ -29,7 +30,7 @@ import { Button } from "#root/components/ui/button";
 import { AuthContext } from "#root/context/AuthContext.js";
 import { useCart } from "#root/lib/context/CartContext";
 import { STORE_NAME } from "#root/shared/config/branding";
-import { navigate } from "vike/client/router";
+import { trpc } from "#root/shared/trpc/client";
 import { EASE_OUT } from "../motion/motionPresets";
 import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext";
 import { useNavbarMode } from "#root/components/globals/NavbarContext";
@@ -67,13 +68,32 @@ export function EditorialNavbar() {
   const isSolid = mode === "solid";
   const [isScrolled, setIsScrolled] = useState(isSolid);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [categories, setCategories] = useState<
+    { id: string; name: string; slug: string }[]
+  >([]);
 
   const { session, logout } = useContext(AuthContext);
   const { totalItems } = useCart();
   const layoutSettings = useLayoutSettings();
+
+  // Fetch categories for the mobile sheet drop-down
+  useEffect(() => {
+    trpc.category.view
+      .query()
+      .then((res) => {
+        if (res.success && Array.isArray(res.result)) {
+          setCategories(
+            (res.result as { id: string; name: string; slug: string }[]).map(
+              (c) => ({ id: c.id, name: c.name, slug: c.slug }),
+            ),
+          );
+        }
+      })
+      .catch(() => {
+        /* silent — sheet falls back to just Offers / New Arrivals */
+      });
+  }, []);
 
   // Build navigation links from CMS settings, with static fallback
   const cmsNavLinks = layoutSettings.header.navigationLinks;
@@ -117,17 +137,7 @@ export function EditorialNavbar() {
     };
   }, [isSolid]);
 
-  /* ---- Search ---- */
-  const handleSearchSubmit = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setIsSearchOpen(false);
-      setSearchQuery("");
-      setIsSheetOpen(false);
-    }
-  };
-
+  /* ---- Sheet ---- */
   const handleCloseSheet = () => setIsSheetOpen(false);
 
   /* ---- Link styles ---- */
@@ -184,32 +194,59 @@ export function EditorialNavbar() {
                       />
                     </div>
 
-                    <div className='px-8 py-10 flex-1'>
-                      {/* Mobile search */}
-                      <form onSubmit={handleSearchSubmit} className='mb-10'>
-                        <div className='relative'>
-                          <Search className='absolute left-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-400' />
-                          <input
-                            type='text'
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder='Search…'
-                            className='w-full pl-7 pr-4 py-2.5 text-[13px] tracking-wide border-b border-stone-200 bg-transparent text-stone-900 placeholder-stone-400 outline-none focus:border-stone-400 transition-colors'
+                    <div className='px-8 py-10 flex-1 overflow-y-auto'>
+                      {/* Categories — collapsible drop-down */}
+                      <div className='mb-2'>
+                        <button
+                          type='button'
+                          onClick={() =>
+                            setIsCategoriesOpen((prev) => !prev)
+                          }
+                          aria-expanded={isCategoriesOpen}
+                          className='w-full flex items-center justify-between py-3 text-[11px] tracking-[0.22em] uppercase text-stone-700 hover:text-stone-950 transition-colors font-normal'>
+                          <span className='flex items-center gap-2.5'>
+                            <Tag className='w-3.5 h-3.5' /> Categories
+                          </span>
+                          <ChevronDown
+                            className={`w-3.5 h-3.5 transition-transform duration-300 ${isCategoriesOpen ? "rotate-180" : ""}`}
                           />
-                        </div>
-                      </form>
-
-                      <div className='flex flex-col gap-7 mb-10'>
-                        {NAV_LINKS.map((link) => (
-                          <Link
-                            key={link.href}
-                            href={link.href}
-                            className='text-[11px] tracking-[0.22em] uppercase text-stone-600 hover:text-stone-900 transition-colors font-normal'
-                            onClick={handleCloseSheet}>
-                            {link.label}
-                          </Link>
-                        ))}
+                        </button>
+                        {isCategoriesOpen && (
+                          <div className='mt-1 mb-3 pl-6 flex flex-col gap-3 border-l border-stone-200/70'>
+                            {categories.length === 0 ? (
+                              <span className='text-[11px] text-stone-400 tracking-wide'>
+                                No categories
+                              </span>
+                            ) : (
+                              categories.map((c) => (
+                                <Link
+                                  key={c.id}
+                                  href={`/categories/${c.slug}`}
+                                  onClick={handleCloseSheet}
+                                  className='text-[11px] tracking-[0.18em] uppercase text-stone-500 hover:text-stone-900 transition-colors'>
+                                  {c.name}
+                                </Link>
+                              ))
+                            )}
+                          </div>
+                        )}
                       </div>
+
+                      {/* Offers */}
+                      <Link
+                        href='/shop?section=offers'
+                        onClick={handleCloseSheet}
+                        className='flex items-center gap-2.5 py-3 text-[11px] tracking-[0.22em] uppercase text-stone-700 hover:text-stone-950 transition-colors font-normal'>
+                        <Tag className='w-3.5 h-3.5' /> Offers
+                      </Link>
+
+                      {/* New Arrivals */}
+                      <Link
+                        href='/shop?section=newarrivals'
+                        onClick={handleCloseSheet}
+                        className='flex items-center gap-2.5 py-3 text-[11px] tracking-[0.22em] uppercase text-stone-700 hover:text-stone-950 transition-colors font-normal mb-6'>
+                        <Sparkles className='w-3.5 h-3.5' /> New Arrivals
+                      </Link>
 
                       {session && (
                         <div className='border-t border-stone-200/60 pt-7 mb-6 space-y-5'>
