@@ -415,57 +415,6 @@ const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            {/* Search button (desktop + mobile) */}
-            {isSearchOpen ? (
-              <form
-                onSubmit={handleSearchSubmit}
-                className='flex items-center gap-1'>
-                <input
-                  ref={searchInputRef}
-                  type='text'
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder='Search products...'
-                  autoFocus
-                  className={`w-32 lg:w-48 px-3 py-1.5 text-sm rounded-full border bg-transparent outline-none transition-colors ${
-                    isScrolled
-                      ? "border-gray-300 text-black placeholder-gray-400 focus:border-black"
-                      : "border-white/30 text-white placeholder-white/60 focus:border-white"
-                  }`}
-                />
-                <Button
-                  type='button'
-                  variant='ghost'
-                  size='icon'
-                  onClick={() => {
-                    setIsSearchOpen(false);
-                    setSearchQuery("");
-                  }}
-                  className={`transition-colors ${
-                    isScrolled
-                      ? "!text-black hover:bg-stone-100"
-                      : "!text-white hover:bg-white/10"
-                  }`}>
-                  <X size={18} />
-                </Button>
-              </form>
-            ) : (
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={() => {
-                  setIsSearchOpen(true);
-                  setTimeout(() => searchInputRef.current?.focus(), 100);
-                }}
-                className={`transition-all duration-[240ms] ease-in-out ${
-                  isScrolled
-                    ? "!text-black hover:!text-stone-700 hover:bg-stone-100"
-                    : "!text-white hover:!text-white/80 hover:bg-white/10"
-                }`}>
-                <Search size={20} />
-              </Button>
-            )}
-
             {/* Cart button */}
             <Button
               variant='ghost'

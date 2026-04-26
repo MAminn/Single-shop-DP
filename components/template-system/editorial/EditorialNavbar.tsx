@@ -285,50 +285,8 @@ export function EditorialNavbar() {
             />
           </div>
 
-          {/* ─── Right: Icons (Search · Account · Bag) ─── */}
+          {/* ─── Right: Icons (Account · Bag) ─── */}
           <div className='flex items-center gap-4 justify-end'>
-            {/* Search */}
-            {isSearchOpen ? (
-              <form
-                onSubmit={handleSearchSubmit}
-                className='flex items-center gap-2'>
-                <input
-                  ref={searchInputRef}
-                  type='text'
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder='Search…'
-                  autoFocus
-                  className={`w-36 lg:w-44 px-4 py-1.5 text-[12px] tracking-wider border-b bg-transparent outline-none transition-all duration-300 ${
-                    isScrolled
-                      ? "border-stone-300 text-stone-900 placeholder-stone-400 focus:border-stone-500"
-                      : "border-white/30 text-white placeholder-white/50 focus:border-white/60"
-                  }`}
-                />
-                <button
-                  type='button'
-                  onClick={() => {
-                    setIsSearchOpen(false);
-                    setSearchQuery("");
-                  }}
-                  className={`p-1 transition-colors duration-300 ${iconCls}`}
-                  aria-label='Close search'>
-                  <X size={16} strokeWidth={1.3} />
-                </button>
-              </form>
-            ) : (
-              <button
-                type='button'
-                onClick={() => {
-                  setIsSearchOpen(true);
-                  setTimeout(() => searchInputRef.current?.focus(), 100);
-                }}
-                className={`p-1 transition-colors duration-300 ${iconCls}`}
-                aria-label='Search'>
-                <Search size={18} strokeWidth={1.3} />
-              </button>
-            )}
-
             {/* Account icon — dropdown for logged-in users */}
             {session ? (
               <DropdownMenu>
