@@ -75,7 +75,10 @@ export function EditorialNavbar() {
   const announcementEnabled = layoutSettings.header.announcementBarEnabled;
   const announcementText = layoutSettings.header.announcementBarText;
 
-  /* ---- Scroll detection ---- */
+  /* ---- Scroll detection ----
+   * Stay transparent over the hero; only flip to solid once ~80% of the
+   * viewport (≈ hero height) has been scrolled past.
+   */
   useEffect(() => {
     if (isSolid) {
       setIsScrolled(true);
@@ -83,12 +86,25 @@ export function EditorialNavbar() {
     }
 
     if (typeof window === "undefined") return;
-    setIsScrolled(window.scrollY > SCROLL_THRESHOLD);
 
-    const handleScroll = () => setIsScrolled(window.scrollY > SCROLL_THRESHOLD);
+    const computeThreshold = () => window.innerHeight * 0.8;
+    let threshold = computeThreshold();
+
+    const update = () => setIsScrolled(window.scrollY > threshold);
+    update();
+
+    const handleScroll = () => update();
+    const handleResize = () => {
+      threshold = computeThreshold();
+      update();
+    };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleResize, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleResize);
+    };
   }, [isSolid]);
 
   /* ---- Search ---- */

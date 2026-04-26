@@ -75,25 +75,38 @@ const Navbar: React.FC<NavbarProps> = ({
     });
   }, []);
 
-  // Scroll detection hook (only matters in overlay mode)
+  // Scroll detection hook (only matters in overlay mode).
+  // We stay transparent while the hero is in view and only flip to solid
+  // once ~80% of the viewport (≈ hero height) has been scrolled past.
   useEffect(() => {
     if (isSolid) {
       setIsScrolled(true);
       return;
     }
 
-    if (typeof window !== "undefined") {
-      setIsScrolled(window.scrollY > 32);
-    }
+    const computeThreshold = () =>
+      typeof window !== "undefined" ? window.innerHeight * 0.8 : 0;
+    let threshold = computeThreshold();
 
-    const handleScroll = () => {
-      if (typeof window !== "undefined") {
-        setIsScrolled(window.scrollY > 32);
-      }
+    const update = () => {
+      if (typeof window === "undefined") return;
+      setIsScrolled(window.scrollY > threshold);
+    };
+
+    update();
+
+    const handleScroll = () => update();
+    const handleResize = () => {
+      threshold = computeThreshold();
+      update();
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleResize, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleResize);
+    };
   }, [isSolid]);
 
   const { totalItems } = useCart();
@@ -145,22 +158,26 @@ const Navbar: React.FC<NavbarProps> = ({
   const announcementText = layoutSettings.header.announcementBarText;
 
   return (
-    <>
+    // Single sticky/fixed wrapper: announcement bar + nav are siblings in
+    // normal flow, so the navbar can never overlap the banner — regardless of
+    // banner height (e.g. text wrapping to 2 lines on mobile).
+    <div
+      className={`w-full z-[10000] ${
+        isSolid ? "sticky top-0" : "fixed inset-x-0 top-0"
+      }`}>
       {/* Announcement bar */}
       {announcementEnabled && announcementText && (
-        <div className='w-full bg-black text-white text-center py-2 px-4 text-xs tracking-wider z-[10001] relative'>
-          {announcementText}
+        <div className='w-full bg-black text-white text-xs sm:text-sm'>
+          <div className='max-w-7xl mx-auto px-4 py-2 sm:py-2.5 flex items-center justify-center gap-2 text-center leading-tight tracking-wider'>
+            {announcementText}
+          </div>
         </div>
       )}
       <nav
-        className={`w-full py-4 lg:py-6 z-[10000] transition-all duration-[240ms] ease-in-out ${
-          isSolid
-            ? "sticky top-0 bg-white border-b border-black/[0.08]"
-            : `fixed top-0 ${
-                isScrolled
-                  ? "bg-white border-b border-black/[0.08]"
-                  : "bg-transparent border-b border-transparent"
-              }`
+        className={`w-full py-4 lg:py-6 transition-all duration-[240ms] ease-in-out ${
+          isSolid || isScrolled
+            ? "bg-white/95 backdrop-blur-sm border-b border-black/[0.08]"
+            : "bg-transparent border-b border-transparent"
         }`}>
         <div className='px-6 lg:px-8 grid grid-cols-3 items-center min-h-16 max-w-7xl mx-auto'>
           {/* Left: Primary Navigation */}
@@ -459,7 +476,7 @@ const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
       </nav>
-    </>
+    </div>
   );
 };
 
