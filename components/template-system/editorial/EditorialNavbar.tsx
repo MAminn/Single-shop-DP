@@ -199,9 +199,7 @@ export function EditorialNavbar() {
                       <div className='mb-2'>
                         <button
                           type='button'
-                          onClick={() =>
-                            setIsCategoriesOpen((prev) => !prev)
-                          }
+                          onClick={() => setIsCategoriesOpen((prev) => !prev)}
                           aria-expanded={isCategoriesOpen}
                           className='w-full flex items-center justify-between py-3 text-[11px] tracking-[0.22em] uppercase text-stone-700 hover:text-stone-950 transition-colors font-normal'>
                           <span className='flex items-center gap-2.5'>
