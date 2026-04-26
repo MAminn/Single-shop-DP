@@ -97,13 +97,13 @@ export function MinimalComingSoonPage() {
 
             <div>
               <label className="block text-[11px] uppercase tracking-widest text-stone-600 mb-2">
-                Phone <span className="normal-case text-stone-400">(optional)</span>
+                WhatsApp Number <span className="normal-case text-stone-400">(optional)</span>
               </label>
               <Input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="+1 234 567 8900"
+                placeholder="WhatsApp number"
                 disabled={submitting}
                 className="border-0 border-b border-stone-300 rounded-none px-0 py-2.5 text-sm bg-transparent focus-visible:ring-0 focus-visible:border-stone-900 placeholder:text-stone-300"
               />
