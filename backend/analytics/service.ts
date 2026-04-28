@@ -6,6 +6,7 @@ import {
   trackingEvent,
   trackingEventDelivery,
   pixelConfig,
+  user,
 } from "#root/shared/database/drizzle/schema";
 import {
   count,
@@ -18,6 +19,7 @@ import {
   sum,
   and,
   max,
+  min,
 } from "drizzle-orm";
 import { Effect } from "effect";
 
@@ -360,5 +362,52 @@ export const getTopTrackedProducts = () =>
       }));
 
       return { mostViewed, mostCarted };
+    });
+  });
+
+// ─── Returning vs New Customers ─────────────────────────────────────────────
+
+export const getReturningCustomers = () =>
+  Effect.gen(function* () {
+    return yield* query(async (db) => {
+      // Group orders by customer email to compute loyalty stats
+      const customerStats = await db
+        .select({
+          email: order.customerEmail,
+          name: sql<string>`MAX(${order.customerName})`,
+          orderCount: count(),
+          totalSpent: sum(order.total),
+          firstOrderAt: min(order.createdAt),
+          lastOrderAt: max(order.createdAt),
+        })
+        .from(order)
+        .where(sql`${order.status} != 'cancelled'`)
+        .groupBy(order.customerEmail)
+        .execute();
+
+      const total = customerStats.length;
+      const returning = customerStats.filter((c) => Number(c.orderCount) > 1);
+      const newCustomers = customerStats.filter((c) => Number(c.orderCount) === 1);
+
+      const topLoyal = [...returning]
+        .sort((a, b) => Number(b.totalSpent ?? 0) - Number(a.totalSpent ?? 0))
+        .slice(0, 10)
+        .map((c) => ({
+          email: c.email,
+          name: c.name,
+          orderCount: Number(c.orderCount),
+          totalSpent: Math.round(Number(c.totalSpent ?? 0) * 100) / 100,
+          firstOrderAt: c.firstOrderAt,
+          lastOrderAt: c.lastOrderAt,
+        }));
+
+      return {
+        totalCustomers: total,
+        returningCount: returning.length,
+        newCount: newCustomers.length,
+        returningRate:
+          total > 0 ? Math.round((returning.length / total) * 1000) / 10 : 0,
+        topLoyal,
+      };
     });
   });

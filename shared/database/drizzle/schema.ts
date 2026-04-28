@@ -1083,6 +1083,7 @@ export const trackingEvent = pgTable("tracking_event", {
   userAgent: text("user_agent"),
   ipHash: text("ip_hash"),
   deviceType: text("device_type"),
+  archivedAt: timestamp("archived_at", { withTimezone: true, mode: "date" }),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
     .defaultNow()
     .notNull(),

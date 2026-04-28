@@ -8,6 +8,7 @@ import {
   listTrackingEvents,
   getDeliveryStats,
   listEventsSchema,
+  archiveEventLog,
 } from "./service";
 
 export const eventDeliveryRouter = t.router({
@@ -22,6 +23,12 @@ export const eventDeliveryRouter = t.router({
   stats: adminProcedure.query(async ({ ctx }) => {
     return await runBackendEffect(
       getDeliveryStats().pipe(provideDatabase(ctx)),
+    ).then(serializeBackendEffectResult);
+  }),
+
+  archiveLog: adminProcedure.mutation(async ({ ctx }) => {
+    return await runBackendEffect(
+      archiveEventLog().pipe(provideDatabase(ctx)),
     ).then(serializeBackendEffectResult);
   }),
 });

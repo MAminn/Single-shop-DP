@@ -3,7 +3,7 @@ import {
   trackingEvent,
   trackingEventDelivery,
 } from "#root/shared/database/drizzle/schema";
-import { desc, eq, and, sql, count, gte, countDistinct } from "drizzle-orm";
+import { desc, eq, and, sql, count, gte, countDistinct, isNull } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 
@@ -47,6 +47,7 @@ export const listTrackingEvents = (input: z.infer<typeof listEventsSchema>) =>
           trackingEventDelivery,
           eq(trackingEvent.id, trackingEventDelivery.trackingEventId),
         )
+        .where(isNull(trackingEvent.archivedAt))
         .orderBy(desc(trackingEvent.createdAt))
         .limit(input.limit)
         .offset(input.offset)
@@ -56,6 +57,7 @@ export const listTrackingEvents = (input: z.infer<typeof listEventsSchema>) =>
       const [countResult] = await db
         .select({ total: count() })
         .from(trackingEvent)
+        .where(isNull(trackingEvent.archivedAt))
         .execute();
 
       return {
@@ -80,38 +82,38 @@ export const getDeliveryStats = () =>
       const [events24h] = await db
         .select({ total: count() })
         .from(trackingEvent)
-        .where(gte(trackingEvent.createdAt, day))
+        .where(and(gte(trackingEvent.createdAt, day), isNull(trackingEvent.archivedAt)))
         .execute();
 
       const [events7d] = await db
         .select({ total: count() })
         .from(trackingEvent)
-        .where(gte(trackingEvent.createdAt, week))
+        .where(and(gte(trackingEvent.createdAt, week), isNull(trackingEvent.archivedAt)))
         .execute();
 
       const [events30d] = await db
         .select({ total: count() })
         .from(trackingEvent)
-        .where(gte(trackingEvent.createdAt, month))
+        .where(and(gte(trackingEvent.createdAt, month), isNull(trackingEvent.archivedAt)))
         .execute();
 
       // Unique sessions per period
       const [sessions24h] = await db
         .select({ total: countDistinct(trackingEvent.sessionId) })
         .from(trackingEvent)
-        .where(gte(trackingEvent.createdAt, day))
+        .where(and(gte(trackingEvent.createdAt, day), isNull(trackingEvent.archivedAt)))
         .execute();
 
       const [sessions7d] = await db
         .select({ total: countDistinct(trackingEvent.sessionId) })
         .from(trackingEvent)
-        .where(gte(trackingEvent.createdAt, week))
+        .where(and(gte(trackingEvent.createdAt, week), isNull(trackingEvent.archivedAt)))
         .execute();
 
       const [sessions30d] = await db
         .select({ total: countDistinct(trackingEvent.sessionId) })
         .from(trackingEvent)
-        .where(gte(trackingEvent.createdAt, month))
+        .where(and(gte(trackingEvent.createdAt, month), isNull(trackingEvent.archivedAt)))
         .execute();
 
       // Event counts by event name (last 30 days)
@@ -122,7 +124,7 @@ export const getDeliveryStats = () =>
           uniqueSessions: countDistinct(trackingEvent.sessionId),
         })
         .from(trackingEvent)
-        .where(gte(trackingEvent.createdAt, month))
+        .where(and(gte(trackingEvent.createdAt, month), isNull(trackingEvent.archivedAt)))
         .groupBy(trackingEvent.eventName)
         .orderBy(desc(count()))
         .execute();
@@ -149,5 +151,22 @@ export const getDeliveryStats = () =>
         eventTypeCounts,
         platformStats,
       };
+    });
+  });
+
+/**
+ * Archive all non-archived tracking events (sets archivedAt = now).
+ * Nothing is deleted — records remain in the DB for audit purposes.
+ */
+export const archiveEventLog = () =>
+  Effect.gen(function* () {
+    return yield* query(async (db) => {
+      await db
+        .update(trackingEvent)
+        .set({ archivedAt: new Date() })
+        .where(isNull(trackingEvent.archivedAt))
+        .execute();
+
+      return { archived: true };
     });
   });

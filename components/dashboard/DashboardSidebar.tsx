@@ -14,6 +14,7 @@ import {
   PanelTop,
   Link2,
   Star,
+  BarChart3,
 } from "lucide-react";
 
 import {
@@ -105,6 +106,11 @@ export function DashboardSidebar() {
       label: "Pixels & Tracking",
       href: "/dashboard/admin/pixels",
       icon: Radio,
+    },
+    {
+      label: "Analytics",
+      href: "/dashboard/admin/analytics",
+      icon: BarChart3,
     },
     {
       label: "Links Page",

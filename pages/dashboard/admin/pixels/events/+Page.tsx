@@ -46,7 +46,16 @@ import {
   Megaphone,
   Mail,
   Hash,
+  ArchiveX,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#root/components/ui/dialog";
 import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
 
@@ -202,6 +211,8 @@ export default function AdminPixelEventsPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState<"all" | "sent" | "failed">("all");
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [archiving, setArchiving] = useState(false);
 
   // ── Fetch events ────────────────────────────────────────────
 
@@ -238,6 +249,27 @@ export default function AdminPixelEventsPage() {
     Promise.all([fetchEvents(), fetchStats()]).finally(() => setLoading(false));
   }, [page, statusFilter]);
 
+  const handleArchive = async () => {
+    setArchiving(true);
+    try {
+      const result = await trpc.pixelTracking.events.archiveLog.mutate();
+      if (result.success) {
+        toast.success("Event log archived. The view has been cleared.");
+        setArchiveDialogOpen(false);
+        setPage(0);
+        setEvents([]);
+        setTotal(0);
+        await Promise.all([fetchEvents(), fetchStats()]);
+      } else {
+        toast.error("Failed to archive event log");
+      }
+    } catch {
+      toast.error("Failed to archive event log");
+    } finally {
+      setArchiving(false);
+    }
+  };
+
   // ── Stats helpers ───────────────────────────────────────────
 
   const getSuccessRate = (platform: string): number => {
@@ -270,6 +302,29 @@ export default function AdminPixelEventsPage() {
 
   return (
     <div className='p-6 space-y-6 max-w-7xl mx-auto'>
+      {/* Confirm Archive Dialog */}
+      <Dialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Archive Event Log?</DialogTitle>
+            <DialogDescription>
+              This will archive all current event records. Nothing is deleted — all data
+              is preserved in the database for audit purposes. The live log view will be
+              cleared and start fresh.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className='gap-2'>
+            <Button variant='outline' onClick={() => setArchiveDialogOpen(false)} disabled={archiving}>
+              Cancel
+            </Button>
+            <Button variant='destructive' onClick={handleArchive} disabled={archiving}>
+              {archiving ? <Loader2 className='w-4 h-4 mr-2 animate-spin' /> : <ArchiveX className='w-4 h-4 mr-2' />}
+              Yes, Archive Log
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Header */}
       <div className='flex items-center justify-between'>
         <div>
@@ -278,6 +333,15 @@ export default function AdminPixelEventsPage() {
             Monitor pixel event tracking and delivery status across all platforms.
           </p>
         </div>
+        <Button
+          variant='outline'
+          size='sm'
+          onClick={() => setArchiveDialogOpen(true)}
+          className='text-muted-foreground hover:text-destructive'
+        >
+          <ArchiveX className='w-4 h-4 mr-2' />
+          Reset Log
+        </Button>
       </div>
 
       {/* Key Metrics: Events + Sessions */}

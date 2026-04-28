@@ -38,6 +38,9 @@ import {
   DollarSign,
   Loader2,
   BarChart3,
+  Users,
+  Repeat2,
+  UserPlus,
 } from "lucide-react";
 import { trpc } from "#root/shared/trpc/client";
 
@@ -97,6 +100,23 @@ interface TopTrackedData {
   mostCarted: { productId: string; productName: string; cartCount: number }[];
 }
 
+interface LoyalCustomerRow {
+  email: string;
+  name: string;
+  orderCount: number;
+  totalSpent: number;
+  firstOrderAt: Date | null;
+  lastOrderAt: Date | null;
+}
+
+interface CustomerData {
+  totalCustomers: number;
+  returningCount: number;
+  newCount: number;
+  returningRate: number;
+  topLoyal: LoyalCustomerRow[];
+}
+
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const FUNNEL_COLORS = ["#6366f1", "#8b5cf6", "#a78bfa", "#c4b5fd", "#ddd6fe"];
@@ -130,6 +150,7 @@ export default function AnalyticsDashboardPage() {
   const [topTrackedData, setTopTrackedData] = useState<TopTrackedData | null>(
     null,
   );
+  const [customerData, setCustomerData] = useState<CustomerData | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -155,6 +176,11 @@ export default function AnalyticsDashboardPage() {
         if (platform.success) setPlatformData(platform.result);
         if (topSelling.success) setTopSellingData(topSelling.result);
         if (topTracked.success) setTopTrackedData(topTracked.result);
+
+        // Load returning customers separately (non-blocking)
+        trpc.analytics.returningCustomers.query().then((r) => {
+          if (!cancelled && r.success) setCustomerData(r.result as CustomerData);
+        }).catch(() => {});
       } catch (err) {
         console.error("Failed to fetch analytics:", err);
       } finally {
@@ -169,7 +195,7 @@ export default function AnalyticsDashboardPage() {
   }, []);
 
   return (
-    <div className='space-y-6' data-testid='analytics-dashboard'>
+    <div className='p-6 max-w-7xl mx-auto space-y-6' data-testid='analytics-dashboard'>
       {/* Header */}
       <div>
         <h1 className='text-2xl font-bold tracking-tight'>
@@ -379,9 +405,94 @@ export default function AnalyticsDashboardPage() {
         )}
       </div>
 
+      {/* ── Customer Loyalty ──────────────────────────────────────── */}
+      {customerData && (
+        <Card>
+          <CardHeader>
+            <CardTitle className='flex items-center gap-2'>
+              <Users className='h-5 w-5' />
+              Customer Loyalty
+            </CardTitle>
+            <CardDescription>
+              Returning vs new customers — all time
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            {/* Summary stats */}
+            <div className='grid grid-cols-2 sm:grid-cols-4 gap-4'>
+              <div className='rounded-lg border p-4'>
+                <p className='text-xs text-muted-foreground'>Total Customers</p>
+                <p className='text-2xl font-bold mt-1'>{customerData.totalCustomers.toLocaleString()}</p>
+              </div>
+              <div className='rounded-lg border p-4'>
+                <p className='text-xs text-muted-foreground flex items-center gap-1'>
+                  <Repeat2 className='h-3 w-3' /> Returning
+                </p>
+                <p className='text-2xl font-bold mt-1 text-indigo-600'>{customerData.returningCount.toLocaleString()}</p>
+              </div>
+              <div className='rounded-lg border p-4'>
+                <p className='text-xs text-muted-foreground flex items-center gap-1'>
+                  <UserPlus className='h-3 w-3' /> New
+                </p>
+                <p className='text-2xl font-bold mt-1'>{customerData.newCount.toLocaleString()}</p>
+              </div>
+              <div className='rounded-lg border bg-indigo-50 p-4'>
+                <p className='text-xs text-indigo-600'>Retention Rate</p>
+                <p className='text-2xl font-bold mt-1 text-indigo-700'>{customerData.returningRate}%</p>
+              </div>
+            </div>
+
+            {/* Top loyal customers */}
+            {customerData.topLoyal.length > 0 && (
+              <>
+                <p className='text-sm font-medium text-muted-foreground pt-2'>Top Loyal Customers</p>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Customer</TableHead>
+                      <TableHead className='text-right'>Orders</TableHead>
+                      <TableHead className='text-right'>Total Spent</TableHead>
+                      <TableHead className='text-right hidden sm:table-cell'>First Order</TableHead>
+                      <TableHead className='text-right hidden sm:table-cell'>Last Order</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {customerData.topLoyal.map((c: LoyalCustomerRow) => (
+                      <TableRow key={c.email}>
+                        <TableCell>
+                          <p className='font-medium'>{c.name}</p>
+                          <p className='text-xs text-muted-foreground'>{c.email}</p>
+                        </TableCell>
+                        <TableCell className='text-right'>
+                          <Badge variant='secondary'>{c.orderCount}</Badge>
+                        </TableCell>
+                        <TableCell className='text-right font-medium'>
+                          ${c.totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className='text-right text-xs text-muted-foreground hidden sm:table-cell'>
+                          {c.firstOrderAt ? new Date(c.firstOrderAt).toLocaleDateString() : '—'}
+                        </TableCell>
+                        <TableCell className='text-right text-xs text-muted-foreground hidden sm:table-cell'>
+                          {c.lastOrderAt ? new Date(c.lastOrderAt).toLocaleDateString() : '—'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </>
+            )}
+
+            {customerData.topLoyal.length === 0 && (
+              <p className='text-sm text-muted-foreground text-center py-4'>
+                No repeat customers yet. Loyalty data will appear here as customers place more orders.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* ── Event Breakdown ───────────────────────────────────────── */}
-      {eventsData && (
-        <Card data-testid='event-breakdown'>
+      {eventsData && (        <Card data-testid='event-breakdown'>
           <CardHeader>
             <CardTitle className='flex items-center gap-2'>
               <BarChart3 className='h-5 w-5' />
