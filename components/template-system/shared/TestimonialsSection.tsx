@@ -62,18 +62,9 @@ const VARIANT_STYLES: Record<Variant, VariantStyles> = {
   },
 };
 
-function getDynamicTitle(count: number, locale: Locale): string {
-  if (locale === "ar") {
-    if (count === 0) return "انضم إلى عملائنا السعداء";
-    if (count === 1) return "انضم إلى عميلنا السعيد";
-    if (count === 2) return "انضم إلى عميلَينا السعيدَين";
-    if (count >= 3 && count <= 10)
-      return `انضم إلى عملائنا الـ${count} السعداء`;
-    return `انضم إلى ${count} من عملائنا السعداء`;
-  }
-  if (count === 0) return "Join our happy clients";
-  if (count === 1) return "Join our happy client";
-  return `Join our ${count} happy clients`;
+function getDynamicTitle(_count: number, locale: Locale): string {
+  if (locale === "ar") return "انضم إلى عملائنا";
+  return "Join our Clients";
 }
 
 function resolveLocalized(
