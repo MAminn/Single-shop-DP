@@ -9,7 +9,7 @@ import { Badge } from "#root/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "#root/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#root/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "#root/components/ui/alert-dialog";
-import { Users, Search, Loader2, CheckCircle, XCircle, Plus, Pencil, Trash2, KeyRound, ShieldCheck, ShieldOff, Eye, RotateCcw } from "lucide-react";
+import { Users, Search, Loader2, CheckCircle, XCircle, Plus, Pencil, Trash2, KeyRound, ShieldCheck, ShieldOff, Eye, RotateCcw, Activity, ShoppingCart, CreditCard, TrendingUp, Package, DollarSign, BarChart2, MousePointerClick } from "lucide-react";
 import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
@@ -20,6 +20,19 @@ import { Label } from "#root/components/ui/label";
 interface UserRow { id: string; name: string; email: string; phone: string | null; role: string; emailVerified: boolean; createdAt: Date | string | null; }
 interface OrderRow { id: string; customerName: string; customerEmail: string; total: string; status: string; createdAt: Date | string | null; items: { id: string; name: string; quantity: number; price: string; }[]; }
 interface UserDetail extends UserRow { orders: OrderRow[]; }
+
+interface CartProduct { productId: string; productName: string; count: number; }
+interface ViewedProduct { productId: string; productName: string; count: number; }
+interface TopPurchased { productId: string; productName: string; timesBought: number; totalSpent: number; }
+interface ActivityOrder { id: string; total: number; status: string; createdAt: Date | null; paymentMethod: string; }
+interface UserActivityData {
+  pageViews: number; productViews: number; cartAdds: number; checkoutStarts: number; purchasesTracked: number;
+  cartProducts: CartProduct[]; viewedProducts: ViewedProduct[]; topPurchased: TopPurchased[];
+  totalOrders: number; completedOrdersCount: number; cancelledOrdersCount: number; pendingOrdersCount: number;
+  totalSpent: number; avgOrderValue: number;
+  firstOrderAt: Date | null; lastOrderAt: Date | null;
+  recentOrders: ActivityOrder[];
+}
 
 const PAGE_SIZE = 20;
 
@@ -44,6 +57,9 @@ export default function UsersPage() {
   const [deleteUser, setDeleteUser] = useState<UserRow | null>(null);
   const [passwordUser, setPasswordUser] = useState<UserRow | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activityUser, setActivityUser] = useState<UserRow | null>(null);
+  const [activityData, setActivityData] = useState<UserActivityData | null>(null);
+  const [loadingActivity, setLoadingActivity] = useState(false);
 
   const fetchUsers = useCallback(async (pageNum: number, searchVal: string) => {
     setIsLoading(true);
@@ -65,6 +81,16 @@ export default function UsersPage() {
       const res = await trpc.users.getById.query({ id: userId });
       if (res.success) setSelectedUser(res.result as UserDetail);
     } catch (err) { console.error(err); } finally { setLoadingDetail(false); }
+  };
+
+  const openUserActivity = async (u: UserRow) => {
+    setActivityUser(u);
+    setActivityData(null);
+    setLoadingActivity(true);
+    try {
+      const res = await trpc.users.getActivity.query({ id: u.id });
+      if (res.success) setActivityData(res.result as UserActivityData);
+    } catch (err) { console.error(err); } finally { setLoadingActivity(false); }
   };
 
   const createForm = useForm<CreateUserValues>({ resolver: zodResolver(createUserSchema), defaultValues: { name: "", email: "", password: "", phone: "", role: "user", emailVerified: false } });
@@ -202,6 +228,9 @@ export default function UsersPage() {
                           <div className="flex items-center justify-end gap-1">
                             <Button variant="ghost" size="sm" title="View" onClick={() => openUserDetail(u.id)}>
                               <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" title="Activity & Analytics" onClick={() => openUserActivity(u)}>
+                              <Activity className="h-4 w-4" />
                             </Button>
                             <Button variant="ghost" size="sm" title="Edit" onClick={() => openEdit(u)}>
                               <Pencil className="h-4 w-4" />
@@ -384,8 +413,7 @@ export default function UsersPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* User Detail Dialog */}
-      <Dialog open={!!selectedUser || loadingDetail} onOpenChange={(open) => { if (!open) setSelectedUser(null); }}>
+      {/* User Detail Dialog */}      <Dialog open={!!selectedUser || loadingDetail} onOpenChange={(open) => { if (!open) setSelectedUser(null); }}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           {loadingDetail ? (
             <div className="flex items-center justify-center py-12">
@@ -452,6 +480,171 @@ export default function UsersPage() {
                 )}
               </div>
             </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      {/* User Activity Dialog */}
+      <Dialog open={!!activityUser} onOpenChange={(open) => { if (!open) { setActivityUser(null); setActivityData(null); } }}>
+        <DialogContent className="max-w-3xl max-h-[88vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-indigo-500" />
+              Activity &amp; Analytics
+            </DialogTitle>
+            <DialogDescription>{activityUser?.name} — {activityUser?.email}</DialogDescription>
+          </DialogHeader>
+
+          {loadingActivity ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : activityData ? (
+            <div className="space-y-6 mt-2">
+
+              {/* ── Behavioral Funnel ──────────────────────────────── */}
+              <section>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Behavioral Funnel</p>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  {[
+                    { label: "Page Views", value: activityData.pageViews, icon: <Eye className="h-4 w-4 text-blue-500" />, color: "bg-blue-50" },
+                    { label: "Product Views", value: activityData.productViews, icon: <Package className="h-4 w-4 text-violet-500" />, color: "bg-violet-50" },
+                    { label: "Cart Adds", value: activityData.cartAdds, icon: <ShoppingCart className="h-4 w-4 text-amber-500" />, color: "bg-amber-50" },
+                    { label: "Checkout Starts", value: activityData.checkoutStarts, icon: <MousePointerClick className="h-4 w-4 text-orange-500" />, color: "bg-orange-50" },
+                    { label: "Purchases", value: activityData.purchasesTracked, icon: <CreditCard className="h-4 w-4 text-green-500" />, color: "bg-green-50" },
+                  ].map((s) => (
+                    <div key={s.label} className={`rounded-lg border p-3 flex flex-col justify-between items-center text-center ${s.color}`}>
+                      <div className="flex flex-col justify-center items-center text-center gap-1.5 mb-1">{s.icon}<p className="text-xs text-muted-foreground">{s.label}</p></div>
+                      <p className="text-2xl font-bold text-center ">{s.value.toLocaleString()}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* ── Order Analytics ────────────────────────────────── */}
+              <section>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Order Analytics</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs text-muted-foreground mb-1">Total Orders</p>
+                    <p className="text-2xl font-bold">{activityData.totalOrders}</p>
+                  </div>
+                  <div className="rounded-lg border p-3 bg-green-50">
+                    <p className="text-xs text-muted-foreground mb-1">Completed</p>
+                    <p className="text-2xl font-bold text-green-700">{activityData.completedOrdersCount}</p>
+                  </div>
+                  <div className="rounded-lg border p-3 bg-red-50">
+                    <p className="text-xs text-muted-foreground mb-1">Cancelled</p>
+                    <p className="text-2xl font-bold text-red-600">{activityData.cancelledOrdersCount}</p>
+                  </div>
+                  <div className="rounded-lg border p-3 bg-amber-50">
+                    <p className="text-xs text-muted-foreground mb-1">Pending</p>
+                    <p className="text-2xl font-bold text-amber-700">{activityData.pendingOrdersCount}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-lg border p-3 bg-indigo-50">
+                    <p className="text-xs text-indigo-600 mb-1 flex items-center gap-1"><DollarSign className="h-3 w-3" />Total Spent</p>
+                    <p className="text-2xl font-bold text-indigo-700">${activityData.totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><TrendingUp className="h-3 w-3" />Avg Order Value</p>
+                    <p className="text-2xl font-bold">${activityData.avgOrderValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                  </div>
+                </div>
+                {(activityData.firstOrderAt || activityData.lastOrderAt) && (
+                  <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+                    {activityData.firstOrderAt && <span>First order: <strong>{formatDate(activityData.firstOrderAt)}</strong></span>}
+                    {activityData.lastOrderAt && <span>Last order: <strong>{formatDate(activityData.lastOrderAt)}</strong></span>}
+                  </div>
+                )}
+              </section>
+
+              {/* ── Products Added to Cart ─────────────────────────── */}
+              {activityData.cartProducts.length > 0 && (
+                <section>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Products Added to Cart</p>
+                  <div className="border rounded-md divide-y text-sm max-h-48 overflow-y-auto">
+                    {activityData.cartProducts.map((p) => (
+                      <div key={p.productId} className="flex items-center justify-between px-3 py-2">
+                        <span className="font-medium">{p.productName}</span>
+                        <Badge variant="secondary" className="text-xs">{p.count}×</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* ── Top Purchased Products ─────────────────────────── */}
+              {activityData.topPurchased.length > 0 && (
+                <section>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Most Purchased Products</p>
+                  <div className="border rounded-md divide-y text-sm max-h-48 overflow-y-auto">
+                    {activityData.topPurchased.map((p) => (
+                      <div key={p.productId} className="flex items-center justify-between px-3 py-2">
+                        <span className="font-medium">{p.productName}</span>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span>{p.timesBought}× ordered</span>
+                          <span className="font-medium text-foreground">${p.totalSpent.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* ── Most Viewed Products ───────────────────────────── */}
+              {activityData.viewedProducts.length > 0 && (
+                <section>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Most Viewed Products</p>
+                  <div className="border rounded-md divide-y text-sm max-h-40 overflow-y-auto">
+                    {activityData.viewedProducts.map((p) => (
+                      <div key={p.productId} className="flex items-center justify-between px-3 py-2">
+                        <span className="font-medium">{p.productName}</span>
+                        <Badge variant="outline" className="text-xs">{p.count} views</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* ── Recent Orders ──────────────────────────────────── */}
+              {activityData.recentOrders.length > 0 && (
+                <section>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Recent Orders</p>
+                  <div className="border rounded-md divide-y text-sm max-h-56 overflow-y-auto">
+                    {activityData.recentOrders.map((o) => (
+                      <div key={o.id} className="flex items-center justify-between px-3 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs text-muted-foreground">{o.id.slice(0, 8)}…</span>
+                          <Badge
+                            variant="outline"
+                            className={`capitalize text-xs ${
+                              o.status === "delivered" || o.status === "completed" || o.status === "confirmed"
+                                ? "border-green-200 bg-green-50 text-green-700"
+                                : o.status === "cancelled"
+                                  ? "border-red-200 bg-red-50 text-red-600"
+                                  : ""
+                            }`}
+                          >
+                            {o.status}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs">
+                          <span className="text-muted-foreground">{formatDate(o.createdAt)}</span>
+                          <span className="font-semibold">${Number(o.total).toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {activityData.totalOrders === 0 && activityData.cartAdds === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-6">No activity recorded for this user yet.</p>
+              )}
+
+            </div>
           ) : null}
         </DialogContent>
       </Dialog>

@@ -15,6 +15,7 @@ import {
   eq,
   gte,
   inArray,
+  isNull,
   sql,
   sum,
   and,
@@ -31,29 +32,30 @@ export const getOverviewMetrics = () =>
       const now = new Date();
       const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-      // Revenue + order count from non-cancelled orders (all-time)
+      // Revenue + order count from non-cancelled, non-archived orders (all-time)
       const [revenueTotals] = await db
         .select({
           orderCount: count(),
           totalRevenue: sum(order.total),
         })
         .from(order)
-        .where(sql`${order.status} != 'cancelled'`)
+        .where(and(sql`${order.status} != 'cancelled'`, isNull(order.archivedAt)))
         .execute();
 
-      // Order count (non-cancelled, last 7 days)
+      // Order count (non-cancelled, non-archived, last 7 days)
       const [orderCount7d] = await db
         .select({ total: count() })
         .from(order)
         .where(
           and(
             sql`${order.status} != 'cancelled'`,
+            isNull(order.archivedAt),
             gte(order.createdAt, sevenDaysAgo),
           ),
         )
         .execute();
 
-      // Revenue from non-cancelled orders (last 7 days)
+      // Revenue from non-cancelled, non-archived orders (last 7 days)
       const [revenueTotals7d] = await db
         .select({
           totalRevenue: sum(order.total),
@@ -62,6 +64,7 @@ export const getOverviewMetrics = () =>
         .where(
           and(
             sql`${order.status} != 'cancelled'`,
+            isNull(order.archivedAt),
             gte(order.createdAt, sevenDaysAgo),
           ),
         )
@@ -115,6 +118,7 @@ export const getConversionFunnel = () =>
         .from(trackingEvent)
         .where(
           and(
+            isNull(trackingEvent.archivedAt),
             gte(trackingEvent.createdAt, thirtyDaysAgo),
             sql`${trackingEvent.eventName} IN (${sql.join(
               funnelEvents.map((e) => sql`${e}`),
@@ -155,7 +159,7 @@ export const getEventBreakdown = () =>
           uniqueSessions: countDistinct(trackingEvent.sessionId),
         })
         .from(trackingEvent)
-        .where(gte(trackingEvent.createdAt, thirtyDaysAgo))
+        .where(and(isNull(trackingEvent.archivedAt), gte(trackingEvent.createdAt, thirtyDaysAgo)))
         .groupBy(trackingEvent.eventName)
         .orderBy(desc(count()))
         .execute();
@@ -167,7 +171,7 @@ export const getEventBreakdown = () =>
           totalSessions: countDistinct(trackingEvent.sessionId),
         })
         .from(trackingEvent)
-        .where(gte(trackingEvent.createdAt, thirtyDaysAgo))
+        .where(and(isNull(trackingEvent.archivedAt), gte(trackingEvent.createdAt, thirtyDaysAgo)))
         .execute();
 
       return {
@@ -301,6 +305,7 @@ export const getTopTrackedProducts = () =>
         .from(trackingEvent)
         .where(
           and(
+            isNull(trackingEvent.archivedAt),
             eq(trackingEvent.eventName, "product_viewed"),
             gte(trackingEvent.createdAt, thirtyDaysAgo),
             sql`${trackingEvent.eventData}->>'productId' IS NOT NULL`,
@@ -320,6 +325,7 @@ export const getTopTrackedProducts = () =>
         .from(trackingEvent)
         .where(
           and(
+            isNull(trackingEvent.archivedAt),
             eq(trackingEvent.eventName, "product_added_to_cart"),
             gte(trackingEvent.createdAt, thirtyDaysAgo),
             sql`${trackingEvent.eventData}->>'productId' IS NOT NULL`,
@@ -381,7 +387,7 @@ export const getReturningCustomers = () =>
           lastOrderAt: max(order.createdAt),
         })
         .from(order)
-        .where(sql`${order.status} != 'cancelled'`)
+        .where(and(sql`${order.status} != 'cancelled'`, isNull(order.archivedAt)))
         .groupBy(order.customerEmail)
         .execute();
 
@@ -409,5 +415,30 @@ export const getReturningCustomers = () =>
           total > 0 ? Math.round((returning.length / total) * 1000) / 10 : 0,
         topLoyal,
       };
+    });
+  });
+
+// ─── Archive all analytics data (safe reset for launch) ─────────────────────
+
+export const archiveAnalytics = () =>
+  Effect.gen(function* () {
+    return yield* query(async (db) => {
+      const now = new Date();
+
+      // Archive all non-archived tracking events
+      await db
+        .update(trackingEvent)
+        .set({ archivedAt: now })
+        .where(isNull(trackingEvent.archivedAt))
+        .execute();
+
+      // Archive all non-archived orders
+      await db
+        .update(order)
+        .set({ archivedAt: now })
+        .where(isNull(order.archivedAt))
+        .execute();
+
+      return { archivedAt: now.toISOString() };
     });
   });

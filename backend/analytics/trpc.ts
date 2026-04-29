@@ -11,6 +11,7 @@ import {
   getPlatformHealth,
   getTopTrackedProducts,
   getReturningCustomers,
+  archiveAnalytics,
 } from "./service";
 
 export const analyticsRouter = t.router({
@@ -47,6 +48,12 @@ export const analyticsRouter = t.router({
   returningCustomers: adminProcedure.query(async ({ ctx }) => {
     return await runBackendEffect(
       getReturningCustomers().pipe(provideDatabase(ctx)),
+    ).then(serializeBackendEffectResult);
+  }),
+
+  archiveAll: adminProcedure.mutation(async ({ ctx }) => {
+    return await runBackendEffect(
+      archiveAnalytics().pipe(provideDatabase(ctx)),
     ).then(serializeBackendEffectResult);
   }),
 });

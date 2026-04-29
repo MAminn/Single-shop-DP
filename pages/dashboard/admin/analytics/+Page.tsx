@@ -7,6 +7,15 @@ import {
   CardContent,
 } from "#root/components/ui/card";
 import { Badge } from "#root/components/ui/badge";
+import { Button } from "#root/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#root/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -41,6 +50,7 @@ import {
   Users,
   Repeat2,
   UserPlus,
+  ArchiveX,
 } from "lucide-react";
 import { trpc } from "#root/shared/trpc/client";
 
@@ -151,6 +161,48 @@ export default function AnalyticsDashboardPage() {
     null,
   );
   const [customerData, setCustomerData] = useState<CustomerData | null>(null);
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+
+  const handleArchiveAll = async () => {
+    setArchiving(true);
+    try {
+      await trpc.analytics.archiveAll.mutate();
+      // Refresh all data to reflect zeroed-out analytics
+      setOverviewData(null);
+      setFunnelData(null);
+      setEventsData(null);
+      setTopSellingData([]);
+      setTopTrackedData(null);
+      setCustomerData(null);
+      setArchiveDialogOpen(false);
+      // Reload
+      setIsLoading(true);
+      const [overview, funnel, events, platform, topSelling, topTracked] =
+        await Promise.all([
+          trpc.analytics.overview.query(),
+          trpc.analytics.funnel.query(),
+          trpc.analytics.eventBreakdown.query(),
+          trpc.analytics.platformHealth.query(),
+          trpc.product.topSelling.query({ limit: 5 }),
+          trpc.analytics.topTrackedProducts.query(),
+        ]);
+      if (overview.success) setOverviewData(overview.result);
+      if (funnel.success) setFunnelData(funnel.result);
+      if (events.success) setEventsData(events.result);
+      if (platform.success) setPlatformData(platform.result);
+      if (topSelling.success) setTopSellingData(topSelling.result);
+      if (topTracked.success) setTopTrackedData(topTracked.result);
+      trpc.analytics.returningCustomers.query().then((r) => {
+        if (r.success) setCustomerData(r.result as CustomerData);
+      }).catch(() => {});
+    } catch (err) {
+      console.error("Failed to archive analytics:", err);
+    } finally {
+      setArchiving(false);
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -197,13 +249,24 @@ export default function AnalyticsDashboardPage() {
   return (
     <div className='p-6 max-w-7xl mx-auto space-y-6' data-testid='analytics-dashboard'>
       {/* Header */}
-      <div>
-        <h1 className='text-2xl font-bold tracking-tight'>
-          Analytics Dashboard
-        </h1>
-        <p className='text-muted-foreground'>
-          Overview of store performance, conversions, and tracking health.
-        </p>
+      <div className='flex items-start justify-between gap-4'>
+        <div>
+          <h1 className='text-2xl font-bold tracking-tight'>
+            Analytics Dashboard
+          </h1>
+          <p className='text-muted-foreground'>
+            Overview of store performance, conversions, and tracking health.
+          </p>
+        </div>
+        <Button
+          variant='outline'
+          size='sm'
+          className='shrink-0 gap-2 text-destructive border-destructive/30 hover:bg-destructive/10'
+          onClick={() => setArchiveDialogOpen(true)}
+        >
+          <ArchiveX className='h-4 w-4' />
+          Reset Analytics
+        </Button>
       </div>
 
       {isLoading && (
@@ -631,6 +694,57 @@ export default function AnalyticsDashboardPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* ── Archive / Reset Confirmation Dialog ───────────────────── */}
+      <Dialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
+        <DialogContent className='max-w-md'>
+          <DialogHeader>
+            <DialogTitle className='flex items-center gap-2 text-destructive'>
+              <ArchiveX className='h-5 w-5' />
+              Reset All Analytics
+            </DialogTitle>
+            <DialogDescription asChild>
+              <div className='space-y-3 text-sm'>
+                <p>
+                  This will archive <strong>all tracking events</strong> and{" "}
+                  <strong>all orders</strong>, effectively zeroing out the
+                  dashboard for a clean launch.
+                </p>
+                <div className='rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-800'>
+                  <p className='font-medium'>Nothing is deleted.</p>
+                  <p className='mt-0.5 text-xs'>
+                    All data is preserved in the database with an{" "}
+                    <code className='font-mono'>archived_at</code> timestamp for
+                    audit purposes. This action cannot be undone from the UI.
+                  </p>
+                </div>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className='gap-2 sm:gap-0'>
+            <Button
+              variant='outline'
+              onClick={() => setArchiveDialogOpen(false)}
+              disabled={archiving}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant='destructive'
+              onClick={handleArchiveAll}
+              disabled={archiving}
+              className='gap-2'
+            >
+              {archiving ? (
+                <Loader2 className='h-4 w-4 animate-spin' />
+              ) : (
+                <ArchiveX className='h-4 w-4' />
+              )}
+              {archiving ? "Archiving…" : "Yes, Reset Analytics"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

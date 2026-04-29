@@ -435,6 +435,10 @@ export const order = pgTable("order", {
     mode: "date",
   }),
   fincartWebhookData: jsonb("fincart_webhook_data"),
+  archivedAt: timestamp("archived_at", {
+    withTimezone: true,
+    mode: "date",
+  }),
 });
 
 export const orderItem = pgTable("order_item", {

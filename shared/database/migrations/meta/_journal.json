@@ -232,6 +232,13 @@
       "when": 1777391749355,
       "tag": "0032_magenta_medusa",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1777491044600,
+      "tag": "0033_slow_guardsmen",
+      "breakpoints": true
     }
   ]
 }

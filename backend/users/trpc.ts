@@ -1,8 +1,8 @@
 import { adminProcedure, publicProcedure, router } from "#root/shared/trpc/server";
 import { z } from "zod";
-import { eq, and, desc, ilike, or, count } from "drizzle-orm";
+import { eq, and, desc, ilike, or, count, sql, sum, inArray } from "drizzle-orm";
 import { hashPassword } from "better-auth/crypto";
-import { user, order, orderItem, account, session } from "#root/shared/database/drizzle/schema";
+import { user, order, orderItem, account, session, trackingEvent } from "#root/shared/database/drizzle/schema";
 import { auth } from "#root/backend/auth/auth.server.js";
 import { TRPCError } from "@trpc/server";
 
@@ -302,5 +302,145 @@ export const usersRouter = router({
         })
         .where(eq(user.id, input.id));
       return { success: true as const };
+    }),
+
+  /** Admin-only: get full behavioral activity + analytics for one user */
+  getActivity: adminProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const db = ctx.db;
+
+      // ── Tracking event counts per event type for this user ──────────────
+      const eventCounts = await db
+        .select({ eventName: trackingEvent.eventName, total: count() })
+        .from(trackingEvent)
+        .where(eq(trackingEvent.userId, input.id))
+        .groupBy(trackingEvent.eventName);
+
+      const countMap: Record<string, number> = {};
+      for (const e of eventCounts) countMap[e.eventName] = e.total;
+
+      // ── Products added to cart (with per-product tally) ─────────────────
+      const cartEventRows = await db
+        .select({
+          productId: sql<string>`${trackingEvent.eventData}->>'productId'`,
+          productName: sql<string>`${trackingEvent.eventData}->>'productName'`,
+          createdAt: trackingEvent.createdAt,
+        })
+        .from(trackingEvent)
+        .where(
+          and(
+            eq(trackingEvent.userId, input.id),
+            eq(trackingEvent.eventName, "product_added_to_cart"),
+          ),
+        )
+        .orderBy(desc(trackingEvent.createdAt));
+
+      const cartMap = new Map<string, { productId: string; productName: string; count: number }>();
+      for (const row of cartEventRows) {
+        if (!row.productId) continue;
+        const existing = cartMap.get(row.productId);
+        if (existing) { existing.count++; }
+        else { cartMap.set(row.productId, { productId: row.productId, productName: row.productName ?? "Unknown", count: 1 }); }
+      }
+      const cartProducts = [...cartMap.values()].sort((a, b) => b.count - a.count);
+
+      // ── Products viewed (with per-product tally) ────────────────────────
+      const viewedEventRows = await db
+        .select({
+          productId: sql<string>`${trackingEvent.eventData}->>'productId'`,
+          productName: sql<string>`${trackingEvent.eventData}->>'productName'`,
+        })
+        .from(trackingEvent)
+        .where(
+          and(
+            eq(trackingEvent.userId, input.id),
+            eq(trackingEvent.eventName, "product_viewed"),
+          ),
+        );
+
+      const viewedMap = new Map<string, { productId: string; productName: string; count: number }>();
+      for (const row of viewedEventRows) {
+        if (!row.productId) continue;
+        const existing = viewedMap.get(row.productId);
+        if (existing) { existing.count++; }
+        else { viewedMap.set(row.productId, { productId: row.productId, productName: row.productName ?? "Unknown", count: 1 }); }
+      }
+      const viewedProducts = [...viewedMap.values()].sort((a, b) => b.count - a.count).slice(0, 10);
+
+      // ── Orders for this user ─────────────────────────────────────────────
+      const orders = await db
+        .select({
+          id: order.id,
+          total: order.total,
+          status: order.status,
+          createdAt: order.createdAt,
+          paymentMethod: order.paymentMethod,
+        })
+        .from(order)
+        .where(eq(order.userId, input.id))
+        .orderBy(desc(order.createdAt));
+
+      const completedStatuses = ["delivered", "completed", "confirmed", "processing"];
+      const completedOrders = orders.filter((o) => completedStatuses.includes(o.status));
+      const cancelledOrders = orders.filter((o) => o.status === "cancelled");
+      const totalSpent = completedOrders.reduce((s, o) => s + Number(o.total), 0);
+      const avgOrderValue = completedOrders.length > 0 ? totalSpent / completedOrders.length : 0;
+
+      // ── Order items for completed orders (to find favourite products) ───
+      const completedIds = completedOrders.map((o) => o.id);
+      let topPurchased: { productId: string; productName: string; timesBought: number; totalSpent: number }[] = [];
+      if (completedIds.length > 0) {
+        const items = await db
+          .select({
+            productId: orderItem.productId,
+            name: orderItem.name,
+            totalQty: sql<number>`sum(${orderItem.quantity})`,
+            totalSpent: sql<number>`sum(${orderItem.price} * ${orderItem.quantity})`,
+          })
+          .from(orderItem)
+          .where(inArray(orderItem.orderId, completedIds))
+          .groupBy(orderItem.productId, orderItem.name)
+          .orderBy(desc(sql`sum(${orderItem.quantity})`));
+
+        topPurchased = items.map((i) => ({
+          productId: i.productId ?? "",
+          productName: i.name,
+          timesBought: Number(i.totalQty),
+          totalSpent: Math.round(Number(i.totalSpent) * 100) / 100,
+        }));
+      }
+
+      return {
+        success: true as const,
+        result: {
+          // Funnel counts
+          pageViews: countMap["page_viewed"] ?? 0,
+          productViews: countMap["product_viewed"] ?? 0,
+          cartAdds: countMap["product_added_to_cart"] ?? 0,
+          checkoutStarts: countMap["checkout_started"] ?? 0,
+          purchasesTracked: countMap["checkout_completed"] ?? 0,
+          // Products
+          cartProducts,
+          viewedProducts,
+          topPurchased,
+          // Orders
+          totalOrders: orders.length,
+          completedOrdersCount: completedOrders.length,
+          cancelledOrdersCount: cancelledOrders.length,
+          pendingOrdersCount: orders.length - completedOrders.length - cancelledOrders.length,
+          totalSpent: Math.round(totalSpent * 100) / 100,
+          avgOrderValue: Math.round(avgOrderValue * 100) / 100,
+          firstOrderAt: orders.length > 0 ? orders[orders.length - 1]!.createdAt : null,
+          lastOrderAt: orders.length > 0 ? orders[0]!.createdAt : null,
+          recentOrders: orders.slice(0, 15).map((o) => ({
+            id: o.id,
+            total: Number(o.total),
+            status: o.status,
+            createdAt: o.createdAt,
+            paymentMethod: o.paymentMethod,
+          })),
+        },
+      };
     }),
 });
