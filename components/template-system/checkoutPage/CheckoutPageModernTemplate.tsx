@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "#root/components/ui/button";
 import {
   Card,
@@ -181,6 +181,37 @@ export function CheckoutPageModernTemplate({
     if (!validateForm()) return;
     onSubmit?.(form);
   };
+
+  // Resolved payment methods (with COD fallback when none provided)
+  const methods =
+    paymentMethods && paymentMethods.length > 0
+      ? paymentMethods
+      : [
+          {
+            id: "cod",
+            label: "Cash on Delivery",
+            description: "Pay when your order is delivered to your doorstep",
+          },
+        ];
+
+  const getPaymentIcon = (id: string) => {
+    switch (id) {
+      case "stripe":
+        return <CreditCard className='w-5 h-5' />;
+      case "paymob":
+        return <Wallet className='w-5 h-5' />;
+      default:
+        return <Banknote className='w-5 h-5' />;
+    }
+  };
+
+  // Auto-select the only payment method when there's exactly one
+  useEffect(() => {
+    if (methods.length === 1 && form.paymentMethod !== methods[0]!.id) {
+      updateField("paymentMethod", methods[0]!.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [methods, form.paymentMethod]);
 
   return (
     <div className='container mx-auto px-4 py-8'>
@@ -416,93 +447,82 @@ export function CheckoutPageModernTemplate({
             </Card>
 
             {/* Payment Method */}
-            {(() => {
-              const methods =
-                paymentMethods && paymentMethods.length > 0
-                  ? paymentMethods
-                  : [
-                      {
-                        id: "cod",
-                        label: "Cash on Delivery",
-                        description:
-                          "Pay when your order is delivered to your doorstep",
-                      },
-                    ];
-              const showPaymentSection = methods.length > 1;
-
-              if (!showPaymentSection) return null;
-
-              const getPaymentIcon = (id: string) => {
-                switch (id) {
-                  case "stripe":
-                    return <CreditCard className='w-5 h-5' />;
-                  case "paymob":
-                    return <Wallet className='w-5 h-5' />;
-                  default:
-                    return <Banknote className='w-5 h-5' />;
-                }
-              };
-
-              return (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className='flex items-center gap-2'>
-                      <CreditCard className='w-5 h-5 text-primary' />
-                      {t("checkout.payment_method")}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {paymentMethodsLoading ? (
-                      <div className='flex items-center justify-center py-4 gap-2 text-muted-foreground'>
-                        <Loader2 className='w-4 h-4 animate-spin' />
-                        {t("checkout.loading_payment")}
+            <Card>
+              <CardHeader>
+                <CardTitle className='flex items-center gap-2'>
+                  <CreditCard className='w-5 h-5 text-primary' />
+                  {t("checkout.payment_method")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {paymentMethodsLoading ? (
+                  <div className='flex items-center justify-center py-4 gap-2 text-muted-foreground'>
+                    <Loader2 className='w-4 h-4 animate-spin' />
+                    {t("checkout.loading_payment")}
+                  </div>
+                ) : methods.length === 1 ? (
+                  // Single method — render as a clean info card (no radio, no interaction)
+                  (() => {
+                    const only = methods[0]!;
+                    return (
+                      <div className='flex items-start gap-4 p-4 rounded-lg border-2 border-primary bg-primary/5'>
+                        <div className='mt-0.5 text-primary'>
+                          {getPaymentIcon(only.id)}
+                        </div>
+                        <div className='flex-1'>
+                          <p className='font-medium'>{only.label}</p>
+                          <p className='text-sm text-muted-foreground'>
+                            {only.description}
+                          </p>
+                        </div>
                       </div>
-                    ) : (
-                      <div className='space-y-3'>
-                        {methods.map((method) => (
-                          <label
-                            key={method.id}
-                            className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                              form.paymentMethod === method.id
-                                ? "border-primary bg-primary/5"
-                                : "border-border hover:border-muted-foreground/30"
-                            }`}>
-                            <input
-                              type='radio'
-                              name='paymentMethod'
-                              value={method.id}
-                              checked={form.paymentMethod === method.id}
-                              onChange={(e) =>
-                                updateField("paymentMethod", e.target.value)
-                              }
-                              className='mt-1 accent-primary'
-                            />
-                            <div className='flex items-start gap-3 flex-1'>
-                              <div
-                                className={`mt-0.5 ${form.paymentMethod === method.id ? "text-primary" : "text-muted-foreground"}`}>
-                                {getPaymentIcon(method.id)}
-                              </div>
-                              <div className='flex-1'>
-                                <p className='font-medium'>{method.label}</p>
-                                <p className='text-sm text-muted-foreground'>
-                                  {method.description}
-                                </p>
-                              </div>
-                            </div>
-                            {method.id !== "cod" && (
-                              <div className='flex items-center gap-1 text-xs text-green-600 mt-1'>
-                                <Shield className='w-3 h-3' />
-                                {t("checkout.secure")}
-                              </div>
-                            )}
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })()}
+                    );
+                  })()
+                ) : (
+                  // Multiple methods — keep the existing radio-card UI
+                  <div className='space-y-3'>
+                    {methods.map((method) => (
+                      <label
+                        key={method.id}
+                        className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                          form.paymentMethod === method.id
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-muted-foreground/30"
+                        }`}>
+                        <input
+                          type='radio'
+                          name='paymentMethod'
+                          value={method.id}
+                          checked={form.paymentMethod === method.id}
+                          onChange={(e) =>
+                            updateField("paymentMethod", e.target.value)
+                          }
+                          className='mt-1 accent-primary'
+                        />
+                        <div className='flex items-start gap-3 flex-1'>
+                          <div
+                            className={`mt-0.5 ${form.paymentMethod === method.id ? "text-primary" : "text-muted-foreground"}`}>
+                            {getPaymentIcon(method.id)}
+                          </div>
+                          <div className='flex-1'>
+                            <p className='font-medium'>{method.label}</p>
+                            <p className='text-sm text-muted-foreground'>
+                              {method.description}
+                            </p>
+                          </div>
+                        </div>
+                        {method.id !== "cod" && (
+                          <div className='flex items-center gap-1 text-xs text-green-600 mt-1'>
+                            <Shield className='w-3 h-3' />
+                            {t("checkout.secure")}
+                          </div>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Order Items */}
             <Card>
