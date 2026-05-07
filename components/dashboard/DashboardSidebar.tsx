@@ -15,6 +15,7 @@ import {
   Link2,
   Star,
   BarChart3,
+  Tag,
 } from "lucide-react";
 
 import {
@@ -76,6 +77,11 @@ export function DashboardSidebar() {
       label: "Promo Codes",
       href: "/dashboard/promo-codes",
       icon: TicketPercent,
+    },
+    {
+      label: "Offers",
+      href: "/dashboard/offers",
+      icon: Tag,
     },
     {
       label: "Reviews",

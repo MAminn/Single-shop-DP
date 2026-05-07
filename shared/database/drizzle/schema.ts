@@ -1308,3 +1308,60 @@ export const comingSoonSubscribers = pgTable("coming_soon_subscribers", {
     mode: "date",
   }),
 });
+
+// ─── Cart Offers ────────────────────────────────────────────────────────────
+// Automatic promotions applied at cart/checkout level.
+// Condition and reward are stored as JSONB so new offer types can be added
+// without schema migrations.
+
+export const cartOffer = pgTable("cart_offer", {
+  id: uuid("id")
+    .$defaultFn(() => v7())
+    .primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").notNull().default(true),
+  // Lower priority = evaluated first; exclusive offers stop further stacking
+  priority: integer("priority").notNull().default(0),
+  isExclusive: boolean("is_exclusive").notNull().default(false),
+  /**
+   * Condition JSONB — one of:
+   *   { type: "always" }
+   *   { type: "quantity_threshold"; minQuantity: number; productIds?: string[]; categoryIds?: string[] }
+   *   { type: "cart_total"; minTotal: number }
+   *   { type: "product_bundle"; requiredProductIds: string[] }
+   */
+  condition: jsonb("condition").notNull().$type<OfferCondition>(),
+  /**
+   * Reward JSONB — one of:
+   *   { type: "percentage_off"; percentOff: number }
+   *   { type: "fixed_off"; amountOff: number }
+   *   { type: "free_shipping" }
+   *   { type: "free_items"; quantity: number; which: "cheapest" | "most_expensive" }
+   */
+  reward: jsonb("reward").notNull().$type<OfferReward>(),
+  startsAt: timestamp("starts_at", { withTimezone: true, mode: "date" }),
+  endsAt: timestamp("ends_at", { withTimezone: true, mode: "date" }),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+    .defaultNow()
+    .notNull(),
+});
+
+// ─── Offer type helpers ─────────────────────────────────────────────────────
+
+export type OfferCondition =
+  | { type: "always" }
+  | { type: "quantity_threshold"; minQuantity: number; productIds?: string[]; categoryIds?: string[] }
+  | { type: "cart_total"; minTotal: number }
+  | { type: "product_bundle"; requiredProductIds: string[] };
+
+export type OfferReward =
+  | { type: "percentage_off"; percentOff: number }
+  | { type: "fixed_off"; amountOff: number }
+  | { type: "free_shipping" }
+  | { type: "free_items"; quantity: number; which: "cheapest" | "most_expensive" };
+
+export type CartOfferRow = typeof cartOffer.$inferSelect;

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import type { Product } from "../mock-data/products";
 import { trpc } from "#root/shared/trpc/client";
+import type { AppliedOffer } from "#root/backend/offers/service";
 
 export interface CartItem extends Product {
   quantity: number;
@@ -42,6 +43,8 @@ interface CartContextType {
     itemId: string,
     options: CartItem["selectedOptions"],
   ) => CartItem | undefined;
+  appliedOffers: AppliedOffer[];
+  offerDiscount: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -51,6 +54,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [promoCode, setPromoCode] = useState<PromoCodeInfo | null>(null);
   const [discount, setDiscount] = useState<number>(0);
   const [shipping, setShipping] = useState<number>(0);
+  const [appliedOffers, setAppliedOffers] = useState<AppliedOffer[]>([]);
+  const [offerDiscount, setOfferDiscount] = useState<number>(0);
 
   useEffect(() => {
     const savedCart = localStorage.getItem("cart");
@@ -125,9 +130,42 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(items));
 
-    // Recalculate discount when items change
+    // Recalculate promo discount when items change
     if (promoCode) {
       calculateDiscount(promoCode);
+    }
+
+    // Re-evaluate automatic offers when cart changes
+    const cartItems = items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      quantity: item.quantity,
+      price: item.price,
+    }));
+    const currentSubtotal = items.reduce((t, i) => t + i.price * i.quantity, 0);
+    if (cartItems.length > 0) {
+      trpc.offer.evaluate
+        .query({ cartItems, subtotal: currentSubtotal })
+        .then((result) => {
+          if (result.success && result.result) {
+            setAppliedOffers(result.result);
+            const totalOfferDiscount = result.result.reduce((s, o) => s + o.discountAmount, 0);
+            setOfferDiscount(totalOfferDiscount);
+            // If any offer gives free shipping, zero out shipping
+            const hasFreeShipping = result.result.some((o) => o.freeShipping);
+            if (hasFreeShipping) setShipping(0);
+          } else {
+            setAppliedOffers([]);
+            setOfferDiscount(0);
+          }
+        })
+        .catch(() => {
+          setAppliedOffers([]);
+          setOfferDiscount(0);
+        });
+    } else {
+      setAppliedOffers([]);
+      setOfferDiscount(0);
     }
   }, [items, promoCode]);
 
@@ -312,8 +350,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const totalItems = items.reduce((total, item) => total + item.quantity, 0);
 
-  // Calculate total including shipping (no tax)
-  const total = subtotal - discount + shipping;
+  // Total: subtotal minus promo discount, minus offer discount, plus shipping
+  const total = Math.max(0, subtotal - discount - offerDiscount + shipping);
 
   return (
     <CartContext.Provider
@@ -332,6 +370,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         applyPromoCode,
         removePromoCode,
         findItemInCart,
+        appliedOffers,
+        offerDiscount,
       }}>
       {children}
     </CartContext.Provider>

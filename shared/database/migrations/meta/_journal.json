@@ -239,6 +239,13 @@
       "when": 1777491044600,
       "tag": "0033_slow_guardsmen",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1778170066989,
+      "tag": "0034_tired_tiger_shark",
+      "breakpoints": true
     }
   ]
 }

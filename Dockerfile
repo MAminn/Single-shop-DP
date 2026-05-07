@@ -3,18 +3,18 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
-# Install dependencies only
+# Install dependencies only (force NODE_ENV=development so pnpm installs devDeps too)
 FROM base AS deps
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN NODE_ENV=development pnpm install --frozen-lockfile
 
 # Build the app
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN pnpm run build
+RUN NODE_ENV=production pnpm run build
 
 # Production runtime
 FROM base AS runner
