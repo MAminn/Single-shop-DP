@@ -1,7 +1,7 @@
 FROM node:22-slim AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN npm install -g pnpm@9.15.4
 
 # Install dependencies only (force NODE_ENV=development so pnpm installs devDeps too)
 FROM base AS deps
