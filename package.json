@@ -109,6 +109,7 @@
     "vike": "^0.4.225",
     "vike-react": "^0.5.13",
     "vitest": "^3.0.9",
+    "cross-env": "^7.0.3",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -120,7 +121,6 @@
     "@types/react-dom": "^19.0.4",
     "@types/slug": "^5.0.9",
     "@types/uuid": "^10.0.0",
-    "cross-env": "^7.0.3",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2",
     "vite": "^6.2.2"
