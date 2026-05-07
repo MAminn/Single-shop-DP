@@ -1,5 +1,5 @@
 import React from "react";
-import { Trash2, Plus, Minus, ShoppingCart } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingCart, Gift } from "lucide-react";
 import type { CartPageModernTemplateProps } from "./CartPageModernTemplate";
 
 /**
@@ -260,6 +260,19 @@ export function CartPageMinimalTemplate({
                     <span>−{totals.discount.toFixed(2)} {currency}</span>
                   </div>
                 )}
+                {totals.appliedOffers && totals.appliedOffers.map((offer) => (
+                  <div key={offer.name} className="flex items-start justify-between gap-2 text-[13px] text-red-600">
+                    <span className="flex items-center gap-1 font-medium min-w-0">
+                      <Gift className="w-3 h-3 shrink-0" />
+                      <span className="truncate">{offer.name}</span>
+                    </span>
+                    <span className="font-semibold shrink-0">
+                      {offer.freeShipping && offer.discountAmount === 0
+                        ? "Free shipping"
+                        : `−${offer.discountAmount.toFixed(2)} ${currency}`}
+                    </span>
+                  </div>
+                ))}
                 <div className="flex justify-between text-[13px] text-gray-600">
                   <span>Shipping</span>
                   <span>{totals.shipping != null && totals.shipping > 0 ? `${totals.shipping.toFixed(2)} ${currency}` : "Calculated at checkout"}</span>

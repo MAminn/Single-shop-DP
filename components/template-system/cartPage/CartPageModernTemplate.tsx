@@ -1,14 +1,7 @@
 import React from "react";
 import { Button } from "#root/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "#root/components/ui/card";
 import { Input } from "#root/components/ui/input";
-import { Separator } from "#root/components/ui/separator";
-import { Trash2, Plus, Minus, ShoppingCart, ArrowRight } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingCart, ArrowRight, Gift } from "lucide-react";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 
 /**
@@ -79,210 +72,246 @@ export function CartPageModernTemplate({
 
   if (isLoading) {
     return (
-      <div className='container mx-auto px-4 py-8'>
-        <div className='flex items-center justify-center min-h-[400px]'>
-          <div className='text-center'>
-            <ShoppingCart className='w-16 h-16 mx-auto mb-4 text-muted-foreground animate-pulse' />
-            <p className='text-muted-foreground'>{t("cart.loading")}</p>
-          </div>
-        </div>
+      <div className='min-h-[60vh] flex items-center justify-center'>
+        <ShoppingCart className='w-10 h-10 text-muted-foreground animate-pulse' />
       </div>
     );
   }
 
   if (items.length === 0) {
     return (
-      <div className='container mx-auto px-4 py-8'>
-        <div className='flex items-center justify-center min-h-[400px]'>
-          <div className='text-center'>
-            <ShoppingCart className='w-16 h-16 mx-auto mb-4 text-muted-foreground' />
-            <h2 className='text-2xl font-bold mb-2'>{t("cart.empty")}</h2>
-            <p className='text-muted-foreground mb-6'>
-              {t("cart.empty_cta")}
-            </p>
-            <Button onClick={() => (window.location.href = "/shop")}>
-              {t("cart.continue_shopping")}
-            </Button>
-          </div>
-        </div>
+      <div className='min-h-[60vh] flex flex-col items-center justify-center gap-4 px-4 text-center'>
+        <ShoppingCart className='w-14 h-14 text-muted-foreground/40' />
+        <h2 className='text-2xl font-bold'>{t("cart.empty")}</h2>
+        <p className='text-muted-foreground'>{t("cart.empty_cta")}</p>
+        <Button onClick={() => (window.location.href = "/shop")} className='mt-2'>
+          {t("cart.continue_shopping")}
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className='w-full overflow-x-hidden'>
-      <div className='mx-auto max-w-2xl lg:max-w-5xl px-4 py-8'>
-        <h1 className='text-3xl font-bold mb-6'>{t("cart.title")}</h1>
+    <div className='min-h-screen bg-background'>
+      <div className='mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12'>
+        <h1 className='text-2xl sm:text-3xl font-bold mb-8'>
+          {t("cart.title")}
+          <span className='ms-3 text-base font-normal text-muted-foreground'>
+            ({items.length} {items.length === 1 ? "item" : "items"})
+          </span>
+        </h1>
 
-        {/* Single column on mobile, 3-col on desktop */}
-        <div className='flex flex-col lg:grid lg:grid-cols-3 lg:gap-8 gap-4'>
+        <div className='lg:grid lg:grid-cols-[1fr_380px] lg:gap-12'>
 
-          {/* Cart Items */}
-          <div className='lg:col-span-2 space-y-3'>
-            {items.map((item) => (
-              <Card key={item.id}>
-                <CardContent className='p-4'>
-                  <div className={`flex gap-3 transition-opacity ${isUpdating ? "opacity-60 pointer-events-none" : ""}`}>
-                    {/* Image */}
-                    <div className='w-20 h-20 sm:w-24 sm:h-24 bg-muted rounded-lg overflow-hidden shrink-0'>
+          {/* ── Items list ─────────────────────────────────── */}
+          <div>
+            {/* Desktop column headers */}
+            <div className='hidden sm:grid grid-cols-[1fr_140px_90px_36px] gap-4 pb-3 border-b text-xs uppercase tracking-widest text-muted-foreground font-medium'>
+              <span>{t("cart.product") || "Product"}</span>
+              <span className='text-center'>{t("cart.quantity") || "Quantity"}</span>
+              <span className='text-right'>{t("cart.total") || "Total"}</span>
+              <span />
+            </div>
+
+            <div className='divide-y'>
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className={`py-5 sm:py-6 transition-opacity ${isUpdating ? "opacity-50 pointer-events-none" : ""}`}
+                >
+                  {/* ── Mobile layout ── */}
+                  <div className='flex gap-4 sm:hidden'>
+                    <div className='w-20 h-20 shrink-0 bg-muted rounded-lg overflow-hidden'>
                       {item.imageUrl ? (
                         <img src={item.imageUrl} alt={item.name} className='w-full h-full object-cover' />
                       ) : (
                         <div className='w-full h-full flex items-center justify-center'>
-                          <ShoppingCart className='w-6 h-6 text-muted-foreground/30' />
+                          <ShoppingCart className='w-5 h-5 text-muted-foreground/30' />
                         </div>
                       )}
                     </div>
-
-                    {/* Content */}
-                    <div className='flex-1 min-w-0 flex flex-col gap-2'>
-                      {/* Name + trash */}
-                      <div className='flex items-start gap-1'>
-                        <div className='flex-1 min-w-0'>
-                          <h3 className='font-semibold text-sm leading-snug text-foreground break-words'>
-                            {item.name}
-                          </h3>
-                          {item.variant && (
-                            <p className='text-xs text-muted-foreground mt-0.5'>{item.variant}</p>
-                          )}
-                          <p className='text-sm font-bold text-foreground mt-1'>
-                            {currency}{item.price.toFixed(2)}
+                    <div className='flex-1 min-w-0'>
+                      <div className='flex items-start justify-between gap-2'>
+                        <div className='min-w-0'>
+                          <p className='font-semibold text-sm leading-snug break-words'>{item.name}</p>
+                          {item.variant && <p className='text-xs text-muted-foreground mt-0.5'>{item.variant}</p>}
+                          <p className='text-sm font-medium text-muted-foreground mt-1'>
+                            {currency}{item.price.toFixed(2)} {t("checkout.each") || "each"}
                           </p>
                         </div>
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          className='shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive -mt-1 -mr-2'
+                        <button
+                          type='button'
                           onClick={() => onRemoveItem?.(item.id)}
                           disabled={isUpdating}
-                          aria-label='Remove item'>
+                          aria-label='Remove item'
+                          className='shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors'>
                           <Trash2 className='w-4 h-4' />
-                        </Button>
+                        </button>
                       </div>
-
-                      {/* Qty stepper + line total — stacked column */}
-                      <div className='flex flex-col gap-1.5'>
-                        <div className='flex items-center border rounded-lg w-fit'>
-                          <Button
-                            variant='ghost'
-                            size='icon'
-                            className='h-9 w-9'
+                      <div className='flex items-center justify-between mt-3'>
+                        <div className='flex items-center border rounded-lg'>
+                          <button
+                            type='button'
                             onClick={() => onQuantityChange?.(item.id, Math.max(1, item.quantity - 1))}
                             disabled={isUpdating || item.quantity <= 1}
-                            aria-label='Decrease quantity'>
-                            <Minus className='w-3.5 h-3.5' />
-                          </Button>
-                          <span className='w-8 text-center text-sm font-medium text-foreground'>
-                            {item.quantity}
-                          </span>
-                          <Button
-                            variant='ghost'
-                            size='icon'
-                            className='h-9 w-9'
+                            aria-label='Decrease quantity'
+                            className='w-9 h-9 flex items-center justify-center hover:bg-muted transition-colors rounded-l-lg disabled:opacity-40'>
+                            <Minus className='w-3 h-3' />
+                          </button>
+                          <span className='w-10 text-center text-sm font-medium'>{item.quantity}</span>
+                          <button
+                            type='button'
                             onClick={() => onQuantityChange?.(item.id, item.quantity + 1)}
                             disabled={isUpdating || (item.stock != null && item.quantity >= item.stock)}
-                            aria-label='Increase quantity'>
-                            <Plus className='w-3.5 h-3.5' />
-                          </Button>
+                            aria-label='Increase quantity'
+                            className='w-9 h-9 flex items-center justify-center hover:bg-muted transition-colors rounded-r-lg disabled:opacity-40'>
+                            <Plus className='w-3 h-3' />
+                          </button>
                         </div>
-                        <p className='text-sm font-semibold text-foreground'>
-                          {currency}{(item.price * item.quantity).toFixed(2)}
+                        <p className='text-sm font-bold'>{currency}{(item.price * item.quantity).toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ── Desktop layout ── */}
+                  <div className='hidden sm:grid grid-cols-[1fr_140px_90px_36px] gap-4 items-center'>
+                    <div className='flex items-center gap-4'>
+                      <div className='w-16 h-16 shrink-0 bg-muted rounded-lg overflow-hidden'>
+                        {item.imageUrl ? (
+                          <img src={item.imageUrl} alt={item.name} className='w-full h-full object-cover' />
+                        ) : (
+                          <div className='w-full h-full flex items-center justify-center'>
+                            <ShoppingCart className='w-5 h-5 text-muted-foreground/30' />
+                          </div>
+                        )}
+                      </div>
+                      <div className='min-w-0'>
+                        <p className='font-semibold text-sm'>{item.name}</p>
+                        {item.variant && <p className='text-xs text-muted-foreground mt-0.5'>{item.variant}</p>}
+                        <p className='text-xs text-muted-foreground mt-0.5'>
+                          {currency}{item.price.toFixed(2)} {t("checkout.each") || "each"}
                         </p>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Order Summary */}
-          <div className='lg:col-span-1 lg:sticky lg:top-4 lg:self-start'>
-            <Card>
-              <CardHeader className='pb-3'>
-                <CardTitle className='text-base'>{t("cart.order_summary")}</CardTitle>
-              </CardHeader>
-              <CardContent className='space-y-4'>
-                <div className='space-y-2.5'>
-                  <div className='flex items-center justify-between gap-4 text-sm'>
-                    <span className='shrink-0 text-muted-foreground'>{t("cart.subtotal")}</span>
-                    <span className='font-medium text-foreground'>{currency}{totals.subtotal.toFixed(2)}</span>
-                  </div>
-                  {totals.discount !== undefined && totals.discount > 0 && (
-                    <div className='flex items-center justify-between gap-4 text-sm text-green-600'>
-                      <span className='shrink-0'>{t("cart.discount")}</span>
-                      <span className='font-medium'>-{currency}{totals.discount.toFixed(2)}</span>
+                    <div className='flex items-center border rounded-lg w-fit mx-auto'>
+                      <button
+                        type='button'
+                        onClick={() => onQuantityChange?.(item.id, Math.max(1, item.quantity - 1))}
+                        disabled={isUpdating || item.quantity <= 1}
+                        aria-label='Decrease quantity'
+                        className='w-9 h-9 flex items-center justify-center hover:bg-muted transition-colors rounded-l-lg disabled:opacity-40'>
+                        <Minus className='w-3 h-3' />
+                      </button>
+                      <span className='w-10 text-center text-sm font-medium'>{item.quantity}</span>
+                      <button
+                        type='button'
+                        onClick={() => onQuantityChange?.(item.id, item.quantity + 1)}
+                        disabled={isUpdating || (item.stock != null && item.quantity >= item.stock)}
+                        aria-label='Increase quantity'
+                        className='w-9 h-9 flex items-center justify-center hover:bg-muted transition-colors rounded-r-lg disabled:opacity-40'>
+                        <Plus className='w-3 h-3' />
+                      </button>
                     </div>
-                  )}
-                  {totals.appliedOffers && totals.appliedOffers.length > 0 && (
-                    <>
-                      {totals.appliedOffers.map((offer) => (
-                        <div key={offer.name} className='flex items-center justify-between gap-4 text-sm text-red-600'>
-                          <span className='shrink-0 font-medium'>🎁 {offer.name}</span>
-                          <span className='font-semibold'>
-                            {offer.freeShipping && offer.discountAmount === 0
-                              ? t("cart.free_shipping")
-                              : `-${currency}${offer.discountAmount.toFixed(2)}`}
-                          </span>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                  {totals.shipping !== undefined && (
-                    <div className='flex items-center justify-between gap-4 text-sm'>
-                      <span className='shrink-0 text-muted-foreground'>{t("cart.shipping")}</span>
-                      <span className='font-medium text-foreground'>
-                        {totals.shipping === 0 ? t("cart.free") : `${currency}${totals.shipping.toFixed(2)}`}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <Separator />
-
-                <div className='flex items-center justify-between gap-4 font-bold'>
-                  <span className='shrink-0 text-foreground'>{t("cart.total")}</span>
-                  <span className='text-foreground'>{currency}{totals.grandTotal.toFixed(2)}</span>
-                </div>
-
-                {/* Coupon Code */}
-                <div className='space-y-2'>
-                  <label className='text-sm font-medium text-foreground'>{t("cart.coupon_code")}</label>
-                  <div className='flex gap-2'>
-                    <Input
-                      placeholder={t("cart.enter_code")}
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
+                    <p className='text-sm font-bold text-right'>{currency}{(item.price * item.quantity).toFixed(2)}</p>
+                    <button
+                      type='button'
+                      onClick={() => onRemoveItem?.(item.id)}
                       disabled={isUpdating}
-                      className='text-sm min-w-0'
-                    />
-                    <Button
-                      variant='outline'
-                      onClick={handleApplyCoupon}
-                      disabled={isUpdating || !couponCode.trim()}
-                      className='shrink-0 text-xs px-3'>
-                      {t("cart.apply")}
-                    </Button>
+                      aria-label='Remove item'
+                      className='p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors justify-self-end'>
+                      <Trash2 className='w-4 h-4' />
+                    </button>
                   </div>
                 </div>
+              ))}
+            </div>
 
-                <Button
-                  className='w-full mt-2'
-                  size='lg'
-                  onClick={onProceedToCheckout}
-                  disabled={isUpdating || items.length === 0}>
-                  {t("cart.proceed_to_checkout")}
-                  <ArrowRight className='w-4 h-4 ms-2 shrink-0' />
-                </Button>
-
+            {/* Coupon code */}
+            <div className='mt-6 pt-6 border-t'>
+              <p className='text-sm font-medium mb-2'>{t("cart.coupon_code")}</p>
+              <div className='flex gap-2'>
+                <Input
+                  placeholder={t("cart.enter_code")}
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleApplyCoupon(); }}
+                  disabled={isUpdating}
+                  className='text-sm'
+                />
                 <Button
                   variant='outline'
-                  className='w-full mt-2'
-                  onClick={() => (window.location.href = "/shop")}>
-                  {t("cart.continue_shopping")}
+                  onClick={handleApplyCoupon}
+                  disabled={isUpdating || !couponCode.trim()}
+                  className='shrink-0'>
+                  {t("cart.apply")}
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Order Summary ──────────────────────────────── */}
+          <div className='mt-8 lg:mt-0 lg:sticky lg:top-6 lg:self-start'>
+            <div className='border rounded-xl bg-card p-6 space-y-4'>
+              <h2 className='font-semibold text-base'>{t("cart.order_summary")}</h2>
+
+              <div className='space-y-2.5 text-sm'>
+                <div className='flex justify-between'>
+                  <span className='text-muted-foreground'>{t("cart.subtotal")}</span>
+                  <span className='font-medium'>{currency}{totals.subtotal.toFixed(2)}</span>
+                </div>
+
+                {totals.discount !== undefined && totals.discount > 0 && (
+                  <div className='flex justify-between text-emerald-600'>
+                    <span>{t("cart.discount")}</span>
+                    <span className='font-medium'>-{currency}{totals.discount.toFixed(2)}</span>
+                  </div>
+                )}
+
+                {totals.appliedOffers && totals.appliedOffers.map((offer) => (
+                  <div key={offer.name} className='flex items-start justify-between gap-3 text-red-600'>
+                    <span className='flex items-center gap-1.5 min-w-0 font-medium'>
+                      <Gift className='w-3.5 h-3.5 shrink-0' />
+                      <span className='truncate'>{offer.name}</span>
+                    </span>
+                    <span className='font-semibold shrink-0'>
+                      {offer.freeShipping && offer.discountAmount === 0
+                        ? t("cart.free_shipping") || "Free shipping"
+                        : `-${currency}${offer.discountAmount.toFixed(2)}`}
+                    </span>
+                  </div>
+                ))}
+
+                {totals.shipping !== undefined && (
+                  <div className='flex justify-between'>
+                    <span className='text-muted-foreground'>{t("cart.shipping")}</span>
+                    <span className='font-medium'>
+                      {totals.shipping === 0 ? t("cart.free") : `${currency}${totals.shipping.toFixed(2)}`}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className='border-t pt-4 flex justify-between font-bold text-base'>
+                <span>{t("cart.total")}</span>
+                <span>{currency}{totals.grandTotal.toFixed(2)}</span>
+              </div>
+
+              <Button
+                className='w-full'
+                size='lg'
+                onClick={onProceedToCheckout}
+                disabled={isUpdating || items.length === 0}>
+                {t("cart.proceed_to_checkout")}
+                <ArrowRight className='w-4 h-4 ms-2' />
+              </Button>
+
+              <Button
+                variant='ghost'
+                className='w-full text-muted-foreground'
+                onClick={() => (window.location.href = "/shop")}>
+                {t("cart.continue_shopping")}
+              </Button>
+            </div>
           </div>
 
         </div>

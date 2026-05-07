@@ -9,6 +9,7 @@ import {
   ShoppingBag,
   ArrowRight,
   Tag,
+  Gift,
 } from "lucide-react";
 import type {
   CartPageCartItem,
@@ -250,6 +251,19 @@ export function CartPageEditorialTemplate({
                     </span>
                   </div>
                 )}
+                {totals.appliedOffers && totals.appliedOffers.map((offer) => (
+                  <div key={offer.name} className="flex items-start justify-between gap-2 text-red-600">
+                    <span className="flex items-center gap-1.5 font-medium min-w-0">
+                      <Gift className="w-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{offer.name}</span>
+                    </span>
+                    <span className="font-semibold shrink-0">
+                      {offer.freeShipping && offer.discountAmount === 0
+                        ? "Free shipping"
+                        : `−${formatPrice(offer.discountAmount, currency)}`}
+                    </span>
+                  </div>
+                ))}
                 {totals.shipping != null && (
                   <div className="flex justify-between text-stone-600">
                     <span>Shipping</span>

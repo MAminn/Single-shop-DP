@@ -603,11 +603,13 @@ export function CheckoutPageModernTemplate({
                   {totals.appliedOffers && totals.appliedOffers.length > 0 && (
                     <>
                       {totals.appliedOffers.map((offer) => (
-                        <div key={offer.name} className='flex justify-between text-red-600'>
-                          <span className='font-medium'>🎁 {offer.name}</span>
-                          <span className='font-semibold'>
+                        <div key={offer.name} className='flex items-start justify-between gap-2 text-red-600'>
+                          <span className='font-medium flex items-center gap-1 min-w-0'>
+                            🎁 <span className='truncate'>{offer.name}</span>
+                          </span>
+                          <span className='font-semibold shrink-0'>
                             {offer.freeShipping && offer.discountAmount === 0
-                              ? t("cart.free_shipping")
+                              ? t("cart.free_shipping") || "Free shipping"
                               : `-${currency}${offer.discountAmount.toFixed(2)}`}
                           </span>
                         </div>
