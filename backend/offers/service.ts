@@ -17,7 +17,7 @@ const CartItemInputSchema = z.object({
   name: z.string(),
   quantity: z.number().int().min(1),
   /** Effective price (after any per-product discount) in the store's currency */
-  price: z.number().nonneg(),
+  price: z.number().nonnegative(),
   categoryIds: z.array(z.string()).optional(),
 });
 
@@ -25,7 +25,7 @@ export type CartItemInput = z.infer<typeof CartItemInputSchema>;
 
 export const evaluateOffersSchema = z.object({
   cartItems: z.array(CartItemInputSchema),
-  subtotal: z.number().nonneg(),
+  subtotal: z.number().nonnegative(),
 });
 
 export type EvaluateOffersInput = z.infer<typeof evaluateOffersSchema>;
