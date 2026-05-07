@@ -23,12 +23,16 @@ export function isStripeConfigured(): boolean {
   return isNonEmpty(process.env.STRIPE_SECRET_KEY);
 }
 
-/** Check if Paymob is configured (requires API key + integration ID) */
+/** Check if Paymob is configured (requires secret key + at least one integration ID) */
 export function isPaymobConfigured(): boolean {
-  return (
-    isNonEmpty(process.env.PAYMOB_API_KEY) &&
-    isNonEmpty(process.env.PAYMOB_INTEGRATION_ID)
-  );
+  const hasKey =
+    isNonEmpty(process.env.PAYMOB_SECRET_KEY) ||
+    isNonEmpty(process.env.PAYMOB_API_KEY);
+  const hasIntegration =
+    isNonEmpty(process.env.PAYMOB_CARD_INTEGRATION_ID) ||
+    isNonEmpty(process.env.PAYMOB_WALLET_INTEGRATION_ID) ||
+    isNonEmpty(process.env.PAYMOB_INTEGRATION_ID);
+  return hasKey && hasIntegration;
 }
 
 /** Returns array of all active gateways (empty = COD only) */
@@ -64,10 +68,25 @@ export function getStripeConfig() {
 
 export function getPaymobConfig() {
   return {
-    apiKey: process.env.PAYMOB_API_KEY ?? "",
-    integrationId: process.env.PAYMOB_INTEGRATION_ID ?? "",
-    iframeId: process.env.PAYMOB_IFRAME_ID ?? "",
+    // New-format keys (preferred)
+    secretKey:
+      process.env.PAYMOB_SECRET_KEY ?? process.env.PAYMOB_API_KEY ?? "",
+    publicKey: process.env.PAYMOB_PUBLIC_KEY ?? "",
+    cardIntegrationId:
+      process.env.PAYMOB_CARD_INTEGRATION_ID ??
+      process.env.PAYMOB_INTEGRATION_ID ??
+      "",
+    walletIntegrationId: process.env.PAYMOB_WALLET_INTEGRATION_ID ?? "",
     hmacSecret: process.env.PAYMOB_HMAC_SECRET ?? "",
+    baseUrl: process.env.PAYMOB_BASE_URL ?? "https://accept.paymob.com",
+    // Legacy aliases kept for any old call-sites
+    apiKey:
+      process.env.PAYMOB_API_KEY ?? process.env.PAYMOB_SECRET_KEY ?? "",
+    integrationId:
+      process.env.PAYMOB_CARD_INTEGRATION_ID ??
+      process.env.PAYMOB_INTEGRATION_ID ??
+      "",
+    iframeId: process.env.PAYMOB_IFRAME_ID ?? "",
   };
 }
 

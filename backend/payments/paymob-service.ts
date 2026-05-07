@@ -15,8 +15,6 @@ import { ServerError } from "#root/shared/error/server";
 import { getPaymobConfig, isPaymobConfigured } from "#root/shared/config/payment";
 import axios from "axios";
 
-const PAYMOB_BASE_URL = "https://accept.paymob.com/v1/intention/";
-
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 export interface CreatePaymobSessionInput {
@@ -64,19 +62,52 @@ export const createPaymobPaymentSession = (
         description: item.name,
       }));
 
+      // Paymob requires sum(item.amount * item.quantity) === total amount exactly.
+      // Since totalInCents includes shipping and discounts, the per-product items
+      // won't match. Represent the whole order as one line item to guarantee alignment.
+      const paymobItems = [
+        {
+          name: `Order (${input.items.length} item${input.items.length !== 1 ? "s" : ""})`,
+          amount: input.totalInCents,
+          quantity: 1,
+          description: input.items.map((i) => i.name).join(", ").slice(0, 200),
+        },
+      ];
+
       const [firstName, ...lastParts] = input.customerName.split(" ");
       const lastName = lastParts.join(" ") || firstName;
+
+      // Normalize phone to E.164 — Paymob requires +XXXXXXXXXXXX format
+      const normalizePhone = (phone: string): string => {
+        const digits = phone.replace(/\D/g, "");
+        if (phone.startsWith("+")) return phone; // already international
+        if (digits.startsWith("20") && digits.length === 12) return `+${digits}`; // 2012XXXXXXXX
+        if (digits.startsWith("01") && digits.length === 11) return `+2${digits}`; // Egyptian mobile
+        if (digits.startsWith("1") && digits.length === 10) return `+20${digits}`; // without leading 0
+        return phone.startsWith("+") ? phone : `+${digits}`;
+      };
+      const phoneE164 = input.customerPhone
+        ? normalizePhone(input.customerPhone)
+        : "+201000000000";
+
+      // Build integration ID list — include card and/or wallet IDs that are configured
+      const paymentMethods = [
+        config.cardIntegrationId,
+        config.walletIntegrationId,
+      ]
+        .filter((id) => id.trim().length > 0)
+        .map((id) => Number.parseInt(id, 10));
 
       const payload = {
         amount: input.totalInCents,
         currency: input.currency.toUpperCase(),
-        payment_methods: [Number.parseInt(config.integrationId, 10)],
-        items,
+        payment_methods: paymentMethods,
+        items: paymobItems,
         billing_data: {
           first_name: firstName,
           last_name: lastName,
           email: input.customerEmail,
-          phone_number: input.customerPhone || "+200000000000",
+          phone_number: phoneE164,
           apartment: "N/A",
           floor: "N/A",
           street: "N/A",
@@ -94,21 +125,21 @@ export const createPaymobPaymentSession = (
         notification_url: `${process.env.BASE_URL || process.env.PUBLIC_ORIGIN || "http://localhost:3000"}/api/webhooks/paymob`,
       };
 
-      const response = await axios.post(PAYMOB_BASE_URL, payload, {
+      const response = await axios.post(
+        `${config.baseUrl}/v1/intention/`,
+        payload, {
         headers: {
-          Authorization: `Token ${config.apiKey}`,
+          // New-format secret key; falls back to legacy API key for backward compat
+          Authorization: `Token ${config.secretKey}`,
           "Content-Type": "application/json",
         },
       });
 
       const data = response.data;
 
-      // Build the checkout URL
-      const iframeId = config.iframeId;
+      // Unified Checkout URL — publicKey + clientSecret (no iFrame ID needed)
       const paymentToken = data.client_secret;
-      const paymentUrl = iframeId
-        ? `https://accept.paymob.com/unifiedcheckout/?publicKey=${config.apiKey}&clientSecret=${paymentToken}`
-        : `https://accept.paymob.com/unifiedcheckout/?publicKey=${config.apiKey}&clientSecret=${paymentToken}`;
+      const paymentUrl = `${config.baseUrl}/unifiedcheckout/?publicKey=${config.publicKey}&clientSecret=${paymentToken}`;
 
       return {
         sessionId: data.id?.toString() ?? data.intention_id?.toString() ?? "",

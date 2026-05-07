@@ -89,10 +89,7 @@ export default function CheckoutPage() {
       try {
         const res = await trpc.payment.methods.query();
         if (!cancelled && res?.methods) {
-          // TEMP: Only show Cash on Delivery for now.
-          // Uncomment the line below (and remove the filter) to re-enable Stripe/Paymob.
-          // setPaymentMethods(res.methods);
-          setPaymentMethods(res.methods.filter((m) => m.id === "cod"));
+          setPaymentMethods(res.methods);
         }
       } catch (err) {
         console.warn(
