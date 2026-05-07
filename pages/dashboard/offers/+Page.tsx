@@ -45,8 +45,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "#root/components/ui/alert-dialog";
-import { PlusCircle, Edit, Trash2, Tag, Loader2 } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Tag, Loader2, Check, ChevronsUpDown, X } from "lucide-react";
 import type { OfferCondition, OfferReward } from "#root/shared/database/drizzle/schema";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "#root/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "#root/components/ui/popover";
+import { cn } from "#root/lib/utils";
 
 type CartOfferRow = {
   id: string;
@@ -103,6 +113,131 @@ const defaultForm: FormState = {
   startsAt: "",
   endsAt: "",
 };
+
+type ProductOption = { id: string; name: string };
+
+function ProductMultiSelect({
+  selectedIds,
+  onChange,
+}: {
+  selectedIds: string[];
+  onChange: (ids: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState<ProductOption[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedNames, setSelectedNames] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    setSearching(true);
+    trpc.product.search
+      .query({ search: search || undefined, limit: 20, includeOutOfStock: true })
+      .then((res) => {
+        if (!cancelled && res.success && res.result) {
+          setResults(
+            (res.result as { items: ProductOption[] }).items.map((p) => ({
+              id: p.id,
+              name: p.name,
+            }))
+          );
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setSearching(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [search]);
+
+  function toggle(id: string, name: string) {
+    if (selectedIds.includes(id)) {
+      onChange(selectedIds.filter((i) => i !== id));
+    } else {
+      setSelectedNames((m) => ({ ...m, [id]: name }));
+      onChange([...selectedIds, id]);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between font-normal"
+          >
+            {selectedIds.length === 0
+              ? "Search and select products…"
+              : `${selectedIds.length} product${selectedIds.length > 1 ? "s" : ""} selected`}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[400px] p-0" align="start">
+          <Command shouldFilter={false}>
+            <CommandInput
+              placeholder="Search products…"
+              value={search}
+              onValueChange={setSearch}
+            />
+            <CommandList>
+              {searching && <CommandEmpty>Searching…</CommandEmpty>}
+              {!searching && results.length === 0 && (
+                <CommandEmpty>No products found.</CommandEmpty>
+              )}
+              <CommandGroup>
+                {results.map((p) => (
+                  <CommandItem
+                    key={p.id}
+                    value={p.id}
+                    onSelect={() => toggle(p.id, p.name)}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedIds.includes(p.id) ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {p.name}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      {selectedIds.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {selectedIds.map((id) => (
+            <Badge
+              key={id}
+              variant="secondary"
+              className="flex items-center gap-1 pr-1"
+            >
+              <span className="max-w-[180px] truncate">
+                {selectedNames[id] ?? id.slice(0, 8) + "…"}
+              </span>
+              <button
+                type="button"
+                className="ml-1 rounded-full hover:bg-muted"
+                onClick={() => onChange(selectedIds.filter((i) => i !== id))}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ConditionFields({
   condition,
@@ -183,19 +318,16 @@ function ConditionFields({
 
       {condition.type === "product_bundle" && (
         <div className="space-y-2 pl-2 border-l-2 border-muted">
-          <Label>Required Product IDs (comma-separated)</Label>
-          <Input
-            placeholder="product-id-1, product-id-2"
-            value={condition.requiredProductIds.join(", ")}
-            onChange={(e) =>
-              onChange({
-                ...condition,
-                requiredProductIds: e.target.value
-                  ? e.target.value.split(",").map((s) => s.trim())
-                  : [],
-              })
-            }
+          <Label>Required Products (all must be in cart)</Label>
+          <ProductMultiSelect
+            selectedIds={condition.requiredProductIds}
+            onChange={(ids) => onChange({ ...condition, requiredProductIds: ids })}
           />
+          {condition.requiredProductIds.length < 2 && (
+            <p className="text-xs text-muted-foreground">
+              Select at least 2 products to form a bundle.
+            </p>
+          )}
         </div>
       )}
     </div>
