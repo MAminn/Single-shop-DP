@@ -67,6 +67,7 @@ export default function CheckoutPage() {
     total,
     promoCode,
     clearCart,
+    appliedOffers,
   } = useCart();
   const { getTemplateId } = useTemplate();
   const { trackEvent } = useTracking();
@@ -180,8 +181,9 @@ export default function CheckoutPage() {
       discount: discount > 0 ? discount : undefined,
       shipping: shipping > 0 ? shipping : undefined,
       grandTotal: total,
+      appliedOffers: appliedOffers.length > 0 ? appliedOffers : undefined,
     };
-  }, [subtotal, discount, shipping, total]);
+  }, [subtotal, discount, shipping, total, appliedOffers]);
 
   // Handle form submit
   const handleSubmit = async (

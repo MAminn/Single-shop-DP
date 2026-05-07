@@ -33,6 +33,7 @@ export interface CartPageTotals {
   discount?: number;
   shipping?: number;
   grandTotal: number;
+  appliedOffers?: Array<{ name: string; discountAmount: number; freeShipping: boolean }>;
 }
 
 /**
@@ -213,6 +214,20 @@ export function CartPageModernTemplate({
                       <span className='font-medium'>-{currency}{totals.discount.toFixed(2)}</span>
                     </div>
                   )}
+                  {totals.appliedOffers && totals.appliedOffers.length > 0 && (
+                    <>
+                      {totals.appliedOffers.map((offer) => (
+                        <div key={offer.name} className='flex items-center justify-between gap-4 text-sm text-red-600'>
+                          <span className='shrink-0 font-medium'>🎁 {offer.name}</span>
+                          <span className='font-semibold'>
+                            {offer.freeShipping && offer.discountAmount === 0
+                              ? t("cart.free_shipping")
+                              : `-${currency}${offer.discountAmount.toFixed(2)}`}
+                          </span>
+                        </div>
+                      ))}
+                    </>
+                  )}
                   {totals.shipping !== undefined && (
                     <div className='flex items-center justify-between gap-4 text-sm'>
                       <span className='shrink-0 text-muted-foreground'>{t("cart.shipping")}</span>
@@ -252,7 +267,7 @@ export function CartPageModernTemplate({
                 </div>
 
                 <Button
-                  className='w-full max-w-xs mx-auto mt-2 px-4'
+                  className='w-full mt-2'
                   size='lg'
                   onClick={onProceedToCheckout}
                   disabled={isUpdating || items.length === 0}>
@@ -262,7 +277,7 @@ export function CartPageModernTemplate({
 
                 <Button
                   variant='outline'
-                  className='w-full max-w-xs mx-auto mt-2 px-4'
+                  className='w-full mt-2'
                   onClick={() => (window.location.href = "/shop")}>
                   {t("cart.continue_shopping")}
                 </Button>

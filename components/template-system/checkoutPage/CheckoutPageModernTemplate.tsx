@@ -65,6 +65,7 @@ export interface CheckoutTotals {
   discount?: number;
   shipping?: number;
   grandTotal: number;
+  appliedOffers?: Array<{ name: string; discountAmount: number; freeShipping: boolean }>;
 }
 
 /**
@@ -598,6 +599,20 @@ export function CheckoutPageModernTemplate({
                         {totals.discount.toFixed(2)}
                       </span>
                     </div>
+                  )}
+                  {totals.appliedOffers && totals.appliedOffers.length > 0 && (
+                    <>
+                      {totals.appliedOffers.map((offer) => (
+                        <div key={offer.name} className='flex justify-between text-red-600'>
+                          <span className='font-medium'>🎁 {offer.name}</span>
+                          <span className='font-semibold'>
+                            {offer.freeShipping && offer.discountAmount === 0
+                              ? t("cart.free_shipping")
+                              : `-${currency}${offer.discountAmount.toFixed(2)}`}
+                          </span>
+                        </div>
+                      ))}
+                    </>
                   )}
                   {totals.shipping !== undefined && (
                     <div className='flex justify-between'>

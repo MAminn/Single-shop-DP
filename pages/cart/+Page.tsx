@@ -24,6 +24,7 @@ export default function CartPage() {
     applyPromoCode,
     removePromoCode,
     shipping,
+    appliedOffers,
   } = useCart();
   const { getTemplateId } = useTemplate();
   const [isLoading, setIsLoading] = useState(false);
@@ -68,8 +69,9 @@ export default function CartPage() {
       discount: discount > 0 ? discount : undefined,
       shipping: shipping > 0 ? shipping : undefined,
       grandTotal: total,
+      appliedOffers: appliedOffers.length > 0 ? appliedOffers : undefined,
     };
-  }, [subtotal, discount, shipping, total]);
+  }, [subtotal, discount, shipping, total, appliedOffers]);
 
   // Handle quantity change
   const handleQuantityChange = (
