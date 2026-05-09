@@ -1,7 +1,20 @@
 import React from "react";
 import { Button } from "#root/components/ui/button";
 import { Input } from "#root/components/ui/input";
-import { Trash2, Plus, Minus, ShoppingCart, ArrowRight, Gift } from "lucide-react";
+import {
+  Trash2,
+  Plus,
+  Minus,
+  ShoppingCart,
+  ArrowRight,
+  ArrowLeft,
+  Gift,
+  Tag,
+  ShieldCheck,
+  Lock,
+  Truck,
+  RotateCcw,
+} from "lucide-react";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 
 /**
@@ -91,12 +104,18 @@ export function CartPageModernTemplate({
     );
   }
 
+  const totalSavings =
+    (totals.discount ?? 0) +
+    (totals.appliedOffers?.reduce((s, o) => s + o.discountAmount, 0) ?? 0);
+
   return (
     <div className='min-h-screen bg-background'>
-      <div className='mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12'>
-        <h1 className='text-2xl sm:text-3xl font-bold mb-8'>
-          {t("cart.title")}
-          <span className='ms-3 text-base font-normal text-muted-foreground'>
+      <div className='mx-auto max-w-8xl px-6 lg:px-36 py-8 sm:py-12'>
+
+        {/* ── Page heading ───────────────────────────────── */}
+        <h1 className='text-2xl sm:text-3xl font-extrabold uppercase tracking-tight mb-8'>
+          {t("cart.title") || "Shopping Cart"}
+          <span className='ms-3 text-sm font-semibold tracking-widest text-muted-foreground uppercase'>
             ({items.length} {items.length === 1 ? "item" : "items"})
           </span>
         </h1>
@@ -105,23 +124,24 @@ export function CartPageModernTemplate({
 
           {/* ── Items list ─────────────────────────────────── */}
           <div>
-            {/* Desktop column headers */}
-            <div className='hidden sm:grid grid-cols-[1fr_140px_90px_36px] gap-4 pb-3 border-b text-xs uppercase tracking-widest text-muted-foreground font-medium'>
+            {/* Column headers — desktop */}
+            <div className='hidden sm:grid grid-cols-[1fr_160px_110px_40px] gap-4 pb-4 border-b text-xs font-semibold uppercase tracking-widest text-muted-foreground'>
               <span>{t("cart.product") || "Product"}</span>
               <span className='text-center'>{t("cart.quantity") || "Quantity"}</span>
               <span className='text-right'>{t("cart.total") || "Total"}</span>
               <span />
             </div>
 
+            {/* Items */}
             <div className='divide-y'>
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className={`py-5 sm:py-6 transition-opacity ${isUpdating ? "opacity-50 pointer-events-none" : ""}`}
+                  className={`py-6 transition-opacity ${isUpdating ? "opacity-50 pointer-events-none" : ""}`}
                 >
-                  {/* ── Mobile layout ── */}
+                  {/* Mobile */}
                   <div className='flex gap-4 sm:hidden'>
-                    <div className='w-20 h-20 shrink-0 bg-muted rounded-lg overflow-hidden'>
+                    <div className='w-20 h-20 shrink-0 bg-muted rounded-lg overflow-hidden border'>
                       {item.imageUrl ? (
                         <img src={item.imageUrl} alt={item.name} className='w-full h-full object-cover' />
                       ) : (
@@ -133,9 +153,9 @@ export function CartPageModernTemplate({
                     <div className='flex-1 min-w-0'>
                       <div className='flex items-start justify-between gap-2'>
                         <div className='min-w-0'>
-                          <p className='font-semibold text-sm leading-snug break-words'>{item.name}</p>
+                          <p className='font-semibold text-sm leading-snug'>{item.name}</p>
                           {item.variant && <p className='text-xs text-muted-foreground mt-0.5'>{item.variant}</p>}
-                          <p className='text-sm font-medium text-muted-foreground mt-1'>
+                          <p className='text-sm text-muted-foreground mt-1'>
                             {currency}{item.price.toFixed(2)} {t("checkout.each") || "each"}
                           </p>
                         </div>
@@ -144,39 +164,40 @@ export function CartPageModernTemplate({
                           onClick={() => onRemoveItem?.(item.id)}
                           disabled={isUpdating}
                           aria-label='Remove item'
-                          className='shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors'>
+                          className='shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-destructive transition-colors'>
                           <Trash2 className='w-4 h-4' />
                         </button>
                       </div>
                       <div className='flex items-center justify-between mt-3'>
-                        <div className='flex items-center border rounded-lg'>
+                        <div className='inline-flex items-center border rounded-lg'>
                           <button
                             type='button'
                             onClick={() => onQuantityChange?.(item.id, Math.max(1, item.quantity - 1))}
                             disabled={isUpdating || item.quantity <= 1}
                             aria-label='Decrease quantity'
                             className='w-9 h-9 flex items-center justify-center hover:bg-muted transition-colors rounded-l-lg disabled:opacity-40'>
-                            <Minus className='w-3 h-3' />
+                            <Minus className='w-3.5 h-3.5' />
                           </button>
-                          <span className='w-10 text-center text-sm font-medium'>{item.quantity}</span>
+                          <span className='w-10 text-center text-sm font-semibold'>{item.quantity}</span>
                           <button
                             type='button'
                             onClick={() => onQuantityChange?.(item.id, item.quantity + 1)}
                             disabled={isUpdating || (item.stock != null && item.quantity >= item.stock)}
                             aria-label='Increase quantity'
                             className='w-9 h-9 flex items-center justify-center hover:bg-muted transition-colors rounded-r-lg disabled:opacity-40'>
-                            <Plus className='w-3 h-3' />
+                            <Plus className='w-3.5 h-3.5' />
                           </button>
                         </div>
-                        <p className='text-sm font-bold'>{currency}{(item.price * item.quantity).toFixed(2)}</p>
+                        <p className='font-bold'>{currency}{(item.price * item.quantity).toFixed(2)}</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* ── Desktop layout ── */}
-                  <div className='hidden sm:grid grid-cols-[1fr_140px_90px_36px] gap-4 items-center'>
+                  {/* Desktop */}
+                  <div className='hidden sm:grid grid-cols-[1fr_160px_110px_40px] gap-4 items-center'>
+                    {/* Product info */}
                     <div className='flex items-center gap-4'>
-                      <div className='w-16 h-16 shrink-0 bg-muted rounded-lg overflow-hidden'>
+                      <div className='w-20 h-20 shrink-0 bg-muted rounded-xl overflow-hidden border'>
                         {item.imageUrl ? (
                           <img src={item.imageUrl} alt={item.name} className='w-full h-full object-cover' />
                         ) : (
@@ -186,39 +207,47 @@ export function CartPageModernTemplate({
                         )}
                       </div>
                       <div className='min-w-0'>
-                        <p className='font-semibold text-sm'>{item.name}</p>
+                        <p className='font-semibold'>{item.name}</p>
                         {item.variant && <p className='text-xs text-muted-foreground mt-0.5'>{item.variant}</p>}
-                        <p className='text-xs text-muted-foreground mt-0.5'>
+                        <p className='text-sm text-muted-foreground mt-1'>
                           {currency}{item.price.toFixed(2)} {t("checkout.each") || "each"}
                         </p>
                       </div>
                     </div>
-                    <div className='flex items-center border rounded-lg w-fit mx-auto'>
-                      <button
-                        type='button'
-                        onClick={() => onQuantityChange?.(item.id, Math.max(1, item.quantity - 1))}
-                        disabled={isUpdating || item.quantity <= 1}
-                        aria-label='Decrease quantity'
-                        className='w-9 h-9 flex items-center justify-center hover:bg-muted transition-colors rounded-l-lg disabled:opacity-40'>
-                        <Minus className='w-3 h-3' />
-                      </button>
-                      <span className='w-10 text-center text-sm font-medium'>{item.quantity}</span>
-                      <button
-                        type='button'
-                        onClick={() => onQuantityChange?.(item.id, item.quantity + 1)}
-                        disabled={isUpdating || (item.stock != null && item.quantity >= item.stock)}
-                        aria-label='Increase quantity'
-                        className='w-9 h-9 flex items-center justify-center hover:bg-muted transition-colors rounded-r-lg disabled:opacity-40'>
-                        <Plus className='w-3 h-3' />
-                      </button>
+
+                    {/* Quantity stepper */}
+                    <div className='flex justify-center'>
+                      <div className='inline-flex items-center border rounded-lg'>
+                        <button
+                          type='button'
+                          onClick={() => onQuantityChange?.(item.id, Math.max(1, item.quantity - 1))}
+                          disabled={isUpdating || item.quantity <= 1}
+                          aria-label='Decrease quantity'
+                          className='w-9 h-9 flex items-center justify-center hover:bg-muted transition-colors rounded-l-lg disabled:opacity-40'>
+                          <Minus className='w-3.5 h-3.5' />
+                        </button>
+                        <span className='w-10 text-center text-sm font-semibold'>{item.quantity}</span>
+                        <button
+                          type='button'
+                          onClick={() => onQuantityChange?.(item.id, item.quantity + 1)}
+                          disabled={isUpdating || (item.stock != null && item.quantity >= item.stock)}
+                          aria-label='Increase quantity'
+                          className='w-9 h-9 flex items-center justify-center hover:bg-muted transition-colors rounded-r-lg disabled:opacity-40'>
+                          <Plus className='w-3.5 h-3.5' />
+                        </button>
+                      </div>
                     </div>
-                    <p className='text-sm font-bold text-right'>{currency}{(item.price * item.quantity).toFixed(2)}</p>
+
+                    {/* Line total */}
+                    <p className='font-bold text-right'>{currency}{(item.price * item.quantity).toFixed(2)}</p>
+
+                    {/* Remove */}
                     <button
                       type='button'
                       onClick={() => onRemoveItem?.(item.id)}
                       disabled={isUpdating}
                       aria-label='Remove item'
-                      className='p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors justify-self-end'>
+                      className='justify-self-end p-1.5 rounded-md text-muted-foreground hover:text-destructive transition-colors'>
                       <Trash2 className='w-4 h-4' />
                     </button>
                   </div>
@@ -226,48 +255,81 @@ export function CartPageModernTemplate({
               ))}
             </div>
 
-            {/* Coupon code */}
+            {/* ── Coupon code ──────────────────────────────── */}
             <div className='mt-6 pt-6 border-t'>
-              <p className='text-sm font-medium mb-2'>{t("cart.coupon_code")}</p>
-              <div className='flex gap-2'>
-                <Input
-                  placeholder={t("cart.enter_code")}
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") handleApplyCoupon(); }}
-                  disabled={isUpdating}
-                  className='text-sm'
-                />
-                <Button
-                  variant='outline'
-                  onClick={handleApplyCoupon}
-                  disabled={isUpdating || !couponCode.trim()}
-                  className='shrink-0'>
-                  {t("cart.apply")}
-                </Button>
+              <div className='flex flex-col sm:flex-row items-start sm:items-center gap-4'>
+                <div className='flex items-center gap-3 shrink-0'>
+                  <Tag className='w-5 h-5 text-muted-foreground' />
+                  <div>
+                    <p className='font-semibold text-sm'>{t("cart.coupon_code") || "Have a coupon code?"}</p>
+                    <p className='text-xs text-muted-foreground'>{t("cart.coupon_desc") || "Add your code for instant savings"}</p>
+                  </div>
+                </div>
+                <div className='flex gap-2 flex-1 w-full sm:w-auto'>
+                  <Input
+                    placeholder={t("cart.enter_code") || "Enter coupon code"}
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleApplyCoupon(); }}
+                    disabled={isUpdating}
+                    className='flex-1 text-sm'
+                  />
+                  <Button
+                    variant='primary'
+                    onClick={handleApplyCoupon}
+                    disabled={isUpdating || !couponCode.trim()}
+                    className='shrink-0 font-bold tracking-wide'>
+                    {t("cart.apply") || "Apply"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Trust badges ─────────────────────────────── */}
+            <div className='mt-8  pt-6 border-t grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-xs text-muted-foreground'>
+              <div className='flex flex-col items-center gap-1.5'>
+                <ShieldCheck className='w-5 h-5 text-muted-foreground/70' />
+                <span>100% Authentic Products</span>
+              </div>
+              <div className='flex flex-col items-center gap-1.5'>
+                <Lock className='w-5 h-5 text-muted-foreground/70' />
+                <span>Secure Payments</span>
+              </div>
+              <div className='flex flex-col items-center gap-1.5'>
+                <Truck className='w-5 h-5 text-muted-foreground/70' />
+                <span>Fast &amp; Reliable Delivery</span>
+              </div>
+              <div className='flex flex-col items-center gap-1.5'>
+                <RotateCcw className='w-5 h-5 text-muted-foreground/70' />
+                <span>Easy Returns</span>
               </div>
             </div>
           </div>
 
           {/* ── Order Summary ──────────────────────────────── */}
           <div className='mt-8 lg:mt-0 lg:sticky lg:top-6 lg:self-start'>
-            <div className='border rounded-xl bg-card p-6 space-y-4'>
-              <h2 className='font-semibold text-base'>{t("cart.order_summary")}</h2>
+            <div className='border rounded-2xl bg-card p-6 space-y-5'>
+              <h2 className='font-extrabold text-base uppercase tracking-widest'>
+                {t("cart.order_summary") || "Order Summary"}
+              </h2>
 
-              <div className='space-y-2.5 text-sm'>
+              <div className='space-y-3 text-sm'>
+                {/* Subtotal */}
                 <div className='flex justify-between'>
-                  <span className='text-muted-foreground'>{t("cart.subtotal")}</span>
-                  <span className='font-medium'>{currency}{totals.subtotal.toFixed(2)}</span>
+                  <span className='text-muted-foreground'>{t("cart.subtotal") || "Subtotal"}</span>
+                  <span className='font-semibold'>{currency}{totals.subtotal.toFixed(2)}</span>
                 </div>
 
+                {/* Promo code discount */}
                 {totals.discount !== undefined && totals.discount > 0 && (
-                  <div className='flex justify-between text-emerald-600'>
-                    <span>{t("cart.discount")}</span>
-                    <span className='font-medium'>-{currency}{totals.discount.toFixed(2)}</span>
+                  <div className='flex justify-between text-red-600'>
+                    <span className='font-medium'>{t("cart.discount") || "Discount"}</span>
+                    <span className='font-semibold'>-{currency}{totals.discount.toFixed(2)}</span>
                   </div>
                 )}
 
-                {totals.appliedOffers && totals.appliedOffers.map((offer) => (
+                {/* Automatic offers */}
+                {totals.appliedOffers?.map((offer) => (
                   <div key={offer.name} className='flex items-start justify-between gap-3 text-red-600'>
                     <span className='flex items-center gap-1.5 min-w-0 font-medium'>
                       <Gift className='w-3.5 h-3.5 shrink-0' />
@@ -281,36 +343,71 @@ export function CartPageModernTemplate({
                   </div>
                 ))}
 
+                {/* Shipping */}
                 {totals.shipping !== undefined && (
                   <div className='flex justify-between'>
-                    <span className='text-muted-foreground'>{t("cart.shipping")}</span>
-                    <span className='font-medium'>
-                      {totals.shipping === 0 ? t("cart.free") : `${currency}${totals.shipping.toFixed(2)}`}
+                    <span className='text-muted-foreground'>{t("cart.shipping") || "Shipping"}</span>
+                    <span className='font-semibold'>
+                      {totals.shipping === 0
+                        ? t("cart.free") || "Free"
+                        : `${currency}${totals.shipping.toFixed(2)}`}
                     </span>
                   </div>
                 )}
               </div>
 
-              <div className='border-t pt-4 flex justify-between font-bold text-base'>
-                <span>{t("cart.total")}</span>
+              {/* Total */}
+              <div className='border-t pt-4 flex justify-between items-center font-extrabold text-lg'>
+                <span className='uppercase tracking-wide'>{t("cart.total") || "Total"}</span>
                 <span>{currency}{totals.grandTotal.toFixed(2)}</span>
               </div>
 
+              {/* Savings callout */}
+              {totalSavings > 0 && (
+                <div className='flex items-center gap-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400'>
+                  <ShieldCheck className='w-4 h-4 shrink-0' />
+                  <span className='font-medium'>
+                    You're saving {currency}{totalSavings.toFixed(2)} with this offer!
+                  </span>
+                </div>
+              )}
+
+              {/* Proceed button */}
               <Button
-                className='w-full'
+                className='w-full font-bold tracking-wide uppercase'
                 size='lg'
                 onClick={onProceedToCheckout}
                 disabled={isUpdating || items.length === 0}>
-                {t("cart.proceed_to_checkout")}
+                {t("cart.proceed_to_checkout") || "Proceed to Checkout"}
                 <ArrowRight className='w-4 h-4 ms-2' />
               </Button>
 
+              {/* Divider */}
+              <div className='flex items-center gap-3 text-xs text-muted-foreground'>
+                <div className='flex-1 border-t' />
+                <span>or</span>
+                <div className='flex-1 border-t' />
+              </div>
+
+              {/* Continue shopping */}
               <Button
-                variant='ghost'
-                className='w-full text-muted-foreground'
+                variant='outline'
+                className='w-full font-semibold'
                 onClick={() => (window.location.href = "/shop")}>
-                {t("cart.continue_shopping")}
+                <ArrowLeft className='w-4 h-4 me-2' />
+                {t("cart.continue_shopping") || "Continue Shopping"}
               </Button>
+
+              {/* Payment logos */}
+              <div className='pt-2 border-t flex items-center justify-center gap-2 flex-wrap'>
+                <span className='text-xs text-muted-foreground mr-1'>We accept</span>
+                <span className='inline-flex items-center px-2 py-0.5 rounded border text-xs font-bold text-blue-700 bg-white border-blue-200'>VISA</span>
+                <span className='inline-flex items-center px-2 py-0.5 rounded border text-xs font-bold bg-white border-gray-200'>
+                  <span className='text-red-500'>●</span><span className='text-yellow-500 -ms-1'>●</span>
+                </span>
+                <span className='inline-flex items-center px-2 py-0.5 rounded border text-xs font-bold text-green-700 bg-white border-green-200'>meeza</span>
+                <span className='inline-flex items-center px-2 py-0.5 rounded border text-xs font-bold bg-white border-gray-200'>🍎 Pay</span>
+              </div>
             </div>
           </div>
 

@@ -17,6 +17,7 @@ import { Button } from "#root/components/ui/button";
 import { useTracking } from "#root/frontend/contexts/TrackingContext";
 import { TrackingEventName } from "#root/shared/types/pixel-tracking";
 import { STORE_CURRENCY } from "#root/shared/config/branding";
+import { useCart } from "#root/lib/context/CartContext";
 
 type PaymentState = "none" | "success" | "pending" | "cancelled" | "failed";
 
@@ -60,7 +61,23 @@ export default function OrderConfirmationPage() {
   // Uses sessionStorage keyed by orderId to survive page refresh.
   // Ref guards against React strict-mode double-effects within the same mount.
   const { trackEvent } = useTracking();
+  const { clearCart } = useCart();
   const hasTrackedCompletion = useRef<string | null>(null);
+
+  // ─── Clear cart on successful payment (deferred from checkout page) ────
+  // For online payments, clearCart is NOT called before redirect (so pressing
+  // back in the browser keeps the cart intact). This effect clears it once
+  // the user lands here with a successful/pending payment.
+  useEffect(() => {
+    if (!orderId) return;
+    try {
+      const key = `pending_cart_clear:${orderId}`;
+      if (sessionStorage.getItem(key) && (isPaymentSuccess || isPaymentPending)) {
+        clearCart();
+        sessionStorage.removeItem(key);
+      }
+    } catch { /* best-effort */ }
+  }, [orderId, isPaymentSuccess, isPaymentPending, clearCart]);
 
   useEffect(() => {
     if (!orderId || !isPaymentSuccess) return;

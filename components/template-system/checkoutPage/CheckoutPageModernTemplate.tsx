@@ -1,16 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Button } from "#root/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "#root/components/ui/card";
 import { Input } from "#root/components/ui/input";
 import { Label } from "#root/components/ui/label";
 import { Textarea } from "#root/components/ui/textarea";
-import { Separator } from "#root/components/ui/separator";
-import { Badge } from "#root/components/ui/badge";
+import { Button } from "#root/components/ui/button";
 import { Alert, AlertDescription } from "#root/components/ui/alert";
 import {
   AlertCircle,
@@ -22,6 +14,11 @@ import {
   Banknote,
   Wallet,
   Shield,
+  Lock,
+  Truck,
+  RotateCcw,
+  FileText,
+  Gift,
 } from "lucide-react";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 
@@ -54,6 +51,7 @@ export interface CheckoutOrderSummaryItem {
   name: string;
   price: number;
   quantity: number;
+  imageUrl?: string | null;
   variant?: string | null;
 }
 
@@ -124,7 +122,7 @@ export function CheckoutPageModernTemplate({
     address: shippingAddress?.line1 ?? "",
     city: shippingAddress?.city ?? "",
     state: shippingAddress?.state ?? "",
-    postalCode: shippingAddress?.postalCode ?? "",
+    postalCode: "00000",
     country: shippingAddress?.country ?? "Egypt",
     notes: "",
     paymentMethod: "cod",
@@ -214,10 +212,21 @@ export function CheckoutPageModernTemplate({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [methods, form.paymentMethod]);
 
+  const totalSavings =
+    (totals.discount ?? 0) +
+    (totals.appliedOffers?.reduce((s, o) => s + o.discountAmount, 0) ?? 0);
+
+  // Section number component
+  const SectionNum = ({ n }: { n: number }) => (
+    <span className='flex items-center justify-center w-7 h-7 rounded-full bg-foreground text-background text-xs font-bold shrink-0'>
+      {n}
+    </span>
+  );
+
   return (
-    <div className='container mx-auto px-4 py-8'>
-      <h1 className='text-xl md:text-3xl font-bold mb-8'>
-        {t("checkout.title")}
+    <div className='mx-auto max-w-8xl px-6 lg:px-36 py-8 sm:py-12'>
+      <h1 className='text-2xl sm:text-3xl font-extrabold mb-8'>
+        {t("checkout.title") || "Checkout"}
       </h1>
 
       {errorMessage && (
@@ -235,47 +244,42 @@ export function CheckoutPageModernTemplate({
       )}
 
       <form onSubmit={handleSubmit}>
-        <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
-          {/* Checkout Form */}
-          <div className='lg:col-span-2 space-y-6'>
-            {/* Customer Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className='flex items-center gap-2'>
-                  <User className='w-5 h-5 text-primary' />
-                  {t("checkout.customer_info")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className='space-y-4'>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  <div className='space-y-2'>
+        <div className='grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10'>
+
+          {/* ── Left column: form sections ─────────────────── */}
+          <div className='space-y-6'>
+
+            {/* 1. Customer Information */}
+            <div className='border rounded-2xl p-6'>
+              <div className='flex items-center justify-between mb-5'>
+                <div className='flex items-center gap-3'>
+                  <SectionNum n={1} />
+                  <h2 className='font-bold text-base'>{t("checkout.customer_info") || "Customer Information"}</h2>
+                </div>
+                <User className='w-5 h-5 text-muted-foreground' />
+              </div>
+              <div className='space-y-4'>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                  <div className='space-y-1.5'>
                     <Label htmlFor='fullName'>
-                      {t("checkout.full_name")}{" "}
-                      <span className='text-destructive'>
-                        {t("checkout.required")}
-                      </span>
+                      {t("checkout.full_name") || "Full Name"}{" "}
+                      <span className='text-destructive'>*</span>
                     </Label>
                     <Input
                       id='fullName'
                       placeholder='John Doe'
                       value={form.fullName}
                       onChange={(e) => updateField("fullName", e.target.value)}
-                      className={
-                        fieldErrors.fullName ? "border-destructive" : ""
-                      }
+                      className={fieldErrors.fullName ? "border-destructive" : ""}
                     />
                     {fieldErrors.fullName && (
-                      <p className='text-sm text-destructive'>
-                        {fieldErrors.fullName}
-                      </p>
+                      <p className='text-xs text-destructive'>{fieldErrors.fullName}</p>
                     )}
                   </div>
-                  <div className='space-y-2'>
+                  <div className='space-y-1.5'>
                     <Label htmlFor='email'>
-                      {t("checkout.email")}{" "}
-                      <span className='text-destructive'>
-                        {t("checkout.required")}
-                      </span>
+                      {t("checkout.email") || "Email Address"}{" "}
+                      <span className='text-destructive'>*</span>
                     </Label>
                     <Input
                       id='email'
@@ -286,18 +290,14 @@ export function CheckoutPageModernTemplate({
                       className={fieldErrors.email ? "border-destructive" : ""}
                     />
                     {fieldErrors.email && (
-                      <p className='text-sm text-destructive'>
-                        {fieldErrors.email}
-                      </p>
+                      <p className='text-xs text-destructive'>{fieldErrors.email}</p>
                     )}
                   </div>
                 </div>
-                <div className='space-y-2'>
+                <div className='space-y-1.5'>
                   <Label htmlFor='phoneNumber'>
-                    {t("checkout.phone")}{" "}
-                    <span className='text-destructive'>
-                      {t("checkout.required")}
-                    </span>
+                    {t("checkout.phone") || "Phone Number"}{" "}
+                    <span className='text-destructive'>*</span>
                   </Label>
                   <Input
                     id='phoneNumber'
@@ -305,34 +305,29 @@ export function CheckoutPageModernTemplate({
                     placeholder='+20 1XX XXX XXXX'
                     value={form.phoneNumber}
                     onChange={(e) => updateField("phoneNumber", e.target.value)}
-                    className={
-                      fieldErrors.phoneNumber ? "border-destructive" : ""
-                    }
+                    className={fieldErrors.phoneNumber ? "border-destructive" : ""}
                   />
                   {fieldErrors.phoneNumber && (
-                    <p className='text-sm text-destructive'>
-                      {fieldErrors.phoneNumber}
-                    </p>
+                    <p className='text-xs text-destructive'>{fieldErrors.phoneNumber}</p>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            {/* Shipping Address */}
-            <Card>
-              <CardHeader>
-                <CardTitle className='flex items-center gap-2'>
-                  <MapPin className='w-5 h-5 text-primary' />
-                  {t("checkout.shipping_address")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className='space-y-4'>
-                <div className='space-y-2'>
+            {/* 2. Shipping Address */}
+            <div className='border rounded-2xl p-6'>
+              <div className='flex items-center justify-between mb-5'>
+                <div className='flex items-center gap-3'>
+                  <SectionNum n={2} />
+                  <h2 className='font-bold text-base'>{t("checkout.shipping_address") || "Shipping Address"}</h2>
+                </div>
+                <MapPin className='w-5 h-5 text-muted-foreground' />
+              </div>
+              <div className='space-y-4'>
+                <div className='space-y-1.5'>
                   <Label htmlFor='address'>
-                    {t("checkout.street")}{" "}
-                    <span className='text-destructive'>
-                      {t("checkout.required")}
-                    </span>
+                    {t("checkout.street") || "Street Address"}{" "}
+                    <span className='text-destructive'>*</span>
                   </Label>
                   <Input
                     id='address'
@@ -342,18 +337,14 @@ export function CheckoutPageModernTemplate({
                     className={fieldErrors.address ? "border-destructive" : ""}
                   />
                   {fieldErrors.address && (
-                    <p className='text-sm text-destructive'>
-                      {fieldErrors.address}
-                    </p>
+                    <p className='text-xs text-destructive'>{fieldErrors.address}</p>
                   )}
                 </div>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  <div className='space-y-2'>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                  <div className='space-y-1.5'>
                     <Label htmlFor='city'>
-                      {t("checkout.city")}{" "}
-                      <span className='text-destructive'>
-                        {t("checkout.required")}
-                      </span>
+                      {t("checkout.city") || "City"}{" "}
+                      <span className='text-destructive'>*</span>
                     </Label>
                     <Input
                       id='city'
@@ -363,308 +354,258 @@ export function CheckoutPageModernTemplate({
                       className={fieldErrors.city ? "border-destructive" : ""}
                     />
                     {fieldErrors.city && (
-                      <p className='text-sm text-destructive'>
-                        {fieldErrors.city}
-                      </p>
+                      <p className='text-xs text-destructive'>{fieldErrors.city}</p>
                     )}
                   </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='state'>{t("checkout.state")}</Label>
+                  <div className='space-y-1.5'>
+                    <Label htmlFor='state'>{t("checkout.state") || "State / Governorate"}</Label>
                     <Input
                       id='state'
-                      placeholder='Cairo Governorate'
+                      placeholder='Cairo'
                       value={form.state}
                       onChange={(e) => updateField("state", e.target.value)}
-                      className={fieldErrors.state ? "border-destructive" : ""}
                     />
-                    {fieldErrors.state && (
-                      <p className='text-sm text-destructive'>
-                        {fieldErrors.state}
-                      </p>
-                    )}
                   </div>
                 </div>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  <div className='space-y-2'>
-                    <Label htmlFor='postalCode'>
-                      {t("checkout.postal_code")}
-                    </Label>
-                    <Input
-                      id='postalCode'
-                      placeholder='11511'
-                      value={form.postalCode}
-                      onChange={(e) =>
-                        updateField("postalCode", e.target.value)
-                      }
-                      className={
-                        fieldErrors.postalCode ? "border-destructive" : ""
-                      }
-                    />
-                    {fieldErrors.postalCode && (
-                      <p className='text-sm text-destructive'>
-                        {fieldErrors.postalCode}
-                      </p>
-                    )}
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='country'>
-                      {t("checkout.country")}{" "}
-                      <span className='text-destructive'>
-                        {t("checkout.required")}
-                      </span>
-                    </Label>
-                    <Input
-                      id='country'
-                      placeholder='Egypt'
-                      value={form.country}
-                      onChange={(e) => updateField("country", e.target.value)}
-                      className={
-                        fieldErrors.country ? "border-destructive" : ""
-                      }
-                    />
-                    {fieldErrors.country && (
-                      <p className='text-sm text-destructive'>
-                        {fieldErrors.country}
-                      </p>
-                    )}
-                  </div>
+                <div className='space-y-1.5'>
+                  <Label htmlFor='country'>
+                    {t("checkout.country") || "Country"}{" "}
+                    <span className='text-destructive'>*</span>
+                  </Label>
+                  <select
+                    id='country'
+                    value={form.country}
+                    onChange={(e) => updateField("country", e.target.value)}
+                    className={`flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${fieldErrors.country ? "border-destructive" : "border-input"}`}>
+                    <option value='Egypt'>Egypt</option>
+                    <option value='Saudi Arabia'>Saudi Arabia</option>
+                    <option value='UAE'>UAE</option>
+                    <option value='Kuwait'>Kuwait</option>
+                    <option value='Qatar'>Qatar</option>
+                    <option value='Bahrain'>Bahrain</option>
+                    <option value='Oman'>Oman</option>
+                    <option value='Jordan'>Jordan</option>
+                    <option value='Lebanon'>Lebanon</option>
+                    <option value='Other'>Other</option>
+                  </select>
+                  {fieldErrors.country && (
+                    <p className='text-xs text-destructive'>{fieldErrors.country}</p>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            {/* Order Notes */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{t("checkout.order_notes")}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  placeholder={t("checkout.notes_placeholder")}
-                  value={form.notes}
-                  onChange={(e) => updateField("notes", e.target.value)}
-                  rows={3}
-                />
-              </CardContent>
-            </Card>
+            {/* 3. Order Notes */}
+            <div className='border rounded-2xl p-6'>
+              <div className='flex items-center justify-between mb-5'>
+                <div className='flex items-center gap-3'>
+                  <SectionNum n={3} />
+                  <h2 className='font-bold text-base'>{t("checkout.order_notes") || "Order Notes (Optional)"}</h2>
+                </div>
+                <FileText className='w-5 h-5 text-muted-foreground' />
+              </div>
+              <Textarea
+                placeholder={t("checkout.notes_placeholder") || "Any special instructions for your order?"}
+                value={form.notes}
+                onChange={(e) => updateField("notes", e.target.value)}
+                rows={3}
+              />
+            </div>
 
-            {/* Payment Method */}
-            <Card>
-              <CardHeader>
-                <CardTitle className='flex items-center gap-2'>
-                  <CreditCard className='w-5 h-5 text-primary' />
-                  {t("checkout.payment_method")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {paymentMethodsLoading ? (
-                  <div className='flex items-center justify-center py-4 gap-2 text-muted-foreground'>
-                    <Loader2 className='w-4 h-4 animate-spin' />
-                    {t("checkout.loading_payment")}
-                  </div>
-                ) : methods.length === 1 ? (
-                  // Single method — render as a clean info card (no radio, no interaction)
-                  (() => {
-                    const only = methods[0]!;
-                    return (
-                      <div className='flex items-start gap-4 p-4 rounded-lg border-2 border-primary bg-primary/5'>
-                        <div className='mt-0.5 text-primary'>
-                          {getPaymentIcon(only.id)}
+            {/* 4. Payment Method */}
+            <div className='border rounded-2xl p-6'>
+              <div className='flex items-center justify-between mb-5'>
+                <div className='flex items-center gap-3'>
+                  <SectionNum n={4} />
+                  <h2 className='font-bold text-base'>{t("checkout.payment_method") || "Payment Method"}</h2>
+                </div>
+                <Lock className='w-5 h-5 text-muted-foreground' />
+              </div>
+              {paymentMethodsLoading ? (
+                <div className='flex items-center gap-2 text-muted-foreground py-2'>
+                  <Loader2 className='w-4 h-4 animate-spin' />
+                  {t("checkout.loading_payment") || "Loading payment options..."}
+                </div>
+              ) : (
+                <div className='space-y-3'>
+                  {methods.map((method) => (
+                    <label
+                      key={method.id}
+                      className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        form.paymentMethod === method.id
+                          ? "border-foreground bg-muted/40"
+                          : "border-border hover:border-muted-foreground/40"
+                      }`}>
+                      <input
+                        type='radio'
+                        name='paymentMethod'
+                        value={method.id}
+                        checked={form.paymentMethod === method.id}
+                        onChange={(e) => updateField("paymentMethod", e.target.value)}
+                        className='mt-1 accent-foreground'
+                      />
+                      <div className='flex items-start gap-3 flex-1'>
+                        <div className={`mt-0.5 ${form.paymentMethod === method.id ? "text-foreground" : "text-muted-foreground"}`}>
+                          {getPaymentIcon(method.id)}
                         </div>
                         <div className='flex-1'>
-                          <p className='font-medium'>{only.label}</p>
-                          <p className='text-sm text-muted-foreground'>
-                            {only.description}
-                          </p>
+                          <p className='font-semibold'>{method.label}</p>
+                          <p className='text-sm text-muted-foreground'>{method.description}</p>
                         </div>
                       </div>
-                    );
-                  })()
-                ) : (
-                  // Multiple methods — keep the existing radio-card UI
-                  <div className='space-y-3'>
-                    {methods.map((method) => (
-                      <label
-                        key={method.id}
-                        className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                          form.paymentMethod === method.id
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-muted-foreground/30"
-                        }`}>
-                        <input
-                          type='radio'
-                          name='paymentMethod'
-                          value={method.id}
-                          checked={form.paymentMethod === method.id}
-                          onChange={(e) =>
-                            updateField("paymentMethod", e.target.value)
-                          }
-                          className='mt-1 accent-primary'
-                        />
-                        <div className='flex items-start gap-3 flex-1'>
-                          <div
-                            className={`mt-0.5 ${form.paymentMethod === method.id ? "text-primary" : "text-muted-foreground"}`}>
-                            {getPaymentIcon(method.id)}
-                          </div>
-                          <div className='flex-1'>
-                            <p className='font-medium'>{method.label}</p>
-                            <p className='text-sm text-muted-foreground'>
-                              {method.description}
-                            </p>
-                          </div>
+                      {method.id !== "cod" && (
+                        <div className='flex items-center gap-1 text-xs text-green-600 shrink-0 mt-1'>
+                          <Shield className='w-3 h-3' />
+                          {t("checkout.secure") || "SECURE"}
                         </div>
-                        {method.id !== "cod" && (
-                          <div className='flex items-center gap-1 text-xs text-green-600 mt-1'>
-                            <Shield className='w-3 h-3' />
-                            {t("checkout.secure")}
-                          </div>
-                        )}
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Order Items */}
-            <Card>
-              <CardHeader>
-                <div className='flex items-center justify-between'>
-                  <CardTitle className='flex items-center gap-2'>
-                    <ShoppingCart className='w-5 h-5' />
-                    {t("checkout.order_items")} ({items.length})
-                  </CardTitle>
-                  {onEditCart && (
-                    <Button
-                      type='button'
-                      variant='outline'
-                      size='sm'
-                      onClick={onEditCart}>
-                      {t("checkout.edit_cart")}
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className='space-y-4'>
-                {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className='flex justify-between items-center'>
-                    <div className='flex-1'>
-                      <p className='font-medium'>{item.name}</p>
-                      {item.variant && (
-                        <p className='text-xs text-muted-foreground'>
-                          {item.variant}
-                        </p>
                       )}
-                      <p className='text-sm text-muted-foreground'>
-                        {t("checkout.quantity")}: {item.quantity}
-                      </p>
-                    </div>
-                    <div className='text-right'>
-                      <p className='font-medium'>
-                        {currency}
-                        {(item.price * item.quantity).toFixed(2)}
-                      </p>
-                      <p className='text-sm text-muted-foreground'>
-                        {currency}
-                        {item.price.toFixed(2)} {t("checkout.each")}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Order Summary */}
-          <div className='lg:col-span-1'>
-            <Card className='sticky top-4'>
-              <CardHeader>
-                <CardTitle>{t("checkout.order_summary")}</CardTitle>
-              </CardHeader>
-              <CardContent className='space-y-4'>
-                <div className='space-y-2'>
-                  <div className='flex justify-between'>
-                    <span>{t("cart.subtotal")}</span>
-                    <span>
-                      {currency}
-                      {totals.subtotal.toFixed(2)}
+          {/* ── Right column: Order Summary ────────────────── */}
+          <div className='lg:sticky lg:top-6 lg:self-start'>
+            <div className='border rounded-2xl p-6 space-y-5'>
+              <h2 className='font-extrabold text-base uppercase tracking-widest'>
+                {t("checkout.order_summary") || "Order Summary"}
+              </h2>
+
+              {/* Items */}
+              <div className='space-y-4'>
+                {items.map((item) => (
+                  <div key={item.id} className='flex items-center gap-3'>
+                    <div className='w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-muted border'>
+                      {item.imageUrl ? (
+                        <img src={item.imageUrl} alt={item.name} className='w-full h-full object-cover' />
+                      ) : (
+                        <div className='w-full h-full flex items-center justify-center'>
+                          <ShoppingCart className='w-4 h-4 text-muted-foreground/30' />
+                        </div>
+                      )}
+                    </div>
+                    <div className='flex-1 min-w-0'>
+                      <p className='font-semibold text-sm leading-snug truncate'>{item.name}</p>
+                      {item.variant && (
+                        <p className='text-xs text-muted-foreground truncate'>{item.variant}</p>
+                      )}
+                      <p className='text-xs text-muted-foreground'>Qty: {item.quantity}</p>
+                    </div>
+                    <p className='font-semibold text-sm shrink-0'>
+                      {currency}{(item.price * item.quantity).toFixed(2)}
+                    </p>
+                  </div>
+                ))}
+                {onEditCart && (
+                  <button
+                    type='button'
+                    onClick={onEditCart}
+                    className='text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors'>
+                    {t("checkout.edit_cart") || "Edit cart"}
+                  </button>
+                )}
+              </div>
+
+              {/* Divider */}
+              <div className='border-t' />
+
+              {/* Totals */}
+              <div className='space-y-2.5 text-sm'>
+                <div className='flex justify-between'>
+                  <span className='text-muted-foreground'>{t("cart.subtotal") || "Subtotal"}</span>
+                  <span className='font-semibold'>{currency}{totals.subtotal.toFixed(2)}</span>
+                </div>
+                {totals.discount !== undefined && totals.discount > 0 && (
+                  <div className='flex justify-between text-red-600'>
+                    <span className='font-medium'>{t("cart.discount") || "Discount"}</span>
+                    <span className='font-semibold'>- {currency}{totals.discount.toFixed(2)}</span>
+                  </div>
+                )}
+                {totals.appliedOffers?.map((offer) => (
+                  <div key={offer.name} className='flex items-start justify-between gap-3 text-red-600'>
+                    <span className='flex items-center gap-1.5 min-w-0 font-medium'>
+                      <Gift className='w-3.5 h-3.5 shrink-0' />
+                      <span className='truncate'>{offer.name}</span>
+                    </span>
+                    <span className='font-semibold shrink-0'>
+                      {offer.freeShipping && offer.discountAmount === 0
+                        ? "Free shipping"
+                        : `- ${currency}${offer.discountAmount.toFixed(2)}`}
                     </span>
                   </div>
-                  {totals.discount !== undefined && totals.discount > 0 && (
-                    <div className='flex justify-between text-green-600'>
-                      <span>{t("cart.discount")}</span>
-                      <span>
-                        -{currency}
-                        {totals.discount.toFixed(2)}
-                      </span>
-                    </div>
-                  )}
-                  {totals.appliedOffers && totals.appliedOffers.length > 0 && (
-                    <>
-                      {totals.appliedOffers.map((offer) => (
-                        <div key={offer.name} className='flex items-start justify-between gap-2 text-red-600'>
-                          <span className='font-medium flex items-center gap-1 min-w-0'>
-                            🎁 <span className='truncate'>{offer.name}</span>
-                          </span>
-                          <span className='font-semibold shrink-0'>
-                            {offer.freeShipping && offer.discountAmount === 0
-                              ? t("cart.free_shipping") || "Free shipping"
-                              : `-${currency}${offer.discountAmount.toFixed(2)}`}
-                          </span>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                  {totals.shipping !== undefined && (
-                    <div className='flex justify-between'>
-                      <span>{t("cart.shipping")}</span>
-                      <span>
-                        {totals.shipping === 0 ? (
-                          <Badge variant='secondary'>{t("cart.free")}</Badge>
-                        ) : (
-                          `${currency} ${totals.shipping.toFixed(2)}`
-                        )}
-                      </span>
-                    </div>
-                  )}
+                ))}
+                {totals.shipping !== undefined && (
+                  <div className='flex justify-between'>
+                    <span className='text-muted-foreground'>{t("cart.shipping") || "Shipping"}</span>
+                    <span className='font-semibold'>
+                      {totals.shipping === 0
+                        ? t("cart.free") || "Free"
+                        : `${currency}${totals.shipping.toFixed(2)}`}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Grand total */}
+              <div className='border-t pt-4 flex justify-between items-center'>
+                <span className='font-bold text-base uppercase tracking-wide'>{t("cart.total") || "Total"}</span>
+                <span className='font-extrabold text-xl text-emerald-600'>{currency} {totals.grandTotal.toFixed(2)}</span>
+              </div>
+
+              {/* Trust badges */}
+              <div className='space-y-2.5 text-sm text-muted-foreground'>
+                <div className='flex items-center gap-2'>
+                  <Lock className='w-4 h-4 shrink-0' />
+                  <div>
+                    <p className='font-medium text-foreground text-xs'>Secure Checkout</p>
+                    <p className='text-xs'>Your payment information is safe with us.</p>
+                  </div>
                 </div>
+                <div className='flex items-center gap-2'>
+                  <Truck className='w-4 h-4 shrink-0' />
+                  <div>
+                    <p className='font-medium text-foreground text-xs'>Fast Delivery</p>
+                    <p className='text-xs'>Quick delivery to your doorstep.</p>
+                  </div>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <RotateCcw className='w-4 h-4 shrink-0' />
+                  <div>
+                    <p className='font-medium text-foreground text-xs'>Easy Returns</p>
+                    <p className='text-xs'>14-day return policy.</p>
+                  </div>
+                </div>
+              </div>
 
-                <Separator />
-
-                <div className='flex justify-between text-base md:text-lg font-bold'>
-                  <span>{t("cart.total")}</span>
-                  <span>
-                    {currency}
-                    {totals.grandTotal.toFixed(2)}
+              {/* Submit */}
+              <Button
+                type='submit'
+                className='w-full font-bold tracking-wide uppercase'
+                size='lg'
+                disabled={isSubmitting || items.length === 0}>
+                {isSubmitting ? (
+                  <span className='flex items-center gap-2'>
+                    <Loader2 className='w-4 h-4 animate-spin' />
+                    {t("checkout.processing") || "Processing..."}
                   </span>
-                </div>
+                ) : (
+                  <span className='flex items-center gap-2'>
+                    <Lock className='w-4 h-4' />
+                    {form.paymentMethod === "cod"
+                      ? (t("checkout.place_order") || "Place Order")
+                      : (t("checkout.place_order_pay") || "Place Order & Pay")}
+                  </span>
+                )}
+              </Button>
 
-                <Button
-                  type='submit'
-                  className='w-full'
-                  size='lg'
-                  disabled={isSubmitting || items.length === 0}>
-                  {isSubmitting ? (
-                    <span className='flex items-center gap-2'>
-                      <Loader2 className='w-4 h-4 animate-spin' />
-                      {t("checkout.processing")}
-                    </span>
-                  ) : form.paymentMethod === "cod" ? (
-                    t("checkout.place_order")
-                  ) : (
-                    <span className='flex items-center gap-2'>
-                      <CreditCard className='w-4 h-4' />
-                      {t("checkout.place_order_pay")}
-                    </span>
-                  )}
-                </Button>
-
-                <p className='text-xs text-center text-muted-foreground'>
-                  {t("checkout.terms")}
-                </p>
-              </CardContent>
-            </Card>
+              <p className='text-xs text-center text-muted-foreground'>
+                {t("checkout.terms") || (
+                  <>By placing your order, you agree to our <a href='/links' className='underline underline-offset-2 text-foreground'>Terms &amp; Conditions</a></>
+                )}
+              </p>
+            </div>
           </div>
         </div>
       </form>

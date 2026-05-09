@@ -166,6 +166,7 @@ export default function CheckoutPage() {
       name: item.name,
       price: item.price,
       quantity: item.quantity,
+      imageUrl: item.imageUrl ?? undefined,
       variant: item.selectedOptions
         ? Object.entries(item.selectedOptions)
             .map(([key, value]) => `${key}: ${value}`)
@@ -273,8 +274,11 @@ export default function CheckoutPage() {
           });
 
           if (paymentResult.success && paymentResult.result?.paymentUrl) {
-            // Clear cart before redirecting to payment gateway
-            clearCart();
+            // Do NOT clear the cart before redirecting — the user may press back.
+            // Mark the order as pending-clear so the confirmation page clears it on success.
+            try {
+              sessionStorage.setItem(`pending_cart_clear:${orderId}`, "1");
+            } catch { /* best-effort */ }
             // Redirect to payment gateway
             window.location.href = paymentResult.result.paymentUrl;
             return;
