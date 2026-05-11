@@ -111,18 +111,24 @@ const DefaultProductCardTemplate: React.FC<DefaultProductCardTemplateProps> = ({
           />
         </Link>
 
-        {/* Discount Badge */}
-        {product.discountPrice && product.price && (
-          <Badge className='absolute top-2 left-2 bg-red-500 hover:bg-red-600'>
-            {Math.round(
-              ((Number.parseFloat(product.price.toString()) -
-                Number.parseFloat(product.discountPrice.toString())) /
-                Number.parseFloat(product.price.toString())) *
-                100,
-            )}
-            % OFF
-          </Badge>
-        )}
+        {/* Discount badge intentionally hidden — Anchor A brand positioning.
+            Pricing logic and discount data are unchanged; only the visual overlay
+            is suppressed on the product card. */}
+        {/*
+          Discount Badge (originally rendered here — kept commented for easy re-enable):
+
+          {product.discountPrice && product.price && (
+            <Badge className='absolute top-2 left-2 bg-red-500 hover:bg-red-600'>
+              {Math.round(
+                ((Number.parseFloat(product.price.toString()) -
+                  Number.parseFloat(product.discountPrice.toString())) /
+                  Number.parseFloat(product.price.toString())) *
+                  100,
+              )}
+              % OFF
+            </Badge>
+          )}
+        */}
 
         {/* Action Buttons */}
         <div

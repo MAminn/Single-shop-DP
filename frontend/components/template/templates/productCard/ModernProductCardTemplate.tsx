@@ -143,18 +143,24 @@ const ModernProductCardTemplate: React.FC<ModernProductCardTemplateProps> = ({
           />
         </Link>
 
-        {/* Discount Badge */}
-        {product.discountPrice && product.price && (
-          <Badge className='absolute top-3 left-3 bg-gray-900 text-white rounded-none px-3 py-1 text-xs font-medium border border-gray-900'>
-            {Math.round(
-              ((Number.parseFloat(product.price.toString()) -
-                Number.parseFloat(product.discountPrice.toString())) /
-                Number.parseFloat(product.price.toString())) *
-                100,
-            )}
-            % OFF
-          </Badge>
-        )}
+        {/* Discount badge intentionally hidden — Anchor A brand positioning.
+            Pricing logic and discount data are unchanged; only the visual overlay
+            is suppressed on the product card. */}
+        {/*
+          Discount Badge (originally rendered here — kept commented for easy re-enable):
+
+          {product.discountPrice && product.price && (
+            <Badge className='absolute top-3 left-3 bg-gray-900 text-white rounded-none px-3 py-1 text-xs font-medium border border-gray-900'>
+              {Math.round(
+                ((Number.parseFloat(product.price.toString()) -
+                  Number.parseFloat(product.discountPrice.toString())) /
+                  Number.parseFloat(product.price.toString())) *
+                  100,
+              )}
+              % OFF
+            </Badge>
+          )}
+        */}
 
         {/* New Badge - Show for products less than 14 days old */}
         {/* {product.dateAdded && 
