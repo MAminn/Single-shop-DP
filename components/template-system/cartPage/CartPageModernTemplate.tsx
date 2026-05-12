@@ -110,7 +110,7 @@ export function CartPageModernTemplate({
 
   return (
     <div className='min-h-screen bg-background'>
-      <div className='mx-auto max-w-8xl px-6 lg:px-36 py-8 sm:py-12'>
+      <div className='max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12'>
 
         {/* ── Page heading ───────────────────────────────── */}
         <h1 className='text-2xl sm:text-3xl font-extrabold uppercase tracking-tight mb-8'>
@@ -286,7 +286,8 @@ export function CartPageModernTemplate({
             </div>
 
             {/* ── Trust badges ─────────────────────────────── */}
-            <div className='mt-8  pt-6 border-t grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-xs text-muted-foreground'>
+            {/* Desktop only — on mobile these are shown after the order summary */}
+            <div className='hidden lg:grid mt-8 pt-6 border-t grid-cols-4 gap-4 text-center text-xs text-muted-foreground'>
               <div className='flex flex-col items-center gap-1.5'>
                 <ShieldCheck className='w-5 h-5 text-muted-foreground/70' />
                 <span>100% Authentic Products</span>
@@ -330,10 +331,10 @@ export function CartPageModernTemplate({
 
                 {/* Automatic offers */}
                 {totals.appliedOffers?.map((offer) => (
-                  <div key={offer.name} className='flex items-start justify-between gap-3 text-red-600'>
-                    <span className='flex items-center gap-1.5 min-w-0 font-medium'>
-                      <Gift className='w-3.5 h-3.5 shrink-0' />
-                      <span className='truncate'>{offer.name}</span>
+                  <div key={offer.name} className='flex items-start justify-between gap-2 text-red-600 text-xs'>
+                    <span className='flex items-center gap-1 min-w-0 font-medium'>
+                      <Gift className='w-3 h-3 shrink-0' />
+                      <span className='leading-snug'>{offer.name}</span>
                     </span>
                     <span className='font-semibold shrink-0'>
                       {offer.freeShipping && offer.discountAmount === 0
@@ -412,6 +413,27 @@ export function CartPageModernTemplate({
           </div>
 
         </div>
+
+        {/* ── Trust badges (mobile only — appears after order summary) ── */}
+        <div className='lg:hidden mt-8 pt-6 border-t grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-xs text-muted-foreground'>
+          <div className='flex flex-col items-center gap-1.5'>
+            <ShieldCheck className='w-5 h-5 text-muted-foreground/70' />
+            <span>100% Authentic Products</span>
+          </div>
+          <div className='flex flex-col items-center gap-1.5'>
+            <Lock className='w-5 h-5 text-muted-foreground/70' />
+            <span>Secure Payments</span>
+          </div>
+          <div className='flex flex-col items-center gap-1.5'>
+            <Truck className='w-5 h-5 text-muted-foreground/70' />
+            <span>Fast &amp; Reliable Delivery</span>
+          </div>
+          <div className='flex flex-col items-center gap-1.5'>
+            <RotateCcw className='w-5 h-5 text-muted-foreground/70' />
+            <span>Easy Returns</span>
+          </div>
+        </div>
+
       </div>
     </div>
   );

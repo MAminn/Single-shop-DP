@@ -218,13 +218,13 @@ export function CheckoutPageModernTemplate({
 
   // Section number component
   const SectionNum = ({ n }: { n: number }) => (
-    <span className='flex items-center justify-center w-7 h-7 rounded-full bg-foreground text-background text-xs font-bold shrink-0'>
+    <span className='flex items-center justify-center w-7 h-7 rounded-full bg-green-600 text-white text-xs font-bold shrink-0'>
       {n}
     </span>
   );
 
   return (
-    <div className='mx-auto max-w-8xl px-6 lg:px-36 py-8 sm:py-12'>
+    <div className='max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12'>
       <h1 className='text-2xl sm:text-3xl font-extrabold mb-8'>
         {t("checkout.title") || "Checkout"}
       </h1>
@@ -431,9 +431,9 @@ export function CheckoutPageModernTemplate({
                   {methods.map((method) => (
                     <label
                       key={method.id}
-                      className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
                         form.paymentMethod === method.id
-                          ? "border-foreground bg-muted/40"
+                          ? "border-green-600 bg-muted/40"
                           : "border-border hover:border-muted-foreground/40"
                       }`}>
                       <input
@@ -512,7 +512,7 @@ export function CheckoutPageModernTemplate({
               <div className='border-t' />
 
               {/* Totals */}
-              <div className='space-y-2.5 text-sm'>
+              <div className='space-y-2.5 text-xs'>
                 <div className='flex justify-between'>
                   <span className='text-muted-foreground'>{t("cart.subtotal") || "Subtotal"}</span>
                   <span className='font-semibold'>{currency}{totals.subtotal.toFixed(2)}</span>
