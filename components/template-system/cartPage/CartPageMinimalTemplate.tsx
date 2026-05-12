@@ -262,11 +262,11 @@ export function CartPageMinimalTemplate({
                 )}
                 {totals.appliedOffers && totals.appliedOffers.map((offer) => (
                   <div key={offer.name} className="flex items-start justify-between gap-2 text-[13px] text-red-600">
-                    <span className="flex items-center gap-1 font-medium min-w-0">
-                      <Gift className="w-3 h-3 shrink-0" />
-                      <span className="truncate">{offer.name}</span>
+                    <span className="flex items-start gap-1 font-medium min-w-0">
+                      <Gift className="w-3 h-3 shrink-0 mt-0.5" />
+                      <span className="leading-snug break-words">{offer.name}</span>
                     </span>
-                    <span className="font-semibold shrink-0">
+                    <span className="font-semibold shrink-0 ml-2">
                       {offer.freeShipping && offer.discountAmount === 0
                         ? "Free shipping"
                         : `−${offer.discountAmount.toFixed(2)} ${currency}`}

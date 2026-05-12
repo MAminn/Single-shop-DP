@@ -467,8 +467,8 @@ export function CheckoutPageModernTemplate({
           </div>
 
           {/* ── Right column: Order Summary ────────────────── */}
-          <div className='lg:sticky lg:top-6 lg:self-start'>
-            <div className='border rounded-2xl p-6 space-y-5'>
+          <div className='lg:sticky lg:top-6 lg:self-start w-full'>
+            <div className='border rounded-2xl p-6 space-y-5 w-full'>
               <h2 className='font-extrabold text-base uppercase tracking-widest'>
                 {t("checkout.order_summary") || "Order Summary"}
               </h2>
@@ -512,7 +512,7 @@ export function CheckoutPageModernTemplate({
               <div className='border-t' />
 
               {/* Totals */}
-              <div className='space-y-2.5 text-xs'>
+              <div className='space-y-2.5 text-xs w-full'>
                 <div className='flex justify-between'>
                   <span className='text-muted-foreground'>{t("cart.subtotal") || "Subtotal"}</span>
                   <span className='font-semibold'>{currency}{totals.subtotal.toFixed(2)}</span>
@@ -524,12 +524,12 @@ export function CheckoutPageModernTemplate({
                   </div>
                 )}
                 {totals.appliedOffers?.map((offer) => (
-                  <div key={offer.name} className='flex items-start justify-between gap-3 text-red-600'>
-                    <span className='flex items-center gap-1.5 min-w-0 font-medium'>
-                      <Gift className='w-3.5 h-3.5 shrink-0' />
-                      <span className='truncate'>{offer.name}</span>
+                  <div key={offer.name} className='flex items-start justify-between gap-2 text-red-600'>
+                    <span className='flex items-start gap-1 min-w-0 font-medium'>
+                      <Gift className='w-3 h-3 shrink-0 mt-0.5' />
+                      <span className='leading-snug break-words'>{offer.name}</span>
                     </span>
-                    <span className='font-semibold shrink-0'>
+                    <span className='font-semibold shrink-0 ml-2'>
                       {offer.freeShipping && offer.discountAmount === 0
                         ? "Free shipping"
                         : `- ${currency}${offer.discountAmount.toFixed(2)}`}
