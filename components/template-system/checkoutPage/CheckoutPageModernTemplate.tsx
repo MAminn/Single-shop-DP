@@ -63,7 +63,11 @@ export interface CheckoutTotals {
   discount?: number;
   shipping?: number;
   grandTotal: number;
-  appliedOffers?: Array<{ name: string; discountAmount: number; freeShipping: boolean }>;
+  appliedOffers?: Array<{
+    name: string;
+    discountAmount: number;
+    freeShipping: boolean;
+  }>;
 }
 
 /**
@@ -246,16 +250,16 @@ export function CheckoutPageModernTemplate({
 
       <form onSubmit={handleSubmit}>
         <div className='grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10'>
-
           {/* ── Left column: form sections ─────────────────── */}
           <div className='space-y-6'>
-
             {/* 1. Customer Information */}
             <div className='border rounded-2xl p-6'>
               <div className='flex items-center justify-between mb-5'>
                 <div className='flex items-center gap-3'>
                   <SectionNum n={1} />
-                  <h2 className='font-bold text-base'>{t("checkout.customer_info") || "Customer Information"}</h2>
+                  <h2 className='font-bold text-base'>
+                    {t("checkout.customer_info") || "Customer Information"}
+                  </h2>
                 </div>
                 <User className='w-5 h-5 text-muted-foreground' />
               </div>
@@ -271,10 +275,14 @@ export function CheckoutPageModernTemplate({
                       placeholder='John Doe'
                       value={form.fullName}
                       onChange={(e) => updateField("fullName", e.target.value)}
-                      className={fieldErrors.fullName ? "border-destructive" : ""}
+                      className={
+                        fieldErrors.fullName ? "border-destructive" : ""
+                      }
                     />
                     {fieldErrors.fullName && (
-                      <p className='text-xs text-destructive'>{fieldErrors.fullName}</p>
+                      <p className='text-xs text-destructive'>
+                        {fieldErrors.fullName}
+                      </p>
                     )}
                   </div>
                   <div className='space-y-1.5'>
@@ -291,7 +299,9 @@ export function CheckoutPageModernTemplate({
                       className={fieldErrors.email ? "border-destructive" : ""}
                     />
                     {fieldErrors.email && (
-                      <p className='text-xs text-destructive'>{fieldErrors.email}</p>
+                      <p className='text-xs text-destructive'>
+                        {fieldErrors.email}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -306,10 +316,14 @@ export function CheckoutPageModernTemplate({
                     placeholder='+20 1XX XXX XXXX'
                     value={form.phoneNumber}
                     onChange={(e) => updateField("phoneNumber", e.target.value)}
-                    className={fieldErrors.phoneNumber ? "border-destructive" : ""}
+                    className={
+                      fieldErrors.phoneNumber ? "border-destructive" : ""
+                    }
                   />
                   {fieldErrors.phoneNumber && (
-                    <p className='text-xs text-destructive'>{fieldErrors.phoneNumber}</p>
+                    <p className='text-xs text-destructive'>
+                      {fieldErrors.phoneNumber}
+                    </p>
                   )}
                 </div>
               </div>
@@ -320,7 +334,9 @@ export function CheckoutPageModernTemplate({
               <div className='flex items-center justify-between mb-5'>
                 <div className='flex items-center gap-3'>
                   <SectionNum n={2} />
-                  <h2 className='font-bold text-base'>{t("checkout.shipping_address") || "Shipping Address"}</h2>
+                  <h2 className='font-bold text-base'>
+                    {t("checkout.shipping_address") || "Shipping Address"}
+                  </h2>
                 </div>
                 <MapPin className='w-5 h-5 text-muted-foreground' />
               </div>
@@ -338,7 +354,9 @@ export function CheckoutPageModernTemplate({
                     className={fieldErrors.address ? "border-destructive" : ""}
                   />
                   {fieldErrors.address && (
-                    <p className='text-xs text-destructive'>{fieldErrors.address}</p>
+                    <p className='text-xs text-destructive'>
+                      {fieldErrors.address}
+                    </p>
                   )}
                 </div>
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
@@ -355,11 +373,15 @@ export function CheckoutPageModernTemplate({
                       className={fieldErrors.city ? "border-destructive" : ""}
                     />
                     {fieldErrors.city && (
-                      <p className='text-xs text-destructive'>{fieldErrors.city}</p>
+                      <p className='text-xs text-destructive'>
+                        {fieldErrors.city}
+                      </p>
                     )}
                   </div>
                   <div className='space-y-1.5'>
-                    <Label htmlFor='state'>{t("checkout.state") || "State / Governorate"}</Label>
+                    <Label htmlFor='state'>
+                      {t("checkout.state") || "State / Governorate"}
+                    </Label>
                     <Input
                       id='state'
                       placeholder='Cairo'
@@ -390,7 +412,9 @@ export function CheckoutPageModernTemplate({
                     <option value='Other'>Other</option>
                   </select>
                   {fieldErrors.country && (
-                    <p className='text-xs text-destructive'>{fieldErrors.country}</p>
+                    <p className='text-xs text-destructive'>
+                      {fieldErrors.country}
+                    </p>
                   )}
                 </div>
               </div>
@@ -407,7 +431,10 @@ export function CheckoutPageModernTemplate({
                 </button>
               ) : (
                 <Textarea
-                  placeholder={t("checkout.notes_placeholder") || "Any special instructions for your order\u2026"}
+                  placeholder={
+                    t("checkout.notes_placeholder") ||
+                    "Any special instructions for your order\u2026"
+                  }
                   value={form.notes}
                   onChange={(e) => updateField("notes", e.target.value)}
                   rows={3}
@@ -420,14 +447,17 @@ export function CheckoutPageModernTemplate({
               <div className='flex items-center justify-between mb-5'>
                 <div className='flex items-center gap-3'>
                   <SectionNum n={3} />
-                  <h2 className='font-bold text-base'>{t("checkout.payment_method") || "Payment Method"}</h2>
+                  <h2 className='font-bold text-base'>
+                    {t("checkout.payment_method") || "Payment Method"}
+                  </h2>
                 </div>
                 <Lock className='w-5 h-5 text-muted-foreground' />
               </div>
               {paymentMethodsLoading ? (
                 <div className='flex items-center gap-2 text-muted-foreground py-2'>
                   <Loader2 className='w-4 h-4 animate-spin' />
-                  {t("checkout.loading_payment") || "Loading payment options..."}
+                  {t("checkout.loading_payment") ||
+                    "Loading payment options..."}
                 </div>
               ) : (
                 <div className='space-y-3'>
@@ -444,16 +474,21 @@ export function CheckoutPageModernTemplate({
                         name='paymentMethod'
                         value={method.id}
                         checked={form.paymentMethod === method.id}
-                        onChange={(e) => updateField("paymentMethod", e.target.value)}
+                        onChange={(e) =>
+                          updateField("paymentMethod", e.target.value)
+                        }
                         className='mt-1 accent-foreground'
                       />
                       <div className='flex items-start gap-3 flex-1'>
-                        <div className={`mt-0.5 ${form.paymentMethod === method.id ? "text-foreground" : "text-muted-foreground"}`}>
+                        <div
+                          className={`mt-0.5 ${form.paymentMethod === method.id ? "text-foreground" : "text-muted-foreground"}`}>
                           {getPaymentIcon(method.id)}
                         </div>
                         <div className='flex-1'>
                           <p className='font-semibold'>{method.label}</p>
-                          <p className='text-sm text-muted-foreground'>{method.description}</p>
+                          <p className='text-sm text-muted-foreground'>
+                            {method.description}
+                          </p>
                         </div>
                       </div>
                       {method.id !== "cod" && (
@@ -482,7 +517,11 @@ export function CheckoutPageModernTemplate({
                   <div key={item.id} className='flex items-center gap-3'>
                     <div className='w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-muted border'>
                       {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.name} className='w-full h-full object-cover' />
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className='w-full h-full object-cover'
+                        />
                       ) : (
                         <div className='w-full h-full flex items-center justify-center'>
                           <ShoppingCart className='w-4 h-4 text-muted-foreground/30' />
@@ -490,14 +529,21 @@ export function CheckoutPageModernTemplate({
                       )}
                     </div>
                     <div className='flex-1 min-w-0'>
-                      <p className='font-semibold text-sm leading-snug truncate'>{item.name}</p>
+                      <p className='font-semibold text-sm leading-snug truncate'>
+                        {item.name}
+                      </p>
                       {item.variant && (
-                        <p className='text-xs text-muted-foreground truncate'>{item.variant}</p>
+                        <p className='text-xs text-muted-foreground truncate'>
+                          {item.variant}
+                        </p>
                       )}
-                      <p className='text-xs text-muted-foreground'>Qty: {item.quantity}</p>
+                      <p className='text-xs text-muted-foreground'>
+                        Qty: {item.quantity}
+                      </p>
                     </div>
                     <p className='font-semibold text-sm shrink-0'>
-                      {currency}{(item.price * item.quantity).toFixed(2)}
+                      {currency}
+                      {(item.price * item.quantity).toFixed(2)}
                     </p>
                   </div>
                 ))}
@@ -517,17 +563,29 @@ export function CheckoutPageModernTemplate({
               {/* Totals */}
               <div className='space-y-2.5 text-sm'>
                 <div className='flex justify-between'>
-                  <span className='text-muted-foreground'>{t("cart.subtotal") || "Subtotal"}</span>
-                  <span className='font-semibold'>{currency}{totals.subtotal.toFixed(2)}</span>
+                  <span className='text-muted-foreground'>
+                    {t("cart.subtotal") || "Subtotal"}
+                  </span>
+                  <span className='font-semibold'>
+                    {currency}
+                    {totals.subtotal.toFixed(2)}
+                  </span>
                 </div>
                 {totals.discount !== undefined && totals.discount > 0 && (
                   <div className='flex justify-between text-red-600'>
-                    <span className='font-medium'>{t("cart.discount") || "Discount"}</span>
-                    <span className='font-semibold'>- {currency}{totals.discount.toFixed(2)}</span>
+                    <span className='font-medium'>
+                      {t("cart.discount") || "Discount"}
+                    </span>
+                    <span className='font-semibold'>
+                      - {currency}
+                      {totals.discount.toFixed(2)}
+                    </span>
                   </div>
                 )}
                 {totals.appliedOffers?.map((offer) => (
-                  <div key={offer.name} className='flex items-start justify-between gap-3 text-red-600'>
+                  <div
+                    key={offer.name}
+                    className='flex items-start justify-between gap-3 text-red-600'>
                     <span className='flex items-center gap-1.5 min-w-0 font-medium'>
                       <Gift className='w-3.5 h-3.5 shrink-0' />
                       <span className='truncate'>{offer.name}</span>
@@ -541,7 +599,9 @@ export function CheckoutPageModernTemplate({
                 ))}
                 {totals.shipping !== undefined && (
                   <div className='flex justify-between'>
-                    <span className='text-muted-foreground'>{t("cart.shipping") || "Shipping"}</span>
+                    <span className='text-muted-foreground'>
+                      {t("cart.shipping") || "Shipping"}
+                    </span>
                     <span className='font-semibold'>
                       {totals.shipping === 0
                         ? t("cart.free") || "Free"
@@ -553,8 +613,12 @@ export function CheckoutPageModernTemplate({
 
               {/* Grand total */}
               <div className='border-t pt-4 flex justify-between items-center'>
-                <span className='font-bold text-base uppercase tracking-wide'>{t("cart.total") || "Total"}</span>
-                <span className='font-extrabold text-xl text-emerald-600'>{currency} {totals.grandTotal.toFixed(2)}</span>
+                <span className='font-bold text-base uppercase tracking-wide'>
+                  {t("cart.total") || "Total"}
+                </span>
+                <span className='font-extrabold text-xl text-emerald-600'>
+                  {currency} {totals.grandTotal.toFixed(2)}
+                </span>
               </div>
 
               {/* Trust badges */}
@@ -562,21 +626,29 @@ export function CheckoutPageModernTemplate({
                 <div className='flex items-center gap-2'>
                   <Lock className='w-4 h-4 shrink-0' />
                   <div>
-                    <p className='font-medium text-foreground text-xs'>Secure Checkout</p>
-                    <p className='text-xs'>Your payment information is safe with us.</p>
+                    <p className='font-medium text-foreground text-xs'>
+                      Secure Checkout
+                    </p>
+                    <p className='text-xs'>
+                      Your payment information is safe with us.
+                    </p>
                   </div>
                 </div>
                 <div className='flex items-center gap-2'>
                   <Truck className='w-4 h-4 shrink-0' />
                   <div>
-                    <p className='font-medium text-foreground text-xs'>Fast Delivery</p>
+                    <p className='font-medium text-foreground text-xs'>
+                      Fast Delivery
+                    </p>
                     <p className='text-xs'>Quick delivery to your doorstep.</p>
                   </div>
                 </div>
                 <div className='flex items-center gap-2'>
                   <RotateCcw className='w-4 h-4 shrink-0' />
                   <div>
-                    <p className='font-medium text-foreground text-xs'>Easy Returns</p>
+                    <p className='font-medium text-foreground text-xs'>
+                      Easy Returns
+                    </p>
                     <p className='text-xs'>14-day return policy.</p>
                   </div>
                 </div>
@@ -597,15 +669,22 @@ export function CheckoutPageModernTemplate({
                   <span className='flex items-center gap-2'>
                     <Lock className='w-4 h-4' />
                     {form.paymentMethod === "cod"
-                      ? (t("checkout.place_order") || "Place Order")
-                      : (t("checkout.place_order_pay") || "Place Order & Pay")}
+                      ? t("checkout.place_order") || "Place Order"
+                      : t("checkout.place_order_pay") || "Place Order & Pay"}
                   </span>
                 )}
               </Button>
 
               <p className='text-xs text-center text-muted-foreground'>
                 {t("checkout.terms") || (
-                  <>By placing your order, you agree to our <a href='/links' className='underline underline-offset-2 text-foreground'>Terms &amp; Conditions</a></>
+                  <>
+                    By placing your order, you agree to our{" "}
+                    <a
+                      href='/links'
+                      className='underline underline-offset-2 text-foreground'>
+                      Terms &amp; Conditions
+                    </a>
+                  </>
                 )}
               </p>
             </div>

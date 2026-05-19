@@ -39,7 +39,11 @@ export interface CartPageTotals {
   discount?: number;
   shipping?: number;
   grandTotal: number;
-  appliedOffers?: Array<{ name: string; discountAmount: number; freeShipping: boolean }>;
+  appliedOffers?: Array<{
+    name: string;
+    discountAmount: number;
+    freeShipping: boolean;
+  }>;
 }
 
 /**
@@ -113,7 +117,9 @@ export function CartPageModernTemplate({
         <ShoppingCart className='w-14 h-14 text-muted-foreground/40' />
         <h2 className='text-2xl font-bold'>{t("cart.empty")}</h2>
         <p className='text-muted-foreground'>{t("cart.empty_cta")}</p>
-        <Button onClick={() => (window.location.href = "/shop")} className='mt-2'>
+        <Button
+          onClick={() => (window.location.href = "/shop")}
+          className='mt-2'>
           {t("cart.continue_shopping")}
         </Button>
       </div>
@@ -127,7 +133,6 @@ export function CartPageModernTemplate({
   return (
     <div className='min-h-screen bg-background'>
       <div className='mx-auto max-w-8xl px-6 lg:px-36 py-8 sm:py-12'>
-
         {/* ── Page heading ───────────────────────────────── */}
         <h1 className='text-2xl sm:text-3xl font-extrabold uppercase tracking-tight mb-8'>
           {t("cart.title") || "Shopping Cart"}
@@ -137,13 +142,14 @@ export function CartPageModernTemplate({
         </h1>
 
         <div className='lg:grid lg:grid-cols-[1fr_380px] lg:gap-12'>
-
           {/* ── Items list ─────────────────────────────────── */}
           <div>
             {/* Column headers — desktop */}
             <div className='hidden sm:grid grid-cols-[1fr_160px_110px_40px] gap-4 pb-4 border-b text-xs font-semibold uppercase tracking-widest text-muted-foreground'>
               <span>{t("cart.product") || "Product"}</span>
-              <span className='text-center'>{t("cart.quantity") || "Quantity"}</span>
+              <span className='text-center'>
+                {t("cart.quantity") || "Quantity"}
+              </span>
               <span className='text-right'>{t("cart.total") || "Total"}</span>
               <span />
             </div>
@@ -153,13 +159,16 @@ export function CartPageModernTemplate({
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className={`py-6 transition-opacity ${isUpdating ? "opacity-50 pointer-events-none" : ""}`}
-                >
+                  className={`py-6 transition-opacity ${isUpdating ? "opacity-50 pointer-events-none" : ""}`}>
                   {/* Mobile */}
                   <div className='flex gap-4 sm:hidden'>
                     <div className='w-20 h-20 shrink-0 bg-muted rounded-lg overflow-hidden border'>
                       {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.name} className='w-full h-full object-cover' />
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className='w-full h-full object-cover'
+                        />
                       ) : (
                         <div className='w-full h-full flex items-center justify-center'>
                           <ShoppingCart className='w-5 h-5 text-muted-foreground/30' />
@@ -169,10 +178,18 @@ export function CartPageModernTemplate({
                     <div className='flex-1 min-w-0'>
                       <div className='flex items-start justify-between gap-2'>
                         <div className='min-w-0'>
-                          <p className='font-semibold text-sm leading-snug'>{item.name}</p>
-                          {item.variant && <p className='text-xs text-muted-foreground mt-0.5'>{item.variant}</p>}
+                          <p className='font-semibold text-sm leading-snug'>
+                            {item.name}
+                          </p>
+                          {item.variant && (
+                            <p className='text-xs text-muted-foreground mt-0.5'>
+                              {item.variant}
+                            </p>
+                          )}
                           <p className='text-sm text-muted-foreground mt-1'>
-                            {currency}{item.price.toFixed(2)} {t("checkout.each") || "each"}
+                            {currency}
+                            {item.price.toFixed(2)}{" "}
+                            {t("checkout.each") || "each"}
                           </p>
                         </div>
                         <button
@@ -188,23 +205,39 @@ export function CartPageModernTemplate({
                         <div className='inline-flex items-center border rounded-lg'>
                           <button
                             type='button'
-                            onClick={() => onQuantityChange?.(item.id, Math.max(1, item.quantity - 1))}
+                            onClick={() =>
+                              onQuantityChange?.(
+                                item.id,
+                                Math.max(1, item.quantity - 1),
+                              )
+                            }
                             disabled={isUpdating || item.quantity <= 1}
                             aria-label='Decrease quantity'
                             className='w-9 h-9 flex items-center justify-center hover:bg-muted transition-colors rounded-l-lg disabled:opacity-40'>
                             <Minus className='w-3.5 h-3.5' />
                           </button>
-                          <span className='w-10 text-center text-sm font-semibold'>{item.quantity}</span>
+                          <span className='w-10 text-center text-sm font-semibold'>
+                            {item.quantity}
+                          </span>
                           <button
                             type='button'
-                            onClick={() => onQuantityChange?.(item.id, item.quantity + 1)}
-                            disabled={isUpdating || (item.stock != null && item.quantity >= item.stock)}
+                            onClick={() =>
+                              onQuantityChange?.(item.id, item.quantity + 1)
+                            }
+                            disabled={
+                              isUpdating ||
+                              (item.stock != null &&
+                                item.quantity >= item.stock)
+                            }
                             aria-label='Increase quantity'
                             className='w-9 h-9 flex items-center justify-center hover:bg-muted transition-colors rounded-r-lg disabled:opacity-40'>
                             <Plus className='w-3.5 h-3.5' />
                           </button>
                         </div>
-                        <p className='font-bold'>{currency}{(item.price * item.quantity).toFixed(2)}</p>
+                        <p className='font-bold'>
+                          {currency}
+                          {(item.price * item.quantity).toFixed(2)}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -215,7 +248,11 @@ export function CartPageModernTemplate({
                     <div className='flex items-center gap-4'>
                       <div className='w-20 h-20 shrink-0 bg-muted rounded-xl overflow-hidden border'>
                         {item.imageUrl ? (
-                          <img src={item.imageUrl} alt={item.name} className='w-full h-full object-cover' />
+                          <img
+                            src={item.imageUrl}
+                            alt={item.name}
+                            className='w-full h-full object-cover'
+                          />
                         ) : (
                           <div className='w-full h-full flex items-center justify-center'>
                             <ShoppingCart className='w-5 h-5 text-muted-foreground/30' />
@@ -224,9 +261,14 @@ export function CartPageModernTemplate({
                       </div>
                       <div className='min-w-0'>
                         <p className='font-semibold'>{item.name}</p>
-                        {item.variant && <p className='text-xs text-muted-foreground mt-0.5'>{item.variant}</p>}
+                        {item.variant && (
+                          <p className='text-xs text-muted-foreground mt-0.5'>
+                            {item.variant}
+                          </p>
+                        )}
                         <p className='text-sm text-muted-foreground mt-1'>
-                          {currency}{item.price.toFixed(2)} {t("checkout.each") || "each"}
+                          {currency}
+                          {item.price.toFixed(2)} {t("checkout.each") || "each"}
                         </p>
                       </div>
                     </div>
@@ -236,17 +278,29 @@ export function CartPageModernTemplate({
                       <div className='inline-flex items-center border rounded-lg'>
                         <button
                           type='button'
-                          onClick={() => onQuantityChange?.(item.id, Math.max(1, item.quantity - 1))}
+                          onClick={() =>
+                            onQuantityChange?.(
+                              item.id,
+                              Math.max(1, item.quantity - 1),
+                            )
+                          }
                           disabled={isUpdating || item.quantity <= 1}
                           aria-label='Decrease quantity'
                           className='w-9 h-9 flex items-center justify-center hover:bg-muted transition-colors rounded-l-lg disabled:opacity-40'>
                           <Minus className='w-3.5 h-3.5' />
                         </button>
-                        <span className='w-10 text-center text-sm font-semibold'>{item.quantity}</span>
+                        <span className='w-10 text-center text-sm font-semibold'>
+                          {item.quantity}
+                        </span>
                         <button
                           type='button'
-                          onClick={() => onQuantityChange?.(item.id, item.quantity + 1)}
-                          disabled={isUpdating || (item.stock != null && item.quantity >= item.stock)}
+                          onClick={() =>
+                            onQuantityChange?.(item.id, item.quantity + 1)
+                          }
+                          disabled={
+                            isUpdating ||
+                            (item.stock != null && item.quantity >= item.stock)
+                          }
                           aria-label='Increase quantity'
                           className='w-9 h-9 flex items-center justify-center hover:bg-muted transition-colors rounded-r-lg disabled:opacity-40'>
                           <Plus className='w-3.5 h-3.5' />
@@ -255,7 +309,10 @@ export function CartPageModernTemplate({
                     </div>
 
                     {/* Line total */}
-                    <p className='font-bold text-right'>{currency}{(item.price * item.quantity).toFixed(2)}</p>
+                    <p className='font-bold text-right'>
+                      {currency}
+                      {(item.price * item.quantity).toFixed(2)}
+                    </p>
 
                     {/* Remove */}
                     <button
@@ -280,12 +337,18 @@ export function CartPageModernTemplate({
                     {isFirstTimeVisitor ? (
                       <p className='font-semibold text-sm'>
                         First time? Add code{" "}
-                        <span className='font-bold'>WELCOME15</span> for 15% off your first piece
+                        <span className='font-bold'>WELCOME15</span> for 15% off
+                        your first piece
                       </p>
                     ) : (
                       <>
-                        <p className='font-semibold text-sm'>{t("cart.coupon_code") || "Have a coupon code?"}</p>
-                        <p className='text-xs text-muted-foreground'>{t("cart.coupon_desc") || "Add your code for instant savings"}</p>
+                        <p className='font-semibold text-sm'>
+                          {t("cart.coupon_code") || "Have a coupon code?"}
+                        </p>
+                        <p className='text-xs text-muted-foreground'>
+                          {t("cart.coupon_desc") ||
+                            "Add your code for instant savings"}
+                        </p>
                       </>
                     )}
                   </div>
@@ -295,7 +358,9 @@ export function CartPageModernTemplate({
                     placeholder={t("cart.enter_code") || "Enter coupon code"}
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleApplyCoupon(); }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleApplyCoupon();
+                    }}
                     disabled={isUpdating}
                     className='flex-1 text-sm'
                   />
@@ -341,21 +406,33 @@ export function CartPageModernTemplate({
               <div className='space-y-3 text-sm'>
                 {/* Subtotal */}
                 <div className='flex justify-between'>
-                  <span className='text-muted-foreground'>{t("cart.subtotal") || "Subtotal"}</span>
-                  <span className='font-semibold'>{currency}{totals.subtotal.toFixed(2)}</span>
+                  <span className='text-muted-foreground'>
+                    {t("cart.subtotal") || "Subtotal"}
+                  </span>
+                  <span className='font-semibold'>
+                    {currency}
+                    {totals.subtotal.toFixed(2)}
+                  </span>
                 </div>
 
                 {/* Promo code discount */}
                 {totals.discount !== undefined && totals.discount > 0 && (
                   <div className='flex justify-between text-red-600'>
-                    <span className='font-medium'>{t("cart.discount") || "Discount"}</span>
-                    <span className='font-semibold'>-{currency}{totals.discount.toFixed(2)}</span>
+                    <span className='font-medium'>
+                      {t("cart.discount") || "Discount"}
+                    </span>
+                    <span className='font-semibold'>
+                      -{currency}
+                      {totals.discount.toFixed(2)}
+                    </span>
                   </div>
                 )}
 
                 {/* Automatic offers */}
                 {totals.appliedOffers?.map((offer) => (
-                  <div key={offer.name} className='flex items-start justify-between gap-3 text-red-600'>
+                  <div
+                    key={offer.name}
+                    className='flex items-start justify-between gap-3 text-red-600'>
                     <span className='flex items-center gap-1.5 min-w-0 font-medium'>
                       <Gift className='w-3.5 h-3.5 shrink-0' />
                       <span className='truncate'>{offer.name}</span>
@@ -371,7 +448,9 @@ export function CartPageModernTemplate({
                 {/* Shipping */}
                 {totals.shipping !== undefined && (
                   <div className='flex justify-between'>
-                    <span className='text-muted-foreground'>{t("cart.shipping") || "Shipping"}</span>
+                    <span className='text-muted-foreground'>
+                      {t("cart.shipping") || "Shipping"}
+                    </span>
                     <span className='font-semibold'>
                       {totals.shipping === 0
                         ? t("cart.free") || "Free"
@@ -383,8 +462,13 @@ export function CartPageModernTemplate({
 
               {/* Total */}
               <div className='border-t pt-4 flex justify-between items-center font-extrabold text-lg'>
-                <span className='uppercase tracking-wide'>{t("cart.total") || "Total"}</span>
-                <span>{currency}{totals.grandTotal.toFixed(2)}</span>
+                <span className='uppercase tracking-wide'>
+                  {t("cart.total") || "Total"}
+                </span>
+                <span>
+                  {currency}
+                  {totals.grandTotal.toFixed(2)}
+                </span>
               </div>
 
               {/* Savings callout */}
@@ -392,7 +476,8 @@ export function CartPageModernTemplate({
                 <div className='flex items-center gap-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400'>
                   <ShieldCheck className='w-4 h-4 shrink-0' />
                   <span className='font-medium'>
-                    You're saving {currency}{totalSavings.toFixed(2)} with this offer!
+                    You're saving {currency}
+                    {totalSavings.toFixed(2)} with this offer!
                   </span>
                 </div>
               )}
@@ -401,15 +486,21 @@ export function CartPageModernTemplate({
               <div className='flex flex-wrap items-center justify-center gap-4 sm:gap-6 border-t border-stone-100 pt-4'>
                 <div className='flex items-center gap-1.5'>
                   <Lock className='h-3.5 w-3.5 text-stone-400' />
-                  <span className='text-[11px] tracking-wide text-stone-500'>Secure Checkout</span>
+                  <span className='text-[11px] tracking-wide text-stone-500'>
+                    Secure Checkout
+                  </span>
                 </div>
                 <div className='flex items-center gap-1.5'>
                   <Truck className='h-3.5 w-3.5 text-stone-400' />
-                  <span className='text-[11px] tracking-wide text-stone-500'>Fast Delivery</span>
+                  <span className='text-[11px] tracking-wide text-stone-500'>
+                    Fast Delivery
+                  </span>
                 </div>
                 <div className='flex items-center gap-1.5'>
                   <RotateCcw className='h-3.5 w-3.5 text-stone-400' />
-                  <span className='text-[11px] tracking-wide text-stone-500'>Easy Returns</span>
+                  <span className='text-[11px] tracking-wide text-stone-500'>
+                    Easy Returns
+                  </span>
                 </div>
               </div>
 
@@ -441,17 +532,25 @@ export function CartPageModernTemplate({
 
               {/* Payment logos */}
               <div className='pt-2 border-t flex items-center justify-center gap-2 flex-wrap'>
-                <span className='text-xs text-muted-foreground mr-1'>We accept</span>
-                <span className='inline-flex items-center px-2 py-0.5 rounded border text-xs font-bold text-blue-700 bg-white border-blue-200'>VISA</span>
-                <span className='inline-flex items-center px-2 py-0.5 rounded border text-xs font-bold bg-white border-gray-200'>
-                  <span className='text-red-500'>●</span><span className='text-yellow-500 -ms-1'>●</span>
+                <span className='text-xs text-muted-foreground mr-1'>
+                  We accept
                 </span>
-                <span className='inline-flex items-center px-2 py-0.5 rounded border text-xs font-bold text-green-700 bg-white border-green-200'>meeza</span>
-                <span className='inline-flex items-center px-2 py-0.5 rounded border text-xs font-bold bg-white border-gray-200'>🍎 Pay</span>
+                <span className='inline-flex items-center px-2 py-0.5 rounded border text-xs font-bold text-blue-700 bg-white border-blue-200'>
+                  VISA
+                </span>
+                <span className='inline-flex items-center px-2 py-0.5 rounded border text-xs font-bold bg-white border-gray-200'>
+                  <span className='text-red-500'>●</span>
+                  <span className='text-yellow-500 -ms-1'>●</span>
+                </span>
+                <span className='inline-flex items-center px-2 py-0.5 rounded border text-xs font-bold text-green-700 bg-white border-green-200'>
+                  meeza
+                </span>
+                <span className='inline-flex items-center px-2 py-0.5 rounded border text-xs font-bold bg-white border-gray-200'>
+                  🍎 Pay
+                </span>
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>
