@@ -129,6 +129,7 @@ export function CheckoutPageModernTemplate({
   });
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [notesOpen, setNotesOpen] = useState(false);
 
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -395,28 +396,30 @@ export function CheckoutPageModernTemplate({
               </div>
             </div>
 
-            {/* 3. Order Notes */}
+            {/* Order Notes — inline collapsible, not numbered */}
+            <div className='px-1'>
+              {!notesOpen ? (
+                <button
+                  type='button'
+                  onClick={() => setNotesOpen(true)}
+                  className='text-sm text-stone-500 hover:text-stone-700 underline underline-offset-4'>
+                  + Add special instructions (optional)
+                </button>
+              ) : (
+                <Textarea
+                  placeholder={t("checkout.notes_placeholder") || "Any special instructions for your order\u2026"}
+                  value={form.notes}
+                  onChange={(e) => updateField("notes", e.target.value)}
+                  rows={3}
+                />
+              )}
+            </div>
+
+            {/* 3. Payment Method */}
             <div className='border rounded-2xl p-6'>
               <div className='flex items-center justify-between mb-5'>
                 <div className='flex items-center gap-3'>
                   <SectionNum n={3} />
-                  <h2 className='font-bold text-base'>{t("checkout.order_notes") || "Order Notes (Optional)"}</h2>
-                </div>
-                <FileText className='w-5 h-5 text-muted-foreground' />
-              </div>
-              <Textarea
-                placeholder={t("checkout.notes_placeholder") || "Any special instructions for your order?"}
-                value={form.notes}
-                onChange={(e) => updateField("notes", e.target.value)}
-                rows={3}
-              />
-            </div>
-
-            {/* 4. Payment Method */}
-            <div className='border rounded-2xl p-6'>
-              <div className='flex items-center justify-between mb-5'>
-                <div className='flex items-center gap-3'>
-                  <SectionNum n={4} />
                   <h2 className='font-bold text-base'>{t("checkout.payment_method") || "Payment Method"}</h2>
                 </div>
                 <Lock className='w-5 h-5 text-muted-foreground' />

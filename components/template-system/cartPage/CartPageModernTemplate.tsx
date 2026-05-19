@@ -74,11 +74,27 @@ export function CartPageModernTemplate({
   onProceedToCheckout,
 }: CartPageModernTemplateProps) {
   const [couponCode, setCouponCode] = React.useState("");
+  const [isFirstTimeVisitor, setIsFirstTimeVisitor] = React.useState(false);
   const { t } = useMinimalI18n();
+
+  // Pre-fill WELCOME15 for first-time visitors (no `perce_returning_user` flag yet).
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const isReturning = localStorage.getItem("perce_returning_user");
+    if (!isReturning) {
+      setIsFirstTimeVisitor(true);
+      setCouponCode((prev) => (prev ? prev : "WELCOME15"));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleApplyCoupon = () => {
     if (couponCode.trim() && onApplyCoupon) {
       onApplyCoupon(couponCode);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("perce_returning_user", "true");
+      }
+      setIsFirstTimeVisitor(false);
       setCouponCode("");
     }
   };
@@ -261,8 +277,17 @@ export function CartPageModernTemplate({
                 <div className='flex items-center gap-3 shrink-0'>
                   <Tag className='w-5 h-5 text-muted-foreground' />
                   <div>
-                    <p className='font-semibold text-sm'>{t("cart.coupon_code") || "Have a coupon code?"}</p>
-                    <p className='text-xs text-muted-foreground'>{t("cart.coupon_desc") || "Add your code for instant savings"}</p>
+                    {isFirstTimeVisitor ? (
+                      <p className='font-semibold text-sm'>
+                        First time? Add code{" "}
+                        <span className='font-bold'>WELCOME15</span> for 15% off your first piece
+                      </p>
+                    ) : (
+                      <>
+                        <p className='font-semibold text-sm'>{t("cart.coupon_code") || "Have a coupon code?"}</p>
+                        <p className='text-xs text-muted-foreground'>{t("cart.coupon_desc") || "Add your code for instant savings"}</p>
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className='flex gap-2 flex-1 w-full sm:w-auto'>
@@ -371,6 +396,22 @@ export function CartPageModernTemplate({
                   </span>
                 </div>
               )}
+
+              {/* Trust signals — directly above Proceed to Checkout */}
+              <div className='flex flex-wrap items-center justify-center gap-4 sm:gap-6 border-t border-stone-100 pt-4'>
+                <div className='flex items-center gap-1.5'>
+                  <Lock className='h-3.5 w-3.5 text-stone-400' />
+                  <span className='text-[11px] tracking-wide text-stone-500'>Secure Checkout</span>
+                </div>
+                <div className='flex items-center gap-1.5'>
+                  <Truck className='h-3.5 w-3.5 text-stone-400' />
+                  <span className='text-[11px] tracking-wide text-stone-500'>Fast Delivery</span>
+                </div>
+                <div className='flex items-center gap-1.5'>
+                  <RotateCcw className='h-3.5 w-3.5 text-stone-400' />
+                  <span className='text-[11px] tracking-wide text-stone-500'>Easy Returns</span>
+                </div>
+              </div>
 
               {/* Proceed button */}
               <Button
