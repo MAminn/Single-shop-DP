@@ -272,12 +272,12 @@ export function LandingTemplateMinimal({
   }));
 
   return (
-    <div className={`landing-template-minimal bg-white ${className}`}>
+    <div className={`landing-template-minimal overflow-x-hidden bg-white ${className}`}>
       {/* ═══════════════════════════════════════════════
           2. HERO IMAGE CAROUSEL
           ═══════════════════════════════════════════════ */}
       {content.hero.enabled && heroSlides.length > 0 ? (
-        <HeroCarousel slides={heroSlides} interval={5000} />
+        <HeroCarousel slides={heroSlides} interval={5000} className="h-fit mt-24" />
       ) : content.hero.enabled ? (
         /* Fallback: text-only hero when no images are uploaded */
         <section className='relative min-h-[50vh] flex items-center justify-center bg-stone-100'>
