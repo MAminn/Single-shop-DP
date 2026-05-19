@@ -24,6 +24,7 @@ import {
   ChevronDown,
   ZoomIn,
 } from "lucide-react";
+import { showCartToast } from "#root/components/ui/cart-toast";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -520,7 +521,18 @@ export function ProductPagePerce({
     product.variants.every((v) => selectedVariants[v.name]);
 
   // ── Handlers
-  const handleAddToCart = () => onAddToCart?.(product, selectedVariants);
+  const handleAddToCart = () => {
+    // IMPORTANT: invoke parent first so the Meta Pixel `AddToCart` event
+    // fires upstream BEFORE the visual toast is shown.
+    onAddToCart?.(product, selectedVariants);
+    showCartToast({
+      name: product.name,
+      price: hasDiscount
+        ? Number(product.discountPrice)
+        : Number(product.price),
+      imageUrl: product.imageUrl || product.images?.[0]?.url || "",
+    });
+  };
   const handleWishlist = () => onAddToWishlist?.(product);
 
   if (isLoading) return <Skeleton />;
@@ -642,7 +654,7 @@ export function ProductPagePerce({
               )}
 
               {/* Price */}
-              <div className='mb-3 sm:mb-5 flex items-baseline gap-2.5'>
+              <div className='mb-1 flex items-baseline gap-2.5'>
                 <span className='text-base sm:text-lg font-light tracking-wide text-stone-900'>
                   EGP {Number(displayPrice).toFixed(2)}
                 </span>
@@ -652,6 +664,11 @@ export function ProductPagePerce({
                   </span>
                 )}
               </div>
+
+              {/* Shipping transparency (display-only) */}
+              <p className='mb-3 sm:mb-5 text-[11px] sm:text-xs text-stone-400 tracking-wide'>
+                + EGP 45 standard shipping · Free above EGP 300
+              </p>
 
               {/* Availability */}
               <div className='mb-3 sm:mb-5 flex items-center gap-2'>
@@ -880,7 +897,9 @@ export function ProductPagePerce({
           <button
             type='button'
             onClick={handleAddToCart}
-            disabled={!product.available || product.stock === 0 || !allVariantsSelected}
+            disabled={
+              !product.available || product.stock === 0 || !allVariantsSelected
+            }
             className='flex h-11 items-center justify-center gap-2 rounded-lg bg-stone-800 px-6 text-[11px] font-normal uppercase tracking-[0.15em] text-stone-100 transition-colors hover:bg-stone-700 disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-stone-400'>
             <ShoppingCart size={14} strokeWidth={1.5} />
             Add to Bag

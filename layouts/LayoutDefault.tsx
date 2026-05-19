@@ -248,7 +248,7 @@ function LayoutShell({
               children
             )}
             {!isDashboardRoute && <GlobalFooter />}
-            {isMinimal && !isDashboardRoute && <CartToastContainer />}
+            {!isDashboardRoute && <CartToastContainer />}
             <Toaster />
             <ShadcnToaster />
             {/* Phase 3 — page-transition overlay (CSS-only, SSR-inert) */}
