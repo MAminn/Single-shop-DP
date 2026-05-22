@@ -99,7 +99,7 @@ export default function OrderHistoryPage() {
       .query({ limit: 50, offset: 0 })
       .then((res: any) => {
         if (res.success) {
-          setOrders(res.result ?? []);
+          setOrders(res.result?.items ?? []);
         } else {
           setError(res.error ?? "Failed to load orders");
         }

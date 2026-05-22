@@ -1,10 +1,12 @@
 import { query } from "#root/shared/database/drizzle/db";
 import {
+  file,
   order,
   orderItem,
+  product,
   user,
 } from "#root/shared/database/drizzle/schema";
-import { and, desc, eq, inArray, type SQL } from "drizzle-orm";
+import { and, count, desc, eq, type SQL } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 import type { ClientSession } from "#root/backend/auth/shared/entities";
@@ -60,11 +62,22 @@ export const viewOrders = (
               .execute();
 
             if (userResult.length === 0 || !userResult[0]?.id) {
-              return [];
+              return { items: [], total: 0 };
             }
 
             conditions.push(eq(order.userId, userResult[0].id));
           }
+
+          const whereClause =
+            conditions.length > 0 ? and(...conditions) : undefined;
+
+          const totalResult = await tx
+            .select({ count: count() })
+            .from(order)
+            .where(whereClause)
+            .execute();
+
+          const total = totalResult[0]?.count ?? 0;
 
           const orders = await tx
             .select({
@@ -89,7 +102,7 @@ export const viewOrders = (
               updatedAt: order.updatedAt,
             })
             .from(order)
-            .where(conditions.length > 0 ? and(...conditions) : undefined)
+            .where(whereClause)
             .orderBy(desc(order.createdAt))
             .limit(limit)
             .offset(offset)
@@ -107,19 +120,32 @@ export const viewOrders = (
                   price: orderItem.price,
                   discountPrice: orderItem.discountPrice,
                   name: orderItem.name,
+                  productImageDiskname: file.diskname,
                 })
                 .from(orderItem)
+                .leftJoin(product, eq(orderItem.productId, product.id))
+                .leftJoin(file, eq(product.imageId, file.id))
                 .where(eq(orderItem.orderId, orderData.id))
                 .execute();
 
+              const itemsWithImage = items.map((it) => {
+                const { productImageDiskname, ...rest } = it;
+                return {
+                  ...rest,
+                  productImage: productImageDiskname
+                    ? `/uploads/${productImageDiskname}`
+                    : null,
+                };
+              });
+
               return {
                 ...orderData,
-                items,
+                items: itemsWithImage,
               };
             }),
           );
 
-          return ordersWithItems;
+          return { items: ordersWithItems, total };
         });
       }),
     );
