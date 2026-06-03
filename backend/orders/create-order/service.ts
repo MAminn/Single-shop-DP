@@ -6,8 +6,9 @@ import {
   user,
   type orderStatus,
   promoCode,
+  cartOffer,
 } from "#root/shared/database/drizzle/schema";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 import type { ClientSession } from "#root/backend/auth/shared/entities";
@@ -19,6 +20,7 @@ import { MinimalOrderEmailTemplate } from "#root/backend/emails/minimal/order-co
 import { getEmailBranding } from "#root/backend/emails/branding";
 import axios from "axios";
 import { validatePromoCode } from "#root/backend/promo-codes/validate-promo-code/validate-promo-code";
+import { applyOffersToCart } from "#root/backend/offers/service";
 import { getStoreOwnerId } from "#root/shared/config/store";
 import { getShippingFeeRaw } from "#root/backend/settings/get-shipping-fee";
 
@@ -431,9 +433,44 @@ export const createOrder = (
             }
           }
 
-          const discountedSubtotal = subtotal - discount;
+          // ─── Evaluate automatic cart offers server-side ───────────────────────
+          const now = new Date();
+          const activeOffers = await tx
+            .select()
+            .from(cartOffer)
+            .where(
+              and(
+                eq(cartOffer.isActive, true),
+                or(isNull(cartOffer.startsAt), lte(cartOffer.startsAt, now)),
+                or(isNull(cartOffer.endsAt), gte(cartOffer.endsAt, now)),
+              ),
+            )
+            .orderBy(asc(cartOffer.priority))
+            .execute();
+
+          const cartItemsForOffers = input.items
+            .map((item) => {
+              const p = products.find((prod) => prod.id === item.productId);
+              if (!p) return null;
+              const price = p.discountPrice
+                ? Number.parseFloat(p.discountPrice.toString())
+                : Number.parseFloat(p.price.toString());
+              return { id: item.productId, name: p.name, quantity: item.quantity, price };
+            })
+            .filter(
+              (i): i is { id: string; name: string; quantity: number; price: number } =>
+                i !== null,
+            );
+
+          const appliedOffers = applyOffersToCart(activeOffers, cartItemsForOffers, subtotal);
+          const offerDiscount = appliedOffers.reduce((s, o) => s + o.discountAmount, 0);
+          const hasFreeShippingFromOffer = appliedOffers.some((o) => o.freeShipping);
+          const effectiveShipping = hasFreeShippingFromOffer ? 0 : shipping;
+
+          const combinedDiscount = discount + offerDiscount;
+          const discountedSubtotal = subtotal - combinedDiscount;
           // Ensure shipping is included in the total (no tax)
-          const total = discountedSubtotal + shipping;
+          const total = Math.max(0, discountedSubtotal) + effectiveShipping;
 
           // Only include fields directly provided or calculated
           const isOnlinePayment =
@@ -450,9 +487,9 @@ export const createOrder = (
             shippingPostalCode: input.shippingPostalCode,
             shippingCountry: input.shippingCountry,
             subtotal: subtotal.toString(),
-            discount: discount > 0 ? discount.toString() : null,
+            discount: combinedDiscount > 0 ? combinedDiscount.toString() : null,
             promoCodeId: input.promoCodeId || null,
-            shipping: shipping.toString(),
+            shipping: effectiveShipping.toString(),
             tax: "0",
             total: total.toString(),
             notes: input.notes,

@@ -170,6 +170,47 @@ function rewardLabel(reward: OfferReward): string {
   }
 }
 
+// ─── Pure evaluation helper (no Effect, usable inside DB transactions) ───────
+
+/**
+ * Evaluate which offers apply to the given cart. Accepts pre-fetched offer rows
+ * so callers (e.g. order creation) can run this inside an existing transaction
+ * without needing to compose Effects.
+ */
+export function applyOffersToCart(
+  offers: CartOfferRow[],
+  cartItems: CartItemInput[],
+  subtotal: number,
+): AppliedOffer[] {
+  const applied: AppliedOffer[] = [];
+  let exclusiveTriggered = false;
+
+  for (const offer of offers) {
+    if (exclusiveTriggered) break;
+    if (!conditionMet(offer.condition as OfferCondition, cartItems, subtotal)) continue;
+
+    const { discountAmount, freeShipping } = computeDiscount(
+      offer.reward as OfferReward,
+      cartItems,
+      subtotal,
+    );
+
+    applied.push({
+      id: offer.id,
+      name: offer.name,
+      description: offer.description,
+      reward: offer.reward as OfferReward,
+      discountAmount,
+      freeShipping,
+      label: rewardLabel(offer.reward as OfferReward),
+    });
+
+    if (offer.isExclusive) exclusiveTriggered = true;
+  }
+
+  return applied;
+}
+
 // ─── Effect services ──────────────────────────────────────────────────────────
 
 /** Returns all active, non-expired offers ordered by priority. */
