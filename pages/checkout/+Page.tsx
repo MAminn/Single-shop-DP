@@ -83,6 +83,22 @@ export default function CheckoutPage() {
     Array<{ id: string; label: string; description: string }>
   >([]);
   const [paymentMethodsLoading, setPaymentMethodsLoading] = useState(true);
+  const [bostaShippingEnabled, setBostaShippingEnabled] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await trpc.order.bosta.checkoutIsEnabled.query();
+        if (!cancelled) setBostaShippingEnabled(!!res.enabled);
+      } catch {
+        if (!cancelled) setBostaShippingEnabled(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -233,6 +249,7 @@ export default function CheckoutPage() {
         notes: formValues.notes || undefined,
         promoCodeId: promoCode?.id,
         paymentMethod: selectedPaymentMethod as "cod" | "stripe" | "paymob",
+        bostaDistrictId: formValues.bostaDistrictId || undefined,
       });
 
       if (!result.success) {
@@ -340,6 +357,7 @@ export default function CheckoutPage() {
     currency: STORE_CURRENCY,
     paymentMethods,
     paymentMethodsLoading,
+    bostaShippingEnabled,
   };
 
   return <Template.component {...templateProps} />;

@@ -33,6 +33,7 @@ export interface CheckoutPageEditorialTemplateProps {
   currency?: string;
   paymentMethods?: PaymentMethodOption[];
   paymentMethodsLoading?: boolean;
+  bostaShippingEnabled?: boolean;
 }
 
 /* ------------------------------------------------------------------ */

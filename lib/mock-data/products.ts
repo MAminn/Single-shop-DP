@@ -22,6 +22,8 @@ export interface Product {
   available?: boolean;
   categoryId?: string;
   vendorName?: string;
+  /** Original price before any discount (used to show strikethrough in cart) */
+  originalPrice?: number;
 }
 
 export interface Variant {

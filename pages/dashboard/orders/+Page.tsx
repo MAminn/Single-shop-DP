@@ -60,6 +60,10 @@ import {
   Loader2,
   Trash2,
   X,
+  Truck,
+  ExternalLink,
+  Send,
+  XCircle,
 } from "lucide-react";
 import { usePageContext } from "vike-react/usePageContext";
 import { trpc } from "#root/shared/trpc/client";
@@ -96,6 +100,16 @@ interface Order {
   createdAt: Date;
   updatedAt: Date | null;
   items: OrderItem[];
+  // Bosta fields (present only when SYN_BOSTA_KEY is configured)
+  bostaDeliveryId?: string | null;
+  bostaTrackingNumber?: string | null;
+  bostaStatus?: string | null;
+  bostaStatusCode?: string | null;
+  bostaStatusUpdatedAt?: Date | null;
+  bostaSyncStatus?: string | null;
+  bostaSyncError?: string | null;
+  bostaSyncedAt?: Date | null;
+  bostaSyncAttemptedAt?: Date | null;
 }
 
 export default function Orders() {
@@ -114,6 +128,8 @@ export default function Orders() {
   const [error, setError] = useState<string | null>(null);
 
   const [orderToDeleteId, setOrderToDeleteId] = useState<string | null>(null);
+  const [bostaActionLoading, setBostaActionLoading] = useState<string | null>(null); // orderId being acted on
+  const [bostaEnabled, setBostaEnabled] = useState(false);
 
   const pageSize = 20;
   const [page, setPage] = useState(1);
@@ -128,6 +144,17 @@ export default function Orders() {
     mq.addEventListener("change", update);
     return () => mq.removeEventListener("change", update);
   }, []);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    trpc.order.bosta.isEnabled.query()
+      .then((res) => {
+        if (res.success && res.result) {
+          setBostaEnabled((res.result as { enabled: boolean }).enabled);
+        }
+      })
+      .catch(() => {});
+  }, [isAdmin]);
 
   // Reset to page 1 when filters change
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional
@@ -236,6 +263,46 @@ export default function Orders() {
     }
   };
 
+  const sendOrderToBosta = async (orderId: string) => {
+    setBostaActionLoading(orderId);
+    try {
+      const result = await trpc.order.bosta.sendOrder.mutate({ orderId });
+      if (result.success) {
+        toast({ title: "Sent to Bosta", description: `Tracking: ${(result.result as { trackingNumber: string })?.trackingNumber ?? "—"}` });
+        fetchOrders();
+        // Refresh selected order data
+        const updated = await trpc.order.view.query({ limit: 1, offset: 0 });
+        void updated;
+        fetchOrders();
+      } else {
+        toast({ title: "Bosta Error", description: result.error ?? "Failed to send order to Bosta", variant: "destructive" });
+      }
+    } catch (err) {
+      toast({ title: "Error", description: "Could not send to Bosta", variant: "destructive" });
+      console.error(err);
+    } finally {
+      setBostaActionLoading(null);
+    }
+  };
+
+  const cancelBostaDelivery = async (orderId: string) => {
+    setBostaActionLoading(orderId);
+    try {
+      const result = await trpc.order.bosta.cancelDelivery.mutate({ orderId });
+      if (result.success) {
+        toast({ title: "Bosta Delivery Cancelled" });
+        fetchOrders();
+      } else {
+        toast({ title: "Bosta Error", description: result.error ?? "Failed to cancel Bosta delivery", variant: "destructive" });
+      }
+    } catch (err) {
+      toast({ title: "Error", description: "Could not cancel Bosta delivery", variant: "destructive" });
+      console.error(err);
+    } finally {
+      setBostaActionLoading(null);
+    }
+  };
+
   const confirmDeleteOrder = async () => {
     if (!orderToDeleteId) return;
 
@@ -299,6 +366,43 @@ export default function Orders() {
       default:
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+  const getBostaSyncBadge = (order: Order) => {
+    const status = order.bostaSyncStatus;
+    if (!status) {
+      return (
+        <span className="text-xs text-muted-foreground">—</span>
+      );
+    }
+
+    const labels: Record<string, { className: string; label: string }> = {
+      sent: { className: "bg-green-100 text-green-800 border-green-200", label: "Sent" },
+      failed: { className: "bg-red-100 text-red-800 border-red-200", label: "Failed" },
+      pending: { className: "bg-yellow-100 text-yellow-800 border-yellow-200", label: "Pending" },
+      skipped: { className: "bg-gray-100 text-gray-600 border-gray-200", label: "Skipped" },
+      cancelled: { className: "bg-gray-100 text-gray-700 border-gray-200", label: "Cancelled" },
+    };
+
+    const cfg = labels[status] ?? { className: "bg-gray-100 text-gray-800", label: status };
+
+    return (
+      <div className="flex flex-col gap-0.5 items-start">
+        <Badge variant="outline" className={`text-[10px] ${cfg.className}`} title={order.bostaSyncError ?? undefined}>
+          {cfg.label}
+        </Badge>
+        {status === "failed" && order.bostaSyncError && (
+          <span className="text-[10px] text-red-600 line-clamp-2 max-w-[140px]" title={order.bostaSyncError}>
+            {order.bostaSyncError}
+          </span>
+        )}
+        {status === "sent" && order.bostaTrackingNumber && (
+          <span className="text-[10px] font-mono text-muted-foreground">
+            {order.bostaTrackingNumber}
+          </span>
+        )}
+      </div>
+    );
   };
 
   const formatDate = (date: Date) => {
@@ -450,6 +554,9 @@ export default function Orders() {
                         <TableHead>Items</TableHead>
                         <TableHead>Total</TableHead>
                         <TableHead>Status</TableHead>
+                        {bostaEnabled && isAdmin && (
+                          <TableHead>Bosta</TableHead>
+                        )}
                         <TableHead className='text-right'>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -491,6 +598,11 @@ export default function Orders() {
                                 order.status.slice(1)}
                             </Badge>
                           </TableCell>
+                          {bostaEnabled && isAdmin && (
+                            <TableCell className='py-2'>
+                              {getBostaSyncBadge(order)}
+                            </TableCell>
+                          )}
                           <TableCell className='text-right py-2'>
                             <div className='flex items-center gap-2 justify-end'>
                               <Button
@@ -545,14 +657,15 @@ export default function Orders() {
                         {" · "}
                         {Number.parseFloat(order.total).toFixed(2)} EGP
                       </div>
-                      <div className='mt-2 flex items-center justify-between'>
+                      <div className='mt-2 flex items-center justify-between gap-2 flex-wrap'>
                         <Badge
                           variant='outline'
                           className={getStatusColor(order.status)}>
                           {order.status.charAt(0).toUpperCase() +
                             order.status.slice(1)}
                         </Badge>
-                        <div className='flex items-center gap-1'>
+                        {bostaEnabled && isAdmin && getBostaSyncBadge(order)}
+                        <div className='flex items-center gap-1 ml-auto'>
                           <Button
                             variant='ghost'
                             size='sm'
@@ -809,6 +922,123 @@ export default function Orders() {
                   </div>
                 </div>
 
+                {/* ── Bosta Delivery Panel ── */}
+                {bostaEnabled && isAdmin && (
+                  <div className='my-4 border-t pt-4'>
+                    <div className='flex items-center justify-between mb-3'>
+                      <h3 className='font-medium text-sm flex items-center gap-2'>
+                        <Truck className='w-4 h-4 text-orange-500' />
+                        Bosta Delivery
+                      </h3>
+                      <div className='flex items-center gap-2'>
+                        {selectedOrder.bostaSyncStatus !== "sent" && !selectedOrder.bostaDeliveryId ? (
+                          <Button
+                            size='sm'
+                            variant='outline'
+                            className='h-7 text-xs gap-1'
+                            disabled={bostaActionLoading === selectedOrder.id}
+                            onClick={() => sendOrderToBosta(selectedOrder.id)}>
+                            {bostaActionLoading === selectedOrder.id ? (
+                              <Loader2 className='w-3 h-3 animate-spin' />
+                            ) : (
+                              <Send className='w-3 h-3' />
+                            )}
+                            Send to Bosta
+                          </Button>
+                        ) : selectedOrder.bostaDeliveryId ? (
+                          <Button
+                            size='sm'
+                            variant='outline'
+                            className='h-7 text-xs gap-1 text-destructive hover:text-destructive'
+                            disabled={bostaActionLoading === selectedOrder.id}
+                            onClick={() => cancelBostaDelivery(selectedOrder.id)}>
+                            {bostaActionLoading === selectedOrder.id ? (
+                              <Loader2 className='w-3 h-3 animate-spin' />
+                            ) : (
+                              <XCircle className='w-3 h-3' />
+                            )}
+                            Cancel Delivery
+                          </Button>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    {/* Sync audit trail */}
+                    <div className='mb-3 rounded-lg border bg-muted/30 p-3 space-y-2 text-sm'>
+                      <div className='flex items-center justify-between'>
+                        <span className='text-muted-foreground font-medium'>Sync status</span>
+                        {getBostaSyncBadge(selectedOrder)}
+                      </div>
+                      {selectedOrder.bostaSyncAttemptedAt && (
+                        <div className='flex items-center justify-between'>
+                          <span className='text-muted-foreground font-medium'>Last attempt</span>
+                          <span className='text-xs text-muted-foreground'>
+                            {new Date(selectedOrder.bostaSyncAttemptedAt).toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                      {selectedOrder.bostaSyncedAt && (
+                        <div className='flex items-center justify-between'>
+                          <span className='text-muted-foreground font-medium'>Sent at</span>
+                          <span className='text-xs text-muted-foreground'>
+                            {new Date(selectedOrder.bostaSyncedAt).toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                      {selectedOrder.bostaSyncError && (
+                        <div className='rounded-md bg-red-50 border border-red-100 p-2 text-xs text-red-700 break-words'>
+                          <span className='font-semibold'>Error: </span>
+                          {selectedOrder.bostaSyncError}
+                        </div>
+                      )}
+                    </div>
+
+                    {selectedOrder.bostaTrackingNumber ? (
+                      <div className='bg-orange-50 border border-orange-100 rounded-lg p-3 space-y-2 text-sm'>
+                        <div className='flex items-center justify-between'>
+                          <span className='text-muted-foreground font-medium'>Tracking #</span>
+                          <div className='flex items-center gap-1.5'>
+                            <span className='font-mono font-semibold text-orange-700'>
+                              {selectedOrder.bostaTrackingNumber}
+                            </span>
+                            <a
+                              href={`https://bosta.co/tracking-shipment?track=${selectedOrder.bostaTrackingNumber}&lang=en`}
+                              target='_blank'
+                              rel='noopener noreferrer'
+                              className='text-orange-500 hover:text-orange-700'>
+                              <ExternalLink className='w-3.5 h-3.5' />
+                            </a>
+                          </div>
+                        </div>
+                        {selectedOrder.bostaStatus && (
+                          <div className='flex items-center justify-between'>
+                            <span className='text-muted-foreground font-medium'>Delivery status</span>
+                            <Badge className='bg-orange-100 text-orange-800 border-orange-200 text-xs'>
+                              {selectedOrder.bostaStatus.replace(/_/g, " ")}
+                            </Badge>
+                          </div>
+                        )}
+                        {selectedOrder.bostaStatusUpdatedAt && (
+                          <div className='flex items-center justify-between'>
+                            <span className='text-muted-foreground font-medium'>Status updated</span>
+                            <span className='text-xs text-muted-foreground'>
+                              {new Date(selectedOrder.bostaStatusUpdatedAt).toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className='text-sm text-muted-foreground'>
+                        {selectedOrder.bostaSyncStatus === "failed"
+                          ? "Last send attempt failed — use the button above to retry."
+                          : selectedOrder.bostaSyncStatus === "skipped"
+                            ? "Auto-send was skipped for this order (e.g. online payment pending)."
+                            : "No Bosta delivery created yet. Use the button above to push this order."}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {selectedOrder.notes && (
                   <div className='my-4 border-t pt-4'>
                     <h3 className='font-medium text-sm mb-2'>Order Notes</h3>
@@ -1004,6 +1234,75 @@ export default function Orders() {
                       </div>
                     </div>
                   </div>
+
+                  {/* ── Bosta Delivery Panel (mobile sheet) ── */}
+                  {bostaEnabled && isAdmin && (
+                    <div>
+                      <div className='flex items-center justify-between mb-2'>
+                        <h3 className='font-medium text-sm flex items-center gap-2'>
+                          <Truck className='w-4 h-4 text-orange-500' />
+                          Bosta Delivery
+                        </h3>
+                        {selectedOrder.bostaSyncStatus !== "sent" && !selectedOrder.bostaDeliveryId ? (
+                          <Button
+                            size='sm'
+                            variant='outline'
+                            className='h-7 text-xs gap-1'
+                            disabled={bostaActionLoading === selectedOrder.id}
+                            onClick={() => sendOrderToBosta(selectedOrder.id)}>
+                            {bostaActionLoading === selectedOrder.id ? <Loader2 className='w-3 h-3 animate-spin' /> : <Send className='w-3 h-3' />}
+                            Send
+                          </Button>
+                        ) : selectedOrder.bostaDeliveryId ? (
+                          <Button
+                            size='sm'
+                            variant='outline'
+                            className='h-7 text-xs gap-1 text-destructive hover:text-destructive'
+                            disabled={bostaActionLoading === selectedOrder.id}
+                            onClick={() => cancelBostaDelivery(selectedOrder.id)}>
+                            {bostaActionLoading === selectedOrder.id ? <Loader2 className='w-3 h-3 animate-spin' /> : <XCircle className='w-3 h-3' />}
+                            Cancel
+                          </Button>
+                        ) : null}
+                      </div>
+
+                      <div className='mb-2 rounded-lg border bg-muted/30 p-3 space-y-2 text-sm'>
+                        <div className='flex items-center justify-between'>
+                          <span className='text-muted-foreground'>Sync status</span>
+                          {getBostaSyncBadge(selectedOrder)}
+                        </div>
+                        {selectedOrder.bostaSyncError && (
+                          <p className='text-xs text-red-700 break-words'>{selectedOrder.bostaSyncError}</p>
+                        )}
+                      </div>
+
+                      {selectedOrder.bostaTrackingNumber ? (
+                        <div className='bg-orange-50 border border-orange-100 rounded-lg p-3 space-y-2 text-sm'>
+                          <div className='flex items-center justify-between'>
+                            <span className='text-muted-foreground'>Tracking #</span>
+                            <div className='flex items-center gap-1.5'>
+                              <span className='font-mono font-semibold text-orange-700'>{selectedOrder.bostaTrackingNumber}</span>
+                              <a href={`https://bosta.co/tracking-shipment?track=${selectedOrder.bostaTrackingNumber}&lang=en`} target='_blank' rel='noopener noreferrer' className='text-orange-500'>
+                                <ExternalLink className='w-3.5 h-3.5' />
+                              </a>
+                            </div>
+                          </div>
+                          {selectedOrder.bostaStatus && (
+                            <div className='flex items-center justify-between'>
+                              <span className='text-muted-foreground'>Delivery status</span>
+                              <Badge className='bg-orange-100 text-orange-800 border-orange-200 text-xs'>{selectedOrder.bostaStatus.replace(/_/g, " ")}</Badge>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <p className='text-sm text-muted-foreground'>
+                          {selectedOrder.bostaSyncStatus === "failed"
+                            ? "Last send failed — tap Send to retry."
+                            : "Not sent to Bosta yet."}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {selectedOrder.notes && (
                     <div>

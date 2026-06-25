@@ -435,6 +435,27 @@ export const order = pgTable("order", {
     mode: "date",
   }),
   fincartWebhookData: jsonb("fincart_webhook_data"),
+  // Bosta integration fields (only populated when SYN_BOSTA_KEY is configured)
+  bostaDeliveryId: text("bosta_delivery_id"),
+  bostaTrackingNumber: text("bosta_tracking_number"),
+  bostaStatus: text("bosta_status"),
+  bostaStatusCode: text("bosta_status_code"),
+  bostaWebhookData: jsonb("bosta_webhook_data"),
+  bostaStatusUpdatedAt: timestamp("bosta_status_updated_at", {
+    withTimezone: true,
+    mode: "date",
+  }),
+  /** sent | failed | pending | skipped | cancelled — null when Bosta not used */
+  bostaSyncStatus: text("bosta_sync_status"),
+  bostaSyncError: text("bosta_sync_error"),
+  bostaSyncedAt: timestamp("bosta_synced_at", {
+    withTimezone: true,
+    mode: "date",
+  }),
+  bostaSyncAttemptedAt: timestamp("bosta_sync_attempted_at", {
+    withTimezone: true,
+    mode: "date",
+  }),
   archivedAt: timestamp("archived_at", {
     withTimezone: true,
     mode: "date",

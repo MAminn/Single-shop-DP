@@ -3,6 +3,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { runBackendEffect } from "#root/shared/backend/effect";
 import { provideDatabase } from "#root/shared/trpc/server";
 import { fincartWebhookSchema, processFincartWebhook } from "./service";
+import { isFincartEnabled } from "#root/backend/orders/fincart/config";
 import { ServerError } from "#root/shared/error/server";
 
 // Environment variable for webhook secret token — MUST be set in production
@@ -15,6 +16,11 @@ if (!FINCART_WEBHOOK_SECRET) {
 }
 
 export const fincartWebhookPlugin: FastifyPluginAsync = async (fastify) => {
+  if (!isFincartEnabled()) {
+    fastify.log.info("[Fincart Webhook] FINCART_ENABLED is not true — webhook disabled");
+    return;
+  }
+
   fastify.post("/", async (request, reply) => {
     try {
       const log = request.log.child({ module: "fincart-webhook" });

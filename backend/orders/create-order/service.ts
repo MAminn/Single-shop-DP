@@ -23,6 +23,9 @@ import { validatePromoCode } from "#root/backend/promo-codes/validate-promo-code
 import { applyOffersToCart } from "#root/backend/offers/service";
 import { getStoreOwnerId } from "#root/shared/config/store";
 import { getShippingFeeRaw } from "#root/backend/settings/get-shipping-fee";
+import { createBostaDelivery, isBostaEnabled } from "#root/backend/orders/bosta/service";
+import { persistBostaSyncStatus } from "#root/backend/orders/bosta/sync-status";
+import { isFincartEnabled } from "#root/backend/orders/fincart/config";
 
 const OrderItemSchema = z.object({
   productId: z.string().uuid(),
@@ -43,6 +46,8 @@ export const createOrderSchema = z.object({
   notes: z.string().optional(),
   promoCodeId: z.string().uuid().optional(),
   paymentMethod: z.enum(["cod", "stripe", "paymob"]).optional().default("cod"),
+  /** Bosta district ID from checkout location picker (when Bosta is enabled) */
+  bostaDistrictId: z.string().min(1).optional(),
 });
 
 // Manually define the insert type matching the schema's nullability
@@ -107,6 +112,10 @@ interface FincartResponse {
 const sendOrderToFincart = async (
   orderData: FincartOrderData,
 ): Promise<FincartResponse> => {
+  if (!isFincartEnabled()) {
+    return { success: false, error: "Fincart integration is disabled" };
+  }
+
   try {
     const FINCART_API_URL = process.env.FINCART_API_URL;
     const FINCART_API_KEY = process.env.FINCART_API_KEY;
@@ -251,6 +260,63 @@ const sendOrderToFincart = async (
     return { success: false, error };
   }
 };
+
+// ─── Bosta auto-send helper ───────────────────────────────────────────────────
+
+interface CreatedOrder {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingState?: string | null;
+  bostaDistrictId?: string | null;
+  itemsCount?: number;
+  total: string | number;
+  notes?: string | null;
+}
+
+async function autoSendOrderToBosta(orderData: CreatedOrder): Promise<void> {
+  if (!isBostaEnabled()) return;
+
+  await persistBostaSyncStatus(orderData.id, "pending");
+
+  const nameParts = orderData.customerName.trim().split(/\s+/);
+  const firstName = nameParts[0] ?? orderData.customerName;
+  const lastName = nameParts.slice(1).join(" ") || "";
+
+  const outcome = await createBostaDelivery({
+    orderId: orderData.id,
+    receiver: { firstName, lastName, phone: orderData.customerPhone },
+    dropOffAddress: {
+      firstLine: orderData.shippingAddress,
+      city: orderData.shippingCity,
+      zone: orderData.shippingState ?? undefined,
+      districtId: orderData.bostaDistrictId ?? undefined,
+    },
+    cod: Number(orderData.total),
+    notes: orderData.notes,
+    itemsCount: orderData.itemsCount,
+  });
+
+  if (!outcome) return;
+
+  if (outcome.success) {
+    await persistBostaSyncStatus(orderData.id, "sent", {
+      delivery: outcome.result,
+    });
+    console.log(
+      `[Order ${orderData.id}] Bosta delivery created — tracking: ${outcome.result.trackingNumber}`,
+    );
+    return;
+  }
+
+  await persistBostaSyncStatus(orderData.id, "failed", {
+    error: outcome.error,
+  });
+}
+
+// ─── Main create-order service ────────────────────────────────────────────────
 
 export const createOrder = (
   input: z.infer<typeof createOrderSchema>,
@@ -684,10 +750,10 @@ export const createOrder = (
 
     // Single-shop mode: No vendor notifications needed
 
-    // Send order to Fincart (only for COD orders — online payment orders are shipped after payment confirmation)
+    // Send order to Fincart (opt-in via FINCART_ENABLED=true)
     const isOnlinePaymentOrder =
       input.paymentMethod === "stripe" || input.paymentMethod === "paymob";
-    if (!isOnlinePaymentOrder) {
+    if (isFincartEnabled() && !isOnlinePaymentOrder) {
       try {
         // Use Effect to handle the async operation correctly
         yield* $(Effect.promise(() => sendOrderToFincart(result))).pipe(
@@ -707,9 +773,41 @@ export const createOrder = (
       } catch (error) {
         console.error("Exception when sending order to Fincart:", error);
       }
-    } else {
+    } else if (isFincartEnabled() && isOnlinePaymentOrder) {
       console.log(
         `[Order ${result.id}] Online payment (${input.paymentMethod}) — Fincart shipment deferred until payment confirmed`,
+      );
+    }
+
+    // ── Bosta integration (feature-flagged) ──────────────────────────────────
+    // Runs only when SYN_BOSTA_KEY is present. Never throws — a failure here
+    // does NOT abort order creation.
+    if (!isOnlinePaymentOrder) {
+      yield* $(
+        Effect.promise(async () => {
+          try {
+            await autoSendOrderToBosta({
+              ...result,
+              bostaDistrictId: input.bostaDistrictId,
+              itemsCount: input.items.reduce((sum, item) => sum + item.quantity, 0),
+            });
+          } catch (err) {
+            console.error("[Bosta] Auto-send failed (order still created):", err);
+            if (isBostaEnabled()) {
+              await persistBostaSyncStatus(result.id, "failed", {
+                error: err instanceof Error ? err.message : String(err),
+              });
+            }
+          }
+        }),
+      );
+    } else if (isBostaEnabled()) {
+      yield* $(
+        Effect.promise(() =>
+          persistBostaSyncStatus(result.id, "skipped", {
+            error: "Deferred until online payment is confirmed",
+          }),
+        ),
       );
     }
 

@@ -12,6 +12,7 @@ import { auth } from "#root/backend/auth/auth.server.js";
 import { uploadFileApiPlugin } from "#root/backend/file/upload-file/api";
 import { emailServiceMiddleware } from "#root/shared/email/middleware.server";
 import { fincartWebhookPlugin } from "#root/backend/orders/fincart-webhook/api.js";
+import { bostaWebhookPlugin } from "#root/backend/orders/bosta/webhook-api.js";
 import { stripeWebhookPlugin } from "#root/backend/payments/stripe-webhook.js";
 import { paymobWebhookPlugin } from "#root/backend/payments/paymob-webhook.js";
 import { ensureDefaultStoreVendor } from "#root/shared/database/bootstrap.js";
@@ -246,6 +247,11 @@ async function buildServer() {
   // Register Fincart webhook endpoint
   await instance.register(fincartWebhookPlugin, {
     prefix: "/api/webhooks/fincart",
+  });
+
+  // Register Bosta webhook endpoint (no-ops silently if SYN_BOSTA_KEY is not set)
+  await instance.register(bostaWebhookPlugin, {
+    prefix: "/api/webhooks/bosta",
   });
 
   // Register Stripe webhook endpoint (no-ops if Stripe is not configured)

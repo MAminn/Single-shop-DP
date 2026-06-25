@@ -21,6 +21,10 @@ import {
   Gift,
 } from "lucide-react";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
+import {
+  BostaShippingFields,
+  type BostaShippingSelection,
+} from "#root/components/checkout/BostaShippingFields";
 
 /**
  * Customer information interface
@@ -97,6 +101,8 @@ export interface CheckoutPageModernTemplateProps {
   paymentMethods?: PaymentMethodOption[];
   /** Whether payment methods are loading */
   paymentMethodsLoading?: boolean;
+  /** When true, city/zone/district come from Bosta API pickers */
+  bostaShippingEnabled?: boolean;
 }
 
 /**
@@ -117,8 +123,11 @@ export function CheckoutPageModernTemplate({
   currency = "EGP",
   paymentMethods,
   paymentMethodsLoading = false,
+  bostaShippingEnabled = false,
 }: CheckoutPageModernTemplateProps) {
   const { t } = useMinimalI18n();
+  const [bostaSelection, setBostaSelection] =
+    useState<BostaShippingSelection | null>(null);
   const [form, setForm] = useState({
     fullName: customer?.name ?? "",
     email: customer?.email ?? "",
@@ -130,6 +139,7 @@ export function CheckoutPageModernTemplate({
     country: shippingAddress?.country ?? "Egypt",
     notes: "",
     paymentMethod: "cod",
+    bostaDistrictId: "",
   });
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -162,7 +172,16 @@ export function CheckoutPageModernTemplate({
       errors.phoneNumber = t("validation.phone_invalid");
     }
     if (!form.address.trim()) errors.address = t("validation.address_required");
-    if (!form.city.trim()) errors.city = t("validation.city_required");
+    else if (form.address.trim().length < 5) {
+      errors.address = "Please enter a full street address (at least 5 characters)";
+    }
+    if (bostaShippingEnabled) {
+      if (!bostaSelection?.districtId) {
+        errors.bostaDistrict = "Please select city, area, and district";
+      }
+    } else {
+      if (!form.city.trim()) errors.city = t("validation.city_required");
+    }
     if (!form.country.trim()) errors.country = t("validation.country_required");
 
     setFieldErrors(errors);
@@ -183,7 +202,15 @@ export function CheckoutPageModernTemplate({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    onSubmit?.(form);
+    const payload = bostaShippingEnabled && bostaSelection
+      ? {
+          ...form,
+          city: bostaSelection.city,
+          state: bostaSelection.zone,
+          bostaDistrictId: bostaSelection.districtId,
+        }
+      : form;
+    onSubmit?.(payload);
   };
 
   // Resolved payment methods (with COD fallback when none provided)
@@ -360,35 +387,47 @@ export function CheckoutPageModernTemplate({
                   )}
                 </div>
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                  <div className='space-y-1.5'>
-                    <Label htmlFor='city'>
-                      {t("checkout.city") || "City"}{" "}
-                      <span className='text-destructive'>*</span>
-                    </Label>
-                    <Input
-                      id='city'
-                      placeholder='Cairo'
-                      value={form.city}
-                      onChange={(e) => updateField("city", e.target.value)}
-                      className={fieldErrors.city ? "border-destructive" : ""}
-                    />
-                    {fieldErrors.city && (
-                      <p className='text-xs text-destructive'>
-                        {fieldErrors.city}
-                      </p>
-                    )}
-                  </div>
-                  <div className='space-y-1.5'>
-                    <Label htmlFor='state'>
-                      {t("checkout.state") || "State / Governorate"}
-                    </Label>
-                    <Input
-                      id='state'
-                      placeholder='Cairo'
-                      value={form.state}
-                      onChange={(e) => updateField("state", e.target.value)}
-                    />
-                  </div>
+                  {bostaShippingEnabled ? (
+                    <div className='sm:col-span-2'>
+                      <BostaShippingFields
+                        value={bostaSelection}
+                        onChange={setBostaSelection}
+                        error={fieldErrors.bostaDistrict}
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <div className='space-y-1.5'>
+                        <Label htmlFor='city'>
+                          {t("checkout.city") || "City"}{" "}
+                          <span className='text-destructive'>*</span>
+                        </Label>
+                        <Input
+                          id='city'
+                          placeholder='Cairo'
+                          value={form.city}
+                          onChange={(e) => updateField("city", e.target.value)}
+                          className={fieldErrors.city ? "border-destructive" : ""}
+                        />
+                        {fieldErrors.city && (
+                          <p className='text-xs text-destructive'>
+                            {fieldErrors.city}
+                          </p>
+                        )}
+                      </div>
+                      <div className='space-y-1.5'>
+                        <Label htmlFor='state'>
+                          {t("checkout.state") || "State / Governorate"}
+                        </Label>
+                        <Input
+                          id='state'
+                          placeholder='Cairo'
+                          value={form.state}
+                          onChange={(e) => updateField("state", e.target.value)}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className='space-y-1.5'>
                   <Label htmlFor='country'>
