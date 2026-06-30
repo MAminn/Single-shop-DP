@@ -335,7 +335,14 @@ export default function Products() {
                   </TableCell>
                   <TableCell>{product.stock}</TableCell>
                   <TableCell>
-                    {product.stock === 0 ? "Out of Stock" : "In Stock"}
+                    <div className='flex flex-col gap-0.5'>
+                      <span>
+                        {product.stock === 0 ? "Out of Stock" : "In Stock"}
+                      </span>
+                      {product.hidden && (
+                        <span className='text-xs text-amber-600'>Hidden</span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Button
@@ -399,6 +406,7 @@ export default function Products() {
                   : null,
                 inspiredBy: selectedProductData.product.inspiredBy ?? undefined,
                 sortOrder: selectedProductData.product.sortOrder ?? undefined,
+                hidden: selectedProductData.product.hidden ?? false,
                 imageId: selectedProductData.file?.id ?? "",
                 productImages: productImages,
                 categoryIds: selectedProductCategories,

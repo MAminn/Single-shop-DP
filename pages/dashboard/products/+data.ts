@@ -63,6 +63,7 @@ export async function data(ctx: PageContext) {
       // Pass search and sortBy if needed by backend
       search: ctx.urlParsed.search.search,
       sortBy: validatedSortBy, // Pass validated value
+      includeHidden: true,
     }).pipe(Effect.provideService(DatabaseClientService, ctx.db))
   ).then(serializeBackendEffectResult);
 

@@ -35,6 +35,7 @@ import { MultiFileUploadInput } from "#root/components/file-uploads/MultiFileUpl
 
 import { Label } from "#root/components/ui/label";
 import { Badge } from "#root/components/ui/badge";
+import { Switch } from "#root/components/ui/switch";
 import { trpc } from "#root/shared/trpc/client";
 
 // Define the interface to match our component
@@ -66,6 +67,7 @@ export function ProductForm({
     variants: { name: string; values: { value: string; priceModifier?: number }[] }[];
     inspiredBy?: string;
     sortOrder?: number;
+    hidden?: boolean;
   }>;
   categories: { id: string; name: string }[];
   vendors?: { id: string; name: string }[];
@@ -117,6 +119,7 @@ export function ProductForm({
       .optional(),
     inspiredBy: z.string().max(1000).optional(),
     sortOrder: z.coerce.number().int().min(0).optional(),
+    hidden: z.boolean().default(false),
   });
 
   // Debug initial values
@@ -153,6 +156,7 @@ export function ProductForm({
         initialValues?.categoryIds.length > 0
           ? initialValues.categoryIds[0]
           : initialValues?.categoryId || "",
+      hidden: initialValues?.hidden ?? false,
     },
   });
 
@@ -451,6 +455,32 @@ export function ProductForm({
               )}
             />
           </div>
+
+          <FormField
+            control={form.control}
+            name='hidden'
+            render={({ field }) => (
+              <FormItem>
+                <div className='flex items-center justify-between rounded-lg border p-3'>
+                  <div className='space-y-0.5'>
+                    <FormLabel>Hide from shop</FormLabel>
+                    <p className='text-xs text-muted-foreground'>
+                      {field.value
+                        ? "Hidden — customers cannot see or buy this product"
+                        : "Visible — product appears in the shop"}
+                    </p>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}

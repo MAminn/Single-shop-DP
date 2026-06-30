@@ -8,7 +8,12 @@ import { viewProducts, viewProductsSchema } from "./service";
 export const viewProductsProcedure = publicProcedure
 	.input(viewProductsSchema)
 	.query(async ({ ctx, input }) => {
+		const safeInput =
+			input.includeHidden && ctx.clientSession?.role !== "admin"
+				? { ...input, includeHidden: false }
+				: input;
+
 		return await runBackendEffect(
-			viewProducts(input).pipe(provideDatabase(ctx)),
+			viewProducts(safeInput).pipe(provideDatabase(ctx)),
 		).then(serializeBackendEffectResult);
 	});

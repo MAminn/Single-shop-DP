@@ -36,6 +36,7 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
             and(
               eq(product.id, input.productId),
               eq(product.deleted, false), // Exclude soft-deleted products
+              eq(product.hidden, false), // Exclude hidden products
               eq(category.deleted, false), // Ensure primary category is not deleted
             ),
           )

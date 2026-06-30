@@ -78,6 +78,7 @@ export async function data(ctx: PageContext) {
     viewProducts({
       limit: 1000,
       offset: 0,
+      includeHidden: true,
     }).pipe(dbServicePipe)
   ).then(serializeBackendEffectResult);
 

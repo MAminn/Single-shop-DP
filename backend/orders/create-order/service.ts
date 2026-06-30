@@ -351,6 +351,7 @@ export const createOrder = (
               discountPrice: product.discountPrice,
               name: product.name,
               stock: product.stock,
+              hidden: product.hidden,
             })
             .from(product)
             .where(inArray(product.id, productIds))
@@ -373,6 +374,15 @@ export const createOrder = (
                 message: `Product with ID ${item.productId} not found`,
                 statusCode: 404,
                 clientMessage: "Some products in your order could not be found",
+              });
+            }
+
+            if (productData.hidden) {
+              throw new ServerError({
+                tag: "ProductNotAvailable",
+                message: `Product ${productData.name} is not available`,
+                statusCode: 400,
+                clientMessage: `${productData.name} is no longer available for purchase`,
               });
             }
 

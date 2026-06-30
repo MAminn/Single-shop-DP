@@ -96,8 +96,9 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
           .from(product)
           .where(
             and(
-              // Exclude soft-deleted products
+              // Exclude soft-deleted and hidden products
               eq(product.deleted, false),
+              eq(product.hidden, false),
               // Filter by specific product IDs
               input.productIds && input.productIds.length > 0
                 ? inArray(product.id, input.productIds)
@@ -142,8 +143,9 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
           .leftJoin(category, eq(product.categoryId, category.id))
           .where(
             and(
-              // Exclude soft-deleted products
+              // Exclude soft-deleted and hidden products
               eq(product.deleted, false),
+              eq(product.hidden, false),
               // Filter by specific product IDs
               input.productIds && input.productIds.length > 0
                 ? inArray(product.id, input.productIds)

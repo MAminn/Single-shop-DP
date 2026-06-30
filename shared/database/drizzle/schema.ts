@@ -320,6 +320,8 @@ export const product = pgTable("product", {
     .notNull(),
   stock: integer("stock").notNull().default(0),
   deleted: boolean("deleted").notNull().default(false),
+  /** When true, product is hidden from the public shop */
+  hidden: boolean("hidden").notNull().default(false),
   /** Optional "inspired by" text supporting [color:#hex]text[/color] syntax */
   inspiredBy: text("inspired_by"),
   /** Display order within a category (lower = shown first, null = default) */
