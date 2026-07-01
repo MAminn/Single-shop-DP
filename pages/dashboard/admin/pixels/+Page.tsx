@@ -107,8 +107,9 @@ const PIXEL_ID_PLACEHOLDERS: Record<string, string> = {
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function maskPixelId(pixelId: string): string {
-  if (pixelId.length <= 6) return pixelId;
-  return `${pixelId.slice(0, 4)}${"•".repeat(pixelId.length - 6)}${pixelId.slice(-2)}`;
+  const trimmed = pixelId.trim();
+  if (trimmed.length <= 12) return trimmed;
+  return `${trimmed.slice(0, 6)}••••${trimmed.slice(-4)}`;
 }
 
 // ─── Readiness Status Types ─────────────────────────────────────────────────
@@ -342,17 +343,17 @@ export default function AdminPixelsPage() {
   }
 
   return (
-    <div className='p-6 space-y-6 max-w-4xl mx-auto'>
+    <div className='p-6 space-y-6 max-w-4xl mx-auto w-full min-w-0 overflow-x-hidden'>
       {/* Header */}
-      <div className='flex items-center justify-between'>
-        <div>
+      <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between min-w-0'>
+        <div className='min-w-0'>
           <h1 className='text-2xl font-bold'>Pixels & Tracking</h1>
           <p className='text-muted-foreground text-sm mt-1'>
             Connect your ad platform pixels to track conversions and build
             audiences.
           </p>
         </div>
-        <div className='flex items-center gap-2'>
+        <div className='flex flex-wrap items-center gap-2 shrink-0'>
           <a href='/dashboard/admin/pixels/custom-events'>
             <Button variant='outline' size='sm'>
               <MousePointerClick className='w-4 h-4 mr-2' />
@@ -374,7 +375,7 @@ export default function AdminPixelsPage() {
 
       {/* ── Pixel Readiness Status ────────────────────────────────────── */}
       {configs.length > 0 && (
-        <Card>
+        <Card className='min-w-0 overflow-hidden'>
           <CardHeader className='pb-3'>
             <CardTitle className='text-base flex items-center gap-2'>
               <Info className='w-4 h-4' />
@@ -414,10 +415,10 @@ export default function AdminPixelsPage() {
                       return (
                         <div
                           key={cfg.id}
-                          className='flex items-center justify-between gap-2 text-sm border rounded-md px-3 py-2'>
-                          <div className='flex min-w-0 flex-col gap-0.5'>
-                            <div className='flex items-center gap-2'>
-                              <span className='font-medium'>
+                          className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm border rounded-md px-3 py-2 min-w-0'>
+                          <div className='flex min-w-0 flex-1 flex-col gap-0.5 overflow-hidden'>
+                            <div className='flex flex-wrap items-center gap-2 min-w-0'>
+                              <span className='font-medium shrink-0'>
                                 {PLATFORM_LABELS[cfg.platform] ?? cfg.platform}
                               </span>
                               {!cfg.enabled && (
@@ -428,11 +429,13 @@ export default function AdminPixelsPage() {
                                 </Badge>
                               )}
                             </div>
-                            <span className='font-mono text-[11px] text-muted-foreground truncate'>
+                            <span
+                              className='font-mono text-[11px] text-muted-foreground truncate break-all'
+                              title={cfg.pixelId.length > 12 ? cfg.pixelId : undefined}>
                               {maskPixelId(cfg.pixelId)}
                             </span>
                           </div>
-                          <div className='flex items-center gap-2 shrink-0'>
+                          <div className='flex items-center gap-2 shrink-0 self-end sm:self-auto'>
                             <div className='flex items-center gap-3 text-xs text-muted-foreground'>
                               {/* Client-side status */}
                               <span
@@ -589,22 +592,26 @@ export default function AdminPixelsPage() {
       )}
 
       {/* Pixel config cards */}
-      <div className='grid gap-4'>
+      <div className='grid gap-4 min-w-0'>
         {configs.map((config) => (
-          <Card key={config.id}>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <div className='space-y-1'>
-                <CardTitle className='text-lg flex items-center gap-2'>
+          <Card key={config.id} className='min-w-0 overflow-hidden'>
+            <CardHeader className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between space-y-0 pb-2 min-w-0'>
+              <div className='space-y-1 min-w-0 flex-1 overflow-hidden'>
+                <CardTitle className='text-lg flex flex-wrap items-center gap-2'>
                   {PLATFORM_LABELS[config.platform] ?? config.platform}
                   <Badge variant={config.enabled ? "default" : "secondary"}>
                     {config.enabled ? "Active" : "Disabled"}
                   </Badge>
                 </CardTitle>
-                <CardDescription className='font-mono text-sm'>
+                <CardDescription
+                  className='font-mono text-sm truncate break-all'
+                  title={
+                    config.pixelId.length > 12 ? config.pixelId : undefined
+                  }>
                   {maskPixelId(config.pixelId)}
                 </CardDescription>
               </div>
-              <div className='flex gap-2'>
+              <div className='flex flex-wrap gap-2 shrink-0'>
                 <Button
                   variant='outline'
                   size='sm'

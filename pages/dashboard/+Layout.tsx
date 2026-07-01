@@ -119,7 +119,7 @@ function Content({ children }: { children: React.ReactNode }) {
       <SidebarProvider>
         <div className='flex w-full h-full'>
           <DashboardSidebar />
-          <section className='h-full w-full flex-1'>
+          <section className='h-full w-full flex-1 min-w-0 overflow-x-hidden'>
             <header className='z-50 flex flex-col bg-neutral-100 dark:bg-neutral-900 w-full p-1 sticky top-0'>
               <div className='flex items-center justify-between w-full px-4'>
                 <div className='flex items-center'>
