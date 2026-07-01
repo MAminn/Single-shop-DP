@@ -294,7 +294,7 @@ export default function AdminPixelsPage() {
       const result = await trpc.pixelTracking.config.delete.mutate({ id });
       if (result.success) {
         toast.success("Pixel configuration deleted");
-        await fetchConfigs();
+        await Promise.all([fetchConfigs(), fetchReadinessData()]);
       } else {
         toast.error("Failed to delete pixel configuration");
       }
@@ -414,70 +414,93 @@ export default function AdminPixelsPage() {
                       return (
                         <div
                           key={cfg.id}
-                          className='flex items-center justify-between text-sm border rounded-md px-3 py-2'>
-                          <div className='flex items-center gap-2'>
-                            <span className='font-medium'>
-                              {PLATFORM_LABELS[cfg.platform] ?? cfg.platform}
+                          className='flex items-center justify-between gap-2 text-sm border rounded-md px-3 py-2'>
+                          <div className='flex min-w-0 flex-col gap-0.5'>
+                            <div className='flex items-center gap-2'>
+                              <span className='font-medium'>
+                                {PLATFORM_LABELS[cfg.platform] ?? cfg.platform}
+                              </span>
+                              {!cfg.enabled && (
+                                <Badge
+                                  variant='secondary'
+                                  className='text-[10px] px-1.5'>
+                                  Disabled
+                                </Badge>
+                              )}
+                            </div>
+                            <span className='font-mono text-[11px] text-muted-foreground truncate'>
+                              {maskPixelId(cfg.pixelId)}
                             </span>
-                            {!cfg.enabled && (
-                              <Badge
-                                variant='secondary'
-                                className='text-[10px] px-1.5'>
-                                Disabled
-                              </Badge>
-                            )}
                           </div>
-                          <div className='flex items-center gap-3 text-xs text-muted-foreground'>
-                            {/* Client-side status */}
-                            <span
-                              className='flex items-center gap-1'
-                              title='Client-side pixel (browser)'>
-                              <Monitor className='w-3 h-3' />
-                              {hasClientSide && cfg.enabled ? (
-                                <CheckCircle2 className='w-3 h-3 text-green-600' />
+                          <div className='flex items-center gap-2 shrink-0'>
+                            <div className='flex items-center gap-3 text-xs text-muted-foreground'>
+                              {/* Client-side status */}
+                              <span
+                                className='flex items-center gap-1'
+                                title='Client-side pixel (browser)'>
+                                <Monitor className='w-3 h-3' />
+                                {hasClientSide && cfg.enabled ? (
+                                  <CheckCircle2 className='w-3 h-3 text-green-600' />
+                                ) : (
+                                  <XCircle className='w-3 h-3 text-muted-foreground/40' />
+                                )}
+                              </span>
+                              {/* Server-side status */}
+                              <span
+                                className='flex items-center gap-1'
+                                title={
+                                  hasServerSide && hasToken
+                                    ? "Server-side Conversions API active"
+                                    : hasServerSide && !hasToken
+                                      ? "Server-side enabled but no access token — delivery will fail"
+                                      : "Server-side not enabled"
+                                }>
+                                <Server className='w-3 h-3' />
+                                {hasServerSide && hasToken && cfg.enabled ? (
+                                  <CheckCircle2 className='w-3 h-3 text-green-600' />
+                                ) : hasServerSide && !hasToken ? (
+                                  <AlertTriangle className='w-3 h-3 text-amber-500' />
+                                ) : (
+                                  <XCircle className='w-3 h-3 text-muted-foreground/40' />
+                                )}
+                              </span>
+                              {/* Delivery count */}
+                              {totalDelivered > 0 ? (
+                                <Badge
+                                  variant='outline'
+                                  className={`text-[10px] px-1.5 ${
+                                    health?.status === "healthy"
+                                      ? "border-green-300 text-green-700"
+                                      : health?.status === "degraded"
+                                        ? "border-amber-300 text-amber-700"
+                                        : "border-red-300 text-red-700"
+                                  }`}>
+                                  {health?.successCount ?? 0} delivered (7d)
+                                </Badge>
                               ) : (
-                                <XCircle className='w-3 h-3 text-muted-foreground/40' />
+                                <Badge
+                                  variant='outline'
+                                  className='text-[10px] px-1.5 border-muted text-muted-foreground'>
+                                  No deliveries yet
+                                </Badge>
                               )}
-                            </span>
-                            {/* Server-side status */}
-                            <span
-                              className='flex items-center gap-1'
-                              title={
-                                hasServerSide && hasToken
-                                  ? "Server-side Conversions API active"
-                                  : hasServerSide && !hasToken
-                                    ? "Server-side enabled but no access token — delivery will fail"
-                                    : "Server-side not enabled"
-                              }>
-                              <Server className='w-3 h-3' />
-                              {hasServerSide && hasToken && cfg.enabled ? (
-                                <CheckCircle2 className='w-3 h-3 text-green-600' />
-                              ) : hasServerSide && !hasToken ? (
-                                <AlertTriangle className='w-3 h-3 text-amber-500' />
-                              ) : (
-                                <XCircle className='w-3 h-3 text-muted-foreground/40' />
-                              )}
-                            </span>
-                            {/* Delivery count */}
-                            {totalDelivered > 0 ? (
-                              <Badge
-                                variant='outline'
-                                className={`text-[10px] px-1.5 ${
-                                  health?.status === "healthy"
-                                    ? "border-green-300 text-green-700"
-                                    : health?.status === "degraded"
-                                      ? "border-amber-300 text-amber-700"
-                                      : "border-red-300 text-red-700"
-                                }`}>
-                                {health?.successCount ?? 0} delivered (7d)
-                              </Badge>
-                            ) : (
-                              <Badge
-                                variant='outline'
-                                className='text-[10px] px-1.5 border-muted text-muted-foreground'>
-                                No deliveries yet
-                              </Badge>
-                            )}
+                            </div>
+                            <Button
+                              variant='outline'
+                              size='icon'
+                              className='h-7 w-7'
+                              title='Edit pixel'
+                              onClick={() => openEditDialog(cfg)}>
+                              <Edit className='w-3.5 h-3.5' />
+                            </Button>
+                            <Button
+                              variant='outline'
+                              size='icon'
+                              className='h-7 w-7 text-destructive hover:text-destructive'
+                              title='Delete pixel'
+                              onClick={() => handleDelete(cfg.id)}>
+                              <Trash2 className='w-3.5 h-3.5' />
+                            </Button>
                           </div>
                         </div>
                       );

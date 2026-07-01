@@ -16,7 +16,6 @@ import { bostaWebhookPlugin } from "#root/backend/orders/bosta/webhook-api.js";
 import { stripeWebhookPlugin } from "#root/backend/payments/stripe-webhook.js";
 import { paymobWebhookPlugin } from "#root/backend/payments/paymob-webhook.js";
 import { ensureDefaultStoreVendor } from "#root/shared/database/bootstrap.js";
-import { listActiveClientConfigsRaw } from "#root/backend/pixel-tracking/pixel-config/ssr.js";
 import { getTemplateSelectionRaw } from "#root/backend/settings/get-template-selection-raw.js";
 import { getLayoutSettingsRaw } from "#root/backend/layout/get-layout-settings-raw.js";
 import { getLinkTreeConfigRaw } from "#root/backend/settings/get-link-tree-config.js";
@@ -302,8 +301,6 @@ async function buildServer() {
       logLevel: "silent",
     },
     async (request, reply) => {
-      // Fetch active pixel configs for SSR script injection (best-effort)
-      const pixelConfigs = await listActiveClientConfigsRaw(request.db);
       // Fetch template selection for SSR to prevent hydration flicker
       const templateSelection = await getTemplateSelectionRaw(request.db);
       // Fetch layout settings for SSR to prevent navbar/footer flicker
@@ -327,7 +324,6 @@ async function buildServer() {
         headersOriginal: request.headers,
         db: request.db,
         clientSession: request.clientSession,
-        pixelConfigs,
         templateSelection,
         layoutSettingsData,
         brandName,
