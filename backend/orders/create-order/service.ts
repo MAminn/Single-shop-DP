@@ -48,6 +48,26 @@ export const createOrderSchema = z.object({
   paymentMethod: z.enum(["cod", "stripe", "paymob"]).optional().default("cod"),
   /** Bosta district ID from checkout location picker (when Bosta is enabled) */
   bostaDistrictId: z.string().min(1).optional(),
+  /** Required when Bosta district is selected — sent as dropOffAddress.buildingNumber */
+  buildingNumber: z.string().trim().min(1).optional(),
+  /** Required when Bosta district is selected — sent as dropOffAddress.apartment */
+  apartment: z.string().trim().min(1).optional(),
+}).superRefine((data, ctx) => {
+  if (!data.bostaDistrictId) return;
+  if (!data.buildingNumber?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Building number is required",
+      path: ["buildingNumber"],
+    });
+  }
+  if (!data.apartment?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Apartment number is required",
+      path: ["apartment"],
+    });
+  }
 });
 
 // Manually define the insert type matching the schema's nullability
@@ -271,9 +291,28 @@ interface CreatedOrder {
   shippingCity: string;
   shippingState?: string | null;
   bostaDistrictId?: string | null;
+  buildingNumber?: string | null;
+  apartment?: string | null;
   itemsCount?: number;
   total: string | number;
   notes?: string | null;
+}
+
+function formatStoredShippingAddress(input: {
+  shippingAddress: string;
+  buildingNumber?: string | null;
+  apartment?: string | null;
+}): string {
+  const street = input.shippingAddress.trim();
+  const parts: string[] = [];
+  if (input.buildingNumber?.trim()) {
+    parts.push(`Bldg ${input.buildingNumber.trim()}`);
+  }
+  if (input.apartment?.trim()) {
+    parts.push(`Apt ${input.apartment.trim()}`);
+  }
+  if (parts.length === 0) return street;
+  return `${street} (${parts.join(", ")})`;
 }
 
 async function autoSendOrderToBosta(orderData: CreatedOrder): Promise<void> {
@@ -293,6 +332,8 @@ async function autoSendOrderToBosta(orderData: CreatedOrder): Promise<void> {
       city: orderData.shippingCity,
       zone: orderData.shippingState ?? undefined,
       districtId: orderData.bostaDistrictId ?? undefined,
+      buildingNumber: orderData.buildingNumber ?? undefined,
+      apartment: orderData.apartment ?? undefined,
     },
     cod: Number(orderData.total),
     notes: orderData.notes,
@@ -557,7 +598,11 @@ export const createOrder = (
             customerName: input.customerName,
             customerEmail: input.customerEmail,
             customerPhone: input.customerPhone,
-            shippingAddress: input.shippingAddress,
+            shippingAddress: formatStoredShippingAddress({
+              shippingAddress: input.shippingAddress,
+              buildingNumber: input.buildingNumber,
+              apartment: input.apartment,
+            }),
             shippingCity: input.shippingCity,
             shippingState: input.shippingState,
             shippingPostalCode: input.shippingPostalCode,
@@ -798,7 +843,10 @@ export const createOrder = (
           try {
             await autoSendOrderToBosta({
               ...result,
+              shippingAddress: input.shippingAddress,
               bostaDistrictId: input.bostaDistrictId,
+              buildingNumber: input.buildingNumber,
+              apartment: input.apartment,
               itemsCount: input.items.reduce((sum, item) => sum + item.quantity, 0),
             });
           } catch (err) {

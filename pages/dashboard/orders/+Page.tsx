@@ -97,6 +97,14 @@ interface Order {
   total: string;
   status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   notes: string | null;
+  paymentMethod: "cod" | "stripe" | "paymob";
+  paymentStatus:
+    | "not_required"
+    | "pending"
+    | "processing"
+    | "paid"
+    | "failed"
+    | "refunded";
   createdAt: Date;
   updatedAt: Date | null;
   items: OrderItem[];
@@ -147,13 +155,10 @@ export default function Orders() {
 
   useEffect(() => {
     if (!isAdmin) return;
-    trpc.order.bosta.isEnabled.query()
-      .then((res) => {
-        if (res.success && res.result) {
-          setBostaEnabled((res.result as { enabled: boolean }).enabled);
-        }
-      })
-      .catch(() => {});
+    trpc.order.bosta.checkoutIsEnabled
+      .query()
+      .then((res) => setBostaEnabled(!!res.enabled))
+      .catch(() => setBostaEnabled(false));
   }, [isAdmin]);
 
   // Reset to page 1 when filters change
@@ -368,6 +373,65 @@ export default function Orders() {
     }
   };
 
+  const formatPaymentMethod = (method: string) => {
+    switch (method) {
+      case "cod":
+        return "Cash on Delivery";
+      case "stripe":
+        return "Card (Stripe)";
+      case "paymob":
+        return "Online (Paymob)";
+      default:
+        return method;
+    }
+  };
+
+  const formatPaymentStatus = (status: string) => {
+    switch (status) {
+      case "not_required":
+        return "Not required";
+      case "pending":
+        return "Awaiting payment";
+      case "processing":
+        return "Processing";
+      case "paid":
+        return "Paid";
+      case "failed":
+        return "Payment failed";
+      case "refunded":
+        return "Refunded";
+      default:
+        return status;
+    }
+  };
+
+  const getPaymentBadgeClass = (method: string) => {
+    switch (method) {
+      case "cod":
+        return "bg-amber-50 text-amber-900 border-amber-200";
+      case "stripe":
+      case "paymob":
+        return "bg-indigo-50 text-indigo-900 border-indigo-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const renderPaymentInfo = (order: Order, compact = false) => (
+    <div className={compact ? "flex flex-col gap-0.5" : "space-y-1 text-sm"}>
+      <Badge
+        variant="outline"
+        className={`${getPaymentBadgeClass(order.paymentMethod)} ${compact ? "text-[10px] w-fit" : ""}`}>
+        {formatPaymentMethod(order.paymentMethod)}
+      </Badge>
+      {order.paymentMethod !== "cod" && order.paymentStatus !== "not_required" && (
+        <span className={`text-muted-foreground ${compact ? "text-[10px]" : "text-xs"}`}>
+          {formatPaymentStatus(order.paymentStatus)}
+        </span>
+      )}
+    </div>
+  );
+
   const getBostaSyncBadge = (order: Order) => {
     const status = order.bostaSyncStatus;
     if (!status) {
@@ -553,6 +617,7 @@ export default function Orders() {
                         <TableHead>Customer</TableHead>
                         <TableHead>Items</TableHead>
                         <TableHead>Total</TableHead>
+                        <TableHead>Payment</TableHead>
                         <TableHead>Status</TableHead>
                         {bostaEnabled && isAdmin && (
                           <TableHead>Bosta</TableHead>
@@ -589,6 +654,9 @@ export default function Orders() {
                                   </span>
                                 </div>
                               )}
+                          </TableCell>
+                          <TableCell className='py-2'>
+                            {renderPaymentInfo(order, true)}
                           </TableCell>
                           <TableCell className='py-2'>
                             <Badge
@@ -657,6 +725,7 @@ export default function Orders() {
                         {" · "}
                         {Number.parseFloat(order.total).toFixed(2)} EGP
                       </div>
+                      <div className='mt-2'>{renderPaymentInfo(order, true)}</div>
                       <div className='mt-2 flex items-center justify-between gap-2 flex-wrap'>
                         <Badge
                           variant='outline'
@@ -845,6 +914,11 @@ export default function Orders() {
                 </div>
 
                 <div className='flex justify-between items-start my-4'>
+                  <div>
+                    <h3 className='font-medium text-sm mb-2'>Payment</h3>
+                    {renderPaymentInfo(selectedOrder)}
+                  </div>
+
                   <div>
                     <h3 className='font-medium text-sm mb-2'>Order Status</h3>
                     <div className='flex items-center gap-3'>
@@ -1163,6 +1237,11 @@ export default function Orders() {
                         </p>
                       )}
                     </div>
+                  </div>
+
+                  <div>
+                    <h3 className='font-medium text-sm mb-2'>Payment</h3>
+                    {renderPaymentInfo(selectedOrder)}
                   </div>
 
                   <div>

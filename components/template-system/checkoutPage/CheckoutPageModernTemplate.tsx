@@ -140,6 +140,8 @@ export function CheckoutPageModernTemplate({
     notes: "",
     paymentMethod: "cod",
     bostaDistrictId: "",
+    buildingNumber: "",
+    apartment: "",
   });
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -178,6 +180,14 @@ export function CheckoutPageModernTemplate({
     if (bostaShippingEnabled) {
       if (!bostaSelection?.districtId) {
         errors.bostaDistrict = "Please select city, area, and district";
+      }
+      if (!form.buildingNumber.trim()) {
+        errors.buildingNumber =
+          t("validation.building_required") || "Building number is required";
+      }
+      if (!form.apartment.trim()) {
+        errors.apartment =
+          t("validation.apartment_required") || "Apartment number is required";
       }
     } else {
       if (!form.city.trim()) errors.city = t("validation.city_required");
@@ -429,6 +439,51 @@ export function CheckoutPageModernTemplate({
                     </>
                   )}
                 </div>
+                {bostaShippingEnabled && (
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                    <div className='space-y-1.5'>
+                      <Label htmlFor='buildingNumber'>
+                        {t("checkout.building_number") || "Building Number"}{" "}
+                        <span className='text-destructive'>*</span>
+                      </Label>
+                      <Input
+                        id='buildingNumber'
+                        placeholder='12'
+                        inputMode='numeric'
+                        value={form.buildingNumber}
+                        onChange={(e) =>
+                          updateField("buildingNumber", e.target.value)
+                        }
+                        className={
+                          fieldErrors.buildingNumber ? "border-destructive" : ""
+                        }
+                      />
+                      {fieldErrors.buildingNumber && (
+                        <p className='text-xs text-destructive'>
+                          {fieldErrors.buildingNumber}
+                        </p>
+                      )}
+                    </div>
+                    <div className='space-y-1.5'>
+                      <Label htmlFor='apartment'>
+                        {t("checkout.apartment") || "Apartment / Unit"}{" "}
+                        <span className='text-destructive'>*</span>
+                      </Label>
+                      <Input
+                        id='apartment'
+                        placeholder='4B'
+                        value={form.apartment}
+                        onChange={(e) => updateField("apartment", e.target.value)}
+                        className={fieldErrors.apartment ? "border-destructive" : ""}
+                      />
+                      {fieldErrors.apartment && (
+                        <p className='text-xs text-destructive'>
+                          {fieldErrors.apartment}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <div className='space-y-1.5'>
                   <Label htmlFor='country'>
                     {t("checkout.country") || "Country"}{" "}

@@ -29,6 +29,9 @@ export interface BostaReceiverAddress {
   city: string;
   zone?: string;
   districtId?: string;
+  buildingNumber?: string;
+  apartment?: string;
+  floor?: string;
 }
 
 export interface BostaReceiver {
@@ -128,6 +131,9 @@ export async function createBostaDelivery(
         zone: input.dropOffAddress.zone,
         firstLine: input.dropOffAddress.firstLine,
         districtId: input.dropOffAddress.districtId,
+        buildingNumber: input.dropOffAddress.buildingNumber,
+        apartment: input.dropOffAddress.apartment,
+        floor: input.dropOffAddress.floor,
       }),
       resolveBostaPickupAddress(),
     ]);

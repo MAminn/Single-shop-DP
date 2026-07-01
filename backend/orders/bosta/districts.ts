@@ -259,6 +259,9 @@ export async function resolveBostaDropOffAddress(input: {
   zone?: string | null;
   firstLine: string;
   districtId?: string | null;
+  buildingNumber?: string | null;
+  apartment?: string | null;
+  floor?: string | null;
 }): Promise<BostaResolvedDropOffAddress> {
   const firstLine = input.firstLine.trim();
   const zoneHint = parseZoneHint(input.zone);
@@ -291,8 +294,8 @@ export async function resolveBostaDropOffAddress(input: {
     districtId: match.districtId,
     firstLine,
     secondLine: firstLine,
-    buildingNumber: "1",
-    floor: "1",
-    apartment: "1",
+    buildingNumber: input.buildingNumber?.trim() || "1",
+    floor: input.floor?.trim() || "1",
+    apartment: input.apartment?.trim() || "1",
   };
 }

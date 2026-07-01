@@ -98,6 +98,8 @@ export const viewOrders = (
               total: order.total,
               status: order.status,
               notes: order.notes,
+              paymentMethod: order.paymentMethod,
+              paymentStatus: order.paymentStatus,
               createdAt: order.createdAt,
               updatedAt: order.updatedAt,
               bostaDeliveryId: order.bostaDeliveryId,

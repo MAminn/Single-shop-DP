@@ -104,6 +104,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     "checkout.processing": "Processing...",
     "checkout.terms": "By placing your order, you agree to our terms and conditions",
     "checkout.required": "*",
+    "checkout.building_number": "Building Number",
+    "checkout.apartment": "Apartment / Unit",
 
     // Validation
     "validation.name_required": "Full name is required",
@@ -116,6 +118,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     "validation.state_required": "State / Governorate is required",
     "validation.postal_code_required": "Postal code is required",
     "validation.country_required": "Country is required",
+    "validation.building_required": "Building number is required",
+    "validation.apartment_required": "Apartment number is required",
     "validation.fix_errors": "Please fix the errors below before placing your order",
 
     // Product page
@@ -232,6 +236,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     "checkout.processing": "جاري المعالجة...",
     "checkout.terms": "بإتمام الطلب، أنت توافق على الشروط والأحكام",
     "checkout.required": "*",
+    "checkout.building_number": "رقم المبنى",
+    "checkout.apartment": "رقم الشقة / الوحدة",
 
     // Validation
     "validation.name_required": "الاسم الكامل مطلوب",
@@ -244,6 +250,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     "validation.state_required": "المحافظة مطلوبة",
     "validation.postal_code_required": "الرمز البريدي مطلوب",
     "validation.country_required": "الدولة مطلوبة",
+    "validation.building_required": "رقم المبنى مطلوب",
+    "validation.apartment_required": "رقم الشقة مطلوب",
     "validation.fix_errors": "يرجى تصحيح الأخطاء أدناه قبل إتمام الطلب",
 
     // Product page

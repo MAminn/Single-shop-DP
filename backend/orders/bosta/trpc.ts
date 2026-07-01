@@ -52,9 +52,9 @@ export const bostaRouter = t.router({
   }),
 
   /** Admin: whether Bosta integration is active (for dashboard UI) */
-  isEnabled: adminProcedure.query(() => {
-    return { enabled: isBostaEnabled() };
-  }),
+  isEnabled: adminProcedure.query(() => ({
+    enabled: isBostaEnabled(),
+  })),
 
   /**
    * Admin: manually push an existing order to Bosta (e.g. if auto-send failed,

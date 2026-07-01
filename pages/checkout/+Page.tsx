@@ -38,6 +38,8 @@ function parseOrderError(error: unknown): string {
           shippingState: "State",
           shippingPostalCode: "Postal Code",
           shippingCountry: "Country",
+          buildingNumber: "Building Number",
+          apartment: "Apartment",
         };
         return issues
           .map((issue: { path?: string[]; message?: string }) => {
@@ -250,6 +252,8 @@ export default function CheckoutPage() {
         promoCodeId: promoCode?.id,
         paymentMethod: selectedPaymentMethod as "cod" | "stripe" | "paymob",
         bostaDistrictId: formValues.bostaDistrictId || undefined,
+        buildingNumber: formValues.buildingNumber || undefined,
+        apartment: formValues.apartment || undefined,
       });
 
       if (!result.success) {
