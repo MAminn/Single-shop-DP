@@ -2,6 +2,8 @@ import defaultFaviconUrl from "../assets/favicon.svg";
 import { useEffect } from "react";
 import { usePageContext } from "vike-react/usePageContext";
 import type { LayoutSettings } from "#root/shared/types/layout-settings";
+import { STORE_NAME, STORE_DESCRIPTION } from "#root/shared/config/branding";
+import { getPublicOrigin, toAbsoluteUrl } from "#root/shared/config/site-url";
 
 export default function HeadDefault() {
   const pageContext = usePageContext();
@@ -15,6 +17,19 @@ export default function HeadDefault() {
       : layoutSettings.faviconUrl.endsWith(".ico") ? "image/x-icon"
       : "image/png")
     : "image/svg+xml";
+
+  const siteTitle =
+    pageContext.brandName ||
+    layoutSettings?.siteTitle ||
+    STORE_NAME;
+  const siteDescription = STORE_DESCRIPTION;
+  const cmsLogoUrl = layoutSettings?.header?.logoUrl?.trim();
+  const ogImageUrl = cmsLogoUrl ? toAbsoluteUrl(cmsLogoUrl) : undefined;
+  const siteOrigin = getPublicOrigin();
+  const canonicalUrl =
+    typeof pageContext.urlPathname === "string"
+      ? `${siteOrigin}${pageContext.urlPathname}`
+      : siteOrigin;
 
   // Dynamic document title from layout settings (client-side only)
   useEffect(() => {
@@ -74,6 +89,26 @@ export default function HeadDefault() {
         content='width=device-width, initial-scale=1.0, viewport-fit=cover'
       />
       <meta httpEquiv='Content-Type' content='text/html; charset=utf-8' />
+      <meta name='description' content={siteDescription} />
+
+      {/* Open Graph / social link previews */}
+      <meta property='og:type' content='website' />
+      <meta property='og:site_name' content={siteTitle} />
+      <meta property='og:title' content={siteTitle} />
+      <meta property='og:description' content={siteDescription} />
+      <meta property='og:url' content={canonicalUrl} />
+      {ogImageUrl && (
+        <>
+          <meta property='og:image' content={ogImageUrl} />
+          <meta property='og:image:alt' content={`${siteTitle} logo`} />
+        </>
+      )}
+
+      {/* Twitter / X card */}
+      <meta name='twitter:card' content={ogImageUrl ? "summary_large_image" : "summary"} />
+      <meta name='twitter:title' content={siteTitle} />
+      <meta name='twitter:description' content={siteDescription} />
+      {ogImageUrl && <meta name='twitter:image' content={ogImageUrl} />}
 
       {/* Core Web Vitals hints */}
       <meta name='theme-color' content='#ffffff' />

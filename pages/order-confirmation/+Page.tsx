@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePageContext } from "vike-react/usePageContext";
 import { Link } from "#root/components/utils/Link";
 import {
@@ -18,6 +18,7 @@ import { useTracking } from "#root/frontend/contexts/TrackingContext";
 import { TrackingEventName } from "#root/shared/types/pixel-tracking";
 import { STORE_CURRENCY } from "#root/shared/config/branding";
 import { useCart } from "#root/lib/context/CartContext";
+import { trpc } from "#root/shared/trpc/client";
 
 type PaymentState = "none" | "success" | "pending" | "cancelled" | "failed";
 
@@ -49,13 +50,70 @@ export default function OrderConfirmationPage() {
   const customerEmail = searchParams?.get("email") ?? "";
   const paymentState = getPaymentState(searchParams?.get("payment") ?? null);
   const shortId = orderId ? orderId.substring(0, 8).toUpperCase() : "";
+  const [verifiedPaymentStatus, setVerifiedPaymentStatus] = useState<
+    | "pending"
+    | "paid"
+    | "failed"
+    | "processing"
+    | "not_required"
+    | "refunded"
+    | null
+  >(null);
 
-  // Determine what icon/color/messaging to show
-  const isPaymentSuccess =
-    paymentState === "success" || paymentState === "none";
-  const isPaymentPending = paymentState === "pending";
+  // Poll backend when customer returns from Paymob/Stripe before webhook lands
+  useEffect(() => {
+    if (!orderId) return;
+    if (paymentState !== "success" && paymentState !== "pending") return;
+
+    let cancelled = false;
+    let interval: number | undefined;
+
+    const verifyPayment = async () => {
+      try {
+        const result = await trpc.payment.verify.query({ orderId });
+        const paymentStatus =
+          result && "result" in result && result.success
+            ? result.result.paymentStatus
+            : null;
+        if (!cancelled && paymentStatus) {
+          setVerifiedPaymentStatus(paymentStatus);
+          if (
+            interval &&
+            (paymentStatus === "paid" || paymentStatus === "failed")
+          ) {
+            window.clearInterval(interval);
+            interval = undefined;
+          }
+        }
+      } catch {
+        /* best-effort */
+      }
+    };
+
+    void verifyPayment();
+    interval = window.setInterval(verifyPayment, 4000);
+    const timeout = window.setTimeout(() => {
+      if (interval) window.clearInterval(interval);
+    }, 60000);
+
+    return () => {
+      cancelled = true;
+      if (interval) window.clearInterval(interval);
+      window.clearTimeout(timeout);
+    };
+  }, [orderId, paymentState]);
+
   const isPaymentFailed =
     paymentState === "cancelled" || paymentState === "failed";
+
+  const isPaymentPending =
+    !isPaymentFailed &&
+    (paymentState === "pending" ||
+      (paymentState === "success" &&
+        verifiedPaymentStatus !== "paid" &&
+        verifiedPaymentStatus !== "failed"));
+
+  const isPaymentSuccess = !isPaymentFailed && !isPaymentPending;
 
   // ─── Fire checkout_completed once per order ────────────────────────────
   // Uses sessionStorage keyed by orderId to survive page refresh.
@@ -163,7 +221,7 @@ export default function OrderConfirmationPage() {
             <p className='text-gray-500 mb-6'>
               Thank you for your purchase. Your order has been placed
               successfully.
-              {paymentState === "success" && " Payment received."}
+              {paymentState === "success" && verifiedPaymentStatus === "paid" && " Payment received."}
             </p>
           </>
         )}

@@ -12,7 +12,7 @@ export default {
 
   // https://vike.dev/head-tags
   // title is handled dynamically by +title.ts (reads from layout settings)
-  description: `${STORE_NAME} — ${STORE_DESCRIPTION}`,
+  description: STORE_DESCRIPTION,
 
   extends: vikeReact,
 

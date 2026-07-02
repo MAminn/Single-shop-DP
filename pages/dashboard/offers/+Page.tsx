@@ -493,14 +493,14 @@ export function Page() {
     try {
       const payload = {
         name: form.name.trim(),
-        description: form.description || null,
+        description: form.description.trim() || undefined,
         isActive: form.isActive,
         priority: form.priority,
         isExclusive: form.isExclusive,
         condition: form.condition,
         reward: form.reward,
-        startsAt: form.startsAt ? new Date(form.startsAt) : null,
-        endsAt: form.endsAt ? new Date(form.endsAt) : null,
+        startsAt: form.startsAt ? new Date(form.startsAt) : undefined,
+        endsAt: form.endsAt ? new Date(form.endsAt) : undefined,
       };
 
       if (editingOffer) {

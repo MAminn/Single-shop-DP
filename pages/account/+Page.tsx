@@ -272,8 +272,13 @@ function OrdersTab() {
   useEffect(() => {
     trpc.order.view.query({ limit: 50, offset: 0 })
       .then((res: any) => {
-        if (res.success) setOrders(res.result ?? []);
-        else setError(res.error ?? "Failed to load orders");
+        if (!res.success) {
+          setError(res.error ?? "Failed to load orders");
+          return;
+        }
+        const data = res.result;
+        const list = Array.isArray(data) ? data : (data?.items ?? []);
+        setOrders(list);
       })
       .catch((err: any) => setError(err.message ?? "Something went wrong"))
       .finally(() => setIsLoading(false));
@@ -325,7 +330,7 @@ function OrdersTab() {
                 <div className="flex items-center gap-2 mt-0.5 text-[12px] text-stone-400">
                   <span>{date}</span>
                   <span>·</span>
-                  <span>{order.items.length} item{order.items.length !== 1 ? "s" : ""}</span>
+                  <span>{(order.items ?? []).length} item{(order.items ?? []).length !== 1 ? "s" : ""}</span>
                 </div>
               </div>
               <div className="text-right shrink-0">
@@ -335,7 +340,7 @@ function OrdersTab() {
 
             {isExpanded && (
               <div className="border-t border-stone-100 px-5 py-4 space-y-3">
-                {order.items.map((item) => (
+                {(order.items ?? []).map((item) => (
                   <div key={item.id} className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-[13px] text-stone-700 truncate">{item.name || "Product"}</p>

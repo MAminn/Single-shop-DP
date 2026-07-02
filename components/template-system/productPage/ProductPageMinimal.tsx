@@ -35,6 +35,8 @@ import { getProductUrl } from "#root/lib/utils/route-helpers";
 import { STORE_CURRENCY } from "#root/shared/config/branding";
 import { trpc } from "#root/shared/trpc/client";
 import { toast } from "sonner";
+import { useWishlist } from "#root/lib/hooks/useWishlist";
+import { cn } from "#root/lib/utils";
 import { getStoreOwnerId } from "#root/shared/config/store";
 import type { HomepageContent } from "#root/shared/types/homepage-content";
 
@@ -75,6 +77,7 @@ export function ProductPageMinimal({
   onImageClick,
   className = "",
 }: ProductPageMinimalProps) {
+  const { toggle: toggleWishlist, isWishlisted } = useWishlist();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [showShareMenu, setShowShareMenu] = useState(false);
@@ -136,15 +139,20 @@ export function ProductPageMinimal({
         // Apply product-level overrides — remove values the admin has explicitly
         // un-strikethrough'd on this specific product
         for (const variant of product.variants || []) {
-          if (!stMap[variant.name]) continue;
+          const currentValues = stMap[variant.name];
+          if (!currentValues) continue;
           const overriddenValues = variant.values
             .filter((v) => v.enabledOverride === true)
             .map((v) => v.value);
           if (overriddenValues.length > 0) {
-            stMap[variant.name] = stMap[variant.name].filter(
+            const filtered = currentValues.filter(
               (sv) => !overriddenValues.includes(sv),
             );
-            if (stMap[variant.name].length === 0) delete stMap[variant.name];
+            if (filtered.length === 0) {
+              delete stMap[variant.name];
+            } else {
+              stMap[variant.name] = filtered;
+            }
           }
         }
 
@@ -222,6 +230,7 @@ export function ProductPageMinimal({
     );
   }
 
+  const wishlisted = isWishlisted(product.id);
   const maxQty = Math.min(product.stock || 99, 99);
   const incrementQty = () => setQuantity((q) => Math.min(q + 1, maxQty));
   const decrementQty = () => setQuantity((q) => Math.max(q - 1, 1));
@@ -438,10 +447,20 @@ export function ProductPageMinimal({
                 </button>
                 {showWishlist && (
                   <button
-                    onClick={() => onAddToWishlist?.(product)}
-                    className='w-7 h-7 flex items-center justify-center border border-gray-200 hover:border-gray-900 transition-colors'
-                    aria-label={t("product.save")}>
-                    <Heart className='w-3 h-3 text-gray-600' />
+                    type='button'
+                    onClick={() => toggleWishlist(product.id)}
+                    className={cn(
+                      "w-9 h-9 flex items-center justify-center rounded-full shadow-md transition-colors",
+                      wishlisted
+                        ? "bg-red-50 text-red-500 hover:bg-red-100"
+                        : "bg-white text-stone-700 hover:bg-stone-100",
+                    )}
+                    aria-label={
+                      wishlisted ? t("removed_from_wishlist") : t("added_to_wishlist")
+                    }>
+                    <Heart
+                      className={cn("w-4 h-4", wishlisted && "fill-current")}
+                    />
                   </button>
                 )}
               </div>
@@ -1154,6 +1173,7 @@ function BottomProductCard({
   onAddToCart: () => void;
 }) {
   const { t } = useMinimalI18n();
+  const { toggle, isWishlisted } = useWishlist();
   const imageUrl = resolveImageUrl(product);
   const hasDiscount =
     product.discountPrice !== undefined &&
@@ -1163,6 +1183,7 @@ function BottomProductCard({
     ? Number(product.discountPrice)
     : product.price;
   const productUrl = getProductUrl(product.id);
+  const wishlisted = isWishlisted(product.id);
 
   return (
     <div
@@ -1179,9 +1200,22 @@ function BottomProductCard({
         </Link>
         <div className='absolute bottom-3 start-3 flex gap-2 opacity-0 group-hover/bcard:opacity-100 transition-opacity duration-300'>
           <button
-            className='w-9 h-9 flex items-center justify-center bg-white rounded-full shadow-md hover:bg-stone-900 hover:text-white transition-colors'
-            aria-label='Wishlist'>
-            <Heart className='w-4 h-4' />
+            type='button'
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggle(product.id);
+            }}
+            className={cn(
+              "w-9 h-9 flex items-center justify-center rounded-full shadow-md transition-colors",
+              wishlisted
+                ? "bg-red-50 text-red-500 hover:bg-red-100"
+                : "bg-white text-stone-700 hover:bg-stone-100",
+            )}
+            aria-label={
+              wishlisted ? t("removed_from_wishlist") : t("added_to_wishlist")
+            }>
+            <Heart className={cn("w-4 h-4", wishlisted && "fill-current")} />
           </button>
           <Link
             href={productUrl}

@@ -13,6 +13,11 @@ declare global {
       ssrLocale?: "en" | "ar";
     }
   }
+
+  interface Window {
+    dataLayer?: unknown[];
+    gtag?: (...args: unknown[]) => void;
+  }
 }
 
 // biome-ignore lint/complexity/noUselessEmptyExport: ensure that the file is considered as a module

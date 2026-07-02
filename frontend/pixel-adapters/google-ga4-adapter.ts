@@ -68,9 +68,9 @@ export class GoogleGA4Adapter implements PixelAdapter {
 
     // Only initialize gtag if not already set up by SSR (+Head.tsx)
     if (typeof window.gtag !== "function") {
-      window.dataLayer = window.dataLayer || [];
+      const dataLayer = (window.dataLayer = window.dataLayer || []);
       window.gtag = function gtag(...args: unknown[]) {
-        window.dataLayer.push(args);
+        dataLayer.push(args);
       };
       window.gtag("js", new Date());
       window.gtag("config", this.measurementId, {

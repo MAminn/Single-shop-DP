@@ -6,7 +6,8 @@
 
 export const STORE_NAME =
   (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_STORE_NAME) ||
-  process.env.VITE_STORE_NAME 
+  process.env.VITE_STORE_NAME ||
+  "SYNT";
 
 export const STORE_CURRENCY =
   (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_CURRENCY) ||
@@ -16,4 +17,4 @@ export const STORE_CURRENCY =
 export const STORE_DESCRIPTION =
   (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_STORE_DESCRIPTION) ||
   process.env.VITE_STORE_DESCRIPTION ||
-  "Curated fashion, quiet confidence.";
+  "Premium fragrances inspired by the world's finest perfumes. Long-lasting, elegant, and made for every day.";

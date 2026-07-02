@@ -84,7 +84,7 @@ function parsePickupLocation(record: Record<string, unknown>): BostaPickupAddres
     zoneId,
     districtId,
     firstLine,
-    secondLine,
+    secondLine: secondLine ?? firstLine,
     buildingNumber:
       pickString(address, "buildingNumber") ??
       pickString(record, "buildingNumber") ??

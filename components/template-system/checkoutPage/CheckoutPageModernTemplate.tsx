@@ -448,8 +448,7 @@ export function CheckoutPageModernTemplate({
                       </Label>
                       <Input
                         id='buildingNumber'
-                        placeholder='12'
-                        inputMode='numeric'
+                        placeholder='117B'
                         value={form.buildingNumber}
                         onChange={(e) =>
                           updateField("buildingNumber", e.target.value)
