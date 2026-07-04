@@ -77,7 +77,7 @@ function buildStripState(
   appliedOffers: AppliedOffer[],
   currency: string,
 ): StripState {
-  const firstApplied = appliedOffers[0];
+  const firstApplied = appliedOffers[appliedOffers.length - 1];
   if (firstApplied) {
     const matched = offers.find((o) => o.name === firstApplied.name);
     return {

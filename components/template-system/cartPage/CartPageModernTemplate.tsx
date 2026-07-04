@@ -1,5 +1,9 @@
 import React from "react";
 import { OfferProgressBanner } from "./OfferProgressBanner";
+import {
+  AppliedOffersSavings,
+  computeOfferSavingsTotal,
+} from "./AppliedOffersSavings";
 import { Button } from "#root/components/ui/button";
 import { Input } from "#root/components/ui/input";
 import {
@@ -9,7 +13,6 @@ import {
   ShoppingCart,
   ArrowRight,
   ArrowLeft,
-  Gift,
   Tag,
   ShieldCheck,
   Lock,
@@ -129,13 +132,14 @@ export function CartPageModernTemplate({
     );
   }
 
-  const totalSavings =
-    (totals.discount ?? 0) +
-    (totals.appliedOffers?.reduce((s, o) => s + o.discountAmount, 0) ?? 0);
+  const totalSavings = computeOfferSavingsTotal(
+    totals.appliedOffers,
+    totals.discount ?? 0,
+  );
 
   const cartSubtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
   const cartQuantity = items.reduce((s, i) => s + i.quantity, 0);
-  const appliedOfferNames = (totals.appliedOffers ?? []).map((o) => o.name);
+  const appliedOffers = totals.appliedOffers ?? [];
 
   return (
     <>
@@ -154,7 +158,7 @@ export function CartPageModernTemplate({
         <OfferProgressBanner
           cartSubtotal={cartSubtotal}
           cartQuantity={cartQuantity}
-          appliedOfferNames={appliedOfferNames}
+          appliedOffers={appliedOffers}
           currency={currency}
         />
 
@@ -479,20 +483,10 @@ export function CartPageModernTemplate({
                   </div>
                 )}
 
-                {/* Automatic offers */}
-                {totals.appliedOffers?.map((offer) => (
-                  <div key={offer.name} className='flex items-start justify-between gap-2 text-red-600 text-xs'>
-                    <span className='flex items-center gap-1 min-w-0 font-medium'>
-                      <Gift className='w-3 h-3 shrink-0' />
-                      <span className='leading-snug'>{offer.name}</span>
-                    </span>
-                    <span className='font-semibold shrink-0'>
-                      {offer.freeShipping && offer.discountAmount === 0
-                        ? t("cart.free_shipping") || "Free shipping"
-                        : `-${currency}${offer.discountAmount.toFixed(2)}`}
-                    </span>
-                  </div>
-                ))}
+                <AppliedOffersSavings
+                  appliedOffers={appliedOffers}
+                  currency={currency}
+                />
 
                 {/* Shipping */}
                 {totals.shipping !== undefined && (
@@ -519,17 +513,6 @@ export function CartPageModernTemplate({
                   {totals.grandTotal.toFixed(2)}
                 </span>
               </div>
-
-              {/* Savings callout */}
-              {totalSavings > 0 && (
-                <div className='flex items-center gap-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400'>
-                  <ShieldCheck className='w-4 h-4 shrink-0' />
-                  <span className='font-medium'>
-                    You're saving {currency}
-                    {totalSavings.toFixed(2)} with this offer!
-                  </span>
-                </div>
-              )}
 
               {/* Trust signals — directly above Proceed to Checkout */}
               <div className='flex flex-wrap items-center justify-center gap-4 sm:gap-6 border-t border-stone-100 pt-4'>
@@ -627,12 +610,12 @@ export function CartPageModernTemplate({
 
     {/* ── Mobile sticky checkout bar ─────────────────────────────────────── */}
     <div className='sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.10)]'>
-      {/* Applied offers nudge strip */}
-      {totals.appliedOffers && totals.appliedOffers.length > 0 && (
-        <div className='bg-emerald-600 text-white text-center py-1.5 px-4 text-[11px] font-semibold tracking-wide'>
-          🎉 {totals.appliedOffers.map(o => o.freeShipping && o.discountAmount === 0 ? "Free shipping applied!" : `${o.name} applied — saving ${currency}${o.discountAmount.toFixed(2)}`).join(" · ")}
-        </div>
-      )}
+      <AppliedOffersSavings
+        appliedOffers={appliedOffers}
+        promoDiscount={totals.discount ?? 0}
+        currency={currency}
+        variant='sticky-banner'
+      />
       <div className='px-4 py-3'>
         <div className='flex items-center justify-between mb-2.5'>
           <span className='text-xs text-muted-foreground uppercase tracking-widest font-semibold'>Total</span>

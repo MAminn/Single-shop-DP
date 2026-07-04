@@ -1,7 +1,11 @@
 import React from "react";
-import { Trash2, Plus, Minus, ShoppingCart, Gift } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingCart, ArrowRight } from "lucide-react";
 import type { CartPageModernTemplateProps } from "./CartPageModernTemplate";
 import { OfferProgressBanner } from "./OfferProgressBanner";
+import {
+  AppliedOffersSavings,
+  computeOfferSavingsTotal,
+} from "./AppliedOffersSavings";
 
 /**
  * CartPageMinimalTemplate
@@ -54,7 +58,11 @@ export function CartPageMinimalTemplate({
   }
 
   const cartSubtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
-  const appliedOfferIds = (totals.appliedOffers ?? []).map((o) => o.name);
+  const appliedOffers = totals.appliedOffers ?? [];
+  const totalSavings = computeOfferSavingsTotal(
+    appliedOffers,
+    totals.discount ?? 0,
+  );
 
   return (
     <>
@@ -70,7 +78,7 @@ export function CartPageMinimalTemplate({
           <OfferProgressBanner
             cartSubtotal={cartSubtotal}
             cartQuantity={items.reduce((s, i) => s + i.quantity, 0)}
-            appliedOfferNames={appliedOfferIds}
+            appliedOffers={appliedOffers}
             currency={currency}
           />
 
@@ -314,19 +322,10 @@ export function CartPageMinimalTemplate({
                       <span>−{totals.discount.toFixed(2)} {currency}</span>
                     </div>
                   )}
-                  {totals.appliedOffers && totals.appliedOffers.map((offer) => (
-                    <div key={offer.name} className="flex items-start justify-between gap-2 text-[13px] text-red-600">
-                      <span className="flex items-start gap-1 font-medium min-w-0">
-                        <Gift className="w-3 h-3 shrink-0 mt-0.5" />
-                        <span className="leading-snug break-words">{offer.name}</span>
-                      </span>
-                      <span className="font-semibold shrink-0 ml-2">
-                        {offer.freeShipping && offer.discountAmount === 0
-                          ? "Free shipping"
-                          : `−${offer.discountAmount.toFixed(2)} ${currency}`}
-                      </span>
-                    </div>
-                  ))}
+                  <AppliedOffersSavings
+                    appliedOffers={appliedOffers}
+                    currency={currency}
+                  />
                   <div className="flex justify-between text-[13px] text-gray-600">
                     <span>Shipping</span>
                     <span>{totals.shipping != null && totals.shipping > 0 ? `${totals.shipping.toFixed(2)} ${currency}` : "Calculated at checkout"}</span>
@@ -359,23 +358,41 @@ export function CartPageMinimalTemplate({
       </div>
 
       {/* ── Mobile sticky checkout bar ─────────────────────────────────────── */}
-      <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-100 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] px-4 py-3">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[12px] text-gray-500 uppercase tracking-wide">Total</span>
-          <span className="text-[15px] font-semibold text-gray-900">{totals.grandTotal.toFixed(2)} {currency}</span>
-        </div>
-        <button
-          type="button"
-          onClick={onProceedToCheckout}
-          disabled={isUpdating || items.length === 0}
-          className="w-full py-3.5 bg-gray-900 text-white text-[13px] font-medium uppercase tracking-wider hover:bg-gray-700 active:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-          {isUpdating ? "Updating…" : "Proceed to Checkout"}
-        </button>
+      <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-100 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
+        <AppliedOffersSavings
+          appliedOffers={appliedOffers}
+          promoDiscount={totals.discount ?? 0}
+          currency={currency}
+          variant="sticky-banner"
+        />
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[12px] text-gray-500 uppercase tracking-wide">Total</span>
+            <div className="text-right">
+              {totalSavings > 0 && (
+                <p className="text-[10px] font-medium text-emerald-600">
+                  Saving {totalSavings.toFixed(2)} {currency}
+                </p>
+              )}
+              <span className="text-[15px] font-semibold text-gray-900">
+                {totals.grandTotal.toFixed(2)} {currency}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onProceedToCheckout}
+            disabled={isUpdating || items.length === 0}
+            className="flex w-full items-center justify-center gap-2 py-3.5 bg-gray-900 text-white text-[13px] font-medium uppercase tracking-wider hover:bg-gray-700 active:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            {isUpdating ? "Updating…" : "Proceed to Checkout"}
+            <ArrowRight className="h-4 w-4" />
+          </button>
         <a
           href="/shop"
           className="mt-2 w-full flex items-center justify-center py-2 text-[11px] text-gray-400 hover:text-gray-700 transition-colors uppercase tracking-wide">
           ← Continue Shopping
         </a>
+        </div>
       </div>
     </>
   );

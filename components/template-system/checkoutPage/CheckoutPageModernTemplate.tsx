@@ -18,13 +18,16 @@ import {
   Truck,
   RotateCcw,
   FileText,
-  Gift,
 } from "lucide-react";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import {
   BostaShippingFields,
   type BostaShippingSelection,
 } from "#root/components/checkout/BostaShippingFields";
+import { OfferProgressBanner } from "#root/components/template-system/cartPage/OfferProgressBanner";
+import {
+  AppliedOffersSavings,
+} from "#root/components/template-system/cartPage/AppliedOffersSavings";
 
 /**
  * Customer information interface
@@ -254,9 +257,9 @@ export function CheckoutPageModernTemplate({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [methods, form.paymentMethod]);
 
-  const totalSavings =
-    (totals.discount ?? 0) +
-    (totals.appliedOffers?.reduce((s, o) => s + o.discountAmount, 0) ?? 0);
+  const appliedOffers = totals.appliedOffers ?? [];
+  const cartSubtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
+  const cartQuantity = items.reduce((s, i) => s + i.quantity, 0);
 
   // Section number component
   const SectionNum = ({ n }: { n: number }) => (
@@ -284,6 +287,13 @@ export function CheckoutPageModernTemplate({
           <AlertDescription>{t("validation.fix_errors")}</AlertDescription>
         </Alert>
       )}
+
+      <OfferProgressBanner
+        cartSubtotal={cartSubtotal}
+        cartQuantity={cartQuantity}
+        appliedOffers={appliedOffers}
+        currency={currency}
+      />
 
       <form onSubmit={handleSubmit}>
         <div className='grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10'>
@@ -675,19 +685,10 @@ export function CheckoutPageModernTemplate({
                     </span>
                   </div>
                 )}
-                {totals.appliedOffers?.map((offer) => (
-                  <div key={offer.name} className='flex items-start justify-between gap-2 text-red-600'>
-                    <span className='flex items-start gap-1 min-w-0 font-medium'>
-                      <Gift className='w-3 h-3 shrink-0 mt-0.5' />
-                      <span className='leading-snug break-words'>{offer.name}</span>
-                    </span>
-                    <span className='font-semibold shrink-0 ml-2'>
-                      {offer.freeShipping && offer.discountAmount === 0
-                        ? "Free shipping"
-                        : `- ${currency}${offer.discountAmount.toFixed(2)}`}
-                    </span>
-                  </div>
-                ))}
+                <AppliedOffersSavings
+                  appliedOffers={appliedOffers}
+                  currency={currency}
+                />
                 {totals.shipping !== undefined && (
                   <div className='flex justify-between'>
                     <span className='text-muted-foreground'>
