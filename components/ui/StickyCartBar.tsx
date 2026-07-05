@@ -1,11 +1,13 @@
 import { useCart } from "#root/lib/context/CartContext";
 import { usePageContext } from "vike-react/usePageContext";
-import { ShoppingBag, ArrowRight, Plus } from "lucide-react";
+import { ShoppingBag, ArrowRight, Plus, ChevronDown } from "lucide-react";
 import { trpc } from "#root/shared/trpc/client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { OfferCondition, OfferReward } from "#root/shared/database/drizzle/schema";
 import type { AppliedOffer } from "#root/backend/offers/service";
 import { cn } from "#root/lib/utils";
+import { computeOfferSavingsTotal } from "#root/components/template-system/cartPage/AppliedOffersSavings";
+import { STORE_CURRENCY } from "#root/shared/config/branding";
 
 const HIDDEN_PATHS = ["/cart", "/checkout", "/login", "/register", "/dashboard"];
 
@@ -68,6 +70,13 @@ function unlockedHeadline(reward: OfferReward, name: string): string {
   }
 }
 
+function formatOfferSaving(offer: AppliedOffer, currency: string): string {
+  if (offer.freeShipping && offer.discountAmount === 0) {
+    return "Free shipping";
+  }
+  return `−${offer.discountAmount.toFixed(2)} ${currency}`;
+}
+
 function buildStripState(
   offers: ActiveOffer[],
   cartSubtotal: number,
@@ -76,19 +85,24 @@ function buildStripState(
   appliedNames: string[],
   appliedOffers: AppliedOffer[],
   currency: string,
+  totalSavings: number,
 ): StripState {
-  const firstApplied = appliedOffers[appliedOffers.length - 1];
-  if (firstApplied) {
-    const matched = offers.find((o) => o.name === firstApplied.name);
+  const latestApplied = appliedOffers[appliedOffers.length - 1];
+  if (latestApplied) {
+    const matched = offers.find((o) => o.name === latestApplied.name);
+    const rewardText =
+      totalSavings > 0
+        ? `SAVING ${totalSavings.toFixed(2)} ${currency}`
+        : latestApplied.freeShipping && latestApplied.discountAmount === 0
+          ? "APPLIED AT CHECKOUT"
+          : `SAVING ${latestApplied.discountAmount.toFixed(2)} ${currency}`;
+
     return {
       kind: "unlocked",
       actionText: matched
         ? unlockedHeadline(matched.reward, matched.name)
-        : `${firstApplied.name.toUpperCase()} UNLOCKED`,
-      rewardText:
-        firstApplied.freeShipping && firstApplied.discountAmount === 0
-          ? "APPLIED AT CHECKOUT"
-          : `SAVING ${firstApplied.discountAmount.toFixed(2)} ${currency}`,
+        : `${latestApplied.name.toUpperCase()} UNLOCKED`,
+      rewardText,
       href: "/cart",
       ctaLabel: "VIEW CART",
     };
@@ -146,13 +160,18 @@ function buildStripState(
 }
 
 export function StickyCartBar() {
-  const { totalItems, total, appliedOffers, subtotal } = useCart();
+  const { totalItems, total, appliedOffers, subtotal, discount } = useCart();
   const { urlPathname } = usePageContext();
   const [visible, setVisible] = useState(false);
   const [offers, setOffers] = useState<ActiveOffer[]>([]);
+  const [savingsExpanded, setSavingsExpanded] = useState(false);
   const prevItems = useRef(0);
+  const currency = STORE_CURRENCY;
 
   const isHidden = HIDDEN_PATHS.some((p) => urlPathname.startsWith(p));
+  const totalSavings = computeOfferSavingsTotal(appliedOffers, discount);
+  const hasSavingsBreakdown =
+    appliedOffers.length > 0 || discount > 0;
 
   useEffect(() => {
     if (isHidden) return;
@@ -179,6 +198,10 @@ export function StickyCartBar() {
     prevItems.current = totalItems;
   }, [totalItems, isHidden]);
 
+  useEffect(() => {
+    setSavingsExpanded(false);
+  }, [appliedOffers.length, discount, totalItems]);
+
   const strip = useMemo(
     () =>
       buildStripState(
@@ -188,9 +211,10 @@ export function StickyCartBar() {
         total,
         appliedOffers.map((o) => o.name),
         appliedOffers,
-        "EGP",
+        currency,
+        totalSavings,
       ),
-    [offers, subtotal, totalItems, total, appliedOffers],
+    [offers, subtotal, totalItems, total, appliedOffers, currency, totalSavings],
   );
 
   if (isHidden || totalItems === 0) return null;
@@ -207,6 +231,35 @@ export function StickyCartBar() {
       aria-label="Cart and offers"
     >
       <div className="mx-auto w-full max-w-3xl pointer-events-auto relative">
+        {isUnlocked && savingsExpanded && hasSavingsBreakdown && (
+          <div className="mb-2 rounded-2xl border border-emerald-400/40 bg-[#0a0a0a]/95 px-4 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-sm">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-emerald-300/90">
+              Savings breakdown
+            </p>
+            <ul className="space-y-1.5">
+              {appliedOffers.map((offer) => (
+                <li
+                  key={offer.name}
+                  className="flex items-start justify-between gap-3 text-[11px] leading-snug text-white/90"
+                >
+                  <span className="min-w-0 break-words">{offer.name}</span>
+                  <span className="shrink-0 font-semibold text-emerald-300">
+                    {formatOfferSaving(offer, currency)}
+                  </span>
+                </li>
+              ))}
+              {discount > 0 && (
+                <li className="flex items-center justify-between gap-3 text-[11px] text-white/90">
+                  <span>Promo code</span>
+                  <span className="font-semibold text-emerald-300">
+                    −{discount.toFixed(2)} {currency}
+                  </span>
+                </li>
+              )}
+            </ul>
+          </div>
+        )}
+
         {/* Sparkle accents */}
         {isProgress && (
           <>
@@ -265,18 +318,41 @@ export function StickyCartBar() {
 
           {/* Offer copy */}
           <div className="relative z-10 min-w-0 flex-1">
-            <p className="truncate text-[10px] font-bold uppercase leading-tight tracking-wide text-white sm:text-[13px] animate-offer-text-glow">
-              <span>{strip.actionText}</span>
-              <span className="mx-1.5 font-normal text-white/30">|</span>
-              <span
-                className={cn(
-                  "font-semibold",
-                  isUnlocked ? "text-emerald-300" : "text-amber-200/90",
-                )}
+            {isUnlocked && hasSavingsBreakdown ? (
+              <button
+                type="button"
+                onClick={() => setSavingsExpanded((prev) => !prev)}
+                className="flex w-full min-w-0 items-center gap-1 text-left"
+                aria-expanded={savingsExpanded}
               >
-                {strip.rewardText}
-              </span>
-            </p>
+                <p className="min-w-0 flex-1 truncate text-[10px] font-bold uppercase leading-tight tracking-wide text-white sm:text-[13px] animate-offer-text-glow">
+                  <span>{strip.actionText}</span>
+                  <span className="mx-1.5 font-normal text-white/30">|</span>
+                  <span className="font-semibold text-emerald-300">
+                    {strip.rewardText}
+                  </span>
+                </p>
+                <ChevronDown
+                  className={cn(
+                    "h-3.5 w-3.5 shrink-0 text-emerald-300/80 transition-transform sm:h-4 sm:w-4",
+                    savingsExpanded && "rotate-180",
+                  )}
+                />
+              </button>
+            ) : (
+              <p className="truncate text-[10px] font-bold uppercase leading-tight tracking-wide text-white sm:text-[13px] animate-offer-text-glow">
+                <span>{strip.actionText}</span>
+                <span className="mx-1.5 font-normal text-white/30">|</span>
+                <span
+                  className={cn(
+                    "font-semibold",
+                    isUnlocked ? "text-emerald-300" : "text-amber-200/90",
+                  )}
+                >
+                  {strip.rewardText}
+                </span>
+              </p>
+            )}
           </div>
 
           {/* CTA */}
