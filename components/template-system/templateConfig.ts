@@ -52,6 +52,9 @@ import { CheckoutPageEditorialTemplate } from "./checkoutPage/CheckoutPageEditor
 import type { CheckoutPageEditorialTemplateProps } from "./checkoutPage/CheckoutPageEditorialTemplate";
 import { SearchResultsEditorial } from "./searchResults/SearchResultsEditorial";
 import type { SearchResultsEditorialProps } from "./searchResults/SearchResultsEditorial";
+import { LandingTemplateNoir } from "./noir/LandingTemplateNoir";
+import type { LandingTemplateNoirProps } from "./noir/LandingTemplateNoir";
+import { LandingNoirPreview } from "./noir/LandingNoirPreview";
 
 // Import preview components
 import {
@@ -135,6 +138,10 @@ export interface TemplateConfig {
  * Centralized configuration for all available templates.
  * Add new templates here to make them available throughout the application.
  */
+// Reserved template IDs — Noir (Demo 5):
+//   "landing-noir" — registered below (Phase 2)
+//   "product-noir", "sorting-noir", "cart-noir", "checkout-noir" — land in Phases 3-4.
+// Do NOT register the remaining IDs yet — the admin selector must not show them.
 export const templateConfig: TemplateConfig = {
   landing: [
     {
@@ -163,6 +170,12 @@ export const templateConfig: TemplateConfig = {
       component:
         LandingTemplateMinimal as React.FC<LandingTemplateMinimalProps>,
       previewComponent: LandingMinimalPreview,
+    },
+    {
+      id: "landing-noir",
+      label: "Demo 5: Noir (Dark Luxury)",
+      component: LandingTemplateNoir as React.FC<LandingTemplateNoirProps>,
+      previewComponent: LandingNoirPreview,
     },
   ],
 
@@ -329,7 +342,8 @@ export const templateConfig: TemplateConfig = {
     {
       id: "search-results-editorial",
       label: "Editorial Layout",
-      component: SearchResultsEditorial as React.FC<SearchResultsEditorialProps>,
+      component:
+        SearchResultsEditorial as React.FC<SearchResultsEditorialProps>,
       previewComponent: SearchResultsEditorialPreview,
     },
   ],
