@@ -13,7 +13,6 @@ import {
   ShoppingCart,
   ArrowRight,
   ArrowLeft,
-  Tag,
   ShieldCheck,
   Lock,
   Truck,
@@ -84,27 +83,11 @@ export function CartPageModernTemplate({
   onProceedToCheckout,
 }: CartPageModernTemplateProps) {
   const [couponCode, setCouponCode] = React.useState("");
-  const [isFirstTimeVisitor, setIsFirstTimeVisitor] = React.useState(false);
   const { t } = useMinimalI18n();
-
-  // Pre-fill WELCOME15 for first-time visitors (no `perce_returning_user` flag yet).
-  React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    const isReturning = localStorage.getItem("perce_returning_user");
-    if (!isReturning) {
-      setIsFirstTimeVisitor(true);
-      setCouponCode((prev) => (prev ? prev : "WELCOME15"));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleApplyCoupon = () => {
     if (couponCode.trim() && onApplyCoupon) {
       onApplyCoupon(couponCode);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("perce_returning_user", "true");
-      }
-      setIsFirstTimeVisitor(false);
       setCouponCode("");
     }
   };
@@ -385,29 +368,10 @@ export function CartPageModernTemplate({
             {/* ── Coupon code ──────────────────────────────── */}
             <div className='mt-6 pt-6 border-t'>
               <div className='flex flex-col sm:flex-row items-start sm:items-center gap-4'>
-                <div className='flex items-center gap-3 shrink-0'>
-                  <Tag className='w-5 h-5 text-muted-foreground' />
-                  <div>
-                    {isFirstTimeVisitor ? (
-                      <p className='font-semibold text-sm'>
-                        First time? Add code{" "}
-                        <span className='font-bold'>WELCOME15</span> for 15% off
-                        your first piece
-                      </p>
-                    ) : (
-                      <>
-                        <p className='font-semibold text-sm'>
-                          {t("cart.coupon_code") || "Have a coupon code?"}
-                        </p>
-                        <p className='text-xs text-muted-foreground'>
-                          {t("cart.coupon_desc") ||
-                            "Add your code for instant savings"}
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className='flex gap-2 flex-1 w-full sm:w-auto'>
+                <p className='text-sm font-semibold shrink-0'>
+                  Apply promo code
+                </p>
+                <div className='flex gap-2 flex-1 w-full sm:w-auto items-center'>
                   <Input
                     placeholder={t("cart.enter_code") || "Enter coupon code"}
                     value={couponCode}

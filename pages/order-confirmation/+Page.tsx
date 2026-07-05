@@ -250,9 +250,9 @@ export default function OrderConfirmationPage() {
         )}
 
         {/* Order Details Card */}
-        <div className='bg-gray-50 rounded-xl p-6 mb-8 text-left space-y-3'>
+        <div className='bg-gray-50 rounded-xl p-6 mb-8 text-left space-y-3 overflow-x-auto'>
           {shortId && (
-            <div className='flex justify-between items-center'>
+            <div className='flex justify-between items-center flex-wrap gap-2'>
               <span className='text-sm text-gray-500'>Order Number</span>
               <span className='text-sm font-mono font-medium text-gray-900'>
                 #{shortId}
@@ -260,7 +260,7 @@ export default function OrderConfirmationPage() {
             </div>
           )}
           {orderTotal && (
-            <div className='flex justify-between items-center'>
+            <div className='flex justify-between items-center flex-wrap gap-2'>
               <span className='text-sm text-gray-500'>Total</span>
               <span className='text-sm font-semibold text-gray-900'>
                 {Number.parseFloat(orderTotal).toFixed(2)} EGP
@@ -268,14 +268,14 @@ export default function OrderConfirmationPage() {
             </div>
           )}
           {customerEmail && (
-            <div className='flex justify-between items-center'>
+            <div className='flex justify-between items-center flex-wrap gap-2 '>
               <span className='text-sm text-gray-500'>
                 Confirmation sent to
               </span>
-              <span className='text-sm text-gray-900'>{customerEmail}</span>
+              <span className='text-sm text-gray-900 whitespace-nowrap '>{customerEmail}</span>
             </div>
           )}
-          <div className='flex justify-between items-center'>
+          <div className='flex justify-between items-center flex-wrap gap-2'>
             <span className='text-sm text-gray-500'>Status</span>
             {isPaymentSuccess && (
               <span className='inline-flex items-center gap-1.5 text-sm font-medium text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full'>
@@ -284,7 +284,7 @@ export default function OrderConfirmationPage() {
               </span>
             )}
             {isPaymentPending && (
-              <span className='inline-flex items-center gap-1.5 text-sm font-medium text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full'>
+              <span className='inline-flex items-center gap-1.5 text-sm font-medium text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full whitespace-nowrap'>
                 <Clock className='w-3.5 h-3.5' />
                 Awaiting Payment
               </span>
@@ -323,7 +323,7 @@ export default function OrderConfirmationPage() {
           <Button asChild variant='outline' className='gap-2'>
             <Link href='/'>
               <Home className='w-4 h-4' />
-              Back to Home
+              <span className='text-xs md:text-sm'>Back to Home</span>
             </Link>
           </Button>
           <Button
@@ -331,7 +331,7 @@ export default function OrderConfirmationPage() {
             className='gap-2 text-white'>
             <Link href='/shop'>
               <ShoppingBag className='w-4 h-4' />
-              Continue Shopping
+              <span className='text-xs md:text-sm'>Continue Shopping</span>
             </Link>
           </Button>
         </div>

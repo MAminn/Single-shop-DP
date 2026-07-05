@@ -280,28 +280,36 @@ export function CartPageMinimalTemplate({
                 })}
               </div>
 
-              {/* Promo code (mobile: above summary, desktop: below items) */}
-              <div className="mt-6 lg:mt-8">
-                <p className="text-[12px] uppercase tracking-wider text-gray-400 font-medium mb-2">Promo Code</p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleApplyCoupon(); }}
-                    placeholder="Enter code"
-                    className="flex-1 px-4 py-2.5 border border-gray-200 text-[13px] text-gray-900 placeholder-gray-300 outline-none focus:border-gray-400 transition-colors bg-white min-w-0"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleApplyCoupon}
-                    disabled={!couponCode.trim()}
-                    className="px-5 py-2.5 bg-gray-900 text-white text-[12px] font-medium uppercase tracking-wide hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
-                    Apply
-                  </button>
+              {/* Promo code */}
+              <div className="mt-6 lg:mt-8 pt-6 border-t border-gray-100">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                  <p className="text-[13px] font-medium text-gray-900 shrink-0">
+                    Apply promo code
+                  </p>
+                  <div className="flex flex-1 gap-2 min-w-0">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleApplyCoupon();
+                      }}
+                      placeholder="Enter code"
+                      className="flex-1 px-4 py-2.5 border border-gray-200 text-[13px] text-gray-900 placeholder-gray-300 outline-none focus:border-gray-400 transition-colors bg-white min-w-0"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={!couponCode.trim()}
+                      className="px-5 py-2.5 bg-gray-900 text-white text-[12px] font-medium uppercase tracking-wide hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
+                      Apply
+                    </button>
+                  </div>
                 </div>
-                {couponApplied && totals.discount && totals.discount > 0 && (
-                  <p className="text-[12px] text-green-600 mt-1.5">Promo code applied — saving {totals.discount.toFixed(2)} {currency}</p>
+                {couponApplied && totals.discount != null && totals.discount > 0 && (
+                  <p className="text-[12px] text-green-600 mt-2">
+                    Promo code applied — saving {totals.discount.toFixed(2)} {currency}
+                  </p>
                 )}
               </div>
             </div>
