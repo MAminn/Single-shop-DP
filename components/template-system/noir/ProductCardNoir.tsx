@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
 import { ArrowRight, Star } from "lucide-react";
 import { Link } from "#root/components/utils/Link";
+import { STORE_NAME } from "#root/shared/config/branding";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import { getProductUrl } from "#root/lib/utils/route-helpers";
 import { cn } from "#root/lib/utils";
 import { formatNoirPrice } from "./format-price";
 import {
   NOIR_CARD_CLASSES,
-  NOIR_CARD_HOVER_CLASSES,
+  NOIR_CARD_HOVER_GLOW,
   NOIR_DISPLAY_FONT_CLASSES,
   NOIR_TEXT_MUTED_CLASSES,
   NOIR_TEXT_SECONDARY_CLASSES,
@@ -60,6 +61,40 @@ function resolveImageUrl(url?: string | null): string {
   return `/uploads/${url}`;
 }
 
+/**
+ * NoirImagePlaceholder — intentional premium treatment for missing/
+ * broken product imagery. Layered radial dark gradient, a hairline
+ * inset frame, and the store monogram (first letter of STORE_NAME) in
+ * the display font at very low opacity. No broken-image iconography.
+ * Shared by Noir cards and the product gallery.
+ */
+export function NoirImagePlaceholder({ className }: { className?: string }) {
+  const monogram =
+    (STORE_NAME || "").trim().charAt(0).toUpperCase() || "\u25C6";
+  return (
+    <div
+      className={cn("relative w-full h-full overflow-hidden", className)}
+      style={{
+        background:
+          "radial-gradient(circle at 50% 38%, #1c1c1c 0%, #121212 45%, #0a0a0a 100%)",
+      }}
+      aria-hidden='true'>
+      {/* hairline inset frame */}
+      <div className='absolute inset-3 border border-white/10 rounded-md' />
+      {/* brand monogram */}
+      <div className='absolute inset-0 flex items-center justify-center'>
+        <span
+          className={cn(
+            "text-8xl md:text-9xl leading-none font-bold text-white/6 select-none",
+            NOIR_DISPLAY_FONT_CLASSES,
+          )}>
+          {monogram}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                         */
 /* ------------------------------------------------------------------ */
@@ -84,6 +119,12 @@ export function ProductCardNoir({
   // Letter-spacing gated off for Arabic (rule 8)
   const trackWide = isAr ? "" : "tracking-[0.18em]";
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  // Whether the product carries any real image data
+  const hasImageData = Boolean(
+    (product.images && product.images.length > 0) || product.imageUrl,
+  );
 
   const displayImageUrl = useMemo(() => {
     if (product.images && product.images.length > 0) {
@@ -121,17 +162,20 @@ export function ProductCardNoir({
   const hasRating = typeof product.rating === "number" && product.rating > 0;
 
   const ctaClasses = cn(
-    "flex w-full items-center justify-center gap-2 border border-white/20 bg-transparent",
-    "px-4 py-2.5 text-xs uppercase text-white/80 rounded-md",
+    "group/cta flex w-full items-center justify-center gap-2 border border-white/20 bg-transparent",
+    "px-4 py-3 text-[11px] uppercase text-white/80 rounded-md",
     trackWide,
     NOIR_DISPLAY_FONT_CLASSES,
-    "transition-colors duration-300 hover:border-white/50 hover:text-white",
+    "transition-all duration-300 hover:bg-[#E8112D] hover:border-[#E8112D] hover:text-white",
   );
 
   const ctaContent = (
     <>
       <span>{t("add_to_cart")}</span>
-      <ArrowRight className='w-3.5 h-3.5 rtl:rotate-180' strokeWidth={1.5} />
+      <ArrowRight
+        className='w-3.5 h-3.5 rtl:rotate-180 transition-transform duration-300 group-hover/cta:translate-x-1 rtl:group-hover/cta:-translate-x-1'
+        strokeWidth={1.5}
+      />
     </>
   );
 
@@ -140,7 +184,7 @@ export function ProductCardNoir({
       className={cn(
         "group relative flex flex-col overflow-hidden",
         NOIR_CARD_CLASSES,
-        NOIR_CARD_HOVER_CLASSES,
+        NOIR_CARD_HOVER_GLOW,
         className,
       )}>
       {/* Badge */}
@@ -155,19 +199,29 @@ export function ProductCardNoir({
         </span>
       )}
 
-      {/* Image */}
+      {/* Image — portrait-leaning, dark placeholder + bottom vignette */}
       <Link
         href={productUrl}
-        className='block relative aspect-square bg-black overflow-hidden'>
-        <img
-          src={displayImageUrl}
-          alt={product.name}
-          className={cn(
-            "w-full h-full object-cover transition-transform duration-500 group-hover:scale-105",
-            !imageLoaded && "opacity-0",
-          )}
-          loading='lazy'
-          onLoad={() => setImageLoaded(true)}
+        className='block relative aspect-4/5 bg-black overflow-hidden'>
+        {!hasImageData || imageError ? (
+          <NoirImagePlaceholder />
+        ) : (
+          <img
+            src={displayImageUrl}
+            alt={product.name}
+            className={cn(
+              "w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.06]",
+              !imageLoaded && "opacity-0",
+            )}
+            loading='lazy'
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageError(true)}
+          />
+        )}
+        {/* Bottom vignette so real photos blend into the card */}
+        <div
+          className='absolute inset-x-0 bottom-0 h-1/3 pointer-events-none bg-linear-to-t from-[#141414] via-[#141414]/20 to-transparent'
+          aria-hidden='true'
         />
       </Link>
 

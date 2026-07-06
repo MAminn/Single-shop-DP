@@ -88,10 +88,7 @@ export function LandingTemplateNoir({
 
         <NoirBenefitsStrip valueProps={content.valueProps} />
 
-        <NoirWhyUs
-          brandStatement={content.brandStatement}
-          valueProps={content.valueProps}
-        />
+        <NoirWhyUs brandStatement={content.brandStatement} />
 
         <NoirExploreGrid
           newArrivalsContent={content.newArrivals}

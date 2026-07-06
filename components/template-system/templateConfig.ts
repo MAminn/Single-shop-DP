@@ -55,6 +55,14 @@ import type { SearchResultsEditorialProps } from "./searchResults/SearchResultsE
 import { LandingTemplateNoir } from "./noir/LandingTemplateNoir";
 import type { LandingTemplateNoirProps } from "./noir/LandingTemplateNoir";
 import { LandingNoirPreview } from "./noir/LandingNoirPreview";
+import { ProductPageNoir } from "./noir/ProductPageNoir";
+import type { ProductPageNoirProps } from "./noir/ProductPageNoir";
+import { SortingNoirTemplate } from "./noir/SortingNoirTemplate";
+import type { SortingNoirTemplateProps } from "./noir/SortingNoirTemplate";
+import {
+  ProductPageNoirPreview,
+  SortingNoirPreview,
+} from "./noir/NoirPreviews";
 
 // Import preview components
 import {
@@ -140,7 +148,8 @@ export interface TemplateConfig {
  */
 // Reserved template IDs — Noir (Demo 5):
 //   "landing-noir" — registered below (Phase 2)
-//   "product-noir", "sorting-noir", "cart-noir", "checkout-noir" — land in Phases 3-4.
+//   "product-noir", "sorting-noir" — registered below (Phase 3)
+//   "cart-noir", "checkout-noir" — land in Phase 4.
 // Do NOT register the remaining IDs yet — the admin selector must not show them.
 export const templateConfig: TemplateConfig = {
   landing: [
@@ -209,6 +218,12 @@ export const templateConfig: TemplateConfig = {
         SortingEditorialTemplate as React.FC<SortingEditorialTemplateProps>,
       previewComponent: SortingEditorialPreview,
     },
+    {
+      id: "sorting-noir",
+      label: "Demo 5: Noir (Dark Luxury)",
+      component: SortingNoirTemplate as React.FC<SortingNoirTemplateProps>,
+      previewComponent: SortingNoirPreview,
+    },
   ],
 
   productPage: [
@@ -248,6 +263,12 @@ export const templateConfig: TemplateConfig = {
       component:
         ProductPageModernSplit as React.FC<ProductPageModernSplitProps>,
       previewComponent: ProductPageModernSplitPreview,
+    },
+    {
+      id: "product-noir",
+      label: "Demo 5: Noir (Dark Luxury)",
+      component: ProductPageNoir as React.FC<ProductPageNoirProps>,
+      previewComponent: ProductPageNoirPreview,
     },
   ],
 

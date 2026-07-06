@@ -463,3 +463,12 @@ html[data-noir-chrome="true"] #global-footer {
 html[data-noir-chrome="true"] #global-navbar {
   display: none !important;
 }
+
+/* Phase 3.5 — hide the page-owned light breadcrumb that renders above
+   the sorting template on /shop?category=… and /categories/@slug. It is
+   light-on-dark and off-brand over the Noir canvas; NoirChrome / the
+   sorting template provide their own dark navigation. Scoped to Noir
+   only, so non-Noir templates keep their breadcrumb untouched. */
+html[data-noir-chrome="true"] [data-shop-breadcrumb] {
+  display: none !important;
+}

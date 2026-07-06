@@ -48,16 +48,20 @@ export function NoirBenefitsStrip({ valueProps }: NoirBenefitsStripProps) {
   if (!valueProps.enabled || valueProps.items.length === 0) return null;
 
   return (
-    <section className='px-4 md:px-8 py-10 md:py-14'>
-      <div className='mx-auto max-w-7xl border-y border-white/10 py-8 md:py-10'>
-        <div className='grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-6'>
-          {valueProps.items.map((item) => {
+    <section className='bg-[#0c0c0c] border-y border-white/10'>
+      <div className='mx-auto max-w-7xl px-4 md:px-8 py-12 md:py-16'>
+        <div className='grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10'>
+          {valueProps.items.map((item, index) => {
             const Icon = ICON_MAP[item.icon] ?? ShoppingBag;
             return (
               <div
                 key={`${item.icon}-${item.title}`}
-                className='flex flex-col items-center text-center gap-3 px-2'>
-                <Icon className='w-6 h-6 text-[#E8112D]' />
+                className={cn(
+                  "flex flex-col items-center text-center gap-3 px-2",
+                  // hairline column separators on desktop (skip first)
+                  index % 4 !== 0 && "lg:border-s lg:border-white/10 lg:ps-6",
+                )}>
+                <Icon className='w-6 h-6 text-[#E8112D]' strokeWidth={1.5} />
                 <h3
                   className={cn(
                     "text-[11px] uppercase font-semibold text-white",

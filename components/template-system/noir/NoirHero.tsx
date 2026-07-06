@@ -46,35 +46,56 @@ export function NoirHero({ hero, onCtaClick }: NoirHeroProps) {
   const ctaLink = hero.ctaLink || "/shop";
 
   return (
-    <section className='px-4 md:px-8 pt-6 md:pt-10'>
-      <div className='mx-auto max-w-7xl bg-[#101010] border border-white/10 rounded-xl overflow-hidden'>
+    <section className='relative px-4 md:px-8 pt-6 md:pt-8 overflow-hidden'>
+      {/* Ambient red rim-light glow — layered depth, no image needed */}
+      <div
+        className='pointer-events-none absolute -top-24 end-[-10%] w-[70vw] max-w-3xl aspect-square rounded-full opacity-60 blur-3xl'
+        style={{
+          background:
+            "radial-gradient(circle, rgba(232,17,45,0.22) 0%, rgba(232,17,45,0.05) 45%, transparent 70%)",
+        }}
+        aria-hidden='true'
+      />
+
+      <div className='relative mx-auto max-w-7xl'>
         <div
           className={cn(
-            "grid items-center",
-            hasImage ? "md:grid-cols-2" : "text-center",
+            "grid items-stretch gap-0 rounded-2xl border border-white/10 bg-[#0c0c0c] overflow-hidden",
+            "min-h-[70vh] md:min-h-[80vh] md:max-h-225",
+            hasImage ? "md:grid-cols-2" : "",
           )}>
           {/* ── Text panel ── */}
           <div
             className={cn(
-              "px-6 py-12 md:px-12 md:py-20 space-y-6",
-              !hasImage && "mx-auto max-w-2xl",
+              "relative z-10 flex flex-col justify-center px-6 py-16 md:px-14 md:py-20 gap-7",
+              !hasImage && "items-center text-center mx-auto max-w-3xl",
             )}>
-            <p
+            <div
               className={cn(
-                "text-[11px] uppercase text-[#E8112D] font-medium",
-                track,
-                NOIR_DISPLAY_FONT_CLASSES,
+                "flex items-center gap-3",
+                !hasImage && "justify-center",
               )}>
-              {STORE_NAME}
-            </p>
+              <span className='w-8 h-px bg-[#E8112D]' aria-hidden='true' />
+              <p
+                className={cn(
+                  "text-[11px] uppercase text-[#E8112D] font-medium",
+                  track,
+                  NOIR_DISPLAY_FONT_CLASSES,
+                )}>
+                {STORE_NAME}
+              </p>
+            </div>
+
             <h1
               className={cn(
-                "text-4xl md:text-6xl uppercase leading-[1.05] text-white font-semibold",
-                isAr ? "" : "tracking-[0.02em]",
+                "uppercase text-white font-bold leading-[0.95]",
+                "text-[clamp(2.75rem,7vw,6rem)]",
+                isAr ? "" : "tracking-[0.01em]",
                 NOIR_DISPLAY_FONT_CLASSES,
               )}>
               {hero.title}
             </h1>
+
             {hero.subtitle && (
               <p
                 className={cn(
@@ -85,6 +106,7 @@ export function NoirHero({ hero, onCtaClick }: NoirHeroProps) {
                 {hero.subtitle}
               </p>
             )}
+
             <div
               className={cn(
                 "flex flex-col sm:flex-row gap-3 pt-2",
@@ -94,7 +116,7 @@ export function NoirHero({ hero, onCtaClick }: NoirHeroProps) {
                 href={ctaLink}
                 onClick={handleCta(ctaLink)}
                 className={cn(
-                  "inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-md",
+                  "group/cta inline-flex items-center justify-center gap-2 px-10 py-4 rounded-md",
                   "text-xs uppercase font-medium text-white transition-colors duration-300",
                   isAr ? "" : "tracking-[0.2em]",
                   NOIR_DISPLAY_FONT_CLASSES,
@@ -102,14 +124,14 @@ export function NoirHero({ hero, onCtaClick }: NoirHeroProps) {
                 )}>
                 {hero.ctaText || t("shop_now")}
                 <ArrowRight
-                  className='w-3.5 h-3.5 rtl:rotate-180'
+                  className='w-3.5 h-3.5 rtl:rotate-180 transition-transform duration-300 group-hover/cta:translate-x-1 rtl:group-hover/cta:-translate-x-1'
                   strokeWidth={1.5}
                 />
               </a>
               <Link
                 href='/shop'
                 className={cn(
-                  "inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-md",
+                  "inline-flex items-center justify-center gap-2 px-10 py-4 rounded-md",
                   "border border-white/20 text-xs uppercase font-medium text-white/80",
                   "hover:border-white/50 hover:text-white transition-colors duration-300",
                   isAr ? "" : "tracking-[0.2em]",
@@ -122,7 +144,7 @@ export function NoirHero({ hero, onCtaClick }: NoirHeroProps) {
 
           {/* ── Image panel (stacks below text on mobile) ── */}
           {hasImage && (
-            <div className='relative h-64 md:h-full md:min-h-[480px] bg-black order-last'>
+            <div className='relative min-h-80 md:min-h-full bg-black order-last'>
               <picture>
                 {mobileImage !== desktopImage && (
                   <source media='(max-width: 767px)' srcSet={mobileImage} />
@@ -134,9 +156,13 @@ export function NoirHero({ hero, onCtaClick }: NoirHeroProps) {
                   fetchPriority='high'
                 />
               </picture>
-              {/* Subtle vignette so the panel blends into the dark canvas */}
+              {/* Blend the panel edge into the dark canvas (both axes) */}
               <div
-                className='absolute inset-0 pointer-events-none bg-gradient-to-t from-black/40 via-transparent to-transparent'
+                className='absolute inset-0 pointer-events-none bg-linear-to-t from-black/50 via-transparent to-transparent'
+                aria-hidden='true'
+              />
+              <div
+                className='absolute inset-y-0 start-0 w-24 pointer-events-none bg-linear-to-r from-[#0c0c0c] to-transparent hidden md:block'
                 aria-hidden='true'
               />
             </div>

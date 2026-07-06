@@ -34,13 +34,22 @@ export function NoirFooterCta({ footerCta, onCtaClick }: NoirFooterCtaProps) {
   };
 
   return (
-    <section className='border-t border-white/10 bg-black'>
-      <div className='mx-auto max-w-7xl px-4 md:px-8 py-16 md:py-24 text-center space-y-6'>
-        <div className='w-12 h-0.5 bg-[#E8112D] mx-auto' aria-hidden='true' />
+    <section className='relative overflow-hidden border-t border-white/10 bg-black'>
+      {/* Ambient red glow anchored bottom-center */}
+      <div
+        className='pointer-events-none absolute -bottom-1/3 start-1/2 -translate-x-1/2 w-[70vw] max-w-3xl aspect-square rounded-full opacity-40 blur-3xl'
+        style={{
+          background:
+            "radial-gradient(circle, rgba(232,17,45,0.18) 0%, transparent 68%)",
+        }}
+        aria-hidden='true'
+      />
+      <div className='relative mx-auto max-w-4xl px-4 md:px-8 py-20 md:py-32 text-center space-y-7'>
+        <div className='w-10 h-0.5 bg-[#E8112D] mx-auto' aria-hidden='true' />
         <h2
           className={cn(
-            "text-3xl md:text-5xl uppercase font-semibold text-white max-w-3xl mx-auto leading-[1.1]",
-            isAr ? "" : "tracking-[0.04em]",
+            "uppercase font-bold text-white mx-auto leading-[0.95] text-[clamp(2.25rem,5.5vw,4.5rem)]",
+            isAr ? "" : "tracking-[0.02em]",
             NOIR_DISPLAY_FONT_CLASSES,
           )}>
           {footerCta.title}
@@ -59,7 +68,7 @@ export function NoirFooterCta({ footerCta, onCtaClick }: NoirFooterCtaProps) {
             href={link}
             onClick={handleClick}
             className={cn(
-              "inline-flex items-center justify-center gap-2 px-10 py-4 rounded-md",
+              "group/cta inline-flex items-center justify-center gap-2 px-12 py-4 rounded-md",
               "text-xs uppercase font-medium text-white transition-colors duration-300",
               track,
               NOIR_DISPLAY_FONT_CLASSES,
@@ -67,7 +76,7 @@ export function NoirFooterCta({ footerCta, onCtaClick }: NoirFooterCtaProps) {
             )}>
             {footerCta.ctaText}
             <ArrowRight
-              className='w-3.5 h-3.5 rtl:rotate-180'
+              className='w-3.5 h-3.5 rtl:rotate-180 transition-transform duration-300 group-hover/cta:translate-x-1 rtl:group-hover/cta:-translate-x-1'
               strokeWidth={1.5}
             />
           </a>

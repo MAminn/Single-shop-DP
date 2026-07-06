@@ -4,6 +4,7 @@ import { cn } from "#root/lib/utils";
 import {
   NOIR_ACCENT_BG_CLASSES,
   NOIR_DISPLAY_FONT_CLASSES,
+  NOIR_INPUT_CLASSES,
   NOIR_TEXT_MUTED_CLASSES,
   NOIR_TEXT_SECONDARY_CLASSES,
 } from "./noir-tokens";
@@ -27,12 +28,22 @@ export function NoirNewsletter({ newsletter }: NoirNewsletterProps) {
   if (!newsletter.enabled) return null;
 
   return (
-    <section className='px-4 md:px-8 py-12 md:py-20'>
-      <div className='mx-auto max-w-7xl bg-[#101010] border border-white/10 rounded-xl px-6 py-14 md:py-16'>
-        <div className='max-w-xl mx-auto text-center space-y-5'>
+    <section className='px-4 md:px-8 py-16 md:py-24'>
+      <div className='relative mx-auto max-w-5xl overflow-hidden rounded-2xl border border-white/10 bg-[#0c0c0c] px-6 py-16 md:py-20'>
+        {/* Ambient red glow */}
+        <div
+          className='pointer-events-none absolute -top-1/3 start-1/2 -translate-x-1/2 w-[50vw] max-w-xl aspect-square rounded-full opacity-50 blur-3xl'
+          style={{
+            background:
+              "radial-gradient(circle, rgba(232,17,45,0.18) 0%, transparent 68%)",
+          }}
+          aria-hidden='true'
+        />
+        <div className='relative max-w-xl mx-auto text-center space-y-6'>
+          <div className='w-10 h-0.5 bg-[#E8112D] mx-auto' aria-hidden='true' />
           <h2
             className={cn(
-              "text-xl md:text-2xl uppercase font-semibold text-white",
+              "text-2xl md:text-4xl uppercase font-semibold text-white leading-[1.05]",
               track,
               NOIR_DISPLAY_FONT_CLASSES,
             )}>
@@ -41,7 +52,7 @@ export function NoirNewsletter({ newsletter }: NoirNewsletterProps) {
           {newsletter.subtitle && (
             <p
               className={cn(
-                "text-sm leading-relaxed",
+                "text-sm md:text-base leading-relaxed max-w-md mx-auto",
                 NOIR_TEXT_SECONDARY_CLASSES,
               )}>
               {newsletter.subtitle}
@@ -49,7 +60,7 @@ export function NoirNewsletter({ newsletter }: NoirNewsletterProps) {
           )}
           <form
             onSubmit={(e) => e.preventDefault()}
-            className='flex flex-col sm:flex-row items-stretch gap-3 pt-2'>
+            className='flex flex-col sm:flex-row items-stretch gap-3 pt-2 max-w-md mx-auto'>
             <input
               type='email'
               required
@@ -57,12 +68,12 @@ export function NoirNewsletter({ newsletter }: NoirNewsletterProps) {
                 newsletter.placeholderText ||
                 (isAr ? "بريدك الإلكتروني" : "Your email address")
               }
-              className='flex-1 bg-black border border-white/10 px-4 py-3 text-sm text-white placeholder:text-[#6B6B6B] rounded-md focus:outline-none focus:border-[#E8112D] transition-colors duration-300'
+              className={cn("flex-1 px-4 py-3.5 text-sm", NOIR_INPUT_CLASSES)}
             />
             <button
               type='submit'
               className={cn(
-                "px-8 py-3 rounded-md text-xs uppercase font-medium text-white transition-colors duration-300",
+                "px-8 py-3.5 rounded-md text-xs uppercase font-medium text-white transition-colors duration-300",
                 track,
                 NOIR_DISPLAY_FONT_CLASSES,
                 NOIR_ACCENT_BG_CLASSES,
