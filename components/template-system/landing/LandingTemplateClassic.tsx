@@ -10,20 +10,15 @@ import {
   type NewArrivalProduct,
 } from "#root/components/shop/NewArrivals";
 import {
-  ShoppingBag,
-  Truck,
-  Shield,
-  Headphones,
-  Award,
-  RefreshCw,
   ArrowRight,
   CheckCircle,
   Star,
+  ShoppingBag,
 } from "lucide-react";
 import type {
   HomepageContent,
-  ValuePropIconType,
 } from "#root/shared/types/homepage-content";
+import { VALUE_PROP_ICON_MAP as ICON_MAP } from "#root/components/template-system/shared/value-prop-icons";
 
 /**
  * Props for the LandingTemplateClassic component
@@ -74,19 +69,6 @@ export interface LandingTemplateClassicProps {
    */
   onCtaClick?: (link: string) => void;
 }
-
-// Icon mapping for value propositions
-const ICON_MAP: Record<
-  ValuePropIconType,
-  React.ComponentType<{ className?: string }>
-> = {
-  shopping: ShoppingBag,
-  shipping: Truck,
-  security: Shield,
-  support: Headphones,
-  quality: Award,
-  returns: RefreshCw,
-};
 
 /**
  * Classic Commerce-First Landing Page Template

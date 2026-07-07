@@ -3,19 +3,13 @@ import { createPortal } from "react-dom";
 import { HomeFeaturedProducts } from "../home/HomeFeaturedProducts";
 import type { FeaturedProduct } from "../home/HomeFeaturedProducts";
 import {
-  ShoppingBag,
-  Truck,
-  Shield,
-  Headphones,
-  Award,
-  RefreshCw,
   ArrowRight,
   ChevronDown,
 } from "lucide-react";
 import type {
   HomepageContent,
-  ValuePropIconType,
 } from "#root/shared/types/homepage-content";
+import { VALUE_PROP_ICON_MAP as ICON_MAP } from "#root/components/template-system/shared/value-prop-icons";
 import { CategoryStripSkeleton } from "#root/components/shop/CategoryStrip";
 import type { CategoryStripItem } from "#root/components/shop/CategoryStrip";
 import {
@@ -73,19 +67,6 @@ export interface LandingTemplateModernProps {
    */
   onCtaClick?: (link: string) => void;
 }
-
-// Icon mapping for value propositions
-const ICON_MAP: Record<
-  ValuePropIconType,
-  React.ComponentType<{ className?: string }>
-> = {
-  shopping: ShoppingBag,
-  shipping: Truck,
-  security: Shield,
-  support: Headphones,
-  quality: Award,
-  returns: RefreshCw,
-};
 
 /**
  * Modern Landing Page Template Component

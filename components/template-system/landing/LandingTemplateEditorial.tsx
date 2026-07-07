@@ -4,18 +4,10 @@ import { Button } from "#root/components/ui/button";
 import { Skeleton } from "#root/components/ui/skeleton";
 import { Input } from "#root/components/ui/input";
 import { Label } from "#root/components/ui/label";
-import {
-  ShoppingBag,
-  Truck,
-  Shield,
-  Headphones,
-  Award,
-  RefreshCw,
-} from "lucide-react";
 import type {
   HomepageContent,
-  ValuePropIconType,
 } from "#root/shared/types/homepage-content";
+import { VALUE_PROP_ICON_MAP as ICON_MAP } from "#root/components/template-system/shared/value-prop-icons";
 import type { FeaturedProduct } from "../home/HomeFeaturedProducts";
 import type { CategoryStripItem } from "#root/components/shop/CategoryStrip";
 import type { NewArrivalProduct } from "#root/components/shop/NewArrivals";
@@ -44,18 +36,6 @@ export interface LandingTemplateEditorialProps {
 /* ------------------------------------------------------------------ */
 /*  Constants                                                         */
 /* ------------------------------------------------------------------ */
-
-const ICON_MAP: Record<
-  ValuePropIconType,
-  React.ComponentType<{ className?: string }>
-> = {
-  shopping: ShoppingBag,
-  shipping: Truck,
-  security: Shield,
-  support: Headphones,
-  quality: Award,
-  returns: RefreshCw,
-};
 
 const NOISE_SVG =
   "data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E";
