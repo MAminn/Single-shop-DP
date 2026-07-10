@@ -7,15 +7,20 @@ import { getPublicOrigin, toAbsoluteUrl } from "#root/shared/config/site-url";
 
 export default function HeadDefault() {
   const pageContext = usePageContext();
-  const layoutSettings = pageContext.layoutSettingsData as LayoutSettings | undefined;
+  const layoutSettings = pageContext.layoutSettingsData as
+    | LayoutSettings
+    | undefined;
 
   // Dynamic favicon from layout settings
   const faviconUrl = layoutSettings?.faviconUrl || defaultFaviconUrl;
   const faviconType = layoutSettings?.faviconUrl
-    ? (layoutSettings.faviconUrl.endsWith(".svg") ? "image/svg+xml"
-      : layoutSettings.faviconUrl.endsWith(".png") ? "image/png"
-      : layoutSettings.faviconUrl.endsWith(".ico") ? "image/x-icon"
-      : "image/png")
+    ? layoutSettings.faviconUrl.endsWith(".svg")
+      ? "image/svg+xml"
+      : layoutSettings.faviconUrl.endsWith(".png")
+        ? "image/png"
+        : layoutSettings.faviconUrl.endsWith(".ico")
+          ? "image/x-icon"
+          : "image/png"
     : "image/svg+xml";
 
   const siteTitle =
@@ -81,6 +86,12 @@ export default function HeadDefault() {
         rel='preload'
         href='https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap'
         as='style'
+      />
+
+      {/* Noir (Demo 5) fonts — usage stays scoped to html[data-noir-chrome] via --noir-font-* vars */}
+      <link
+        rel='stylesheet'
+        href='https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap'
       />
 
       {/* Meta tags for performance */}

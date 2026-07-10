@@ -41,7 +41,13 @@ html[dir="rtl"] .minimal-template * {
 .minimal-template input,
 .minimal-template textarea,
 .minimal-template select {
-  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    "Poppins",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
 }
 
 /* Arabic headings always use Rubik medium (500) for optimal readability */
@@ -423,7 +429,8 @@ html[data-has-template-newsletter] [data-footer-newsletter] {
 }
 
 @keyframes cartToastPulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 4px 20px rgba(16, 185, 129, 0);
   }
   50% {
@@ -534,4 +541,39 @@ html[data-has-template-newsletter] [data-footer-newsletter] {
 
 .animate-offer-text-glow {
   animation: offer-text-glow 2s ease-in-out infinite;
+}
+
+/* ===== NOIR DEMO SCOPE (data-noir-chrome) — added Phase 1 ===== */
+/* Everything below is scoped under html[data-noir-chrome="true"] and
+   affects ONLY the Noir (Demo 5) templates. Do not add unscoped rules. */
+html[data-noir-chrome="true"] {
+  --noir-accent: #e8112d;
+  --noir-card: #141414;
+  --noir-border: rgba(255, 255, 255, 0.1);
+  --noir-font-display: "Oswald", "Poppins", sans-serif;
+  --noir-font-mono: "IBM Plex Mono", monospace;
+  background-color: #000000;
+  color: #ffffff;
+}
+
+/* Noir chrome toggle — hide global footer when noir chrome is active
+   (mirrors the editorial chrome toggle above) */
+html[data-noir-chrome="true"] #global-footer {
+  display: none !important;
+}
+
+/* Phase 2 — hide the global fixed navbar under Noir scope. NoirChrome
+   renders its own NoirNavbar. The GlobalNavbarChrome spacer collapses
+   automatically (ResizeObserver reports 0 height when hidden). */
+html[data-noir-chrome="true"] #global-navbar {
+  display: none !important;
+}
+
+/* Phase 3.5 — hide the page-owned light breadcrumb that renders above
+   the sorting template on /shop?category=… and /categories/@slug. It is
+   light-on-dark and off-brand over the Noir canvas; NoirChrome / the
+   sorting template provide their own dark navigation. Scoped to Noir
+   only, so non-Noir templates keep their breadcrumb untouched. */
+html[data-noir-chrome="true"] [data-shop-breadcrumb] {
+  display: none !important;
 }
