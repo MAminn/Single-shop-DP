@@ -52,6 +52,17 @@ import { CheckoutPageEditorialTemplate } from "./checkoutPage/CheckoutPageEditor
 import type { CheckoutPageEditorialTemplateProps } from "./checkoutPage/CheckoutPageEditorialTemplate";
 import { SearchResultsEditorial } from "./searchResults/SearchResultsEditorial";
 import type { SearchResultsEditorialProps } from "./searchResults/SearchResultsEditorial";
+import { LandingTemplateNoir } from "./noir/LandingTemplateNoir";
+import type { LandingTemplateNoirProps } from "./noir/LandingTemplateNoir";
+import { LandingNoirPreview } from "./noir/LandingNoirPreview";
+import { ProductPageNoir } from "./noir/ProductPageNoir";
+import type { ProductPageNoirProps } from "./noir/ProductPageNoir";
+import { SortingNoirTemplate } from "./noir/SortingNoirTemplate";
+import type { SortingNoirTemplateProps } from "./noir/SortingNoirTemplate";
+import {
+  ProductPageNoirPreview,
+  SortingNoirPreview,
+} from "./noir/NoirPreviews";
 
 // Import preview components
 import {
@@ -135,6 +146,11 @@ export interface TemplateConfig {
  * Centralized configuration for all available templates.
  * Add new templates here to make them available throughout the application.
  */
+// Reserved template IDs — Noir (Demo 5):
+//   "landing-noir" — registered below (Phase 2)
+//   "product-noir", "sorting-noir" — registered below (Phase 3)
+//   "cart-noir", "checkout-noir" — land in Phase 4.
+// Do NOT register the remaining IDs yet — the admin selector must not show them.
 export const templateConfig: TemplateConfig = {
   landing: [
     {
@@ -163,6 +179,12 @@ export const templateConfig: TemplateConfig = {
       component:
         LandingTemplateMinimal as React.FC<LandingTemplateMinimalProps>,
       previewComponent: LandingMinimalPreview,
+    },
+    {
+      id: "landing-noir",
+      label: "Demo 5: Noir (Dark Luxury)",
+      component: LandingTemplateNoir as React.FC<LandingTemplateNoirProps>,
+      previewComponent: LandingNoirPreview,
     },
   ],
 
@@ -195,6 +217,12 @@ export const templateConfig: TemplateConfig = {
       component:
         SortingEditorialTemplate as React.FC<SortingEditorialTemplateProps>,
       previewComponent: SortingEditorialPreview,
+    },
+    {
+      id: "sorting-noir",
+      label: "Demo 5: Noir (Dark Luxury)",
+      component: SortingNoirTemplate as React.FC<SortingNoirTemplateProps>,
+      previewComponent: SortingNoirPreview,
     },
   ],
 
@@ -235,6 +263,12 @@ export const templateConfig: TemplateConfig = {
       component:
         ProductPageModernSplit as React.FC<ProductPageModernSplitProps>,
       previewComponent: ProductPageModernSplitPreview,
+    },
+    {
+      id: "product-noir",
+      label: "Demo 5: Noir (Dark Luxury)",
+      component: ProductPageNoir as React.FC<ProductPageNoirProps>,
+      previewComponent: ProductPageNoirPreview,
     },
   ],
 
@@ -329,7 +363,8 @@ export const templateConfig: TemplateConfig = {
     {
       id: "search-results-editorial",
       label: "Editorial Layout",
-      component: SearchResultsEditorial as React.FC<SearchResultsEditorialProps>,
+      component:
+        SearchResultsEditorial as React.FC<SearchResultsEditorialProps>,
       previewComponent: SearchResultsEditorialPreview,
     },
   ],

@@ -40,9 +40,15 @@ export default function ShopPage() {
   );
 
   // Section-specific filter data from homepage CMS content
-  const [sectionProductIds, setSectionProductIds] = useState<string[] | undefined>(undefined);
-  const [sectionDiscountedOnly, setSectionDiscountedOnly] = useState<boolean | undefined>(undefined);
-  const [sectionSortBy, setSectionSortBy] = useState<"newest" | undefined>(undefined);
+  const [sectionProductIds, setSectionProductIds] = useState<
+    string[] | undefined
+  >(undefined);
+  const [sectionDiscountedOnly, setSectionDiscountedOnly] = useState<
+    boolean | undefined
+  >(undefined);
+  const [sectionSortBy, setSectionSortBy] = useState<"newest" | undefined>(
+    undefined,
+  );
   const [sectionReady, setSectionReady] = useState(!sectionParam); // true immediately if no section param
 
   // Minimal-specific state
@@ -177,7 +183,10 @@ export default function ShopPage() {
           categoryIds: categoryId ? [categoryId] : undefined,
           search: isMinimal && searchQuery ? searchQuery : undefined,
           sortBy: isMinimal ? effectiveSort : undefined,
-          productIds: sectionProductIds && sectionProductIds.length > 0 ? sectionProductIds : undefined,
+          productIds:
+            sectionProductIds && sectionProductIds.length > 0
+              ? sectionProductIds
+              : undefined,
           discountedOnly: sectionDiscountedOnly || undefined,
         });
 
@@ -209,7 +218,19 @@ export default function ShopPage() {
     return () => {
       cancelled = true;
     };
-  }, [categoryParam, categoryId, isMinimal, currentPage, serverSort, searchQuery, sectionParam, sectionReady, sectionProductIds, sectionDiscountedOnly, sectionSortBy]);
+  }, [
+    categoryParam,
+    categoryId,
+    isMinimal,
+    currentPage,
+    serverSort,
+    searchQuery,
+    sectionParam,
+    sectionReady,
+    sectionProductIds,
+    sectionDiscountedOnly,
+    sectionSortBy,
+  ]);
 
   // Debounced search for minimal template
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -265,7 +286,9 @@ export default function ShopPage() {
     <div>
       {/* Breadcrumb when filtering by category */}
       {categoryName && (
-        <div className='container mx-auto px-4 sm:px-6 lg:px-8 pt-6'>
+        <div
+          data-shop-breadcrumb
+          className='container mx-auto px-4 sm:px-6 lg:px-8 pt-6'>
           <div className='flex items-center gap-2 text-sm text-stone-600 mb-4'>
             <a href='/shop' className='hover:text-stone-900 transition-colors'>
               All Products
