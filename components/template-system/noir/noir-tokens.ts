@@ -27,6 +27,10 @@ export const NOIR_COLORS = {
 export const NOIR_CARD_CLASSES =
   "bg-[#141414] border border-white/10 rounded-lg";
 
+/** Card surface with a subtle vertical gradient (image-dominant cards). */
+export const NOIR_CARD_GRADIENT_CLASSES =
+  "bg-linear-to-b from-[#181818] to-[#101010] border border-white/10 rounded-lg";
+
 /** Hairline border used on dividers and outlined elements. */
 export const NOIR_BORDER_CLASSES = "border border-white/10";
 
