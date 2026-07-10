@@ -38,6 +38,7 @@ export function NoirBestSellers({
       viewAllLink={content.viewAllLink || "/shop"}
       products={products}
       isLoading={isLoading}
+      headingVariant='centered'
     />
   );
 }

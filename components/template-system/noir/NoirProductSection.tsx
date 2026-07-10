@@ -1,8 +1,15 @@
+import { ArrowRight } from "lucide-react";
+import { Link } from "#root/components/utils/Link";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import { cn } from "#root/lib/utils";
 import { ProductCardNoir, type NoirProduct } from "./ProductCardNoir";
 import { NoirSectionHeading } from "./NoirSectionHeading";
-import { NOIR_CONTAINER, NOIR_SECTION_Y } from "./noir-tokens";
+import {
+  NOIR_ACCENT_LINE,
+  NOIR_CONTAINER,
+  NOIR_DISPLAY_FONT_CLASSES,
+  NOIR_SECTION_Y,
+} from "./noir-tokens";
 
 interface NoirProductSectionProps {
   title: string;
@@ -14,6 +21,13 @@ interface NoirProductSectionProps {
   maxProducts?: number;
   /** Elevated band background instead of pure black. */
   band?: boolean;
+  /**
+   * "start" (default): NoirSectionHeading with inline view-all link.
+   * "centered": small centered uppercase title + short red underline,
+   * tight top padding (tucks under the hero), view-all link centered
+   * under the grid.
+   */
+  headingVariant?: "start" | "centered";
 }
 
 /** Dark skeleton card — matches ProductCardNoir geometry exactly. */
@@ -49,23 +63,56 @@ export function NoirProductSection({
   isLoading = false,
   maxProducts = 4,
   band = false,
+  headingVariant = "start",
 }: NoirProductSectionProps) {
   const { locale } = useMinimalI18n();
   const isAr = locale === "ar";
+  const centered = headingVariant === "centered";
 
   if (!isLoading && products.length === 0) return null;
 
   const shown = products.slice(0, maxProducts);
 
   return (
-    <section className={cn(NOIR_SECTION_Y, band && "bg-[#0c0c0c]")}>
+    <section
+      className={cn(
+        centered ? "pt-10 md:pt-14 pb-16 md:pb-24" : NOIR_SECTION_Y,
+        band && "bg-[#0c0c0c]",
+      )}>
       <div className={NOIR_CONTAINER}>
-        <NoirSectionHeading
-          title={title}
-          eyebrow={eyebrow}
-          viewAllText={viewAllText}
-          viewAllLink={viewAllLink}
-        />
+        {centered ? (
+          <div className='mb-8 md:mb-10 flex flex-col items-center text-center'>
+            {eyebrow && (
+              <p
+                className={cn(
+                  "text-[11px] uppercase text-[#E8112D] font-medium mb-2",
+                  isAr ? "" : "tracking-[0.28em]",
+                  NOIR_DISPLAY_FONT_CLASSES,
+                )}>
+                {eyebrow}
+              </p>
+            )}
+            <h2
+              className={cn(
+                "text-base md:text-lg uppercase font-semibold text-white",
+                isAr ? "" : "tracking-[0.22em]",
+                NOIR_DISPLAY_FONT_CLASSES,
+              )}>
+              {title}
+            </h2>
+            <span
+              className={cn(NOIR_ACCENT_LINE, "mt-2.5")}
+              aria-hidden='true'
+            />
+          </div>
+        ) : (
+          <NoirSectionHeading
+            title={title}
+            eyebrow={eyebrow}
+            viewAllText={viewAllText}
+            viewAllLink={viewAllLink}
+          />
+        )}
 
         {/* ── Products ── */}
         {isLoading ? (
@@ -101,6 +148,26 @@ export function NoirProductSection({
               ))}
             </div>
           </>
+        )}
+
+        {/* Centered variant: view-all as small centered link under grid */}
+        {centered && viewAllText && viewAllLink && (
+          <div className='mt-8 md:mt-10 flex justify-center'>
+            <Link
+              href={viewAllLink}
+              className={cn(
+                "group/va inline-flex items-center gap-1.5 text-[11px] uppercase text-white/70",
+                "hover:text-[#E8112D] transition-colors duration-300",
+                isAr ? "" : "tracking-[0.2em]",
+                NOIR_DISPLAY_FONT_CLASSES,
+              )}>
+              {viewAllText}
+              <ArrowRight
+                className='w-3 h-3 rtl:rotate-180 transition-transform duration-300 group-hover/va:translate-x-1 rtl:group-hover/va:-translate-x-1'
+                strokeWidth={1.5}
+              />
+            </Link>
+          </div>
         )}
       </div>
     </section>

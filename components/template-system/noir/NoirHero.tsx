@@ -8,7 +8,6 @@ import { cn } from "#root/lib/utils";
 import {
   NOIR_ACCENT_BG_CLASSES,
   NOIR_DISPLAY_FONT_CLASSES,
-  NOIR_TEXT_SECONDARY_CLASSES,
 } from "./noir-tokens";
 
 interface NoirHeroProps {
@@ -46,28 +45,36 @@ export function NoirHero({ hero, onCtaClick }: NoirHeroProps) {
   const ctaLink = hero.ctaLink || "/shop";
 
   return (
-    <section className='relative px-4 md:px-8 pt-6 md:pt-8 overflow-hidden'>
-      {/* Ambient red rim-light glow — layered depth, no image needed */}
-      <div
-        className='pointer-events-none absolute -top-24 end-[-10%] w-[70vw] max-w-3xl aspect-square rounded-full opacity-60 blur-3xl'
-        style={{
-          background:
-            "radial-gradient(circle, rgba(232,17,45,0.22) 0%, rgba(232,17,45,0.05) 45%, transparent 70%)",
-        }}
-        aria-hidden='true'
-      />
-
+    <section className='relative px-4 md:px-8 pt-6 md:pt-8 pb-3 md:pb-4 overflow-hidden'>
       <div className='relative mx-auto max-w-7xl'>
         <div
           className={cn(
-            "grid items-stretch gap-0 rounded-2xl border border-white/10 bg-[#0c0c0c] overflow-hidden",
-            "min-h-[70vh] md:min-h-[80vh] md:max-h-225",
+            "relative grid items-stretch gap-0 rounded-2xl border border-white/10 overflow-hidden",
+            "bg-linear-to-b from-[#121212] to-[#0a0a0a]",
+            "shadow-[0_40px_120px_-40px_rgba(0,0,0,0.9)]",
+            "min-h-120 md:min-h-140 md:max-h-160",
             hasImage ? "md:grid-cols-2" : "",
           )}>
+          {/* Top-edge highlight — glass panel catchlight */}
+          <div
+            className='absolute inset-x-0 top-0 h-px z-10 pointer-events-none bg-linear-to-r from-transparent via-white/25 to-transparent'
+            aria-hidden='true'
+          />
+          {/* Ambient red rim-light glow — inside the glass panel, bottom-start,
+              bleeding under the column boundary */}
+          <div
+            className='pointer-events-none absolute z-0 -bottom-1/3 -start-1/5 w-[60%] aspect-square rounded-full blur-3xl'
+            style={{
+              background:
+                "radial-gradient(circle, rgba(232,17,45,0.16) 0%, rgba(232,17,45,0.04) 45%, transparent 70%)",
+            }}
+            aria-hidden='true'
+          />
+
           {/* ── Text panel ── */}
           <div
             className={cn(
-              "relative z-10 flex flex-col justify-center px-6 py-16 md:px-14 md:py-20 gap-7",
+              "relative z-10 flex flex-col justify-center px-6 py-12 md:px-12 md:py-14 gap-5 md:gap-6",
               !hasImage && "items-center text-center mx-auto max-w-3xl",
             )}>
             <div
@@ -88,8 +95,8 @@ export function NoirHero({ hero, onCtaClick }: NoirHeroProps) {
 
             <h1
               className={cn(
-                "uppercase text-white font-bold leading-[0.95]",
-                "text-[clamp(2.75rem,7vw,6rem)]",
+                "uppercase text-white font-bold leading-[0.98] text-balance",
+                "text-[clamp(2.5rem,5.5vw,4.5rem)]",
                 isAr ? "" : "tracking-[0.01em]",
                 NOIR_DISPLAY_FONT_CLASSES,
               )}>
@@ -99,9 +106,9 @@ export function NoirHero({ hero, onCtaClick }: NoirHeroProps) {
             {hero.subtitle && (
               <p
                 className={cn(
-                  "text-sm md:text-base leading-relaxed max-w-md",
+                  "uppercase text-[11px] md:text-xs leading-[1.9] max-w-[42ch] text-white/60",
+                  isAr ? "" : "tracking-[0.16em]",
                   !hasImage && "mx-auto",
-                  NOIR_TEXT_SECONDARY_CLASSES,
                 )}>
                 {hero.subtitle}
               </p>
@@ -116,7 +123,7 @@ export function NoirHero({ hero, onCtaClick }: NoirHeroProps) {
                 href={ctaLink}
                 onClick={handleCta(ctaLink)}
                 className={cn(
-                  "group/cta inline-flex items-center justify-center gap-2 px-10 py-4 rounded-md",
+                  "group/cta inline-flex items-center justify-center gap-2 px-9 py-3.5 rounded-full",
                   "text-xs uppercase font-medium text-white transition-colors duration-300",
                   isAr ? "" : "tracking-[0.2em]",
                   NOIR_DISPLAY_FONT_CLASSES,
@@ -131,9 +138,9 @@ export function NoirHero({ hero, onCtaClick }: NoirHeroProps) {
               <Link
                 href='/shop'
                 className={cn(
-                  "inline-flex items-center justify-center gap-2 px-10 py-4 rounded-md",
-                  "border border-white/20 text-xs uppercase font-medium text-white/80",
-                  "hover:border-white/50 hover:text-white transition-colors duration-300",
+                  "inline-flex items-center justify-center gap-2 px-9 py-3.5 rounded-full",
+                  "border border-white/25 text-xs uppercase font-medium text-white/80",
+                  "hover:border-white/60 hover:text-white transition-colors duration-300",
                   isAr ? "" : "tracking-[0.2em]",
                   NOIR_DISPLAY_FONT_CLASSES,
                 )}>
@@ -156,13 +163,29 @@ export function NoirHero({ hero, onCtaClick }: NoirHeroProps) {
                   fetchPriority='high'
                 />
               </picture>
-              {/* Blend the panel edge into the dark canvas (both axes) */}
+              {/* Dissolve the photo into the glass panel — no hard edge */}
+              {/* Inline-start fade (desktop, side-by-side) — wide, matches surface */}
               <div
-                className='absolute inset-0 pointer-events-none bg-linear-to-t from-black/50 via-transparent to-transparent'
+                className='absolute inset-y-0 start-0 w-[55%] pointer-events-none bg-linear-to-r rtl:bg-linear-to-l from-[#0e0e0e] to-transparent hidden md:block'
                 aria-hidden='true'
               />
+              {/* Top fade (mobile, stacked below text) */}
               <div
-                className='absolute inset-y-0 start-0 w-24 pointer-events-none bg-linear-to-r from-[#0c0c0c] to-transparent hidden md:block'
+                className='absolute inset-x-0 top-0 h-[55%] pointer-events-none bg-linear-to-b from-[#0e0e0e] to-transparent md:hidden'
+                aria-hidden='true'
+              />
+              {/* Bottom fade — matches container bottom surface */}
+              <div
+                className='absolute inset-x-0 bottom-0 h-[30%] pointer-events-none bg-linear-to-t from-[#0a0a0a] to-transparent'
+                aria-hidden='true'
+              />
+              {/* Very subtle full-panel vignette */}
+              <div
+                className='absolute inset-0 pointer-events-none'
+                style={{
+                  background:
+                    "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.35) 100%)",
+                }}
                 aria-hidden='true'
               />
             </div>

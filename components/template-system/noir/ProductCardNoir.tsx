@@ -7,7 +7,7 @@ import { getProductUrl } from "#root/lib/utils/route-helpers";
 import { cn } from "#root/lib/utils";
 import { formatNoirPrice } from "./format-price";
 import {
-  NOIR_CARD_CLASSES,
+  NOIR_CARD_GRADIENT_CLASSES,
   NOIR_CARD_HOVER_GLOW,
   NOIR_DISPLAY_FONT_CLASSES,
   NOIR_TEXT_MUTED_CLASSES,
@@ -183,7 +183,7 @@ export function ProductCardNoir({
     <div
       className={cn(
         "group relative flex flex-col overflow-hidden",
-        NOIR_CARD_CLASSES,
+        NOIR_CARD_GRADIENT_CLASSES,
         NOIR_CARD_HOVER_GLOW,
         className,
       )}>
@@ -218,15 +218,17 @@ export function ProductCardNoir({
             onError={() => setImageError(true)}
           />
         )}
-        {/* Bottom vignette so real photos blend into the card */}
-        <div
-          className='absolute inset-x-0 bottom-0 h-1/3 pointer-events-none bg-linear-to-t from-[#141414] via-[#141414]/20 to-transparent'
-          aria-hidden='true'
-        />
+        {/* Bottom fade so real photos blend into the card surface */}
+        {hasImageData && !imageError && (
+          <div
+            className='absolute inset-x-0 bottom-0 h-[35%] pointer-events-none bg-linear-to-t from-[#141414] to-transparent'
+            aria-hidden='true'
+          />
+        )}
       </Link>
 
-      {/* Body */}
-      <div className='flex flex-1 flex-col gap-2 p-4'>
+      {/* Body — centered, image-dominant composition */}
+      <div className='flex flex-1 flex-col items-center text-center gap-2 p-4'>
         {/* Name */}
         <Link href={productUrl}>
           <h3
@@ -241,14 +243,18 @@ export function ProductCardNoir({
 
         {/* Notes / descriptor */}
         {product.notes && (
-          <p className={cn("text-xs truncate", NOIR_TEXT_SECONDARY_CLASSES)}>
+          <p
+            className={cn(
+              "w-full text-[11px] truncate",
+              NOIR_TEXT_SECONDARY_CLASSES,
+            )}>
             {product.notes}
           </p>
         )}
 
         {/* Rating — render ONLY when rating data exists */}
         {hasRating && (
-          <div className='flex items-center gap-1.5'>
+          <div className='flex items-center justify-center gap-1.5'>
             <div className='flex items-center gap-0.5'>
               {[1, 2, 3, 4, 5].map((i) => (
                 <Star
@@ -272,7 +278,7 @@ export function ProductCardNoir({
         )}
 
         {/* Price */}
-        <div className='flex items-baseline gap-2 mt-auto pt-1'>
+        <div className='flex items-baseline justify-center gap-2 mt-auto pt-1'>
           <span className='text-sm font-medium text-white'>
             {formatNoirPrice(displayPrice)}
           </span>

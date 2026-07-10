@@ -70,15 +70,15 @@ export function NoirNavbar() {
             <HeaderLogo
               variant='desktop'
               textClassName={cn(
-                "inline-block text-lg md:text-xl font-semibold uppercase !text-white hover:!text-[#E8112D] transition-colors duration-300",
-                isAr ? "" : "tracking-[0.14em]",
+                "inline-block text-xl md:text-2xl font-semibold uppercase !text-white hover:!text-[#E8112D] transition-colors duration-300",
+                isAr ? "" : "tracking-[0.3em]",
                 NOIR_DISPLAY_FONT_CLASSES,
               )}
             />
           </div>
 
           {/* ─── Center: nav links (desktop) ─── */}
-          <nav className='hidden md:flex items-center justify-center gap-8'>
+          <nav className='hidden md:flex items-center justify-center gap-10'>
             {navLinks.map((link) => (
               <Link
                 key={link.href + link.label}
