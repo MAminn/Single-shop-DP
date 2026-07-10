@@ -191,7 +191,7 @@ export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
         links: [
           { id: "contact", label: "Contact Us", url: "#" },
           { id: "faq", label: "FAQ", url: "#faq" },
-          { id: "shipping", label: "Shipping & Returns", url: "#" },
+          { id: "shipping", label: "Shipping & Returns", url: "/return-policy" },
           { id: "privacy", label: "Privacy Policy", url: "#" },
         ],
       },

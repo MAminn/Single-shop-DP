@@ -71,6 +71,10 @@ export enum ValuePropIconType {
   SUPPORT = "support",
   QUALITY = "quality",
   RETURNS = "returns",
+  PACKAGE = "package",
+  BOTTLE = "bottle",
+  RECEIPT = "receipt",
+  PAYMENT = "payment",
 }
 
 /**
@@ -221,6 +225,48 @@ export interface HomepageAboutUsContent {
 }
 
 /**
+ * Return Policy page step (minimal template)
+ */
+export interface HomepageReturnPolicyStep {
+  icon: ValuePropIconType;
+  title: string;
+  titleAr?: string;
+  description: string;
+  descriptionAr?: string;
+}
+
+/**
+ * Return Policy page detail section (minimal template)
+ */
+export interface HomepageReturnPolicyDetailSection {
+  title: string;
+  titleAr?: string;
+  body: string;
+  bodyAr?: string;
+}
+
+/**
+ * Return Policy page content (minimal template)
+ */
+export interface HomepageReturnPolicyContent {
+  enabled: boolean;
+  title: string;
+  titleAr?: string;
+  intro: string;
+  introAr?: string;
+  steps: HomepageReturnPolicyStep[];
+  detailSections: HomepageReturnPolicyDetailSection[];
+  footerPrefix: string;
+  footerPrefixAr?: string;
+  supportEmail: string;
+  footerMiddle: string;
+  footerMiddleAr?: string;
+  contactLinkLabel: string;
+  contactLinkLabelAr?: string;
+  contactLinkUrl: string;
+}
+
+/**
  * Complete homepage content structure
  */
 export interface HomepageContent {
@@ -245,6 +291,8 @@ export interface HomepageContent {
   };
   /** About Us section */
   aboutUs?: HomepageAboutUsContent;
+  /** Return Policy page (minimal template) */
+  returnPolicy?: HomepageReturnPolicyContent;
   /** Product page inline carousel custom title */
   productCarouselTitle?: string;
   productCarouselTitleAr?: string;
@@ -388,6 +436,76 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
       "Welcome to our store. We are passionate about bringing you the finest products.",
     descriptionAr: "",
     imageUrl: "",
+  },
+  returnPolicy: {
+    enabled: true,
+    title: "Return Policy",
+    titleAr: "سياسة الإرجاع",
+    intro:
+      "We want you to love every Synt fragrance. If something's not right, we're here to help.",
+    introAr:
+      "نريدك أن تحب كل عطر من Synt. إذا كان هناك أي مشكلة، نحن هنا لمساعدتك.",
+    steps: [
+      {
+        icon: ValuePropIconType.PACKAGE,
+        title: "1. Return Window",
+        titleAr: "1. فترة الإرجاع",
+        description: "You may return any item within 14 days of delivery.",
+        descriptionAr: "يمكنك إرجاع أي منتج خلال 14 يوماً من تاريخ التسليم.",
+      },
+      {
+        icon: ValuePropIconType.BOTTLE,
+        title: "2. Eligible Items",
+        titleAr: "2. المنتجات المؤهلة",
+        description:
+          "Items must be unused, unopened, and in original packaging.",
+        descriptionAr:
+          "يجب أن تكون المنتجات غير مستخدمة، غير مفتوحة، وفي عبوتها الأصلية.",
+      },
+      {
+        icon: ValuePropIconType.RECEIPT,
+        title: "3. How to Return",
+        titleAr: "3. كيفية الإرجاع",
+        description:
+          "Contact our support team via email or phone to initiate a return.",
+        descriptionAr:
+          "تواصل مع فريق الدعم عبر البريد الإلكتروني أو الهاتف لبدء عملية الإرجاع.",
+      },
+      {
+        icon: ValuePropIconType.PAYMENT,
+        title: "4. Refunds",
+        titleAr: "4. المبالغ المستردة",
+        description:
+          "Once we receive and inspect your return, we'll process your refund within 5–7 business days.",
+        descriptionAr:
+          "بمجرد استلامنا وفحص المرتجع، سنعالج استرداد المبلغ خلال 5–7 أيام عمل.",
+      },
+    ],
+    detailSections: [
+      {
+        title: "Non-Returnable Items",
+        titleAr: "منتجات غير قابلة للإرجاع",
+        body: "For hygiene and safety reasons, we cannot accept returns on opened fragrance bottles. Gift cards and promotional items are also non-returnable.",
+        bodyAr:
+          "لأسباب صحية وأمنية، لا نقبل إرجاع زجاجات العطور المفتوحة. بطاقات الهدايا والعروض الترويجية غير قابلة للإرجاع أيضاً.",
+      },
+      {
+        title: "Damaged or Wrong Items",
+        titleAr: "منتجات تالفة أو خاطئة",
+        body: "If your order arrives damaged or incorrect, please contact us within 48 hours of delivery with photos. We'll arrange a replacement or refund as quickly as possible.",
+        bodyAr:
+          "إذا وصل طلبك تالفاً أو غير صحيح، يرجى التواصل معنا خلال 48 ساعة من التسليم مع صور. سنرتب استبدالاً أو استرداداً في أسرع وقت ممكن.",
+      },
+    ],
+    footerPrefix:
+      "Need help? We're just an email away. Reach out to us at",
+    footerPrefixAr: "تحتاج مساعدة؟ نحن على بعد بريد إلكتروني. تواصل معنا على",
+    supportEmail: "syntperfumes@gmail.com",
+    footerMiddle: "or via our",
+    footerMiddleAr: "أو عبر",
+    contactLinkLabel: "Contact Us page",
+    contactLinkLabelAr: "صفحة اتصل بنا",
+    contactLinkUrl: "/contact",
   },
   testimonials: {
     enabled: true,

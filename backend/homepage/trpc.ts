@@ -169,6 +169,40 @@ const HomepageContentSchema = z.object({
       imageUrl: z.string().nullish(),
     })
     .nullish(),
+  returnPolicy: z
+    .object({
+      enabled: z.boolean(),
+      title: z.string(),
+      titleAr: z.string().nullish(),
+      intro: z.string(),
+      introAr: z.string().nullish(),
+      steps: z.array(
+        z.object({
+          icon: z.nativeEnum(ValuePropIconType),
+          title: z.string(),
+          titleAr: z.string().nullish(),
+          description: z.string(),
+          descriptionAr: z.string().nullish(),
+        }),
+      ),
+      detailSections: z.array(
+        z.object({
+          title: z.string(),
+          titleAr: z.string().nullish(),
+          body: z.string(),
+          bodyAr: z.string().nullish(),
+        }),
+      ),
+      footerPrefix: z.string(),
+      footerPrefixAr: z.string().nullish(),
+      supportEmail: z.string(),
+      footerMiddle: z.string(),
+      footerMiddleAr: z.string().nullish(),
+      contactLinkLabel: z.string(),
+      contactLinkLabelAr: z.string().nullish(),
+      contactLinkUrl: z.string(),
+    })
+    .nullish(),
   productCarouselTitle: z.string().nullish(),
   productCarouselTitleAr: z.string().nullish(),
   testimonials: z.object({

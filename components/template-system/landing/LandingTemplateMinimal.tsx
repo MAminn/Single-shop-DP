@@ -13,21 +13,16 @@ import type { FeaturedProduct } from "../home/HomeFeaturedProducts";
 import type { CategoryStripItem } from "#root/components/shop/CategoryStrip";
 import type { NewArrivalProduct } from "#root/components/shop/NewArrivals";
 import {
-  ShoppingBag,
-  Truck,
-  Shield,
-  Headphones,
-  Award,
-  RefreshCw,
   ArrowRight,
   ChevronLeft,
   ChevronRight,
+  ShoppingBag,
 } from "lucide-react";
 import type {
   HomepageContent,
-  ValuePropIconType,
 } from "#root/shared/types/homepage-content";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
+import { VALUE_PROP_ICON_MAP as ICON_MAP } from "#root/components/template-system/shared/value-prop-icons";
 
 /**
  * Props for the LandingTemplateMinimal component
@@ -45,19 +40,6 @@ export interface LandingTemplateMinimalProps {
   className?: string;
   onCtaClick?: (link: string) => void;
 }
-
-// Icon mapping for value propositions
-const ICON_MAP: Record<
-  ValuePropIconType,
-  React.ComponentType<{ className?: string }>
-> = {
-  shopping: ShoppingBag,
-  shipping: Truck,
-  security: Shield,
-  support: Headphones,
-  quality: Award,
-  returns: RefreshCw,
-};
 
 // ─── Helpers ─────────────────────────────────────────────
 

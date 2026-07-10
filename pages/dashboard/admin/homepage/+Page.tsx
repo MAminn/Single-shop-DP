@@ -2017,6 +2017,18 @@ export default function HomepageAdminPage() {
                         <SelectItem value={ValuePropIconType.RETURNS}>
                           Returns (Refresh)
                         </SelectItem>
+                        <SelectItem value={ValuePropIconType.PACKAGE}>
+                          Package (Box)
+                        </SelectItem>
+                        <SelectItem value={ValuePropIconType.BOTTLE}>
+                          Bottle (Flask)
+                        </SelectItem>
+                        <SelectItem value={ValuePropIconType.RECEIPT}>
+                          Receipt
+                        </SelectItem>
+                        <SelectItem value={ValuePropIconType.PAYMENT}>
+                          Payment (Card)
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -4030,6 +4042,693 @@ export default function HomepageAdminPage() {
                     />
                   </div>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Return Policy Page (Minimal only) ──────────── */}
+        {isMinimal && (
+          <Card>
+            <CardHeader>
+              <div className='flex items-center justify-between'>
+                <CardTitle className='text-base'>Return Policy Page</CardTitle>
+                <Switch
+                  checked={content.returnPolicy?.enabled ?? false}
+                  onCheckedChange={(checked) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      returnPolicy: {
+                        ...(prev.returnPolicy ??
+                          DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                        enabled: checked,
+                      },
+                    }))
+                  }
+                />
+              </div>
+            </CardHeader>
+            <CardContent className='space-y-6'>
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <Label className='text-xs'>Title (English)</Label>
+                  <Input
+                    value={content.returnPolicy?.title ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        returnPolicy: {
+                          ...(prev.returnPolicy ??
+                            DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                          enabled: prev.returnPolicy?.enabled ?? false,
+                          title: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder='Return Policy'
+                    disabled={!(content.returnPolicy?.enabled ?? false)}
+                  />
+                </div>
+                <div>
+                  <Label className='text-xs'>Title (Arabic)</Label>
+                  <Input
+                    dir='rtl'
+                    value={content.returnPolicy?.titleAr ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        returnPolicy: {
+                          ...(prev.returnPolicy ??
+                            DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                          enabled: prev.returnPolicy?.enabled ?? false,
+                          titleAr: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder='سياسة الإرجاع'
+                    disabled={!(content.returnPolicy?.enabled ?? false)}
+                  />
+                </div>
+              </div>
+
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <Label className='text-xs'>Intro (English)</Label>
+                  <Textarea
+                    value={content.returnPolicy?.intro ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        returnPolicy: {
+                          ...(prev.returnPolicy ??
+                            DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                          enabled: prev.returnPolicy?.enabled ?? false,
+                          intro: e.target.value,
+                        },
+                      }))
+                    }
+                    rows={3}
+                    disabled={!(content.returnPolicy?.enabled ?? false)}
+                  />
+                </div>
+                <div>
+                  <Label className='text-xs'>Intro (Arabic)</Label>
+                  <Textarea
+                    dir='rtl'
+                    value={content.returnPolicy?.introAr ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        returnPolicy: {
+                          ...(prev.returnPolicy ??
+                            DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                          enabled: prev.returnPolicy?.enabled ?? false,
+                          introAr: e.target.value,
+                        },
+                      }))
+                    }
+                    rows={3}
+                    disabled={!(content.returnPolicy?.enabled ?? false)}
+                  />
+                </div>
+              </div>
+
+              <div className='space-y-4'>
+                <Label className='text-sm font-medium'>Policy Steps</Label>
+                {(content.returnPolicy?.steps ?? []).map((step, index) => (
+                  <div
+                    key={index}
+                    className='border rounded-lg p-4 space-y-3 bg-muted/30'>
+                    <div className='flex items-center justify-between'>
+                      <span className='text-xs font-medium text-muted-foreground'>
+                        Step {index + 1}
+                      </span>
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='sm'
+                        disabled={!(content.returnPolicy?.enabled ?? false)}
+                        onClick={() =>
+                          setContent((prev) => ({
+                            ...prev,
+                            returnPolicy: {
+                              ...(prev.returnPolicy ??
+                                DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                              enabled: prev.returnPolicy?.enabled ?? false,
+                              steps: (prev.returnPolicy?.steps ?? []).filter(
+                                (_, i) => i !== index,
+                              ),
+                            },
+                          }))
+                        }>
+                        <Trash2 className='w-4 h-4' />
+                      </Button>
+                    </div>
+
+                    <div>
+                      <Label className='text-xs'>Icon</Label>
+                      <Select
+                        value={step.icon}
+                        onValueChange={(value) =>
+                          setContent((prev) => {
+                            const steps = [...(prev.returnPolicy?.steps ?? [])];
+                            steps[index] = {
+                              ...steps[index]!,
+                              icon: value as ValuePropIconType,
+                            };
+                            return {
+                              ...prev,
+                              returnPolicy: {
+                                ...(prev.returnPolicy ??
+                                  DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                                enabled: prev.returnPolicy?.enabled ?? false,
+                                steps,
+                              },
+                            };
+                          })
+                        }
+                        disabled={!(content.returnPolicy?.enabled ?? false)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={ValuePropIconType.PACKAGE}>
+                            Package
+                          </SelectItem>
+                          <SelectItem value={ValuePropIconType.BOTTLE}>
+                            Bottle
+                          </SelectItem>
+                          <SelectItem value={ValuePropIconType.RECEIPT}>
+                            Receipt
+                          </SelectItem>
+                          <SelectItem value={ValuePropIconType.PAYMENT}>
+                            Payment
+                          </SelectItem>
+                          <SelectItem value={ValuePropIconType.RETURNS}>
+                            Returns
+                          </SelectItem>
+                          <SelectItem value={ValuePropIconType.SUPPORT}>
+                            Support
+                          </SelectItem>
+                          <SelectItem value={ValuePropIconType.SHIPPING}>
+                            Shipping
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div>
+                        <Label className='text-xs'>Title (English)</Label>
+                        <Input
+                          value={step.title}
+                          onChange={(e) =>
+                            setContent((prev) => {
+                              const steps = [
+                                ...(prev.returnPolicy?.steps ?? []),
+                              ];
+                              steps[index] = {
+                                ...steps[index]!,
+                                title: e.target.value,
+                              };
+                              return {
+                                ...prev,
+                                returnPolicy: {
+                                  ...(prev.returnPolicy ??
+                                    DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                                  enabled: prev.returnPolicy?.enabled ?? false,
+                                  steps,
+                                },
+                              };
+                            })
+                          }
+                          disabled={!(content.returnPolicy?.enabled ?? false)}
+                        />
+                      </div>
+                      <div>
+                        <Label className='text-xs'>Title (Arabic)</Label>
+                        <Input
+                          dir='rtl'
+                          value={step.titleAr ?? ""}
+                          onChange={(e) =>
+                            setContent((prev) => {
+                              const steps = [
+                                ...(prev.returnPolicy?.steps ?? []),
+                              ];
+                              steps[index] = {
+                                ...steps[index]!,
+                                titleAr: e.target.value,
+                              };
+                              return {
+                                ...prev,
+                                returnPolicy: {
+                                  ...(prev.returnPolicy ??
+                                    DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                                  enabled: prev.returnPolicy?.enabled ?? false,
+                                  steps,
+                                },
+                              };
+                            })
+                          }
+                          disabled={!(content.returnPolicy?.enabled ?? false)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div>
+                        <Label className='text-xs'>Description (English)</Label>
+                        <Textarea
+                          value={step.description}
+                          onChange={(e) =>
+                            setContent((prev) => {
+                              const steps = [
+                                ...(prev.returnPolicy?.steps ?? []),
+                              ];
+                              steps[index] = {
+                                ...steps[index]!,
+                                description: e.target.value,
+                              };
+                              return {
+                                ...prev,
+                                returnPolicy: {
+                                  ...(prev.returnPolicy ??
+                                    DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                                  enabled: prev.returnPolicy?.enabled ?? false,
+                                  steps,
+                                },
+                              };
+                            })
+                          }
+                          rows={2}
+                          disabled={!(content.returnPolicy?.enabled ?? false)}
+                        />
+                      </div>
+                      <div>
+                        <Label className='text-xs'>Description (Arabic)</Label>
+                        <Textarea
+                          dir='rtl'
+                          value={step.descriptionAr ?? ""}
+                          onChange={(e) =>
+                            setContent((prev) => {
+                              const steps = [
+                                ...(prev.returnPolicy?.steps ?? []),
+                              ];
+                              steps[index] = {
+                                ...steps[index]!,
+                                descriptionAr: e.target.value,
+                              };
+                              return {
+                                ...prev,
+                                returnPolicy: {
+                                  ...(prev.returnPolicy ??
+                                    DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                                  enabled: prev.returnPolicy?.enabled ?? false,
+                                  steps,
+                                },
+                              };
+                            })
+                          }
+                          rows={2}
+                          disabled={!(content.returnPolicy?.enabled ?? false)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  disabled={!(content.returnPolicy?.enabled ?? false)}
+                  onClick={() =>
+                    setContent((prev) => ({
+                      ...prev,
+                      returnPolicy: {
+                        ...(prev.returnPolicy ??
+                          DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                        enabled: prev.returnPolicy?.enabled ?? false,
+                        steps: [
+                          ...(prev.returnPolicy?.steps ?? []),
+                          {
+                            icon: ValuePropIconType.PACKAGE,
+                            title: "",
+                            titleAr: "",
+                            description: "",
+                            descriptionAr: "",
+                          },
+                        ],
+                      },
+                    }))
+                  }>
+                  + Add Step
+                </Button>
+              </div>
+
+              <div className='space-y-4'>
+                <Label className='text-sm font-medium'>Detail Sections</Label>
+                {(content.returnPolicy?.detailSections ?? []).map(
+                  (section, index) => (
+                    <div
+                      key={index}
+                      className='border rounded-lg p-4 space-y-3 bg-muted/30'>
+                      <div className='flex items-center justify-between'>
+                        <span className='text-xs font-medium text-muted-foreground'>
+                          Section {index + 1}
+                        </span>
+                        <Button
+                          type='button'
+                          variant='ghost'
+                          size='sm'
+                          disabled={!(content.returnPolicy?.enabled ?? false)}
+                          onClick={() =>
+                            setContent((prev) => ({
+                              ...prev,
+                              returnPolicy: {
+                                ...(prev.returnPolicy ??
+                                  DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                                enabled: prev.returnPolicy?.enabled ?? false,
+                                detailSections: (
+                                  prev.returnPolicy?.detailSections ?? []
+                                ).filter((_, i) => i !== index),
+                              },
+                            }))
+                          }>
+                          <Trash2 className='w-4 h-4' />
+                        </Button>
+                      </div>
+
+                      <div className='grid grid-cols-2 gap-3'>
+                        <div>
+                          <Label className='text-xs'>Title (English)</Label>
+                          <Input
+                            value={section.title}
+                            onChange={(e) =>
+                              setContent((prev) => {
+                                const detailSections = [
+                                  ...(prev.returnPolicy?.detailSections ?? []),
+                                ];
+                                detailSections[index] = {
+                                  ...detailSections[index]!,
+                                  title: e.target.value,
+                                };
+                                return {
+                                  ...prev,
+                                  returnPolicy: {
+                                    ...(prev.returnPolicy ??
+                                      DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                                    enabled:
+                                      prev.returnPolicy?.enabled ?? false,
+                                    detailSections,
+                                  },
+                                };
+                              })
+                            }
+                            disabled={!(content.returnPolicy?.enabled ?? false)}
+                          />
+                        </div>
+                        <div>
+                          <Label className='text-xs'>Title (Arabic)</Label>
+                          <Input
+                            dir='rtl'
+                            value={section.titleAr ?? ""}
+                            onChange={(e) =>
+                              setContent((prev) => {
+                                const detailSections = [
+                                  ...(prev.returnPolicy?.detailSections ?? []),
+                                ];
+                                detailSections[index] = {
+                                  ...detailSections[index]!,
+                                  titleAr: e.target.value,
+                                };
+                                return {
+                                  ...prev,
+                                  returnPolicy: {
+                                    ...(prev.returnPolicy ??
+                                      DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                                    enabled:
+                                      prev.returnPolicy?.enabled ?? false,
+                                    detailSections,
+                                  },
+                                };
+                              })
+                            }
+                            disabled={!(content.returnPolicy?.enabled ?? false)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className='grid grid-cols-2 gap-3'>
+                        <div>
+                          <Label className='text-xs'>Body (English)</Label>
+                          <Textarea
+                            value={section.body}
+                            onChange={(e) =>
+                              setContent((prev) => {
+                                const detailSections = [
+                                  ...(prev.returnPolicy?.detailSections ?? []),
+                                ];
+                                detailSections[index] = {
+                                  ...detailSections[index]!,
+                                  body: e.target.value,
+                                };
+                                return {
+                                  ...prev,
+                                  returnPolicy: {
+                                    ...(prev.returnPolicy ??
+                                      DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                                    enabled:
+                                      prev.returnPolicy?.enabled ?? false,
+                                    detailSections,
+                                  },
+                                };
+                              })
+                            }
+                            rows={3}
+                            disabled={!(content.returnPolicy?.enabled ?? false)}
+                          />
+                        </div>
+                        <div>
+                          <Label className='text-xs'>Body (Arabic)</Label>
+                          <Textarea
+                            dir='rtl'
+                            value={section.bodyAr ?? ""}
+                            onChange={(e) =>
+                              setContent((prev) => {
+                                const detailSections = [
+                                  ...(prev.returnPolicy?.detailSections ?? []),
+                                ];
+                                detailSections[index] = {
+                                  ...detailSections[index]!,
+                                  bodyAr: e.target.value,
+                                };
+                                return {
+                                  ...prev,
+                                  returnPolicy: {
+                                    ...(prev.returnPolicy ??
+                                      DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                                    enabled:
+                                      prev.returnPolicy?.enabled ?? false,
+                                    detailSections,
+                                  },
+                                };
+                              })
+                            }
+                            rows={3}
+                            disabled={!(content.returnPolicy?.enabled ?? false)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ),
+                )}
+
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  disabled={!(content.returnPolicy?.enabled ?? false)}
+                  onClick={() =>
+                    setContent((prev) => ({
+                      ...prev,
+                      returnPolicy: {
+                        ...(prev.returnPolicy ??
+                          DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                        enabled: prev.returnPolicy?.enabled ?? false,
+                        detailSections: [
+                          ...(prev.returnPolicy?.detailSections ?? []),
+                          { title: "", titleAr: "", body: "", bodyAr: "" },
+                        ],
+                      },
+                    }))
+                  }>
+                  + Add Detail Section
+                </Button>
+              </div>
+
+              <div className='space-y-4 border-t pt-4'>
+                <Label className='text-sm font-medium'>Footer Help Line</Label>
+                <div className='grid grid-cols-2 gap-4'>
+                  <div>
+                    <Label className='text-xs'>Prefix (English)</Label>
+                    <Input
+                      value={content.returnPolicy?.footerPrefix ?? ""}
+                      onChange={(e) =>
+                        setContent((prev) => ({
+                          ...prev,
+                          returnPolicy: {
+                            ...(prev.returnPolicy ??
+                              DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                            enabled: prev.returnPolicy?.enabled ?? false,
+                            footerPrefix: e.target.value,
+                          },
+                        }))
+                      }
+                      disabled={!(content.returnPolicy?.enabled ?? false)}
+                    />
+                  </div>
+                  <div>
+                    <Label className='text-xs'>Prefix (Arabic)</Label>
+                    <Input
+                      dir='rtl'
+                      value={content.returnPolicy?.footerPrefixAr ?? ""}
+                      onChange={(e) =>
+                        setContent((prev) => ({
+                          ...prev,
+                          returnPolicy: {
+                            ...(prev.returnPolicy ??
+                              DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                            enabled: prev.returnPolicy?.enabled ?? false,
+                            footerPrefixAr: e.target.value,
+                          },
+                        }))
+                      }
+                      disabled={!(content.returnPolicy?.enabled ?? false)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label className='text-xs'>Support Email</Label>
+                  <Input
+                    type='email'
+                    value={content.returnPolicy?.supportEmail ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        returnPolicy: {
+                          ...(prev.returnPolicy ??
+                            DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                          enabled: prev.returnPolicy?.enabled ?? false,
+                          supportEmail: e.target.value,
+                        },
+                      }))
+                    }
+                    disabled={!(content.returnPolicy?.enabled ?? false)}
+                  />
+                </div>
+
+                <div className='grid grid-cols-2 gap-4'>
+                  <div>
+                    <Label className='text-xs'>Middle text (English)</Label>
+                    <Input
+                      value={content.returnPolicy?.footerMiddle ?? ""}
+                      onChange={(e) =>
+                        setContent((prev) => ({
+                          ...prev,
+                          returnPolicy: {
+                            ...(prev.returnPolicy ??
+                              DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                            enabled: prev.returnPolicy?.enabled ?? false,
+                            footerMiddle: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder='or via our'
+                      disabled={!(content.returnPolicy?.enabled ?? false)}
+                    />
+                  </div>
+                  <div>
+                    <Label className='text-xs'>Middle text (Arabic)</Label>
+                    <Input
+                      dir='rtl'
+                      value={content.returnPolicy?.footerMiddleAr ?? ""}
+                      onChange={(e) =>
+                        setContent((prev) => ({
+                          ...prev,
+                          returnPolicy: {
+                            ...(prev.returnPolicy ??
+                              DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                            enabled: prev.returnPolicy?.enabled ?? false,
+                            footerMiddleAr: e.target.value,
+                          },
+                        }))
+                      }
+                      disabled={!(content.returnPolicy?.enabled ?? false)}
+                    />
+                  </div>
+                </div>
+
+                <div className='grid grid-cols-2 gap-4'>
+                  <div>
+                    <Label className='text-xs'>Contact link label (English)</Label>
+                    <Input
+                      value={content.returnPolicy?.contactLinkLabel ?? ""}
+                      onChange={(e) =>
+                        setContent((prev) => ({
+                          ...prev,
+                          returnPolicy: {
+                            ...(prev.returnPolicy ??
+                              DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                            enabled: prev.returnPolicy?.enabled ?? false,
+                            contactLinkLabel: e.target.value,
+                          },
+                        }))
+                      }
+                      disabled={!(content.returnPolicy?.enabled ?? false)}
+                    />
+                  </div>
+                  <div>
+                    <Label className='text-xs'>Contact link label (Arabic)</Label>
+                    <Input
+                      dir='rtl'
+                      value={content.returnPolicy?.contactLinkLabelAr ?? ""}
+                      onChange={(e) =>
+                        setContent((prev) => ({
+                          ...prev,
+                          returnPolicy: {
+                            ...(prev.returnPolicy ??
+                              DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                            enabled: prev.returnPolicy?.enabled ?? false,
+                            contactLinkLabelAr: e.target.value,
+                          },
+                        }))
+                      }
+                      disabled={!(content.returnPolicy?.enabled ?? false)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label className='text-xs'>Contact link URL</Label>
+                  <Input
+                    value={content.returnPolicy?.contactLinkUrl ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        returnPolicy: {
+                          ...(prev.returnPolicy ??
+                            DEFAULT_HOMEPAGE_CONTENT.returnPolicy!),
+                          enabled: prev.returnPolicy?.enabled ?? false,
+                          contactLinkUrl: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder='/contact'
+                    disabled={!(content.returnPolicy?.enabled ?? false)}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
