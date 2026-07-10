@@ -79,7 +79,7 @@ describe("GoogleGA4Adapter", () => {
     expect(adapter.isLoaded()).toBe(true);
     expect(adapter.isEnabled()).toBe(true);
     // dataLayer should contain initialization calls
-    expect(window.dataLayer.length).toBeGreaterThan(0);
+    expect(window.dataLayer?.length).toBeGreaterThan(0);
   });
 
   it("should not be enabled if config.enabled is false", () => {

@@ -7,11 +7,14 @@
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { isPaymobConfigured } from "#root/shared/config/payment";
+import { getPublicOrigin } from "#root/shared/config/site-url";
 import { verifyPaymobHmac } from "./paymob-service";
+import {
+  applyOnlinePaymentUpdate,
+  extractPaymobOrderId,
+} from "./confirm-online-payment";
 import { Effect } from "effect";
 import { query, DatabaseClientService } from "#root/shared/database/drizzle/db";
-import { order } from "#root/shared/database/drizzle/schema";
-import { eq } from "drizzle-orm";
 
 export async function paymobWebhookPlugin(fastify: FastifyInstance) {
   // Only register if Paymob is configured
@@ -24,11 +27,11 @@ export async function paymobWebhookPlugin(fastify: FastifyInstance) {
 
   fastify.post("/", async (request: FastifyRequest, reply: FastifyReply) => {
     try {
-      const body = request.body as Record<string, any>;
-      const transactionData = body.obj || body;
+      const body = request.body as Record<string, unknown>;
+      const transactionData = (body.obj || body) as Record<string, unknown>;
 
       // Verify HMAC if present
-      const hmac = (request.query as any)?.hmac || body.hmac;
+      const hmac = (request.query as Record<string, string | undefined>)?.hmac || (body.hmac as string | undefined);
       if (hmac) {
         const isValid = verifyPaymobHmac(transactionData, hmac);
         if (!isValid) {
@@ -37,27 +40,27 @@ export async function paymobWebhookPlugin(fastify: FastifyInstance) {
         }
       }
 
-      // Extract order ID from extras or merchant_order_id
-      const orderId =
-        transactionData.order?.extras?.orderId ||
-        transactionData.extras?.orderId ||
-        transactionData.merchant_order_id;
+      const orderId = extractPaymobOrderId(transactionData);
 
       if (!orderId) {
-        fastify.log.warn("[Paymob] No orderId in webhook data");
+        fastify.log.warn(
+          `[Paymob] No orderId in webhook data: ${JSON.stringify({
+            merchant_order_id: (transactionData.order as Record<string, unknown> | undefined)?.merchant_order_id,
+            special_reference: transactionData.special_reference,
+          })}`,
+        );
         return reply.code(400).send({ error: "Missing orderId" });
       }
 
-      const isSuccess = transactionData.success === true || transactionData.success === "true";
-      const isPending = transactionData.pending === true || transactionData.pending === "true";
+      const isSuccess =
+        transactionData.success === true || transactionData.success === "true";
+      const isPending =
+        transactionData.pending === true || transactionData.pending === "true";
       const transactionId = transactionData.id?.toString() ?? null;
 
       let paymentStatus: "paid" | "failed" | "processing";
-      let orderStatus: "processing" | "pending" = "pending";
-
       if (isSuccess) {
         paymentStatus = "paid";
-        orderStatus = "processing";
       } else if (isPending) {
         paymentStatus = "processing";
       } else {
@@ -68,17 +71,11 @@ export async function paymobWebhookPlugin(fastify: FastifyInstance) {
 
       await Effect.runPromise(
         query(async (db) => {
-          await db
-            .update(order)
-            .set({
-              paymentStatus,
-              paymentTransactionId: transactionId,
-              paymentGatewayData: transactionData,
-              status: orderStatus,
-              updatedAt: new Date(),
-            })
-            .where(eq(order.id, orderId))
-            .execute();
+          await applyOnlinePaymentUpdate(db, orderId, {
+            paymentStatus,
+            transactionId,
+            gatewayData: transactionData,
+          });
         }).pipe(provideDb),
       );
 
@@ -99,14 +96,15 @@ export async function paymobWebhookPlugin(fastify: FastifyInstance) {
 
   // Paymob also sends GET callbacks on redirect — handle the redirect URL
   fastify.get("/", async (request: FastifyRequest, reply: FastifyReply) => {
-    // This handles the case where Paymob redirects back to our callback URL
     const queryParams = request.query as Record<string, string>;
     const success = queryParams.success === "true";
-    const orderId = queryParams.merchant_order_id || queryParams.orderId;
+    const orderId =
+      queryParams.merchant_order_id ||
+      queryParams.special_reference ||
+      queryParams.orderId;
 
     if (orderId) {
-      // Redirect to order confirmation
-      const baseUrl = process.env.PUBLIC_ORIGIN || process.env.BASE_URL || "http://localhost:3000";
+      const baseUrl = getPublicOrigin();
       return reply.redirect(
         `${baseUrl}/order-confirmation?id=${orderId}&payment=${success ? "success" : "failed"}`,
       );

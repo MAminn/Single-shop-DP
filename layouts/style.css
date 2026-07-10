@@ -438,6 +438,111 @@ html[data-has-template-newsletter] [data-footer-newsletter] {
   }
 }
 
+/* ── Sticky offer bar ── */
+@keyframes offer-bar-enter {
+  from {
+    opacity: 0;
+    transform: translateY(calc(100% + 1rem));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes offer-border-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(251, 191, 36, 0.45),
+      0 0 18px rgba(251, 146, 60, 0.25),
+      0 8px 32px rgba(0, 0, 0, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(252, 211, 77, 0.85),
+      0 0 28px rgba(251, 146, 60, 0.45),
+      0 8px 32px rgba(0, 0, 0, 0.35);
+  }
+}
+
+@keyframes offer-border-pulse-success {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(52, 211, 153, 0.45),
+      0 0 18px rgba(16, 185, 129, 0.25),
+      0 8px 32px rgba(0, 0, 0, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(110, 231, 183, 0.85),
+      0 0 28px rgba(16, 185, 129, 0.4),
+      0 8px 32px rgba(0, 0, 0, 0.35);
+  }
+}
+
+@keyframes offer-sparkle {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.85) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15) rotate(90deg);
+  }
+}
+
+@keyframes offer-cta-shimmer {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+@keyframes offer-text-glow {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-offer-bar-enter {
+  animation: offer-bar-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-offer-border-pulse {
+  animation: offer-border-pulse 2.4s ease-in-out infinite;
+}
+
+.animate-offer-border-pulse-success {
+  animation: offer-border-pulse-success 2.4s ease-in-out infinite;
+}
+
+.animate-offer-sparkle {
+  animation: offer-sparkle 2.8s ease-in-out infinite;
+}
+
+.animate-offer-sparkle-delayed {
+  animation: offer-sparkle 2.8s ease-in-out infinite;
+  animation-delay: 1.4s;
+}
+
+.animate-offer-cta-shimmer {
+  background-size: 200% auto;
+  animation: offer-cta-shimmer 3s linear infinite;
+}
+
+.animate-offer-text-glow {
+  animation: offer-text-glow 2s ease-in-out infinite;
+}
+
 /* ===== NOIR DEMO SCOPE (data-noir-chrome) — added Phase 1 ===== */
 /* Everything below is scoped under html[data-noir-chrome="true"] and
    affects ONLY the Noir (Demo 5) templates. Do not add unscoped rules. */

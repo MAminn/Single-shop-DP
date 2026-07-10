@@ -86,6 +86,7 @@ export function MinimalProductCard({
             price: displayPrice,
             imageUrl: displayImageUrl,
             stock: product.stock,
+            originalPrice: hasDiscount ? product.price : undefined,
           },
           1,
           {},

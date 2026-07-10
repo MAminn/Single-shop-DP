@@ -82,6 +82,16 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
 
   // ── Pixel Adapter Wiring ────────────────────────────────────────────────
   const registryRef = useRef<PixelAdapterRegistry | null>(null);
+  const hasFiredInitialPageView = useRef(false);
+  const trackEventRef = useRef<
+    (
+      eventName: TrackingEventName | string,
+      data?: {
+        ecommerce?: EcommerceEventData;
+        customProperties?: Record<string, unknown>;
+      },
+    ) => void
+  >(() => {});
 
   // ── Custom Event Triggers ──────────────────────────────────────────────
   const customTriggerRef = useRef<CustomEventTriggerManager | null>(null);
@@ -174,54 +184,6 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  useEffect(() => {
-    // Only run client-side
-    if (typeof window === "undefined") return;
-
-    let cancelled = false;
-    const registry = new PixelAdapterRegistry();
-    registryRef.current = registry;
-
-    // Fetch enabled client-side configs and bootstrap adapters
-    trpc.pixelTracking.config.listActive
-      .query()
-      .then((result) => {
-        if (cancelled) return;
-        // Result shape from runBackendEffect: { success: true, result: T } | { success: false, error: string }
-        if (!result.success) return;
-        const configs = result.result as PixelConfig[];
-
-        for (const config of configs) {
-          const adapter = createAdapterForPlatform(config.platform);
-          if (adapter) {
-            adapter.initialize(config);
-            registry.register(adapter);
-          }
-        }
-      })
-      .catch(() => {
-        // Pixel config fetch failed — gracefully degrade, no pixels fire
-        if (
-          typeof window !== "undefined" &&
-          window.location.hostname === "localhost"
-        ) {
-          console.debug("[Tracking] Failed to fetch pixel configs");
-        }
-      });
-
-    // Subscribe registry.broadcastEvent to the event bus
-    const unsubscribe = trackingEventBus.subscribe((event) => {
-      registry.broadcastEvent(event);
-    });
-
-    return () => {
-      cancelled = true;
-      unsubscribe();
-      registry.destroyAll();
-      registryRef.current = null;
-    };
-  }, []);
-
   const trackEvent = useCallback(
     (
       eventName: TrackingEventName | string,
@@ -259,16 +221,67 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     },
     [sessionId, bufferEvent],
   );
-  // Fire page_viewed on initial page load (SSR hydration)
-  const hasFiredInitialPageView = useRef(false);
-  useEffect(() => {
-    if (!hasFiredInitialPageView.current) {
-      hasFiredInitialPageView.current = true;
-      trackEvent(TrackingEventName.PAGE_VIEWED);
-    }
-  }, [trackEvent]);
+  trackEventRef.current = trackEvent;
 
-  // ── Custom Event Trigger Initialization ────────────────────────────────
+  useEffect(() => {
+    // Only run client-side
+    if (typeof window === "undefined") return;
+
+    let cancelled = false;
+    const registry = new PixelAdapterRegistry();
+    registryRef.current = registry;
+
+    const fireInitialPageView = () => {
+      if (hasFiredInitialPageView.current) return;
+      hasFiredInitialPageView.current = true;
+      trackEventRef.current(TrackingEventName.PAGE_VIEWED);
+    };
+
+    // Fetch enabled client-side configs and bootstrap adapters
+    trpc.pixelTracking.config.listActive
+      .query()
+      .then((result) => {
+        if (cancelled) return;
+        if (result.success) {
+          const configs = result.result as PixelConfig[];
+
+          for (const config of configs) {
+            const adapter = createAdapterForPlatform(config.platform);
+            if (adapter) {
+              adapter.initialize(config);
+              registry.register(adapter);
+            }
+          }
+        }
+
+        fireInitialPageView();
+      })
+      .catch(() => {
+        // Pixel config fetch failed — gracefully degrade, no pixels fire
+        if (
+          typeof window !== "undefined" &&
+          window.location.hostname === "localhost"
+        ) {
+          console.debug("[Tracking] Failed to fetch pixel configs");
+        }
+        if (!cancelled) {
+          fireInitialPageView();
+        }
+      });
+
+    // Subscribe registry.broadcastEvent to the event bus
+    const unsubscribe = trackingEventBus.subscribe((event) => {
+      registry.broadcastEvent(event);
+    });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+      registry.destroyAll();
+      registryRef.current = null;
+    };
+  }, []);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
 

@@ -9,6 +9,7 @@ import { useContext, useEffect, useRef, useState, memo } from "react";
 import "./style.css";
 import { toast, Toaster } from "sonner";
 import { CartToastContainer } from "#root/components/ui/cart-toast";
+import { StickyCartBar } from "#root/components/ui/StickyCartBar";
 import type { ClientSession } from "#root/backend/auth/shared/entities.js";
 import { usePageContext } from "vike-react/usePageContext";
 import { AuthContext } from "#root/context/AuthContext.js";
@@ -249,6 +250,7 @@ function LayoutShell({
             )}
             {!isDashboardRoute && <GlobalFooter />}
             {!isDashboardRoute && <CartToastContainer />}
+            {!isDashboardRoute && <StickyCartBar />}
             <Toaster />
             <ShadcnToaster />
             {/* Phase 3 — page-transition overlay (CSS-only, SSR-inert) */}

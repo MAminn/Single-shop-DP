@@ -107,8 +107,9 @@ const PIXEL_ID_PLACEHOLDERS: Record<string, string> = {
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function maskPixelId(pixelId: string): string {
-  if (pixelId.length <= 6) return pixelId;
-  return `${pixelId.slice(0, 4)}${"•".repeat(pixelId.length - 6)}${pixelId.slice(-2)}`;
+  const trimmed = pixelId.trim();
+  if (trimmed.length <= 12) return trimmed;
+  return `${trimmed.slice(0, 6)}••••${trimmed.slice(-4)}`;
 }
 
 // ─── Readiness Status Types ─────────────────────────────────────────────────
@@ -294,7 +295,7 @@ export default function AdminPixelsPage() {
       const result = await trpc.pixelTracking.config.delete.mutate({ id });
       if (result.success) {
         toast.success("Pixel configuration deleted");
-        await fetchConfigs();
+        await Promise.all([fetchConfigs(), fetchReadinessData()]);
       } else {
         toast.error("Failed to delete pixel configuration");
       }
@@ -342,17 +343,17 @@ export default function AdminPixelsPage() {
   }
 
   return (
-    <div className='p-6 space-y-6 max-w-4xl mx-auto'>
+    <div className='p-6 space-y-6 max-w-4xl mx-auto w-full min-w-0 overflow-x-hidden'>
       {/* Header */}
-      <div className='flex items-center justify-between'>
-        <div>
+      <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between min-w-0'>
+        <div className='min-w-0'>
           <h1 className='text-2xl font-bold'>Pixels & Tracking</h1>
           <p className='text-muted-foreground text-sm mt-1'>
             Connect your ad platform pixels to track conversions and build
             audiences.
           </p>
         </div>
-        <div className='flex items-center gap-2'>
+        <div className='flex flex-wrap items-center gap-2 shrink-0'>
           <a href='/dashboard/admin/pixels/custom-events'>
             <Button variant='outline' size='sm'>
               <MousePointerClick className='w-4 h-4 mr-2' />
@@ -374,7 +375,7 @@ export default function AdminPixelsPage() {
 
       {/* ── Pixel Readiness Status ────────────────────────────────────── */}
       {configs.length > 0 && (
-        <Card>
+        <Card className='min-w-0 overflow-hidden'>
           <CardHeader className='pb-3'>
             <CardTitle className='text-base flex items-center gap-2'>
               <Info className='w-4 h-4' />
@@ -414,70 +415,95 @@ export default function AdminPixelsPage() {
                       return (
                         <div
                           key={cfg.id}
-                          className='flex items-center justify-between text-sm border rounded-md px-3 py-2'>
-                          <div className='flex items-center gap-2'>
-                            <span className='font-medium'>
-                              {PLATFORM_LABELS[cfg.platform] ?? cfg.platform}
+                          className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm border rounded-md px-3 py-2 min-w-0'>
+                          <div className='flex min-w-0 flex-1 flex-col gap-0.5 overflow-hidden'>
+                            <div className='flex flex-wrap items-center gap-2 min-w-0'>
+                              <span className='font-medium shrink-0'>
+                                {PLATFORM_LABELS[cfg.platform] ?? cfg.platform}
+                              </span>
+                              {!cfg.enabled && (
+                                <Badge
+                                  variant='secondary'
+                                  className='text-[10px] px-1.5'>
+                                  Disabled
+                                </Badge>
+                              )}
+                            </div>
+                            <span
+                              className='font-mono text-[11px] text-muted-foreground truncate break-all'
+                              title={cfg.pixelId.length > 12 ? cfg.pixelId : undefined}>
+                              {maskPixelId(cfg.pixelId)}
                             </span>
-                            {!cfg.enabled && (
-                              <Badge
-                                variant='secondary'
-                                className='text-[10px] px-1.5'>
-                                Disabled
-                              </Badge>
-                            )}
                           </div>
-                          <div className='flex items-center gap-3 text-xs text-muted-foreground'>
-                            {/* Client-side status */}
-                            <span
-                              className='flex items-center gap-1'
-                              title='Client-side pixel (browser)'>
-                              <Monitor className='w-3 h-3' />
-                              {hasClientSide && cfg.enabled ? (
-                                <CheckCircle2 className='w-3 h-3 text-green-600' />
+                          <div className='flex items-center gap-2 shrink-0 self-end sm:self-auto'>
+                            <div className='flex items-center gap-3 text-xs text-muted-foreground'>
+                              {/* Client-side status */}
+                              <span
+                                className='flex items-center gap-1'
+                                title='Client-side pixel (browser)'>
+                                <Monitor className='w-3 h-3' />
+                                {hasClientSide && cfg.enabled ? (
+                                  <CheckCircle2 className='w-3 h-3 text-green-600' />
+                                ) : (
+                                  <XCircle className='w-3 h-3 text-muted-foreground/40' />
+                                )}
+                              </span>
+                              {/* Server-side status */}
+                              <span
+                                className='flex items-center gap-1'
+                                title={
+                                  hasServerSide && hasToken
+                                    ? "Server-side Conversions API active"
+                                    : hasServerSide && !hasToken
+                                      ? "Server-side enabled but no access token — delivery will fail"
+                                      : "Server-side not enabled"
+                                }>
+                                <Server className='w-3 h-3' />
+                                {hasServerSide && hasToken && cfg.enabled ? (
+                                  <CheckCircle2 className='w-3 h-3 text-green-600' />
+                                ) : hasServerSide && !hasToken ? (
+                                  <AlertTriangle className='w-3 h-3 text-amber-500' />
+                                ) : (
+                                  <XCircle className='w-3 h-3 text-muted-foreground/40' />
+                                )}
+                              </span>
+                              {/* Delivery count */}
+                              {totalDelivered > 0 ? (
+                                <Badge
+                                  variant='outline'
+                                  className={`text-[10px] px-1.5 ${
+                                    health?.status === "healthy"
+                                      ? "border-green-300 text-green-700"
+                                      : health?.status === "degraded"
+                                        ? "border-amber-300 text-amber-700"
+                                        : "border-red-300 text-red-700"
+                                  }`}>
+                                  {health?.successCount ?? 0} delivered (7d)
+                                </Badge>
                               ) : (
-                                <XCircle className='w-3 h-3 text-muted-foreground/40' />
+                                <Badge
+                                  variant='outline'
+                                  className='text-[10px] px-1.5 border-muted text-muted-foreground'>
+                                  No deliveries yet
+                                </Badge>
                               )}
-                            </span>
-                            {/* Server-side status */}
-                            <span
-                              className='flex items-center gap-1'
-                              title={
-                                hasServerSide && hasToken
-                                  ? "Server-side Conversions API active"
-                                  : hasServerSide && !hasToken
-                                    ? "Server-side enabled but no access token — delivery will fail"
-                                    : "Server-side not enabled"
-                              }>
-                              <Server className='w-3 h-3' />
-                              {hasServerSide && hasToken && cfg.enabled ? (
-                                <CheckCircle2 className='w-3 h-3 text-green-600' />
-                              ) : hasServerSide && !hasToken ? (
-                                <AlertTriangle className='w-3 h-3 text-amber-500' />
-                              ) : (
-                                <XCircle className='w-3 h-3 text-muted-foreground/40' />
-                              )}
-                            </span>
-                            {/* Delivery count */}
-                            {totalDelivered > 0 ? (
-                              <Badge
-                                variant='outline'
-                                className={`text-[10px] px-1.5 ${
-                                  health?.status === "healthy"
-                                    ? "border-green-300 text-green-700"
-                                    : health?.status === "degraded"
-                                      ? "border-amber-300 text-amber-700"
-                                      : "border-red-300 text-red-700"
-                                }`}>
-                                {health?.successCount ?? 0} delivered (7d)
-                              </Badge>
-                            ) : (
-                              <Badge
-                                variant='outline'
-                                className='text-[10px] px-1.5 border-muted text-muted-foreground'>
-                                No deliveries yet
-                              </Badge>
-                            )}
+                            </div>
+                            <Button
+                              variant='outline'
+                              size='icon'
+                              className='h-7 w-7'
+                              title='Edit pixel'
+                              onClick={() => openEditDialog(cfg)}>
+                              <Edit className='w-3.5 h-3.5' />
+                            </Button>
+                            <Button
+                              variant='outline'
+                              size='icon'
+                              className='h-7 w-7 text-destructive hover:text-destructive'
+                              title='Delete pixel'
+                              onClick={() => handleDelete(cfg.id)}>
+                              <Trash2 className='w-3.5 h-3.5' />
+                            </Button>
                           </div>
                         </div>
                       );
@@ -566,22 +592,26 @@ export default function AdminPixelsPage() {
       )}
 
       {/* Pixel config cards */}
-      <div className='grid gap-4'>
+      <div className='grid gap-4 min-w-0'>
         {configs.map((config) => (
-          <Card key={config.id}>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <div className='space-y-1'>
-                <CardTitle className='text-lg flex items-center gap-2'>
+          <Card key={config.id} className='min-w-0 overflow-hidden'>
+            <CardHeader className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between space-y-0 pb-2 min-w-0'>
+              <div className='space-y-1 min-w-0 flex-1 overflow-hidden'>
+                <CardTitle className='text-lg flex flex-wrap items-center gap-2'>
                   {PLATFORM_LABELS[config.platform] ?? config.platform}
                   <Badge variant={config.enabled ? "default" : "secondary"}>
                     {config.enabled ? "Active" : "Disabled"}
                   </Badge>
                 </CardTitle>
-                <CardDescription className='font-mono text-sm'>
+                <CardDescription
+                  className='font-mono text-sm truncate break-all'
+                  title={
+                    config.pixelId.length > 12 ? config.pixelId : undefined
+                  }>
                   {maskPixelId(config.pixelId)}
                 </CardDescription>
               </div>
-              <div className='flex gap-2'>
+              <div className='flex flex-wrap gap-2 shrink-0'>
                 <Button
                   variant='outline'
                   size='sm'

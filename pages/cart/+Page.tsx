@@ -45,6 +45,7 @@ export default function CartPage() {
       id: getCartItemKey(item),
       name: item.name,
       price: item.price,
+      originalPrice: item.originalPrice ?? undefined,
       quantity: item.quantity,
       imageUrl: item.imageUrl ?? undefined,
       variant: item.selectedOptions

@@ -1,4 +1,9 @@
 import React from "react";
+import { OfferProgressBanner } from "./OfferProgressBanner";
+import {
+  AppliedOffersSavings,
+  computeOfferSavingsTotal,
+} from "./AppliedOffersSavings";
 import { Button } from "#root/components/ui/button";
 import { Input } from "#root/components/ui/input";
 import {
@@ -8,8 +13,6 @@ import {
   ShoppingCart,
   ArrowRight,
   ArrowLeft,
-  Gift,
-  Tag,
   ShieldCheck,
   Lock,
   Truck,
@@ -24,6 +27,8 @@ export interface CartPageCartItem {
   id: string;
   name: string;
   price: number;
+  /** Original price before discount — present only when the item was discounted */
+  originalPrice?: number | null;
   quantity: number;
   imageUrl?: string | null;
   variant?: string | null;
@@ -78,27 +83,11 @@ export function CartPageModernTemplate({
   onProceedToCheckout,
 }: CartPageModernTemplateProps) {
   const [couponCode, setCouponCode] = React.useState("");
-  const [isFirstTimeVisitor, setIsFirstTimeVisitor] = React.useState(false);
   const { t } = useMinimalI18n();
-
-  // Pre-fill WELCOME15 for first-time visitors (no `perce_returning_user` flag yet).
-  React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    const isReturning = localStorage.getItem("perce_returning_user");
-    if (!isReturning) {
-      setIsFirstTimeVisitor(true);
-      setCouponCode((prev) => (prev ? prev : "WELCOME15"));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleApplyCoupon = () => {
     if (couponCode.trim() && onApplyCoupon) {
       onApplyCoupon(couponCode);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("perce_returning_user", "true");
-      }
-      setIsFirstTimeVisitor(false);
       setCouponCode("");
     }
   };
@@ -126,21 +115,35 @@ export function CartPageModernTemplate({
     );
   }
 
-  const totalSavings =
-    (totals.discount ?? 0) +
-    (totals.appliedOffers?.reduce((s, o) => s + o.discountAmount, 0) ?? 0);
+  const totalSavings = computeOfferSavingsTotal(
+    totals.appliedOffers,
+    totals.discount ?? 0,
+  );
+
+  const cartSubtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
+  const cartQuantity = items.reduce((s, i) => s + i.quantity, 0);
+  const appliedOffers = totals.appliedOffers ?? [];
 
   return (
-    <div className='min-h-screen bg-background'>
+    <>
+    <div className='min-h-screen bg-background pb-24 sm:pb-0'>
       <div className='max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12'>
 
         {/* ── Page heading ───────────────────────────────── */}
-        <h1 className='text-2xl sm:text-3xl font-extrabold uppercase tracking-tight mb-8'>
+        <h1 className='text-2xl sm:text-3xl font-extrabold uppercase tracking-tight mb-6'>
           {t("cart.title") || "Shopping Cart"}
           <span className='ms-3 text-sm font-semibold tracking-widest text-muted-foreground uppercase'>
             ({items.length} {items.length === 1 ? "item" : "items"})
           </span>
         </h1>
+
+        {/* Offer progress banner */}
+        <OfferProgressBanner
+          cartSubtotal={cartSubtotal}
+          cartQuantity={cartQuantity}
+          appliedOffers={appliedOffers}
+          currency={currency}
+        />
 
         <div className='lg:grid lg:grid-cols-[1fr_380px] lg:gap-12'>
           {/* ── Items list ─────────────────────────────────── */}
@@ -187,11 +190,21 @@ export function CartPageModernTemplate({
                               {item.variant}
                             </p>
                           )}
-                          <p className='text-sm text-muted-foreground mt-1'>
-                            {currency}
-                            {item.price.toFixed(2)}{" "}
-                            {t("checkout.each") || "each"}
-                          </p>
+                          <div className='flex items-center gap-1.5 mt-1 flex-wrap'>
+                            {item.originalPrice != null && item.originalPrice > item.price && (
+                              <span className='text-xs text-muted-foreground line-through'>
+                                {currency}{item.originalPrice.toFixed(2)}
+                              </span>
+                            )}
+                            <span className={`text-sm ${item.originalPrice != null && item.originalPrice > item.price ? "text-red-500 font-semibold" : "text-muted-foreground"}`}>
+                              {currency}{item.price.toFixed(2)}{" "}{t("checkout.each") || "each"}
+                            </span>
+                            {item.originalPrice != null && item.originalPrice > item.price && (
+                              <span className='text-[10px] bg-red-100 text-red-600 font-semibold px-1.5 py-0.5 rounded'>
+                                -{Math.round((1 - item.price / item.originalPrice) * 100)}%
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <button
                           type='button'
@@ -235,10 +248,16 @@ export function CartPageModernTemplate({
                             <Plus className='w-3.5 h-3.5' />
                           </button>
                         </div>
-                        <p className='font-bold'>
-                          {currency}
-                          {(item.price * item.quantity).toFixed(2)}
-                        </p>
+                        <div className='text-right'>
+                          {item.originalPrice != null && item.originalPrice > item.price && (
+                            <p className='text-xs text-muted-foreground line-through'>
+                              {currency}{(item.originalPrice * item.quantity).toFixed(2)}
+                            </p>
+                          )}
+                          <p className={`font-bold ${item.originalPrice != null && item.originalPrice > item.price ? "text-red-500" : ""}`}>
+                            {currency}{(item.price * item.quantity).toFixed(2)}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -267,10 +286,21 @@ export function CartPageModernTemplate({
                             {item.variant}
                           </p>
                         )}
-                        <p className='text-sm text-muted-foreground mt-1'>
-                          {currency}
-                          {item.price.toFixed(2)} {t("checkout.each") || "each"}
-                        </p>
+                        <div className='flex items-center gap-1.5 mt-1 flex-wrap'>
+                          {item.originalPrice != null && item.originalPrice > item.price && (
+                            <span className='text-xs text-muted-foreground line-through'>
+                              {currency}{item.originalPrice.toFixed(2)}
+                            </span>
+                          )}
+                          <span className={`text-sm ${item.originalPrice != null && item.originalPrice > item.price ? "text-red-500 font-semibold" : "text-muted-foreground"}`}>
+                            {currency}{item.price.toFixed(2)} {t("checkout.each") || "each"}
+                          </span>
+                          {item.originalPrice != null && item.originalPrice > item.price && (
+                            <span className='text-[10px] bg-red-100 text-red-600 font-semibold px-1.5 py-0.5 rounded'>
+                              -{Math.round((1 - item.price / item.originalPrice) * 100)}%
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -310,10 +340,16 @@ export function CartPageModernTemplate({
                     </div>
 
                     {/* Line total */}
-                    <p className='font-bold text-right'>
-                      {currency}
-                      {(item.price * item.quantity).toFixed(2)}
-                    </p>
+                    <div className='text-right'>
+                      {item.originalPrice != null && item.originalPrice > item.price && (
+                        <p className='text-xs text-muted-foreground line-through'>
+                          {currency}{(item.originalPrice * item.quantity).toFixed(2)}
+                        </p>
+                      )}
+                      <p className={`font-bold ${item.originalPrice != null && item.originalPrice > item.price ? "text-red-500" : ""}`}>
+                        {currency}{(item.price * item.quantity).toFixed(2)}
+                      </p>
+                    </div>
 
                     {/* Remove */}
                     <button
@@ -332,29 +368,10 @@ export function CartPageModernTemplate({
             {/* ── Coupon code ──────────────────────────────── */}
             <div className='mt-6 pt-6 border-t'>
               <div className='flex flex-col sm:flex-row items-start sm:items-center gap-4'>
-                <div className='flex items-center gap-3 shrink-0'>
-                  <Tag className='w-5 h-5 text-muted-foreground' />
-                  <div>
-                    {isFirstTimeVisitor ? (
-                      <p className='font-semibold text-sm'>
-                        First time? Add code{" "}
-                        <span className='font-bold'>WELCOME15</span> for 15% off
-                        your first piece
-                      </p>
-                    ) : (
-                      <>
-                        <p className='font-semibold text-sm'>
-                          {t("cart.coupon_code") || "Have a coupon code?"}
-                        </p>
-                        <p className='text-xs text-muted-foreground'>
-                          {t("cart.coupon_desc") ||
-                            "Add your code for instant savings"}
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className='flex gap-2 flex-1 w-full sm:w-auto'>
+                <p className='text-sm font-semibold shrink-0'>
+                  Apply promo code
+                </p>
+                <div className='flex gap-2 flex-1 w-full sm:w-auto items-center'>
                   <Input
                     placeholder={t("cart.enter_code") || "Enter coupon code"}
                     value={couponCode}
@@ -430,20 +447,10 @@ export function CartPageModernTemplate({
                   </div>
                 )}
 
-                {/* Automatic offers */}
-                {totals.appliedOffers?.map((offer) => (
-                  <div key={offer.name} className='flex items-start justify-between gap-2 text-red-600 text-xs'>
-                    <span className='flex items-center gap-1 min-w-0 font-medium'>
-                      <Gift className='w-3 h-3 shrink-0' />
-                      <span className='leading-snug'>{offer.name}</span>
-                    </span>
-                    <span className='font-semibold shrink-0'>
-                      {offer.freeShipping && offer.discountAmount === 0
-                        ? t("cart.free_shipping") || "Free shipping"
-                        : `-${currency}${offer.discountAmount.toFixed(2)}`}
-                    </span>
-                  </div>
-                ))}
+                <AppliedOffersSavings
+                  appliedOffers={appliedOffers}
+                  currency={currency}
+                />
 
                 {/* Shipping */}
                 {totals.shipping !== undefined && (
@@ -471,17 +478,6 @@ export function CartPageModernTemplate({
                 </span>
               </div>
 
-              {/* Savings callout */}
-              {totalSavings > 0 && (
-                <div className='flex items-center gap-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400'>
-                  <ShieldCheck className='w-4 h-4 shrink-0' />
-                  <span className='font-medium'>
-                    You're saving {currency}
-                    {totalSavings.toFixed(2)} with this offer!
-                  </span>
-                </div>
-              )}
-
               {/* Trust signals — directly above Proceed to Checkout */}
               <div className='flex flex-wrap items-center justify-center gap-4 sm:gap-6 border-t border-stone-100 pt-4'>
                 <div className='flex items-center gap-1.5'>
@@ -504,9 +500,9 @@ export function CartPageModernTemplate({
                 </div>
               </div>
 
-              {/* Proceed button */}
+              {/* Proceed button — hidden on mobile (sticky bar handles it) */}
               <Button
-                className='w-full font-bold tracking-wide uppercase'
+                className='w-full font-bold tracking-wide uppercase hidden sm:flex'
                 size='lg'
                 onClick={onProceedToCheckout}
                 disabled={isUpdating || items.length === 0}>
@@ -515,7 +511,7 @@ export function CartPageModernTemplate({
               </Button>
 
               {/* Divider */}
-              <div className='flex items-center gap-3 text-xs text-muted-foreground'>
+              <div className='hidden sm:flex items-center gap-3 text-xs text-muted-foreground'>
                 <div className='flex-1 border-t' />
                 <span>or</span>
                 <div className='flex-1 border-t' />
@@ -575,5 +571,35 @@ export function CartPageModernTemplate({
 
       </div>
     </div>
+
+    {/* ── Mobile sticky checkout bar ─────────────────────────────────────── */}
+    <div className='sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.10)]'>
+      <AppliedOffersSavings
+        appliedOffers={appliedOffers}
+        promoDiscount={totals.discount ?? 0}
+        currency={currency}
+        variant='sticky-banner'
+      />
+      <div className='px-4 py-3'>
+        <div className='flex items-center justify-between mb-2.5'>
+          <span className='text-xs text-muted-foreground uppercase tracking-widest font-semibold'>Total</span>
+          <div className='text-right'>
+            {totalSavings > 0 && (
+              <p className='text-[10px] text-emerald-600 font-medium'>Saving {currency}{totalSavings.toFixed(2)}</p>
+            )}
+            <p className='text-base font-extrabold'>{currency}{totals.grandTotal.toFixed(2)}</p>
+          </div>
+        </div>
+        <Button
+          className='w-full font-bold tracking-wide uppercase'
+          size='lg'
+          onClick={onProceedToCheckout}
+          disabled={isUpdating || items.length === 0}>
+          {t("cart.proceed_to_checkout") || "Proceed to Checkout"}
+          <ArrowRight className='w-4 h-4 ms-2' />
+        </Button>
+      </div>
+    </div>
+    </>
   );
 }

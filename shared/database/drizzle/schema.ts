@@ -320,6 +320,8 @@ export const product = pgTable("product", {
     .notNull(),
   stock: integer("stock").notNull().default(0),
   deleted: boolean("deleted").notNull().default(false),
+  /** When true, product is hidden from the public shop */
+  hidden: boolean("hidden").notNull().default(false),
   /** Optional "inspired by" text supporting [color:#hex]text[/color] syntax */
   inspiredBy: text("inspired_by"),
   /** Display order within a category (lower = shown first, null = default) */
@@ -435,6 +437,27 @@ export const order = pgTable("order", {
     mode: "date",
   }),
   fincartWebhookData: jsonb("fincart_webhook_data"),
+  // Bosta integration fields (only populated when SYN_BOSTA_KEY is configured)
+  bostaDeliveryId: text("bosta_delivery_id"),
+  bostaTrackingNumber: text("bosta_tracking_number"),
+  bostaStatus: text("bosta_status"),
+  bostaStatusCode: text("bosta_status_code"),
+  bostaWebhookData: jsonb("bosta_webhook_data"),
+  bostaStatusUpdatedAt: timestamp("bosta_status_updated_at", {
+    withTimezone: true,
+    mode: "date",
+  }),
+  /** sent | failed | pending | skipped | cancelled — null when Bosta not used */
+  bostaSyncStatus: text("bosta_sync_status"),
+  bostaSyncError: text("bosta_sync_error"),
+  bostaSyncedAt: timestamp("bosta_synced_at", {
+    withTimezone: true,
+    mode: "date",
+  }),
+  bostaSyncAttemptedAt: timestamp("bosta_sync_attempted_at", {
+    withTimezone: true,
+    mode: "date",
+  }),
   archivedAt: timestamp("archived_at", {
     withTimezone: true,
     mode: "date",

@@ -17,6 +17,8 @@ export const viewProductsSchema = z.object({
   search: z.string().trim().max(255).optional(),
   sortBy: z.enum(["name", "price", "discountPrice", "stock"]).optional(),
   categoryId: z.string().uuid().optional(),
+  /** Admin-only: include products hidden from the shop */
+  includeHidden: z.boolean().optional().default(false),
 });
 
 export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
@@ -27,6 +29,9 @@ export const viewProducts = (input: z.infer<typeof viewProductsSchema>) =>
           const baseQueryConditions = [];
           baseQueryConditions.push(eq(category.deleted, false));
           baseQueryConditions.push(eq(product.deleted, false));
+          if (!input.includeHidden) {
+            baseQueryConditions.push(eq(product.hidden, false));
+          }
 
           if (input.search) {
             baseQueryConditions.push(

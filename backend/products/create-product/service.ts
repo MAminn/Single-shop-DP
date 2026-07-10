@@ -50,6 +50,7 @@ export const createProductSchema = z.object({
     .optional(),
   inspiredBy: z.string().max(1000).optional(),
   sortOrder: z.number().int().min(0).optional(),
+  hidden: z.boolean().optional().default(false),
 });
 
 export const createProduct = (
@@ -90,6 +91,7 @@ export const createProduct = (
               stock: data.stock,
               inspiredBy: data.inspiredBy || null,
               sortOrder: data.sortOrder ?? 0,
+              hidden: data.hidden ?? false,
             })
             .returning()
             .then((data) => data[0]);

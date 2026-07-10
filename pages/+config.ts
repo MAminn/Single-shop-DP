@@ -12,7 +12,7 @@ export default {
 
   // https://vike.dev/head-tags
   // title is handled dynamically by +title.ts (reads from layout settings)
-  description: `${STORE_NAME} — ${STORE_DESCRIPTION}`,
+  description: STORE_DESCRIPTION,
 
   extends: vikeReact,
 
@@ -22,5 +22,5 @@ export default {
   hydrationCanBeAborted: true,
 
   // Pass client session, pixel configs, and template selection to the client side
-  passToClient: ["clientSession", "pixelConfigs", "templateSelection", "layoutSettingsData", "brandName", "ssrLocale"],
+  passToClient: ["clientSession", "templateSelection", "layoutSettingsData", "brandName", "ssrLocale"],
 } satisfies Config;

@@ -13,6 +13,7 @@
 import { Effect } from "effect";
 import { ServerError } from "#root/shared/error/server";
 import { getPaymobConfig, isPaymobConfigured } from "#root/shared/config/payment";
+import { getPublicOrigin } from "#root/shared/config/site-url";
 import axios from "axios";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -121,8 +122,9 @@ export const createPaymobPaymentSession = (
         extras: {
           orderId: input.orderId,
         },
+        special_reference: input.orderId,
         redirection_url: input.successUrl,
-        notification_url: `${process.env.BASE_URL || process.env.PUBLIC_ORIGIN || "http://localhost:3000"}/api/webhooks/paymob`,
+        notification_url: `${getPublicOrigin()}/api/webhooks/paymob`,
       };
 
       const response = await axios.post(
@@ -191,7 +193,7 @@ export function verifyPaymobHmac(
       "is_refunded",
       "is_standalone_payment",
       "is_voided",
-      "order",
+      "order.id",
       "owner",
       "pending",
       "source_data.pan",
@@ -220,3 +222,79 @@ export function verifyPaymobHmac(
     return false;
   }
 }
+
+function isPaymobPayloadPaid(data: Record<string, unknown>): boolean {
+  if (data.success === true || data.success === "true") return true;
+
+  const status = String(data.status ?? data.payment_status ?? "").toLowerCase();
+  if (["paid", "confirmed", "successful", "success"].includes(status)) {
+    return true;
+  }
+
+  const transactions = [
+    ...(Array.isArray(data.transactions) ? data.transactions : []),
+    ...(data.transaction ? [data.transaction] : []),
+  ] as Array<Record<string, unknown>>;
+
+  return transactions.some(
+    (txn) => txn.success === true || txn.success === "true",
+  );
+}
+
+/**
+ * Poll Paymob for intention / transaction status (fallback when webhook is delayed).
+ */
+export const verifyPaymobIntentionPayment = (intentionId: string) =>
+  Effect.tryPromise({
+    try: async () => {
+      if (!isPaymobConfigured()) {
+        throw new Error("Paymob is not configured");
+      }
+
+      const config = getPaymobConfig();
+      const headers = {
+        Authorization: `Token ${config.secretKey}`,
+        "Content-Type": "application/json",
+      };
+
+      const response = await axios.get(
+        `${config.baseUrl}/v1/intention/${intentionId}/`,
+        { headers },
+      );
+
+      const data = response.data as Record<string, unknown>;
+      if (isPaymobPayloadPaid(data)) {
+        return { paid: true as const, data };
+      }
+
+      // Some accounts expose nested payment attempts on the intention payload.
+      const attempts = data.payment_attempts;
+      if (Array.isArray(attempts)) {
+        const paidAttempt = attempts.find(
+          (attempt) =>
+            attempt &&
+            typeof attempt === "object" &&
+            isPaymobPayloadPaid(attempt as Record<string, unknown>),
+        );
+        if (paidAttempt) {
+          return { paid: true as const, data: paidAttempt as Record<string, unknown> };
+        }
+      }
+
+      return { paid: false as const, data };
+    },
+    catch: (error) => {
+      const msg =
+        axios.isAxiosError(error) && error.response?.data
+          ? JSON.stringify(error.response.data)
+          : error instanceof Error
+            ? error.message
+            : "Unknown error";
+      return new ServerError({
+        tag: "PaymentError",
+        message: `Failed to verify Paymob payment: ${msg}`,
+        statusCode: 502,
+        clientMessage: "Failed to verify payment status",
+      });
+    },
+  });

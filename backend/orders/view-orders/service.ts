@@ -98,8 +98,19 @@ export const viewOrders = (
               total: order.total,
               status: order.status,
               notes: order.notes,
+              paymentMethod: order.paymentMethod,
+              paymentStatus: order.paymentStatus,
               createdAt: order.createdAt,
               updatedAt: order.updatedAt,
+              bostaDeliveryId: order.bostaDeliveryId,
+              bostaTrackingNumber: order.bostaTrackingNumber,
+              bostaStatus: order.bostaStatus,
+              bostaStatusCode: order.bostaStatusCode,
+              bostaStatusUpdatedAt: order.bostaStatusUpdatedAt,
+              bostaSyncStatus: order.bostaSyncStatus,
+              bostaSyncError: order.bostaSyncError,
+              bostaSyncedAt: order.bostaSyncedAt,
+              bostaSyncAttemptedAt: order.bostaSyncAttemptedAt,
             })
             .from(order)
             .where(whereClause)

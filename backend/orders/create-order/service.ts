@@ -6,8 +6,9 @@ import {
   user,
   type orderStatus,
   promoCode,
+  cartOffer,
 } from "#root/shared/database/drizzle/schema";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 import type { ClientSession } from "#root/backend/auth/shared/entities";
@@ -19,8 +20,12 @@ import { MinimalOrderEmailTemplate } from "#root/backend/emails/minimal/order-co
 import { getEmailBranding } from "#root/backend/emails/branding";
 import axios from "axios";
 import { validatePromoCode } from "#root/backend/promo-codes/validate-promo-code/validate-promo-code";
+import { applyOffersToCart } from "#root/backend/offers/service";
 import { getStoreOwnerId } from "#root/shared/config/store";
 import { getShippingFeeRaw } from "#root/backend/settings/get-shipping-fee";
+import { createBostaDelivery, isBostaEnabled } from "#root/backend/orders/bosta/service";
+import { persistBostaSyncStatus } from "#root/backend/orders/bosta/sync-status";
+import { isFincartEnabled } from "#root/backend/orders/fincart/config";
 
 const OrderItemSchema = z.object({
   productId: z.string().uuid(),
@@ -41,6 +46,28 @@ export const createOrderSchema = z.object({
   notes: z.string().optional(),
   promoCodeId: z.string().uuid().optional(),
   paymentMethod: z.enum(["cod", "stripe", "paymob"]).optional().default("cod"),
+  /** Bosta district ID from checkout location picker (when Bosta is enabled) */
+  bostaDistrictId: z.string().min(1).optional(),
+  /** Required when Bosta district is selected — sent as dropOffAddress.buildingNumber */
+  buildingNumber: z.string().trim().min(1).optional(),
+  /** Required when Bosta district is selected — sent as dropOffAddress.apartment */
+  apartment: z.string().trim().min(1).optional(),
+}).superRefine((data, ctx) => {
+  if (!data.bostaDistrictId) return;
+  if (!data.buildingNumber?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Building number is required",
+      path: ["buildingNumber"],
+    });
+  }
+  if (!data.apartment?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Apartment number is required",
+      path: ["apartment"],
+    });
+  }
 });
 
 // Manually define the insert type matching the schema's nullability
@@ -105,6 +132,10 @@ interface FincartResponse {
 const sendOrderToFincart = async (
   orderData: FincartOrderData,
 ): Promise<FincartResponse> => {
+  if (!isFincartEnabled()) {
+    return { success: false, error: "Fincart integration is disabled" };
+  }
+
   try {
     const FINCART_API_URL = process.env.FINCART_API_URL;
     const FINCART_API_KEY = process.env.FINCART_API_KEY;
@@ -250,6 +281,84 @@ const sendOrderToFincart = async (
   }
 };
 
+// ─── Bosta auto-send helper ───────────────────────────────────────────────────
+
+interface CreatedOrder {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingState?: string | null;
+  bostaDistrictId?: string | null;
+  buildingNumber?: string | null;
+  apartment?: string | null;
+  itemsCount?: number;
+  total: string | number;
+  notes?: string | null;
+}
+
+function formatStoredShippingAddress(input: {
+  shippingAddress: string;
+  buildingNumber?: string | null;
+  apartment?: string | null;
+}): string {
+  const street = input.shippingAddress.trim();
+  const parts: string[] = [];
+  if (input.buildingNumber?.trim()) {
+    parts.push(`Bldg ${input.buildingNumber.trim()}`);
+  }
+  if (input.apartment?.trim()) {
+    parts.push(`Apt ${input.apartment.trim()}`);
+  }
+  if (parts.length === 0) return street;
+  return `${street} (${parts.join(", ")})`;
+}
+
+async function autoSendOrderToBosta(orderData: CreatedOrder): Promise<void> {
+  if (!isBostaEnabled()) return;
+
+  await persistBostaSyncStatus(orderData.id, "pending");
+
+  const nameParts = orderData.customerName.trim().split(/\s+/);
+  const firstName = nameParts[0] ?? orderData.customerName;
+  const lastName = nameParts.slice(1).join(" ") || "";
+
+  const outcome = await createBostaDelivery({
+    orderId: orderData.id,
+    receiver: { firstName, lastName, phone: orderData.customerPhone },
+    dropOffAddress: {
+      firstLine: orderData.shippingAddress,
+      city: orderData.shippingCity,
+      zone: orderData.shippingState ?? undefined,
+      districtId: orderData.bostaDistrictId ?? undefined,
+      buildingNumber: orderData.buildingNumber ?? undefined,
+      apartment: orderData.apartment ?? undefined,
+    },
+    cod: Number(orderData.total),
+    notes: orderData.notes,
+    itemsCount: orderData.itemsCount,
+  });
+
+  if (!outcome) return;
+
+  if (outcome.success) {
+    await persistBostaSyncStatus(orderData.id, "sent", {
+      delivery: outcome.result,
+    });
+    console.log(
+      `[Order ${orderData.id}] Bosta delivery created — tracking: ${outcome.result.trackingNumber}`,
+    );
+    return;
+  }
+
+  await persistBostaSyncStatus(orderData.id, "failed", {
+    error: outcome.error,
+  });
+}
+
+// ─── Main create-order service ────────────────────────────────────────────────
+
 export const createOrder = (
   input: z.infer<typeof createOrderSchema>,
   session?: ClientSession,
@@ -283,6 +392,7 @@ export const createOrder = (
               discountPrice: product.discountPrice,
               name: product.name,
               stock: product.stock,
+              hidden: product.hidden,
             })
             .from(product)
             .where(inArray(product.id, productIds))
@@ -305,6 +415,15 @@ export const createOrder = (
                 message: `Product with ID ${item.productId} not found`,
                 statusCode: 404,
                 clientMessage: "Some products in your order could not be found",
+              });
+            }
+
+            if (productData.hidden) {
+              throw new ServerError({
+                tag: "ProductNotAvailable",
+                message: `Product ${productData.name} is not available`,
+                statusCode: 400,
+                clientMessage: `${productData.name} is no longer available for purchase`,
               });
             }
 
@@ -431,9 +550,44 @@ export const createOrder = (
             }
           }
 
-          const discountedSubtotal = subtotal - discount;
+          // ─── Evaluate automatic cart offers server-side ───────────────────────
+          const now = new Date();
+          const activeOffers = await tx
+            .select()
+            .from(cartOffer)
+            .where(
+              and(
+                eq(cartOffer.isActive, true),
+                or(isNull(cartOffer.startsAt), lte(cartOffer.startsAt, now)),
+                or(isNull(cartOffer.endsAt), gte(cartOffer.endsAt, now)),
+              ),
+            )
+            .orderBy(asc(cartOffer.priority))
+            .execute();
+
+          const cartItemsForOffers = input.items
+            .map((item) => {
+              const p = products.find((prod) => prod.id === item.productId);
+              if (!p) return null;
+              const price = p.discountPrice
+                ? Number.parseFloat(p.discountPrice.toString())
+                : Number.parseFloat(p.price.toString());
+              return { id: item.productId, name: p.name, quantity: item.quantity, price };
+            })
+            .filter(
+              (i): i is { id: string; name: string; quantity: number; price: number } =>
+                i !== null,
+            );
+
+          const appliedOffers = applyOffersToCart(activeOffers, cartItemsForOffers, subtotal);
+          const offerDiscount = appliedOffers.reduce((s, o) => s + o.discountAmount, 0);
+          const hasFreeShippingFromOffer = appliedOffers.some((o) => o.freeShipping);
+          const effectiveShipping = hasFreeShippingFromOffer ? 0 : shipping;
+
+          const combinedDiscount = discount + offerDiscount;
+          const discountedSubtotal = subtotal - combinedDiscount;
           // Ensure shipping is included in the total (no tax)
-          const total = discountedSubtotal + shipping;
+          const total = Math.max(0, discountedSubtotal) + effectiveShipping;
 
           // Only include fields directly provided or calculated
           const isOnlinePayment =
@@ -444,15 +598,19 @@ export const createOrder = (
             customerName: input.customerName,
             customerEmail: input.customerEmail,
             customerPhone: input.customerPhone,
-            shippingAddress: input.shippingAddress,
+            shippingAddress: formatStoredShippingAddress({
+              shippingAddress: input.shippingAddress,
+              buildingNumber: input.buildingNumber,
+              apartment: input.apartment,
+            }),
             shippingCity: input.shippingCity,
             shippingState: input.shippingState,
             shippingPostalCode: input.shippingPostalCode,
             shippingCountry: input.shippingCountry,
             subtotal: subtotal.toString(),
-            discount: discount > 0 ? discount.toString() : null,
+            discount: combinedDiscount > 0 ? combinedDiscount.toString() : null,
             promoCodeId: input.promoCodeId || null,
-            shipping: shipping.toString(),
+            shipping: effectiveShipping.toString(),
             tax: "0",
             total: total.toString(),
             notes: input.notes,
@@ -647,10 +805,10 @@ export const createOrder = (
 
     // Single-shop mode: No vendor notifications needed
 
-    // Send order to Fincart (only for COD orders — online payment orders are shipped after payment confirmation)
+    // Send order to Fincart (opt-in via FINCART_ENABLED=true)
     const isOnlinePaymentOrder =
       input.paymentMethod === "stripe" || input.paymentMethod === "paymob";
-    if (!isOnlinePaymentOrder) {
+    if (isFincartEnabled() && !isOnlinePaymentOrder) {
       try {
         // Use Effect to handle the async operation correctly
         yield* $(Effect.promise(() => sendOrderToFincart(result))).pipe(
@@ -670,9 +828,44 @@ export const createOrder = (
       } catch (error) {
         console.error("Exception when sending order to Fincart:", error);
       }
-    } else {
+    } else if (isFincartEnabled() && isOnlinePaymentOrder) {
       console.log(
         `[Order ${result.id}] Online payment (${input.paymentMethod}) — Fincart shipment deferred until payment confirmed`,
+      );
+    }
+
+    // ── Bosta integration (feature-flagged) ──────────────────────────────────
+    // Runs only when SYN_BOSTA_KEY is present. Never throws — a failure here
+    // does NOT abort order creation.
+    if (!isOnlinePaymentOrder) {
+      yield* $(
+        Effect.promise(async () => {
+          try {
+            await autoSendOrderToBosta({
+              ...result,
+              shippingAddress: input.shippingAddress,
+              bostaDistrictId: input.bostaDistrictId,
+              buildingNumber: input.buildingNumber,
+              apartment: input.apartment,
+              itemsCount: input.items.reduce((sum, item) => sum + item.quantity, 0),
+            });
+          } catch (err) {
+            console.error("[Bosta] Auto-send failed (order still created):", err);
+            if (isBostaEnabled()) {
+              await persistBostaSyncStatus(result.id, "failed", {
+                error: err instanceof Error ? err.message : String(err),
+              });
+            }
+          }
+        }),
+      );
+    } else if (isBostaEnabled()) {
+      yield* $(
+        Effect.promise(() =>
+          persistBostaSyncStatus(result.id, "skipped", {
+            error: "Deferred until online payment is confirmed",
+          }),
+        ),
       );
     }
 

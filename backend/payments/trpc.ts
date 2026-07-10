@@ -26,7 +26,8 @@ import { query } from "#root/shared/database/drizzle/db";
 import { order } from "#root/shared/database/drizzle/schema";
 import { eq } from "drizzle-orm";
 import { createStripeCheckoutSession, getStripeSession } from "./stripe-service";
-import { createPaymobPaymentSession } from "./paymob-service";
+import { createPaymobPaymentSession, verifyPaymobIntentionPayment } from "./paymob-service";
+import { applyOnlinePaymentUpdate } from "./confirm-online-payment";
 import { ServerError } from "#root/shared/error/server";
 
 // ─── Payment Methods Query ──────────────────────────────────────────────────
@@ -259,18 +260,12 @@ const verifyPaymentProcedure = publicProcedure
           try {
             const session = yield* getStripeSession(orderData.paymentSessionId);
             if (session.payment_status === "paid") {
-              // Update the order
               yield* query(async (db) => {
-                await db
-                  .update(order)
-                  .set({
-                    paymentStatus: "paid",
-                    paymentTransactionId: session.payment_intent as string,
-                    status: "processing",
-                    updatedAt: new Date(),
-                  })
-                  .where(eq(order.id, input.orderId))
-                  .execute();
+                await applyOnlinePaymentUpdate(db, input.orderId, {
+                  paymentStatus: "paid",
+                  transactionId: session.payment_intent as string,
+                  gatewayData: session,
+                });
               });
               return {
                 ...orderData,
@@ -280,6 +275,38 @@ const verifyPaymentProcedure = publicProcedure
             }
           } catch {
             // If Stripe check fails, return current DB state
+          }
+        }
+
+        // For Paymob, poll the intention when the webhook hasn't landed yet
+        if (
+          orderData.paymentMethod === "paymob" &&
+          orderData.paymentSessionId &&
+          orderData.paymentStatus === "pending"
+        ) {
+          try {
+            const verification = yield* verifyPaymobIntentionPayment(
+              orderData.paymentSessionId,
+            );
+            if (verification.paid) {
+              const transactionId =
+                verification.data.id?.toString() ??
+                orderData.paymentTransactionId;
+              yield* query(async (db) => {
+                await applyOnlinePaymentUpdate(db, input.orderId, {
+                  paymentStatus: "paid",
+                  transactionId,
+                  gatewayData: verification.data,
+                });
+              });
+              return {
+                ...orderData,
+                paymentStatus: "paid" as const,
+                status: "processing" as const,
+              };
+            }
+          } catch {
+            // If Paymob check fails, return current DB state
           }
         }
 
