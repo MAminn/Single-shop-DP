@@ -215,6 +215,17 @@ describe("Analytics Dashboard", () => {
     });
   });
 
+  describe("conversion rate", () => {
+    it("calculates purchase rate from sessions", async () => {
+      const { computeConversionRate } = await import(
+        "#root/backend/analytics/service"
+      );
+      expect(computeConversionRate(28, 2030)).toBe(1.4);
+      expect(computeConversionRate(0, 100)).toBe(0);
+      expect(computeConversionRate(10, 0)).toBe(0);
+    });
+  });
+
   describe("formatTimeAgo", () => {
     it("formats seconds ago", () => {
       const now = new Date(Date.now() - 30000).toISOString(); // 30s ago

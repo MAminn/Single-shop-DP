@@ -7,7 +7,7 @@ import { Effect } from "effect";
 import { z } from "zod";
 
 export const getTopSellingSchema = z.object({
-  limit: z.number().min(1).default(5),
+  limit: z.number().min(1).max(1000).optional(),
 });
 
 export interface TopSellingProduct {
@@ -40,7 +40,7 @@ export const getTopSelling = (
     return yield* $(
       query(async (db) => {
         // Get top selling products by sales volume
-        const results = await db
+        const baseQuery = db
           .select({
             id: product.id,
             name: product.name,
@@ -51,8 +51,11 @@ export const getTopSelling = (
           .from(orderItem)
           .innerJoin(product, eq(orderItem.productId, product.id))
           .groupBy(product.id, product.name, product.price)
-          .orderBy(desc(sql`sum(${orderItem.quantity})`))
-          .limit(input.limit);
+          .orderBy(desc(sql`sum(${orderItem.quantity})`));
+
+        const results = input.limit
+          ? await baseQuery.limit(input.limit)
+          : await baseQuery;
 
         // Format results
         return results.map((item) => ({
