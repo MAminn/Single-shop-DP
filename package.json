@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "tsx watch --exclude \"./pages/**/*\" --include \"./backend/**/*\" ./server/server.ts",
     "start": "tsx --require ./server/env-preload.cjs ./server/server.ts",
+    "start:compiled": "node --require ./build/server/env-preload.js ./build/server/server.js",
     "build": "unbuild && cross-env NODE_ENV=production vike build",
     "preview": "cross-env NODE_ENV=production tsx ./hono-entry.node.ts",
     "lint": "biome lint --write .",
@@ -102,6 +103,7 @@
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.0.14",
     "tailwindcss-animate": "^1.0.7",
+    "tsx": "^4.19.3",
     "unbuild": "^3.5.0",
     "use-debounce": "^10.0.4",
     "uuid": "^11.1.0",
@@ -120,7 +122,6 @@
     "@types/slug": "^5.0.9",
     "@types/uuid": "^10.0.0",
     "cross-env": "^7.0.3",
-    "tsx": "^4.19.3",
     "typescript": "^5.8.2",
     "vite": "^6.2.2"
   },

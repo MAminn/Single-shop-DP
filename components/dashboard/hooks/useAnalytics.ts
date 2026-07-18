@@ -254,9 +254,7 @@ export const useAnalytics = (role: "admin", vendorId?: string) => {
     }));
 
     try {
-      const result = await trpc.product.topSelling.query({
-        limit: 5,
-      });
+      const result = await trpc.product.topSelling.query({});
       if (result.success) {
         setAnalytics((prev) => ({
           ...prev,

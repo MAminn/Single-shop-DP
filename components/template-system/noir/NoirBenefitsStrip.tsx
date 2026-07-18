@@ -1,15 +1,6 @@
-import {
-  Award,
-  Headphones,
-  RefreshCw,
-  Shield,
-  ShoppingBag,
-  Truck,
-} from "lucide-react";
-import type {
-  HomepageValuePropsContent,
-  ValuePropIconType,
-} from "#root/shared/types/homepage-content";
+import { ShoppingBag } from "lucide-react";
+import type { HomepageValuePropsContent } from "#root/shared/types/homepage-content";
+import { VALUE_PROP_ICON_MAP } from "#root/components/template-system/shared/value-prop-icons";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import { cn } from "#root/lib/utils";
 import {
@@ -17,19 +8,8 @@ import {
   NOIR_TEXT_SECONDARY_CLASSES,
 } from "./noir-tokens";
 
-// Icon mapping — same picker values the existing templates map
-// (reference: LandingTemplateModern ICON_MAP, replicated read-only)
-const ICON_MAP: Record<
-  ValuePropIconType,
-  React.ComponentType<{ className?: string }>
-> = {
-  shopping: ShoppingBag,
-  shipping: Truck,
-  security: Shield,
-  support: Headphones,
-  quality: Award,
-  returns: RefreshCw,
-};
+// Icon mapping — shared with other templates
+const ICON_MAP = VALUE_PROP_ICON_MAP;
 
 interface NoirBenefitsStripProps {
   valueProps: HomepageValuePropsContent;
@@ -61,7 +41,7 @@ export function NoirBenefitsStrip({ valueProps }: NoirBenefitsStripProps) {
                   // hairline column separators on desktop (skip first)
                   index % 4 !== 0 && "lg:border-s lg:border-white/10 lg:ps-6",
                 )}>
-                <Icon className='w-6 h-6 text-[#E8112D]' strokeWidth={1.5} />
+                <Icon className='w-6 h-6 text-[#E8112D] stroke-[1.5]' />
                 <h3
                   className={cn(
                     "text-[11px] uppercase font-semibold text-white",

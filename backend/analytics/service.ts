@@ -24,6 +24,15 @@ import {
 } from "drizzle-orm";
 import { Effect } from "effect";
 
+/** Purchase sessions ÷ store sessions (page views), as a percentage. */
+export function computeConversionRate(
+  purchaseSessions: number,
+  storeSessions: number,
+): number {
+  if (storeSessions <= 0 || purchaseSessions <= 0) return 0;
+  return Math.round((purchaseSessions / storeSessions) * 1000) / 10;
+}
+
 // ─── Overview metrics ───────────────────────────────────────────────────────
 
 export const getOverviewMetrics = () =>
@@ -83,6 +92,39 @@ export const getOverviewMetrics = () =>
         .where(eq(product.deleted, false))
         .execute();
 
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      const sessionFunnelEvents = ["page_viewed", "checkout_completed"] as const;
+      const sessionCounts = await db
+        .select({
+          eventName: trackingEvent.eventName,
+          uniqueSessions: countDistinct(trackingEvent.sessionId),
+        })
+        .from(trackingEvent)
+        .where(
+          and(
+            isNull(trackingEvent.archivedAt),
+            gte(trackingEvent.createdAt, thirtyDaysAgo),
+            sql`${trackingEvent.eventName} IN (${sql.join(
+              sessionFunnelEvents.map((e) => sql`${e}`),
+              sql`, `,
+            )})`,
+          ),
+        )
+        .groupBy(trackingEvent.eventName)
+        .execute();
+
+      const sessionCountMap = new Map(
+        sessionCounts.map((row) => [row.eventName, row.uniqueSessions]),
+      );
+      const sessions30d = sessionCountMap.get("page_viewed") ?? 0;
+      const purchaseSessions30d =
+        sessionCountMap.get("checkout_completed") ?? 0;
+      const conversionRate30d = computeConversionRate(
+        purchaseSessions30d,
+        sessions30d,
+      );
+
       return {
         totalOrders: nonCancelledCount,
         totalRevenue,
@@ -90,6 +132,9 @@ export const getOverviewMetrics = () =>
         totalOrders7d: orderCount7d?.total ?? 0,
         totalRevenue7d: Number(revenueTotals7d?.totalRevenue ?? 0),
         totalProducts: productCount?.total ?? 0,
+        sessions30d,
+        purchaseSessions30d,
+        conversionRate30d,
       };
     });
   });

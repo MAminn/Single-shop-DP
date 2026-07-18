@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { TopSellingProductsCard } from "#root/components/dashboard/TopSellingProductsCard";
 import {
   Card,
   CardHeader,
@@ -63,6 +64,9 @@ interface OverviewData {
   totalOrders7d: number;
   totalRevenue7d: number;
   totalProducts: number;
+  sessions30d: number;
+  purchaseSessions30d: number;
+  conversionRate30d: number;
 }
 
 interface FunnelStage {
@@ -95,6 +99,7 @@ interface PlatformRow {
 interface TopSellingRow {
   id: string;
   name: string;
+  price: number;
   sold: number;
   revenue: number;
 }
@@ -184,7 +189,7 @@ export default function AnalyticsDashboardPage() {
           trpc.analytics.funnel.query(),
           trpc.analytics.eventBreakdown.query(),
           trpc.analytics.platformHealth.query(),
-          trpc.product.topSelling.query({ limit: 5 }),
+          trpc.product.topSelling.query({}),
           trpc.analytics.topTrackedProducts.query(),
         ]);
       if (overview.success) setOverviewData(overview.result);
@@ -216,7 +221,7 @@ export default function AnalyticsDashboardPage() {
             trpc.analytics.funnel.query(),
             trpc.analytics.eventBreakdown.query(),
             trpc.analytics.platformHealth.query(),
-            trpc.product.topSelling.query({ limit: 5 }),
+            trpc.product.topSelling.query({}),
             trpc.analytics.topTrackedProducts.query(),
           ]);
 
@@ -278,7 +283,7 @@ export default function AnalyticsDashboardPage() {
       {/* ── Overview Cards ────────────────────────────────────────── */}
       {overviewData && (
         <div
-          className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'
+          className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
           data-testid='overview-cards'>
           <OverviewCard
             label='Total Orders'
@@ -296,6 +301,18 @@ export default function AnalyticsDashboardPage() {
             label='Avg. Order Value'
             value={`$${overviewData.avgOrderValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             icon={<CreditCard className='h-4 w-4' />}
+          />
+          <OverviewCard
+            label='Store Sessions'
+            value={overviewData.sessions30d.toLocaleString()}
+            sub='Unique visitors (last 30 days)'
+            icon={<Users className='h-4 w-4' />}
+          />
+          <OverviewCard
+            label='Conversion Rate'
+            value={`${overviewData.conversionRate30d.toFixed(1)}%`}
+            sub={`${overviewData.purchaseSessions30d.toLocaleString()} purchases from ${overviewData.sessions30d.toLocaleString()} sessions`}
+            icon={<TrendingUp className='h-4 w-4' />}
           />
           <OverviewCard
             label='Total Products'
@@ -395,40 +412,12 @@ export default function AnalyticsDashboardPage() {
 
       {/* ── Top Products ──────────────────────────────────────────── */}
       <div className='grid gap-4 lg:grid-cols-2'>
-        {/* Best Selling (by revenue) */}
-        {topSellingData && topSellingData.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className='flex items-center gap-2'>
-                <DollarSign className='h-5 w-5' />
-                Best Selling Products
-              </CardTitle>
-              <CardDescription>By order revenue (all time)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Product</TableHead>
-                    <TableHead className='text-right'>Sold</TableHead>
-                    <TableHead className='text-right'>Revenue</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {topSellingData.map((p: TopSellingRow) => (
-                    <TableRow key={p.id}>
-                      <TableCell className='font-medium'>{p.name}</TableCell>
-                      <TableCell className='text-right'>{p.sold}</TableCell>
-                      <TableCell className='text-right'>
-                        ${p.revenue.toLocaleString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
+        {/* Best Selling (all sold products) */}
+        <TopSellingProductsCard
+          products={topSellingData}
+          isLoading={isLoading}
+          error={null}
+        />
 
         {/* Most Viewed (from tracking events) */}
         {topTrackedData?.mostViewed && topTrackedData.mostViewed.length > 0 && (
