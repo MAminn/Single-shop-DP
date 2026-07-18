@@ -3,40 +3,38 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN npm install -g pnpm@9.15.4
 
-# Install dependencies only (force NODE_ENV=development so pnpm installs devDeps too)
+# Install dependencies (including devDeps needed for build)
 FROM base AS deps
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 RUN NODE_ENV=development pnpm install --frozen-lockfile
 
-# Build the app
+# Build the app, then drop devDependencies to shrink the runtime image
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN NODE_ENV=production pnpm run build
+RUN NODE_ENV=production pnpm run build \
+  && pnpm prune --prod
 
 # Production runtime
 FROM base AS runner
-RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy built artifacts
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/shared ./shared
 COPY --from=builder /app/backend ./backend
 COPY --from=builder /app/assets ./assets
-COPY --from=builder /app/hono-entry.node.ts ./hono-entry.node.ts
-COPY --from=builder /app/hono-entry.ts ./hono-entry.ts
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 
-# Create uploads directory
 RUN mkdir -p /app/uploads
 
 EXPOSE 3000

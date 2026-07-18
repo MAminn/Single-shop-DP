@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import { useCart } from "#root/lib/context/CartContext";
+import { useTracking } from "#root/frontend/contexts/TrackingContext";
+import { trackAddToCartEvent } from "#root/frontend/tracking/add-to-cart-event";
 import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext";
 import { Link } from "#root/components/utils/Link";
 import { getProductUrl } from "#root/lib/utils/route-helpers";
@@ -91,6 +93,7 @@ export function ProductPageMinimal({
   const isAr = locale === "ar";
   const layoutSettings = useLayoutSettings();
   const { addItem } = useCart();
+  const { trackEvent } = useTracking();
 
   /* ── CMS carousel title ── */
   const [carouselTitle, setCarouselTitle] = useState("");
@@ -260,63 +263,79 @@ export function ProductPageMinimal({
   })();
 
   const handleAddToCart = () => {
-    if (onAddToCart) {
-      // Fly animation from the main product image
-      flyToCart(
-        addToCartBtnRef.current,
-        images[selectedImage]?.url || product.imageUrl || "",
-      );
+    if (!product?.available) return;
 
-      // Add the main product directly with the modifier-adjusted price
-      addItem(
-        {
-          id: product.id,
-          name: product.name,
-          price: displayPrice,
-          stock: product.stock,
-          imageUrl: product.imageUrl,
-          categoryName: product.categoryName ?? undefined,
-          available: product.available,
-        },
-        quantity,
-        selectedVariants,
-      );
+    flyToCart(
+      addToCartBtnRef.current,
+      images[selectedImage]?.url || product.imageUrl || "",
+    );
 
-      // Also add selected add-on products from inline carousels
-      if (selectedAddOns.size > 0 && categoryGroups) {
-        const allCategoryProducts = categoryGroups.flatMap((g) => g.products);
-        for (const addOnId of selectedAddOns) {
-          const addOn = allCategoryProducts.find((p) => p.id === addOnId);
-          if (addOn) {
-            const addOnPrice =
-              addOn.discountPrice != null &&
-              Number(addOn.discountPrice) < addOn.price
-                ? Number(addOn.discountPrice)
-                : addOn.price;
-            addItem(
-              {
-                id: addOn.id,
-                name: addOn.name,
-                price: addOnPrice,
-                stock: addOn.stock || 99,
-                imageUrl: addOn.imageUrl,
-                categoryName: addOn.categoryName || undefined,
-                available: (addOn.stock || 0) > 0,
-              },
-              1,
-              {},
-            );
-          }
-        }
-        setSelectedAddOns(new Set());
-      }
-
-      showCartToast({
+    const success = addItem(
+      {
+        id: product.id,
         name: product.name,
         price: displayPrice,
-        imageUrl: product.imageUrl || "",
+        stock: product.stock,
+        imageUrl: product.imageUrl,
+        categoryName: product.categoryName ?? undefined,
+        available: product.available,
+      },
+      quantity,
+      selectedVariants,
+    );
+
+    if (success) {
+      trackAddToCartEvent(trackEvent, {
+        id: product.id,
+        name: product.name,
+        price: displayPrice,
+        quantity,
+        categoryName: product.categoryName,
       });
     }
+
+    // Also add selected add-on products from inline carousels
+    if (selectedAddOns.size > 0 && categoryGroups) {
+      const allCategoryProducts = categoryGroups.flatMap((g) => g.products);
+      for (const addOnId of selectedAddOns) {
+        const addOn = allCategoryProducts.find((p) => p.id === addOnId);
+        if (addOn) {
+          const addOnPrice =
+            addOn.discountPrice != null &&
+            Number(addOn.discountPrice) < addOn.price
+              ? Number(addOn.discountPrice)
+              : addOn.price;
+          const addOnSuccess = addItem(
+            {
+              id: addOn.id,
+              name: addOn.name,
+              price: addOnPrice,
+              stock: addOn.stock || 99,
+              imageUrl: addOn.imageUrl,
+              categoryName: addOn.categoryName || undefined,
+              available: (addOn.stock || 0) > 0,
+            },
+            1,
+            {},
+          );
+          if (addOnSuccess) {
+            trackAddToCartEvent(trackEvent, {
+              id: addOn.id,
+              name: addOn.name,
+              price: addOnPrice,
+              categoryName: addOn.categoryName,
+            });
+          }
+        }
+      }
+      setSelectedAddOns(new Set());
+    }
+
+    showCartToast({
+      name: product.name,
+      price: displayPrice,
+      imageUrl: product.imageUrl || "",
+    });
   };
 
   const handleImageClick = (index: number) => {
@@ -680,7 +699,8 @@ export function ProductPageMinimal({
                 size='lg'
                 className='w-full bg-gray-900 hover:bg-gray-800 text-white rounded-none py-4 text-sm font-medium shadow-none hover:shadow-lg transition-all'
                 onClick={handleAddToCart}
-                disabled={!product.available || !allVariantsSelected}>
+                disabled={!product.available || !allVariantsSelected}
+                data-add-to-cart='true'>
                 {product.available ? t("add_to_cart") : t("out_of_stock")}
               </Button>
             </div>
@@ -1066,6 +1086,7 @@ function BottomProductsCarousel({
   const [canScrollRight, setCanScrollRight] = useState(true);
   const { t } = useMinimalI18n();
   const { addItem } = useCart();
+  const { trackEvent } = useTracking();
 
   const checkScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -1137,17 +1158,27 @@ function BottomProductsCarousel({
                   const price = product.discountPrice
                     ? Number(product.discountPrice)
                     : product.price;
-                  addItem(
+                  const success = addItem(
                     {
                       id: product.id,
                       name: product.name,
                       price,
                       imageUrl: resolveImageUrl(product),
                       stock: product.stock,
+                      categoryName: product.categoryName ?? undefined,
+                      available: product.available,
                     },
                     1,
                     {},
                   );
+                  if (success) {
+                    trackAddToCartEvent(trackEvent, {
+                      id: product.id,
+                      name: product.name,
+                      price,
+                      categoryName: product.categoryName,
+                    });
+                  }
                   showCartToast({
                     name: product.name,
                     price,
@@ -1259,6 +1290,7 @@ function BottomProductCard({
             onAddToCart();
           }}
           disabled={!product.available}
+          data-add-to-cart='true'
           className='mt-3 w-full py-2.5 border border-stone-900 text-stone-900 text-xs font-medium uppercase tracking-wider hover:bg-stone-900 hover:text-white transition-colors disabled:border-stone-300 disabled:text-stone-400 disabled:cursor-not-allowed disabled:hover:bg-transparent'>
           {product.available ? t("add_to_cart") : t("out_of_stock")}
         </button>

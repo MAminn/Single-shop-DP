@@ -1,6 +1,8 @@
 import { useState, useMemo, useCallback } from "react";
 import { X, ChevronLeft, ChevronRight, Heart, Share2, Check } from "lucide-react";
 import { useCart } from "#root/lib/context/CartContext";
+import { useTracking } from "#root/frontend/contexts/TrackingContext";
+import { trackAddToCartEvent } from "#root/frontend/tracking/add-to-cart-event";
 import { useWishlist } from "#root/lib/hooks/useWishlist";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import { cn } from "#root/lib/utils";
@@ -21,6 +23,7 @@ function resolveImageUrl(url?: string | null): string {
 
 export function QuickViewDialog({ product, open, onClose }: QuickViewDialogProps) {
   const { addItem } = useCart();
+  const { trackEvent } = useTracking();
   const { toggle, isWishlisted } = useWishlist();
   const { t } = useMinimalI18n();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -49,24 +52,34 @@ export function QuickViewDialog({ product, open, onClose }: QuickViewDialogProps
 
   const handleAddToCart = useCallback(() => {
     if (!product || !product.available) return;
-    addItem(
+    const success = addItem(
       {
         id: product.id,
         name: product.name,
         price: displayPrice,
         imageUrl: images[0] || "",
         stock: product.stock,
+        categoryName: product.categoryName ?? undefined,
       },
       quantity,
       {},
     );
+    if (success) {
+      trackAddToCartEvent(trackEvent, {
+        id: product.id,
+        name: product.name,
+        price: displayPrice,
+        quantity,
+        categoryName: product.categoryName,
+      });
+    }
     showCartToast({
       name: product.name,
       price: displayPrice,
       imageUrl: images[0] || "",
     });
     onClose();
-  }, [product, displayPrice, images, quantity, addItem, onClose, t]);
+  }, [product, displayPrice, images, quantity, addItem, trackEvent, onClose]);
 
   if (!open || !product) return null;
 
@@ -219,6 +232,7 @@ export function QuickViewDialog({ product, open, onClose }: QuickViewDialogProps
                 type='button'
                 onClick={handleAddToCart}
                 disabled={!product.available}
+                data-add-to-cart='true'
                 className='flex-1 py-2.5 bg-stone-900 text-white text-xs font-medium tracking-wide uppercase hover:bg-stone-800 transition-colors disabled:opacity-40'>
                 {product.available ? t("add_to_cart") : t("out_of_stock")}
               </button>

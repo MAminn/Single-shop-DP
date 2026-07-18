@@ -2,6 +2,8 @@ import { useState, useMemo, useCallback, useRef } from "react";
 import { Eye, Heart, ShoppingCart } from "lucide-react";
 import { Link } from "#root/components/utils/Link";
 import { useCart } from "#root/lib/context/CartContext";
+import { useTracking } from "#root/frontend/contexts/TrackingContext";
+import { trackAddToCartEvent } from "#root/frontend/tracking/add-to-cart-event";
 import { useWishlist } from "#root/lib/hooks/useWishlist";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import { getProductUrl } from "#root/lib/utils/route-helpers";
@@ -47,6 +49,7 @@ export function MinimalProductCard({
   className,
 }: MinimalProductCardProps) {
   const { addItem } = useCart();
+  const { trackEvent } = useTracking();
   const { toggle, isWishlisted } = useWishlist();
   const { t } = useMinimalI18n();
   const [isAdding, setIsAdding] = useState(false);
@@ -79,18 +82,27 @@ export function MinimalProductCard({
       setIsAdding(true);
       try {
         flyToCart(addToCartBtnRef.current, displayImageUrl);
-        addItem(
+        const success = addItem(
           {
             id: product.id,
             name: product.name,
             price: displayPrice,
             imageUrl: displayImageUrl,
             stock: product.stock,
+            categoryName: product.categoryName ?? undefined,
             originalPrice: hasDiscount ? product.price : undefined,
           },
           1,
           {},
         );
+        if (success) {
+          trackAddToCartEvent(trackEvent, {
+            id: product.id,
+            name: product.name,
+            price: displayPrice,
+            categoryName: product.categoryName,
+          });
+        }
         showCartToast({
           name: product.name,
           price: displayPrice,
@@ -102,7 +114,7 @@ export function MinimalProductCard({
         setIsAdding(false);
       }
     },
-    [product, displayPrice, displayImageUrl, addItem],
+    [product, displayPrice, displayImageUrl, addItem, trackEvent, hasDiscount],
   );
 
   // Determine tag text
@@ -195,6 +207,7 @@ export function MinimalProductCard({
         type='button'
         onClick={handleAddToCart}
         disabled={!product.available || isAdding}
+        data-add-to-cart='true'
         className='mt-1 w-full py-2.5 border border-stone-900 text-stone-900 text-xs font-medium tracking-wide uppercase hover:bg-stone-900 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed'>
         {product.available ? t("add_to_cart") : t("out_of_stock")}
       </button>
