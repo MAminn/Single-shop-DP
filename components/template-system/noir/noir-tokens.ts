@@ -31,6 +31,15 @@ export const NOIR_CARD_CLASSES =
 export const NOIR_CARD_GRADIENT_CLASSES =
   "bg-linear-to-b from-[#181818] to-[#101010] border border-white/10 rounded-lg";
 
+/**
+ * Translucent glass card surface — used when a Noir card sits INSIDE the
+ * framed top-experience composition (NoirTopExperience). Reads as a glass
+ * child of the frame: faint white fill + top-down white highlight gradient,
+ * brighter hairline, and a light backdrop blur.
+ */
+export const NOIR_CARD_GLASS_CLASSES =
+  "bg-white/[0.04] bg-linear-to-b from-white/6 to-transparent border border-white/12 rounded-lg backdrop-blur-sm";
+
 /** Hairline border used on dividers and outlined elements. */
 export const NOIR_BORDER_CLASSES = "border border-white/10";
 
@@ -84,3 +93,19 @@ export const NOIR_DISPLAY_FONT_CLASSES =
 
 /** Mono font (IBM Plex Mono) — variable defined in the scoped Noir CSS block. */
 export const NOIR_MONO_FONT_CLASSES = "[font-family:var(--noir-font-mono)]";
+
+/* ------------------------------------------------------------------ */
+/*  Top-experience frame — one framed composition on the Noir landing  */
+/*  (navbar + hero + best sellers fused inside a single glass panel).  */
+/* ------------------------------------------------------------------ */
+
+/** Frame surface: vertical glass gradient #131313 → #0a0a0a. */
+export const NOIR_FRAME_SURFACE_CLASSES =
+  "bg-linear-to-b from-[#131313] to-[#0a0a0a]";
+
+/** Frame surface TOP value — image fades embedded into the frame match this. */
+export const NOIR_FRAME_SURFACE_TOP = "#131313";
+
+/** Frame outer drop shadow (deep, wide). */
+export const NOIR_FRAME_SHADOW_CLASSES =
+  "shadow-[0_40px_120px_-40px_rgba(0,0,0,0.9)]";

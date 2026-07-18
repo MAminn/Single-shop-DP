@@ -13,6 +13,15 @@ import {
 interface NoirHeroProps {
   hero: HomepageHeroContent;
   onCtaClick?: (link: string) => void;
+  /**
+   * When true the hero is rendered INSIDE the landing's framed top
+   * experience (NoirTopExperience): it drops its own rounded container,
+   * border, surface gradient, outer shadow, top highlight, red glow, and
+   * horizontal margins — the frame owns those. Image fades match the frame
+   * surface top (#131313) and the composition is made more compact.
+   * Default false = original standalone look, unchanged.
+   */
+  embedded?: boolean;
 }
 
 /**
@@ -23,7 +32,11 @@ interface NoirHeroProps {
  * backgroundImage, mobile variant via <picture>); stacks below text on
  * mobile. Renders nothing when the section is disabled.
  */
-export function NoirHero({ hero, onCtaClick }: NoirHeroProps) {
+export function NoirHero({
+  hero,
+  onCtaClick,
+  embedded = false,
+}: NoirHeroProps) {
   const { t, locale } = useMinimalI18n();
   const isAr = locale === "ar";
   const track = isAr ? "" : "tracking-[0.3em]";
@@ -35,6 +48,10 @@ export function NoirHero({ hero, onCtaClick }: NoirHeroProps) {
   const mobileImage = hero.mobileBackgroundImage || desktopImage;
   const hasImage = Boolean(desktopImage);
 
+  // Image dissolve color — embedded matches the frame surface TOP (#131313);
+  // standalone keeps the original panel surface value (#0e0e0e).
+  const imageFadeFrom = embedded ? "from-[#131313]" : "from-[#0e0e0e]";
+
   const handleCta = (link: string) => (e: MouseEvent<HTMLAnchorElement>) => {
     if (onCtaClick) {
       e.preventDefault();
@@ -45,31 +62,45 @@ export function NoirHero({ hero, onCtaClick }: NoirHeroProps) {
   const ctaLink = hero.ctaLink || "/shop";
 
   return (
-    <section className='relative px-4 md:px-8 pt-6 md:pt-8 pb-3 md:pb-4 overflow-hidden'>
-      <div className='relative mx-auto max-w-7xl'>
+    <section
+      className={cn(
+        "relative overflow-hidden",
+        !embedded && "px-4 md:px-8 pt-6 md:pt-8 pb-3 md:pb-4",
+      )}>
+      <div className={cn("relative", !embedded && "mx-auto max-w-7xl")}>
         <div
           className={cn(
-            "relative grid items-stretch gap-0 rounded-2xl border border-white/10 overflow-hidden",
-            "bg-linear-to-b from-[#121212] to-[#0a0a0a]",
-            "shadow-[0_40px_120px_-40px_rgba(0,0,0,0.9)]",
-            "min-h-120 md:min-h-140 md:max-h-160",
+            "relative grid items-stretch gap-0 overflow-hidden",
+            embedded
+              ? "min-h-110 md:min-h-130"
+              : cn(
+                  "rounded-2xl border border-white/10",
+                  "bg-linear-to-b from-[#121212] to-[#0a0a0a]",
+                  "shadow-[0_40px_120px_-40px_rgba(0,0,0,0.9)]",
+                  "min-h-120 md:min-h-140 md:max-h-160",
+                ),
             hasImage ? "md:grid-cols-2" : "",
           )}>
-          {/* Top-edge highlight — glass panel catchlight */}
-          <div
-            className='absolute inset-x-0 top-0 h-px z-10 pointer-events-none bg-linear-to-r from-transparent via-white/25 to-transparent'
-            aria-hidden='true'
-          />
+          {/* Top-edge highlight — glass panel catchlight (frame owns it when embedded) */}
+          {!embedded && (
+            <div
+              className='absolute inset-x-0 top-0 h-px z-10 pointer-events-none bg-linear-to-r from-transparent via-white/25 to-transparent'
+              aria-hidden='true'
+            />
+          )}
           {/* Ambient red rim-light glow — inside the glass panel, bottom-start,
-              bleeding under the column boundary */}
-          <div
-            className='pointer-events-none absolute z-0 -bottom-1/3 -start-1/5 w-[60%] aspect-square rounded-full blur-3xl'
-            style={{
-              background:
-                "radial-gradient(circle, rgba(232,17,45,0.16) 0%, rgba(232,17,45,0.04) 45%, transparent 70%)",
-            }}
-            aria-hidden='true'
-          />
+              bleeding under the column boundary. Omitted when embedded: the
+              frame's own atmosphere glow replaces it. */}
+          {!embedded && (
+            <div
+              className='pointer-events-none absolute z-0 -bottom-1/3 -start-1/5 w-[60%] aspect-square rounded-full blur-3xl'
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(232,17,45,0.16) 0%, rgba(232,17,45,0.04) 45%, transparent 70%)",
+              }}
+              aria-hidden='true'
+            />
+          )}
 
           {/* ── Text panel ── */}
           <div
@@ -166,12 +197,18 @@ export function NoirHero({ hero, onCtaClick }: NoirHeroProps) {
               {/* Dissolve the photo into the glass panel — no hard edge */}
               {/* Inline-start fade (desktop, side-by-side) — wide, matches surface */}
               <div
-                className='absolute inset-y-0 start-0 w-[55%] pointer-events-none bg-linear-to-r rtl:bg-linear-to-l from-[#0e0e0e] to-transparent hidden md:block'
+                className={cn(
+                  "absolute inset-y-0 start-0 w-[55%] pointer-events-none bg-linear-to-r rtl:bg-linear-to-l to-transparent hidden md:block",
+                  imageFadeFrom,
+                )}
                 aria-hidden='true'
               />
               {/* Top fade (mobile, stacked below text) */}
               <div
-                className='absolute inset-x-0 top-0 h-[55%] pointer-events-none bg-linear-to-b from-[#0e0e0e] to-transparent md:hidden'
+                className={cn(
+                  "absolute inset-x-0 top-0 h-[55%] pointer-events-none bg-linear-to-b to-transparent md:hidden",
+                  imageFadeFrom,
+                )}
                 aria-hidden='true'
               />
               {/* Bottom fade — matches container bottom surface */}

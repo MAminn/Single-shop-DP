@@ -19,6 +19,14 @@ interface NoirChromeProps {
    * the global chrome.
    */
   previewMode?: boolean;
+  /**
+   * When true, NoirChrome does NOT render its own NoirNavbar — the
+   * consumer owns the navbar (e.g. the landing's framed top experience
+   * renders an embedded navbar inside the frame). Announcement bar,
+   * footer, and the data-attribute behaviour are unchanged. Defaults to
+   * false, so product/sorting pages render identically.
+   */
+  hideNavbar?: boolean;
 }
 
 /* ------------------------------------------------------------------ */
@@ -67,6 +75,7 @@ export function NoirChrome({
   children,
   announcementText,
   previewMode = false,
+  hideNavbar = false,
 }: NoirChromeProps) {
   useEffect(() => {
     if (previewMode) return;
@@ -85,7 +94,7 @@ export function NoirChrome({
       }}>
       <NoirAnnouncementBar text={announcementText} />
 
-      <NoirNavbar />
+      {!hideNavbar && <NoirNavbar />}
 
       {children}
 

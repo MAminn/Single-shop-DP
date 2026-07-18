@@ -7,6 +7,7 @@ import { getProductUrl } from "#root/lib/utils/route-helpers";
 import { cn } from "#root/lib/utils";
 import { formatNoirPrice } from "./format-price";
 import {
+  NOIR_CARD_GLASS_CLASSES,
   NOIR_CARD_GRADIENT_CLASSES,
   NOIR_CARD_HOVER_GLOW,
   NOIR_DISPLAY_FONT_CLASSES,
@@ -49,6 +50,15 @@ export interface ProductCardNoirProps {
   product: NoirProduct;
   onAddToCart?: (product: NoirProduct) => void;
   className?: string;
+  /**
+   * Card surface treatment.
+   *  - "solid" (default): the original opaque dark-gradient card.
+   *  - "glass": translucent glass card — used when the card sits inside
+   *    the landing's framed top experience so it reads as a glass child
+   *    of the frame. Only the surface changes; layout/badge/pricing/CTA/
+   *    placeholder are identical.
+   */
+  surface?: "solid" | "glass";
 }
 
 /* ------------------------------------------------------------------ */
@@ -113,6 +123,7 @@ export function ProductCardNoir({
   product,
   onAddToCart,
   className,
+  surface = "solid",
 }: ProductCardNoirProps) {
   const { t, locale } = useMinimalI18n();
   const isAr = locale === "ar";
@@ -183,7 +194,9 @@ export function ProductCardNoir({
     <div
       className={cn(
         "group relative flex flex-col overflow-hidden",
-        NOIR_CARD_GRADIENT_CLASSES,
+        surface === "glass"
+          ? NOIR_CARD_GLASS_CLASSES
+          : NOIR_CARD_GRADIENT_CLASSES,
         NOIR_CARD_HOVER_GLOW,
         className,
       )}>

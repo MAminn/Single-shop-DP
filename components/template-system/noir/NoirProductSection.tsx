@@ -28,6 +28,16 @@ interface NoirProductSectionProps {
    * under the grid.
    */
   headingVariant?: "start" | "centered";
+  /**
+   * When true this row is rendered INSIDE the landing's framed top
+   * experience (NoirTopExperience). It drops the section-level vertical
+   * padding tiers (uses a tight pt-2 pb-8 md:pb-10), goes fully
+   * transparent so the frame surface shows through, uses the frame's own
+   * horizontal gutter (px-4 md:px-8, no max-width reset since the frame
+   * constrains width), forces the centered heading variant, and renders
+   * its cards with the translucent glass surface. Default false = unchanged.
+   */
+  embedded?: boolean;
 }
 
 /** Dark skeleton card — matches ProductCardNoir geometry exactly. */
@@ -64,10 +74,12 @@ export function NoirProductSection({
   maxProducts = 4,
   band = false,
   headingVariant = "start",
+  embedded = false,
 }: NoirProductSectionProps) {
   const { locale } = useMinimalI18n();
   const isAr = locale === "ar";
-  const centered = headingVariant === "centered";
+  const centered = headingVariant === "centered" || embedded;
+  const cardSurface = embedded ? "glass" : undefined;
 
   if (!isLoading && products.length === 0) return null;
 
@@ -76,10 +88,14 @@ export function NoirProductSection({
   return (
     <section
       className={cn(
-        centered ? "pt-10 md:pt-14 pb-16 md:pb-24" : NOIR_SECTION_Y,
-        band && "bg-[#0c0c0c]",
+        embedded
+          ? "pt-2 pb-8 md:pb-10"
+          : centered
+            ? "pt-10 md:pt-14 pb-16 md:pb-24"
+            : NOIR_SECTION_Y,
+        band && !embedded && "bg-[#0c0c0c]",
       )}>
-      <div className={NOIR_CONTAINER}>
+      <div className={embedded ? "px-4 md:px-8" : NOIR_CONTAINER}>
         {centered ? (
           <div className='mb-8 md:mb-10 flex flex-col items-center text-center'>
             {eyebrow && (
@@ -126,7 +142,11 @@ export function NoirProductSection({
           /* RTL: 2-col grid on mobile, 4-up desktop (no snap carousel) */
           <div className='grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6'>
             {shown.map((product) => (
-              <ProductCardNoir key={product.id} product={product} />
+              <ProductCardNoir
+                key={product.id}
+                product={product}
+                surface={cardSurface}
+              />
             ))}
           </div>
         ) : (
@@ -137,6 +157,7 @@ export function NoirProductSection({
                 <ProductCardNoir
                   key={product.id}
                   product={product}
+                  surface={cardSurface}
                   className='w-64 shrink-0 snap-start'
                 />
               ))}
@@ -144,7 +165,11 @@ export function NoirProductSection({
             {/* Desktop: 4-up grid */}
             <div className='hidden md:grid md:grid-cols-4 gap-6'>
               {shown.map((product) => (
-                <ProductCardNoir key={product.id} product={product} />
+                <ProductCardNoir
+                  key={product.id}
+                  product={product}
+                  surface={cardSurface}
+                />
               ))}
             </div>
           </>

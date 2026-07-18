@@ -20,8 +20,22 @@ import { NOIR_DISPLAY_FONT_CLASSES } from "./noir-tokens";
  * (same source as the existing navbars) rendered in accent red.
  *
  * Sits BELOW the NoirAnnouncementBar inside NoirChrome.
+ *
+ * `variant`:
+ *  - "standalone" (default): sticky black bar with a hairline bottom
+ *    border — exactly the original page-level header.
+ *  - "embedded": transparent, non-sticky header row inside the landing's
+ *    framed top experience. No black fill / no top-level border; instead a
+ *    faint hairline divider (border-b border-white/8) so it reads as the
+ *    frame's header row. Same grid/logo/links/icons/cart badge/mobile
+ *    panel; the mobile panel gains a translucent blurred backdrop so it
+ *    stays readable over the frame surface.
  */
-export function NoirNavbar() {
+export function NoirNavbar({
+  variant = "standalone",
+}: {
+  variant?: "standalone" | "embedded";
+} = {}) {
   const { session } = useContext(AuthContext);
   const { totalItems } = useCart();
   const layoutSettings = useLayoutSettings();
@@ -29,6 +43,7 @@ export function NoirNavbar() {
   const isAr = locale === "ar";
   const track = isAr ? "" : "tracking-[0.2em]";
   const [mobileOpen, setMobileOpen] = useState(false);
+  const embedded = variant === "embedded";
 
   // CMS nav links with Home + Shop fallback
   const cmsLinks = layoutSettings.header.navigationLinks;
@@ -50,7 +65,12 @@ export function NoirNavbar() {
   );
 
   return (
-    <header className='sticky top-0 z-40 bg-black border-b border-white/10'>
+    <header
+      className={cn(
+        embedded
+          ? "border-b border-white/8"
+          : "sticky top-0 z-40 bg-black border-b border-white/10",
+      )}>
       <div className='mx-auto max-w-7xl px-4 md:px-8'>
         <div className='grid grid-cols-[auto_1fr_auto] md:grid-cols-3 items-center h-16 gap-4'>
           {/* ─── Start: mobile menu toggle + logo ─── */}
@@ -128,7 +148,11 @@ export function NoirNavbar() {
 
       {/* ─── Mobile menu panel ─── */}
       {mobileOpen && (
-        <nav className='md:hidden border-t border-white/10 bg-black px-4 py-4 flex flex-col gap-4'>
+        <nav
+          className={cn(
+            "md:hidden border-t border-white/10 px-4 py-4 flex flex-col gap-4",
+            embedded ? "bg-black/80 backdrop-blur" : "bg-black",
+          )}>
           {navLinks.map((link) => (
             <Link
               key={link.href + link.label}

@@ -7,6 +7,12 @@ interface NoirBestSellersProps {
   content: HomepageFeaturedProductsContent;
   products?: NoirProduct[];
   isLoading?: boolean;
+  /**
+   * Rendered inside the landing's framed top experience
+   * (NoirTopExperience) — forwarded to NoirProductSection so the row
+   * tucks into the frame (tight spacing, transparent surface, glass cards).
+   */
+  embedded?: boolean;
 }
 
 /**
@@ -19,6 +25,7 @@ export function NoirBestSellers({
   content,
   products = [],
   isLoading = false,
+  embedded = false,
 }: NoirBestSellersProps) {
   const { locale } = useMinimalI18n();
   const isAr = locale === "ar";
@@ -38,6 +45,7 @@ export function NoirBestSellers({
       viewAllLink={content.viewAllLink || "/shop"}
       products={products}
       isLoading={isLoading}
+      embedded={embedded}
       headingVariant='centered'
     />
   );

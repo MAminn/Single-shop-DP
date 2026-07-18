@@ -4,8 +4,7 @@ import type { FeaturedProduct } from "../home/HomeFeaturedProducts";
 import type { CategoryStripItem } from "#root/components/shop/CategoryStrip";
 import type { NewArrivalProduct } from "#root/components/shop/NewArrivals";
 import { NoirChrome } from "./NoirChrome";
-import { NoirHero } from "./NoirHero";
-import { NoirBestSellers } from "./NoirBestSellers";
+import { NoirTopExperience } from "./NoirTopExperience";
 import { NoirBenefitsStrip } from "./NoirBenefitsStrip";
 import { NoirWhyUs } from "./NoirWhyUs";
 import { NoirExploreGrid } from "./NoirExploreGrid";
@@ -77,13 +76,16 @@ export function LandingTemplateNoir({
     : undefined;
 
   return (
-    <NoirChrome announcementText={announcementText} previewMode={previewMode}>
+    <NoirChrome
+      announcementText={announcementText}
+      previewMode={previewMode}
+      hideNavbar>
       <div className={className}>
-        <NoirHero hero={content.hero} onCtaClick={onCtaClick} />
-
-        <NoirBestSellers
-          content={content.featuredProducts}
-          products={featuredProducts}
+        <NoirTopExperience
+          hero={content.hero}
+          onCtaClick={onCtaClick}
+          bestSellersContent={content.featuredProducts}
+          featuredProducts={featuredProducts}
         />
 
         <NoirBenefitsStrip valueProps={content.valueProps} />
