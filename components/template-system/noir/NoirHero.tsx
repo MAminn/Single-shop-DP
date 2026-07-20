@@ -17,11 +17,22 @@ interface NoirHeroProps {
    * When true the hero is rendered INSIDE the landing's framed top
    * experience (NoirTopExperience): it drops its own rounded container,
    * border, surface gradient, outer shadow, top highlight, red glow, and
-   * horizontal margins — the frame owns those. Image fades match the frame
-   * surface top (#131313) and the composition is made more compact.
+   * horizontal margins — the frame owns those. Image-panel fades dissolve
+   * the sharp photo into the frame's blurred atmosphere (rgba(10,10,10,0.9)
+   * → transparent) and the composition is made more compact.
    * Default false = original standalone look, unchanged.
    */
   embedded?: boolean;
+}
+
+/**
+ * getNoirHeroImage — resolves the CMS hero image URL the Noir landing
+ * already uses (desktop background → first hero slide fallback → none).
+ * Shared by NoirHero and NoirTopExperience's atmosphere layer so the
+ * resolution isn't duplicated.
+ */
+export function getNoirHeroImage(hero: HomepageHeroContent): string {
+  return hero.backgroundImage || hero.heroSlides?.[0]?.imageUrl || "";
 }
 
 /**
@@ -43,14 +54,19 @@ export function NoirHero({
 
   if (!hero.enabled) return null;
 
-  const desktopImage =
-    hero.backgroundImage || hero.heroSlides?.[0]?.imageUrl || "";
+  const desktopImage = getNoirHeroImage(hero);
   const mobileImage = hero.mobileBackgroundImage || desktopImage;
   const hasImage = Boolean(desktopImage);
 
-  // Image dissolve color — embedded matches the frame surface TOP (#131313);
-  // standalone keeps the original panel surface value (#0e0e0e).
-  const imageFadeFrom = embedded ? "from-[#131313]" : "from-[#0e0e0e]";
+  // Image-panel dissolve colors — embedded fades toward the frame's blurred
+  // atmosphere (rgba(10,10,10,0.9) → transparent) so the sharp photo melts
+  // into it; standalone keeps the original opaque panel surface values.
+  const imageFadeFrom = embedded
+    ? "from-[rgba(10,10,10,0.9)]"
+    : "from-[#0e0e0e]";
+  const imageFadeBottom = embedded
+    ? "from-[rgba(10,10,10,0.9)]"
+    : "from-[#0a0a0a]";
 
   const handleCta = (link: string) => (e: MouseEvent<HTMLAnchorElement>) => {
     if (onCtaClick) {
@@ -211,9 +227,13 @@ export function NoirHero({
                 )}
                 aria-hidden='true'
               />
-              {/* Bottom fade — matches container bottom surface */}
+              {/* Bottom fade — embedded dissolves into the frame atmosphere;
+                  standalone matches the container bottom surface */}
               <div
-                className='absolute inset-x-0 bottom-0 h-[30%] pointer-events-none bg-linear-to-t from-[#0a0a0a] to-transparent'
+                className={cn(
+                  "absolute inset-x-0 bottom-0 h-[30%] pointer-events-none bg-linear-to-t to-transparent",
+                  imageFadeBottom,
+                )}
                 aria-hidden='true'
               />
               {/* Very subtle full-panel vignette */}
