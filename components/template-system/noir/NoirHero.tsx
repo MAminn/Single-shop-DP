@@ -65,20 +65,20 @@ export function NoirHero({
   const imageFadeBottom = "from-[#0a0a0a]";
 
   // Embedded-only: alpha mask on the sharp hero image. Fades the photo to
-  // transparent at the panel's inline-start edge (desktop, gated for RTL via
-  // the `rtl:` variant — masks don't auto-flip) and at the top edge (mobile,
-  // stacked below the text), with a gentle bottom transparency on mobile, so
-  // the photo melts into the blurred atmosphere instead of being covered by an
-  // opaque paint layer. Both mask-image and the -webkit- prefix are emitted.
+  // transparent at the top edge on mobile (stacked below the text) and, on
+  // desktop, across TWO axes via a radial mask anchored at the panel's end
+  // corner so the inline-start, opposite, and bottom edges all melt into the
+  // frame's blurred atmosphere (gated for RTL via the `rtl:` variant — masks
+  // don't auto-flip). Both mask-image and the -webkit- prefix are emitted.
   // Standalone mode gets no mask (empty string).
   const embeddedImageMask = embedded
     ? cn(
         "[mask-image:linear-gradient(to_bottom,transparent_0%,#000_45%,#000_85%,transparent_100%)]",
         "[-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,#000_45%,#000_85%,transparent_100%)]",
-        "md:[mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.6)_25%,#000_45%)]",
-        "md:[-webkit-mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.6)_25%,#000_45%)]",
-        "md:rtl:[mask-image:linear-gradient(to_left,transparent_0%,rgba(0,0,0,0.6)_25%,#000_45%)]",
-        "md:rtl:[-webkit-mask-image:linear-gradient(to_left,transparent_0%,rgba(0,0,0,0.6)_25%,#000_45%)]",
+        "md:[mask-image:radial-gradient(120%_130%_at_100%_40%,#000_35%,rgba(0,0,0,0.6)_60%,transparent_85%)]",
+        "md:[-webkit-mask-image:radial-gradient(120%_130%_at_100%_40%,#000_35%,rgba(0,0,0,0.6)_60%,transparent_85%)]",
+        "md:rtl:[mask-image:radial-gradient(120%_130%_at_0%_40%,#000_35%,rgba(0,0,0,0.6)_60%,transparent_85%)]",
+        "md:rtl:[-webkit-mask-image:radial-gradient(120%_130%_at_0%_40%,#000_35%,rgba(0,0,0,0.6)_60%,transparent_85%)]",
       )
     : "";
 
@@ -212,7 +212,13 @@ export function NoirHero({
 
           {/* ── Image panel (stacks below text on mobile) ── */}
           {hasImage && (
-            <div className='relative min-h-80 md:min-h-full bg-black order-last'>
+            <div
+              className={cn(
+                "relative min-h-80 md:min-h-full order-last",
+                // Embedded: no background so the frame's blurred atmosphere shows
+                // through the mask's transparent edges (no hard black rectangle).
+                !embedded && "bg-black",
+              )}>
               <picture>
                 {mobileImage !== desktopImage && (
                   <source media='(max-width: 767px)' srcSet={mobileImage} />
@@ -259,15 +265,18 @@ export function NoirHero({
                   />
                 </>
               )}
-              {/* Very subtle full-panel vignette — kept for both modes */}
-              <div
-                className='absolute inset-0 pointer-events-none'
-                style={{
-                  background:
-                    "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.35) 100%)",
-                }}
-                aria-hidden='true'
-              />
+              {/* Very subtle full-panel vignette — standalone only; in embedded
+                  mode it would re-darken the very edges the mask is opening. */}
+              {!embedded && (
+                <div
+                  className='absolute inset-0 pointer-events-none'
+                  style={{
+                    background:
+                      "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.35) 100%)",
+                  }}
+                  aria-hidden='true'
+                />
+              )}
             </div>
           )}
         </div>
