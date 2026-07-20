@@ -69,7 +69,7 @@ export function NoirTopExperience({
               alt=''
               aria-hidden='true'
               loading='lazy'
-              className='absolute inset-0 w-full h-full object-cover blur-[28px] scale-110 opacity-35'
+              className='absolute inset-0 w-full h-full object-cover blur-[44px] scale-110 opacity-55 saturate-[1.15]'
             />
           </div>
         )}
@@ -81,7 +81,7 @@ export function NoirTopExperience({
           className='absolute inset-0 z-0 pointer-events-none'
           style={{
             background:
-              "linear-gradient(to bottom, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.75) 50%, rgba(10,10,10,0.92) 100%)",
+              "linear-gradient(to bottom, rgba(10,10,10,0.25) 0%, rgba(10,10,10,0.45) 50%, rgba(10,10,10,0.70) 100%)",
           }}
           aria-hidden='true'
         />

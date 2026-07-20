@@ -17,9 +17,9 @@ interface NoirHeroProps {
    * When true the hero is rendered INSIDE the landing's framed top
    * experience (NoirTopExperience): it drops its own rounded container,
    * border, surface gradient, outer shadow, top highlight, red glow, and
-   * horizontal margins — the frame owns those. Image-panel fades dissolve
-   * the sharp photo into the frame's blurred atmosphere (rgba(10,10,10,0.9)
-   * → transparent) and the composition is made more compact.
+   * horizontal margins — the frame owns those. The sharp photo is alpha-
+   * masked (not painted over) so the frame's blurred atmosphere shows
+   * through its dissolved edges, and the composition is made more compact.
    * Default false = original standalone look, unchanged.
    */
   embedded?: boolean;
@@ -58,15 +58,29 @@ export function NoirHero({
   const mobileImage = hero.mobileBackgroundImage || desktopImage;
   const hasImage = Boolean(desktopImage);
 
-  // Image-panel dissolve colors — embedded fades toward the frame's blurred
-  // atmosphere (rgba(10,10,10,0.9) → transparent) so the sharp photo melts
-  // into it; standalone keeps the original opaque panel surface values.
-  const imageFadeFrom = embedded
-    ? "from-[rgba(10,10,10,0.9)]"
-    : "from-[#0e0e0e]";
-  const imageFadeBottom = embedded
-    ? "from-[rgba(10,10,10,0.9)]"
-    : "from-[#0a0a0a]";
+  // Standalone image-panel dissolve colors (opaque panel surface). Embedded
+  // mode no longer paints these overlays — it alpha-masks the sharp image so
+  // the frame's blurred atmosphere shows through the dissolved edges instead.
+  const imageFadeFrom = "from-[#0e0e0e]";
+  const imageFadeBottom = "from-[#0a0a0a]";
+
+  // Embedded-only: alpha mask on the sharp hero image. Fades the photo to
+  // transparent at the panel's inline-start edge (desktop, gated for RTL via
+  // the `rtl:` variant — masks don't auto-flip) and at the top edge (mobile,
+  // stacked below the text), with a gentle bottom transparency on mobile, so
+  // the photo melts into the blurred atmosphere instead of being covered by an
+  // opaque paint layer. Both mask-image and the -webkit- prefix are emitted.
+  // Standalone mode gets no mask (empty string).
+  const embeddedImageMask = embedded
+    ? cn(
+        "[mask-image:linear-gradient(to_bottom,transparent_0%,#000_45%,#000_85%,transparent_100%)]",
+        "[-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,#000_45%,#000_85%,transparent_100%)]",
+        "md:[mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.6)_25%,#000_45%)]",
+        "md:[-webkit-mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.6)_25%,#000_45%)]",
+        "md:rtl:[mask-image:linear-gradient(to_left,transparent_0%,rgba(0,0,0,0.6)_25%,#000_45%)]",
+        "md:rtl:[-webkit-mask-image:linear-gradient(to_left,transparent_0%,rgba(0,0,0,0.6)_25%,#000_45%)]",
+      )
+    : "";
 
   const handleCta = (link: string) => (e: MouseEvent<HTMLAnchorElement>) => {
     if (onCtaClick) {
@@ -206,37 +220,46 @@ export function NoirHero({
                 <img
                   src={desktopImage}
                   alt={hero.title}
-                  className='absolute inset-0 w-full h-full object-cover'
+                  className={cn(
+                    "absolute inset-0 w-full h-full object-cover",
+                    embeddedImageMask,
+                  )}
                   fetchPriority='high'
                 />
               </picture>
-              {/* Dissolve the photo into the glass panel — no hard edge */}
-              {/* Inline-start fade (desktop, side-by-side) — wide, matches surface */}
-              <div
-                className={cn(
-                  "absolute inset-y-0 start-0 w-[55%] pointer-events-none bg-linear-to-r rtl:bg-linear-to-l to-transparent hidden md:block",
-                  imageFadeFrom,
-                )}
-                aria-hidden='true'
-              />
-              {/* Top fade (mobile, stacked below text) */}
-              <div
-                className={cn(
-                  "absolute inset-x-0 top-0 h-[55%] pointer-events-none bg-linear-to-b to-transparent md:hidden",
-                  imageFadeFrom,
-                )}
-                aria-hidden='true'
-              />
-              {/* Bottom fade — embedded dissolves into the frame atmosphere;
-                  standalone matches the container bottom surface */}
-              <div
-                className={cn(
-                  "absolute inset-x-0 bottom-0 h-[30%] pointer-events-none bg-linear-to-t to-transparent",
-                  imageFadeBottom,
-                )}
-                aria-hidden='true'
-              />
-              {/* Very subtle full-panel vignette */}
+              {/* Standalone: dissolve the photo into the opaque glass panel via
+                  overlay fades. Embedded mode masks the sharp image instead
+                  (see embeddedImageMask above), so these paint layers are
+                  skipped and the blurred atmosphere shows through. */}
+              {!embedded && (
+                <>
+                  {/* Inline-start fade (desktop, side-by-side) — wide, matches surface */}
+                  <div
+                    className={cn(
+                      "absolute inset-y-0 start-0 w-[55%] pointer-events-none bg-linear-to-r rtl:bg-linear-to-l to-transparent hidden md:block",
+                      imageFadeFrom,
+                    )}
+                    aria-hidden='true'
+                  />
+                  {/* Top fade (mobile, stacked below text) */}
+                  <div
+                    className={cn(
+                      "absolute inset-x-0 top-0 h-[55%] pointer-events-none bg-linear-to-b to-transparent md:hidden",
+                      imageFadeFrom,
+                    )}
+                    aria-hidden='true'
+                  />
+                  {/* Bottom fade — matches container bottom surface */}
+                  <div
+                    className={cn(
+                      "absolute inset-x-0 bottom-0 h-[30%] pointer-events-none bg-linear-to-t to-transparent",
+                      imageFadeBottom,
+                    )}
+                    aria-hidden='true'
+                  />
+                </>
+              )}
+              {/* Very subtle full-panel vignette — kept for both modes */}
               <div
                 className='absolute inset-0 pointer-events-none'
                 style={{
