@@ -75,10 +75,10 @@ export function NoirHero({
     ? cn(
         "[mask-image:linear-gradient(to_bottom,transparent_0%,#000_45%,#000_85%,transparent_100%)]",
         "[-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,#000_45%,#000_85%,transparent_100%)]",
-        "md:[mask-image:radial-gradient(120%_130%_at_100%_40%,#000_35%,rgba(0,0,0,0.6)_60%,transparent_85%)]",
-        "md:[-webkit-mask-image:radial-gradient(120%_130%_at_100%_40%,#000_35%,rgba(0,0,0,0.6)_60%,transparent_85%)]",
-        "md:rtl:[mask-image:radial-gradient(120%_130%_at_0%_40%,#000_35%,rgba(0,0,0,0.6)_60%,transparent_85%)]",
-        "md:rtl:[-webkit-mask-image:radial-gradient(120%_130%_at_0%_40%,#000_35%,rgba(0,0,0,0.6)_60%,transparent_85%)]",
+        "md:[mask-image:radial-gradient(120%_80%_at_100%_25%,#000_35%,rgba(0,0,0,0.6)_60%,transparent_72%)]",
+        "md:[-webkit-mask-image:radial-gradient(120%_80%_at_100%_25%,#000_35%,rgba(0,0,0,0.6)_60%,transparent_72%)]",
+        "md:rtl:[mask-image:radial-gradient(120%_80%_at_0%_25%,#000_35%,rgba(0,0,0,0.6)_60%,transparent_72%)]",
+        "md:rtl:[-webkit-mask-image:radial-gradient(120%_80%_at_0%_25%,#000_35%,rgba(0,0,0,0.6)_60%,transparent_72%)]",
       )
     : "";
 
