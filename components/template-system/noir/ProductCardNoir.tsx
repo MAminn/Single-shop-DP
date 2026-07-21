@@ -184,7 +184,7 @@ export function ProductCardNoir({
     <>
       <span>{t("add_to_cart")}</span>
       <ArrowRight
-        className='w-3.5 h-3.5 rtl:rotate-180 transition-transform duration-300 group-hover/cta:translate-x-1 rtl:group-hover/cta:-translate-x-1'
+        className='w-3.5 h-3.5 text-[#E8112D] rtl:rotate-180 transition-all duration-300 group-hover/cta:text-white group-hover/cta:translate-x-1 rtl:group-hover/cta:-translate-x-1'
         strokeWidth={1.5}
       />
     </>
@@ -212,10 +212,12 @@ export function ProductCardNoir({
         </span>
       )}
 
-      {/* Image — portrait-leaning, dark placeholder + bottom vignette */}
+      {/* Image — balanced square panel on a soft dark-glass surface (no hard
+          black box) so the product reads as dominant and the panel blends
+          into the top-frame atmosphere. */}
       <Link
         href={productUrl}
-        className='block relative aspect-4/5 bg-black overflow-hidden'>
+        className='block relative aspect-square overflow-hidden rounded-t-lg bg-linear-to-b from-white/5 via-white/2 to-transparent'>
         {!hasImageData || imageError ? (
           <NoirImagePlaceholder />
         ) : (
@@ -231,10 +233,11 @@ export function ProductCardNoir({
             onError={() => setImageError(true)}
           />
         )}
-        {/* Bottom fade so real photos blend into the card surface */}
+        {/* Bottom fade so real photos dissolve softly into the card body
+            (fades to transparent — no flat opaque block). */}
         {hasImageData && !imageError && (
           <div
-            className='absolute inset-x-0 bottom-0 h-[35%] pointer-events-none bg-linear-to-t from-[#141414] to-transparent'
+            className='absolute inset-x-0 bottom-0 h-[30%] pointer-events-none bg-linear-to-t from-black/40 to-transparent'
             aria-hidden='true'
           />
         )}
