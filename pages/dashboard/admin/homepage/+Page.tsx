@@ -883,6 +883,7 @@ export default function HomepageAdminPage() {
   };
 
   const isMinimal = selectedTemplateId === "landing-minimal";
+  const isNoir = selectedTemplateId === "landing-noir";
 
   // Helper: render an Arabic translation input below an English field
   // Only renders when the minimal template is selected
@@ -2277,6 +2278,143 @@ export default function HomepageAdminPage() {
                   from your catalog. This section controls the heading and
                   whether the carousel is visible.
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Explore / Categories Section — Noir only */}
+        {isNoir && (
+          <Card>
+            <CardHeader>
+              <div className='flex items-center justify-between'>
+                <CardTitle>Explore / Categories Section (Noir)</CardTitle>
+                <div className='flex items-center gap-2'>
+                  <Label htmlFor='noir-categories-enabled'>Enabled</Label>
+                  <Switch
+                    id='noir-categories-enabled'
+                    checked={content.categories.enabled}
+                    onCheckedChange={(checked) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        categories: { ...prev.categories, enabled: checked },
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <div className='bg-muted p-3 rounded-md'>
+                <p className='text-sm text-muted-foreground'>
+                  <strong>Note:</strong> Controls the Noir "Explore Scents"
+                  category-products section. The category tabs and products are
+                  fetched automatically from your catalog — these fields only
+                  set the section heading, description, and view-all link.
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor='noir-categories-title'>
+                  Section Title (English)
+                </Label>
+                <Input
+                  id='noir-categories-title'
+                  value={content.categories.title}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      categories: { ...prev.categories, title: e.target.value },
+                    }))
+                  }
+                  placeholder='Explore Scents'
+                  disabled={!content.categories.enabled}
+                />
+                <div className='mt-1'>
+                  <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+                    <Languages className='w-3 h-3' /> Arabic
+                  </Label>
+                  <Input
+                    dir='rtl'
+                    value={content.categories.titleAr ?? ""}
+                    onChange={(e) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        categories: {
+                          ...prev.categories,
+                          titleAr: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder='استكشف العطور'
+                    className='text-sm mt-0.5'
+                    disabled={!content.categories.enabled}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor='noir-categories-subtitle'>
+                  Section Description
+                </Label>
+                <Textarea
+                  id='noir-categories-subtitle'
+                  value={content.categories.subtitle}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      categories: {
+                        ...prev.categories,
+                        subtitle: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='Eight distinct scents. Each crafted with intention and precision.'
+                  disabled={!content.categories.enabled}
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor='noir-categories-cta-text'>
+                  View All Text (English)
+                </Label>
+                <Input
+                  id='noir-categories-cta-text'
+                  value={content.categories.ctaText}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      categories: {
+                        ...prev.categories,
+                        ctaText: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='View All Scents'
+                  disabled={!content.categories.enabled}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor='noir-categories-cta-link'>
+                  View All Link
+                </Label>
+                <Input
+                  id='noir-categories-cta-link'
+                  value={content.categories.ctaLink}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      categories: {
+                        ...prev.categories,
+                        ctaLink: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='/shop'
+                  disabled={!content.categories.enabled}
+                />
               </div>
             </CardContent>
           </Card>
