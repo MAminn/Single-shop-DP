@@ -49,6 +49,19 @@ export interface HomepageBrandStatementContent {
   title: string;
   description: string;
   image?: string;
+  /** Optional small overline label shown above the title (e.g. "Why solid is better"). */
+  eyebrow?: string;
+  /**
+   * Optional product-specific benefit items rendered around the statement
+   * image (icon + title + description). Distinct from `valueProps`, which
+   * carries store/brand promises. Backward-compatible: absent/empty falls
+   * back to the plain centered statement.
+   */
+  benefits?: {
+    icon: ValuePropIconType;
+    title: string;
+    description: string;
+  }[];
 }
 
 /**
@@ -332,10 +345,45 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
   },
   brandStatement: {
     enabled: true,
-    title: "Worn with intention. Designed for life.",
-    description:
-      "Every piercing is an expression of self. Our pieces are crafted to honor that commitment—refined in form, enduring in quality, and timeless in design.",
+    title: "Smarter scents. Better for you.",
+    description: "Engineered for convenience. Crafted for performance.",
     image: "/uploads/homepage/brand-statement.jpg",
+    eyebrow: "Why solid is better",
+    benefits: [
+      {
+        icon: ValuePropIconType.PACKAGE,
+        title: "Perfectly portable",
+        description: "Compact and travel-friendly. Take your scent anywhere.",
+      },
+      {
+        icon: ValuePropIconType.QUALITY,
+        title: "Long lasting",
+        description: "A solid formula that stays close and lingers all day.",
+      },
+      {
+        icon: ValuePropIconType.SHOPPING,
+        title: "Standout scents",
+        description:
+          "High-quality blends crafted to leave a lasting impression.",
+      },
+      {
+        icon: ValuePropIconType.BOTTLE,
+        title: "Body-heat activated",
+        description:
+          "Melts into your skin and releases fragrance throughout the day.",
+      },
+      {
+        icon: ValuePropIconType.SECURITY,
+        title: "Paraben-free formula",
+        description: "Clean, non-toxic, and safe for everyday use on skin.",
+      },
+      {
+        icon: ValuePropIconType.RETURNS,
+        title: "Natural & recyclable",
+        description:
+          "Made with natural waxes and plant-based oils. Better for the planet.",
+      },
+    ],
   },
   promoBanner: {
     enabled: false,

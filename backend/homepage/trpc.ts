@@ -42,6 +42,16 @@ const HomepageContentSchema = z.object({
     title: z.string(),
     description: z.string(),
     image: z.string().nullish(),
+    eyebrow: z.string().nullish(),
+    benefits: z
+      .array(
+        z.object({
+          icon: z.nativeEnum(ValuePropIconType),
+          title: z.string(),
+          description: z.string(),
+        }),
+      )
+      .nullish(),
   }),
   promoBanner: z.object({
     enabled: z.boolean(),
