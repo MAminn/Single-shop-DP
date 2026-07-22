@@ -8,6 +8,7 @@ import { NoirTopExperience } from "./NoirTopExperience";
 import { NoirBenefitsStrip } from "./NoirBenefitsStrip";
 import { NoirWhyUs } from "./NoirWhyUs";
 import { NoirExploreGrid } from "./NoirExploreGrid";
+import { NoirNewArrivals } from "./NoirNewArrivals";
 import { NoirReviews } from "./NoirReviews";
 import { NoirNewsletter } from "./NoirNewsletter";
 import { NoirFooterCta } from "./NoirFooterCta";
@@ -50,7 +51,7 @@ export interface LandingTemplateNoirProps {
 export function LandingTemplateNoir({
   content,
   featuredProducts,
-  discountedProducts,
+  discountedProducts: _discountedProducts,
   categories: _categories,
   categoriesLoading: _categoriesLoading,
   newArrivals,
@@ -92,12 +93,12 @@ export function LandingTemplateNoir({
 
         <NoirWhyUs brandStatement={content.brandStatement} />
 
-        <NoirExploreGrid
-          newArrivalsContent={content.newArrivals}
-          newArrivals={newArrivals}
-          newArrivalsLoading={newArrivalsLoading}
-          discountedContent={content.discountedProducts}
-          discountedProducts={discountedProducts}
+        <NoirExploreGrid categoriesContent={content.categories} />
+
+        <NoirNewArrivals
+          content={content.newArrivals}
+          products={newArrivals}
+          isLoading={newArrivalsLoading}
         />
 
         <NoirReviews testimonials={content.testimonials} />
