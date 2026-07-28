@@ -184,6 +184,7 @@ export default function ProductDetailPage() {
         rating: reviewStats.averageRating,
         reviewCount: reviewStats.totalReviews,
         variants: product.variants ?? [],
+        fragranceInfo: product.fragranceInfo ?? null,
       };
 
       setProductData(mappedProduct);

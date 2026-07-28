@@ -16,11 +16,16 @@ export const translations: Record<Locale, Record<string, string>> = {
     "nav.logout": "Logout",
     "nav.cart": "Cart",
     "nav.menu": "Menu",
+    "nav.home": "Home",
+    "nav.shop": "Shop",
+    "nav.wishlist": "Wishlist",
+    "nav.offers": "Offers",
 
     // Landing sections
     "shop_now": "Shop now",
     "view_all": "View All",
     "add_to_cart": "Add to cart",
+    "buy_now": "Buy It Now",
     "quick_view": "Quick View",
     "new": "New",
     "sale": "Sale",
@@ -148,11 +153,16 @@ export const translations: Record<Locale, Record<string, string>> = {
     "nav.logout": "تسجيل الخروج",
     "nav.cart": "السلة",
     "nav.menu": "القائمة",
+    "nav.home": "الرئيسية",
+    "nav.shop": "المتجر",
+    "nav.wishlist": "المفضلة",
+    "nav.offers": "العروض",
 
     // Landing sections
     "shop_now": "تسوق الآن",
     "view_all": "عرض الكل",
     "add_to_cart": "إضافة للسلة",
+    "buy_now": "اشترِ الآن",
     "quick_view": "عرض سريع",
     "new": "جديد",
     "sale": "تخفيض",

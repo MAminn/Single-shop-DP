@@ -2,6 +2,12 @@ import type React from "react";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { VariantSelector } from "#root/components/shop/VariantSelector";
 import { Button } from "#root/components/ui/button";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "#root/components/ui/accordion";
 import type {
   ProductPageProduct,
   ProductImage,
@@ -41,6 +47,7 @@ import { useWishlist } from "#root/lib/hooks/useWishlist";
 import { cn } from "#root/lib/utils";
 import { getStoreOwnerId } from "#root/shared/config/store";
 import type { HomepageContent } from "#root/shared/types/homepage-content";
+import { navigate } from "vike/client/router";
 
 /* ═══════════════════════════════════════════════════════════════════
    Props
@@ -90,15 +97,51 @@ export function ProductPageMinimal({
   const mainImageRef = useRef<HTMLImageElement>(null);
   const addToCartBtnRef = useRef<HTMLButtonElement>(null);
   const { t, locale } = useMinimalI18n();
+  const [pageContent, setPageContent] = useState<{
+    shippingText?: string;
+    shippingTextAr?: string;
+    returnsText?: string;
+    returnsTextAr?: string;
+    faqs?: Array<{ question: string; questionAr?: string; answer: string; answerAr?: string }>;
+  } | null>(null);
+
+  useEffect(() => {
+    trpc.settings.getProductPageContent
+      .query()
+      .then((res) => {
+        if (res.success) setPageContent(res.result);
+      })
+      .catch(() => {
+        /* fall back to defaults below */
+      });
+  }, []);
   const isAr = locale === "ar";
   const layoutSettings = useLayoutSettings();
-  const { addItem } = useCart();
+  const { addItem, items: cartItems } = useCart();
   const { trackEvent } = useTracking();
 
   /* ── CMS carousel title ── */
   const [carouselTitle, setCarouselTitle] = useState("");
   /** Strikethrough map: variantName → values that should show line-through */
   const [strikethroughMap, setStrikethroughMap] = useState<Record<string, string[]>>({});
+
+  /* ── Sticky Add to Cart bar: shows once the main Add to Cart button scrolls out of view ── */
+  const [showStickyCart, setShowStickyCart] = useState(false);
+  useEffect(() => {
+    const btn = addToCartBtnRef.current;
+    if (!btn) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry) setShowStickyCart(!entry.isIntersecting);
+      },
+      { threshold: 0 },
+    );
+    observer.observe(btn);
+    return () => observer.disconnect();
+  }, [product?.id]);
+  const cartQtyForProduct =
+    cartItems.find((i) => i.id === product?.id)?.quantity ?? 0;
 
   useEffect(() => {
     const merchantId = getStoreOwnerId();
@@ -262,13 +305,8 @@ export function ProductPageMinimal({
     return base + modifierSum;
   })();
 
-  const handleAddToCart = () => {
-    if (!product?.available) return;
-
-    flyToCart(
-      addToCartBtnRef.current,
-      images[selectedImage]?.url || product.imageUrl || "",
-    );
+  const addProductToCart = (): boolean => {
+    if (!product?.available) return false;
 
     const success = addItem(
       {
@@ -336,6 +374,28 @@ export function ProductPageMinimal({
       price: displayPrice,
       imageUrl: product.imageUrl || "",
     });
+
+    return true;
+  };
+
+  const handleAddToCart = () => {
+    if (!product?.available) return;
+
+    flyToCart(
+      addToCartBtnRef.current,
+      images[selectedImage]?.url || product.imageUrl || "",
+    );
+
+    addProductToCart();
+  };
+
+  const handleBuyNow = () => {
+    if (!product?.available || !allVariantsSelected) return;
+
+    const success = addProductToCart();
+    if (success) {
+      navigate("/checkout");
+    }
   };
 
   const handleImageClick = (index: number) => {
@@ -572,19 +632,19 @@ export function ProductPageMinimal({
                 <p className='text-[10px] text-gray-500 uppercase tracking-wide mb-0.5'>Inspired by</p>
                 <ColoredDescription
                   text={product.inspiredBy}
-                  className='text-xs text-gray-700 italic'
+                  className='text-sm font-semibold text-gray-800 italic'
                 />
               </div>
             )}
 
             {/* Stock status */}
             {product.available ? (
-              <p className='text-xs text-emerald-600 font-medium flex items-center gap-1'>
-                <Check className='w-3 h-3' />
+              <p className='text-sm text-emerald-600 font-bold flex items-center gap-1'>
+                <Check className='w-4 h-4' />
                 {t("in_stock")}
               </p>
             ) : (
-              <p className='text-xs text-red-500 font-medium'>
+              <p className='text-sm text-red-500 font-bold'>
                 {t("out_of_stock")}
               </p>
             )}
@@ -600,47 +660,250 @@ export function ProductPageMinimal({
               ) : null;
             })()}
 
-            {/* ── Category Carousel (merged, single) ── */}
-            {mergedCategoryProducts.length > 0 && (
-              <div className='space-y-3 pt-1'>
-                <InlineCategoryCarousel
-                  title={carouselTitle || (isAr ? "منتجات أخرى" : "More Products")}
-                  products={mergedCategoryProducts}
-                  currentProductId={product.id}
-                  selectedIds={selectedAddOns}
-                  onToggle={toggleAddOn}
-                />
-              </div>
-            )}
+            {/* ── Product info accordion: Scent Notes / About / Shipping / Returns / FAQs / Details / Best Layered With ── */}
+            <Accordion type='single' collapsible defaultValue='scent-notes' className='pt-2 border-t border-gray-100'>
+              {(() => {
+                const info = product.fragranceInfo;
+                const tagline = isAr && info?.taglineAr ? info.taglineAr : info?.tagline;
+                const topNotes = isAr && info?.topNotesAr ? info.topNotesAr : info?.topNotes;
+                const middleNotes = isAr && info?.middleNotesAr ? info.middleNotesAr : info?.middleNotes;
+                const baseNotes = isAr && info?.baseNotesAr ? info.baseNotesAr : info?.baseNotes;
+                const ingredients = isAr && info?.ingredientsAr ? info.ingredientsAr : info?.ingredients;
+                const badges = info?.badges ?? [];
+                const hasScentNotes =
+                  tagline || topNotes || middleNotes || baseNotes || ingredients || badges.length > 0;
 
-            {/* Description */}
-            {product.description && (
-              <div className='pt-2 border-t border-gray-100'>
-                <ColoredDescription
-                  text={product.description}
-                  className='text-xs text-gray-700 leading-relaxed whitespace-pre-line'
-                />
-                {product.longDescription && (
-                  <ExpandableText text={product.longDescription} />
-                )}
-              </div>
-            )}
+                const about = isAr && info?.aboutAr ? info.aboutAr : info?.about;
+                const scentIntensity =
+                  isAr && info?.scentIntensityAr ? info.scentIntensityAr : info?.scentIntensity;
+                const gender = isAr && info?.genderAr ? info.genderAr : info?.gender;
+                const hasAbout =
+                  about || product.description || info?.concentration || scentIntensity || gender;
 
-            {/* Specifications */}
-            {product.specifications && product.specifications.length > 0 && (
-              <div className='space-y-1 pt-1'>
-                {product.specifications.map((spec, idx) => (
-                  <div
-                    key={idx}
-                    className='flex justify-between items-baseline py-1 border-b border-gray-100 last:border-0'>
-                    <span className='text-xs text-gray-500'>{spec.label}</span>
-                    <span className='text-xs text-gray-900 font-medium'>
-                      {spec.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
+                return (
+                  <>
+                    {hasScentNotes && (
+                      <AccordionItem value='scent-notes'>
+                        <AccordionTrigger>{isAr ? "نوتات العطر" : "Scent Notes"}</AccordionTrigger>
+                        <AccordionContent>
+                          <div className='bg-gray-50 p-4 space-y-3'>
+                            {tagline && (
+                              <p className='text-xs text-gray-800'>
+                                <span className='font-semibold'>
+                                  {isAr ? "هذا العطر: " : "This perfume is: "}
+                                </span>
+                                {tagline}
+                              </p>
+                            )}
+                            <div className='space-y-1'>
+                              {topNotes && (
+                                <div className='py-1 border-b border-gray-200'>
+                                  <span className='text-xs font-medium text-gray-900'>
+                                    {isAr ? "المقدمة: " : "Top: "}
+                                  </span>
+                                  <span className='text-xs text-gray-600'>{topNotes}</span>
+                                </div>
+                              )}
+                              {middleNotes && (
+                                <div className='py-1 border-b border-gray-200'>
+                                  <span className='text-xs font-medium text-gray-900'>
+                                    {isAr ? "القلب: " : "Middle: "}
+                                  </span>
+                                  <span className='text-xs text-gray-600'>{middleNotes}</span>
+                                </div>
+                              )}
+                              {baseNotes && (
+                                <div className='py-1'>
+                                  <span className='text-xs font-medium text-gray-900'>
+                                    {isAr ? "القاعدة: " : "Base: "}
+                                  </span>
+                                  <span className='text-xs text-gray-600'>{baseNotes}</span>
+                                </div>
+                              )}
+                            </div>
+                            {ingredients && (
+                              <p className='text-[11px] text-gray-500 leading-relaxed border-t border-gray-200 pt-3'>
+                                <span className='font-medium text-gray-700'>
+                                  {isAr ? "المكونات: " : "Ingredients: "}
+                                </span>
+                                {ingredients}
+                              </p>
+                            )}
+                            {badges.length > 0 && (
+                              <div className='flex flex-wrap gap-2 pt-1'>
+                                {badges.map((badge) => (
+                                  <span
+                                    key={badge}
+                                    className='text-[10px] px-2 py-1 rounded-full bg-white border border-gray-200 text-gray-700'>
+                                    {badge}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    )}
+
+                    {hasAbout && (
+                      <AccordionItem value='about'>
+                        <AccordionTrigger>{isAr ? "عن العطر" : "About"}</AccordionTrigger>
+                        <AccordionContent>
+                          <div className='bg-gray-50 p-4 space-y-3'>
+                            {(about || product.description) && (
+                              <ColoredDescription
+                                text={about || product.description || ""}
+                                className='text-xs text-gray-700 leading-relaxed whitespace-pre-line'
+                              />
+                            )}
+                            {product.longDescription && (
+                              <ExpandableText text={product.longDescription} />
+                            )}
+                            <div className='space-y-1 pt-1'>
+                              {scentIntensity && (
+                                <div className='flex justify-between items-baseline py-1 border-b border-gray-200'>
+                                  <span className='text-xs text-gray-500'>
+                                    {isAr ? "شدة العطر" : "Scent Intensity"}
+                                  </span>
+                                  <span className='text-xs text-gray-900 font-medium'>{scentIntensity}</span>
+                                </div>
+                              )}
+                              {info?.concentration && (
+                                <div className='flex justify-between items-baseline py-1 border-b border-gray-200'>
+                                  <span className='text-xs text-gray-500'>
+                                    {isAr ? "التركيز" : "Concentration"}
+                                  </span>
+                                  <span className='text-xs text-gray-900 font-medium'>{info.concentration}</span>
+                                </div>
+                              )}
+                              {gender && (
+                                <div className='flex justify-between items-baseline py-1'>
+                                  <span className='text-xs text-gray-500'>
+                                    {isAr ? "الفئة" : "Gender"}
+                                  </span>
+                                  <span className='text-xs text-gray-900 font-medium'>{gender}</span>
+                                </div>
+                              )}
+                              {info?.longevity && (
+                                <div className='flex justify-between items-baseline py-1 border-t border-gray-200'>
+                                  <span className='text-xs text-gray-500'>
+                                    {isAr ? "الثبات" : "Longevity"}
+                                  </span>
+                                  <span className='text-xs text-gray-900 font-medium'>
+                                    {isAr && info.longevityAr ? info.longevityAr : info.longevity}
+                                  </span>
+                                </div>
+                              )}
+                              {info?.whenToUse && (
+                                <div className='flex justify-between items-baseline py-1'>
+                                  <span className='text-xs text-gray-500'>
+                                    {isAr ? "يستخدم في" : "When to Use"}
+                                  </span>
+                                  <span className='text-xs text-gray-900 font-medium'>
+                                    {isAr && info.whenToUseAr ? info.whenToUseAr : info.whenToUse}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    )}
+
+                    <AccordionItem value='shipping'>
+                      <AccordionTrigger>{isAr ? "الشحن" : "Shipping"}</AccordionTrigger>
+                      <AccordionContent>
+                        <p className='text-xs text-gray-600'>
+                          {isAr
+                            ? pageContent?.shippingTextAr || pageContent?.shippingText || "شحن مجاني عند طلب قطعتين أو أكثر."
+                            : pageContent?.shippingText || "Free shipping with 2+ items."}
+                        </p>
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    <AccordionItem value='returns'>
+                      <AccordionTrigger>{isAr ? "الإرجاع" : "Returns"}</AccordionTrigger>
+                      <AccordionContent>
+                        <p className='text-xs text-gray-600'>
+                          {isAr
+                            ? pageContent?.returnsTextAr || pageContent?.returnsText || "استبدال مجاني لجميع الطلبات."
+                            : pageContent?.returnsText || "Free exchanges for all orders."}
+                        </p>
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    <AccordionItem value='faqs'>
+                      <AccordionTrigger>{isAr ? "الأسئلة الشائعة" : "FAQs"}</AccordionTrigger>
+                      <AccordionContent>
+                        <div className='space-y-3'>
+                          {(pageContent?.faqs && pageContent.faqs.length > 0
+                            ? pageContent.faqs
+                            : [
+                                {
+                                  question: "How long does it last?",
+                                  questionAr: "كم يدوم العطر؟",
+                                  answer: info?.longevity || "Varies by skin type.",
+                                  answerAr: (info?.longevityAr || info?.longevity) || "يختلف حسب نوع البشرة.",
+                                },
+                                {
+                                  question: "Can I return this?",
+                                  questionAr: "هل يمكنني الإرجاع؟",
+                                  answer: "Yes, free exchanges for all orders.",
+                                  answerAr: "نعم، استبدال مجاني لجميع الطلبات.",
+                                },
+                              ]
+                          ).map((faq, idx) => (
+                            <div key={idx}>
+                              <p className='text-xs font-medium text-gray-900'>
+                                {isAr ? faq.questionAr || faq.question : faq.question}
+                              </p>
+                              <p className='text-xs text-gray-600 mt-0.5'>
+                                {isAr ? faq.answerAr || faq.answer : faq.answer}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    {product.specifications && product.specifications.length > 0 && (
+                      <AccordionItem value='details'>
+                        <AccordionTrigger>{isAr ? "التفاصيل" : "Details"}</AccordionTrigger>
+                        <AccordionContent>
+                          <div className='space-y-1'>
+                            {product.specifications.map((spec, idx) => (
+                              <div
+                                key={idx}
+                                className='flex justify-between items-baseline py-1 border-b border-gray-100 last:border-0'>
+                                <span className='text-xs text-gray-500'>{spec.label}</span>
+                                <span className='text-xs text-gray-900 font-medium'>{spec.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    )}
+
+                    {mergedCategoryProducts.length > 0 && (
+                      <AccordionItem value='best-layered-with'>
+                        <AccordionTrigger>
+                          {isAr ? "أفضل تنسيق مع" : "Best Layered With"}
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <InlineCategoryCarousel
+                            title={carouselTitle || (isAr ? "منتجات أخرى" : "More Products")}
+                            products={mergedCategoryProducts}
+                            currentProductId={product.id}
+                            selectedIds={selectedAddOns}
+                            onToggle={toggleAddOn}
+                          />
+                        </AccordionContent>
+                      </AccordionItem>
+                    )}
+                  </>
+                );
+              })()}
+            </Accordion>
 
             {/* Price again + Quantity + Add to Cart */}
             <div className='pt-2 border-t border-gray-100 space-y-3'>
@@ -652,34 +915,6 @@ export function ProductPageMinimal({
                   {displayPrice.toFixed(2)} {STORE_CURRENCY}
                 </span>
               </div>
-
-              {/* Quantity */}
-              {product.available && (
-                <div className='flex items-center justify-between'>
-                  <span className='text-xs text-gray-500'>
-                    {t("product.quantity")}
-                  </span>
-                  <div className='flex items-center border border-gray-200 rounded-full'>
-                    <button
-                      onClick={incrementQty}
-                      disabled={quantity >= maxQty}
-                      className='w-8 h-8 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors rounded-s-full'
-                      aria-label='Increase quantity'>
-                      <Plus className='w-3 h-3' />
-                    </button>
-                    <span className='w-8 h-8 flex items-center justify-center text-xs font-medium tabular-nums border-x border-gray-200'>
-                      {quantity}
-                    </span>
-                    <button
-                      onClick={decrementQty}
-                      disabled={quantity <= 1}
-                      className='w-8 h-8 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors rounded-e-full'
-                      aria-label='Decrease quantity'>
-                      <Minus className='w-3 h-3' />
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {/* Variant Selector */}
               {product.variants && product.variants.length > 0 && (
@@ -693,20 +928,108 @@ export function ProductPageMinimal({
                 />
               )}
 
-              {/* Add to Cart */}
-              <Button
-                ref={addToCartBtnRef}
-                size='lg'
-                className='w-full bg-gray-900 hover:bg-gray-800 text-white rounded-none py-4 text-sm font-medium shadow-none hover:shadow-lg transition-all'
-                onClick={handleAddToCart}
-                disabled={!product.available || !allVariantsSelected}
-                data-add-to-cart='true'>
-                {product.available ? t("add_to_cart") : t("out_of_stock")}
-              </Button>
+              {/* Quantity stepper + Add to Cart, side by side */}
+              <div className='flex items-stretch gap-2'>
+                {product.available && (
+                  <div className='flex items-center border border-gray-300 shrink-0'>
+                    <button
+                      onClick={decrementQty}
+                      disabled={quantity <= 1}
+                      className='w-9 h-11 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors'
+                      aria-label='Decrease quantity'>
+                      <Minus className='w-3.5 h-3.5' />
+                    </button>
+                    <span className='w-8 h-11 flex items-center justify-center text-sm font-medium tabular-nums'>
+                      {quantity}
+                    </span>
+                    <button
+                      onClick={incrementQty}
+                      disabled={quantity >= maxQty}
+                      className='w-9 h-11 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors'
+                      aria-label='Increase quantity'>
+                      <Plus className='w-3.5 h-3.5' />
+                    </button>
+                  </div>
+                )}
+                <Button
+                  ref={addToCartBtnRef}
+                  size='lg'
+                  variant='outline'
+                  className='flex-1 border-gray-900 text-gray-900 hover:bg-gray-50 rounded-none h-11 py-0 text-sm font-medium shadow-none transition-all gap-2'
+                  onClick={handleAddToCart}
+                  disabled={!product.available || !allVariantsSelected}
+                  data-add-to-cart='true'>
+                  <ShoppingCart className='w-4 h-4' />
+                  {product.available ? t("add_to_cart") : t("out_of_stock")}
+                </Button>
+              </div>
+
+              {/* Buy Now — skips the cart, goes straight to checkout */}
+              {product.available && (
+                <Button
+                  size='lg'
+                  className='w-full bg-red-600 hover:bg-red-700 text-white rounded-none py-4 text-sm font-semibold shadow-none hover:shadow-lg transition-all'
+                  onClick={handleBuyNow}
+                  disabled={!allVariantsSelected}
+                  data-buy-now='true'>
+                  {t("buy_now")}
+                </Button>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* ═══════════════════════════════════════════════
+          STICKY ADD TO CART BAR
+          Appears once the main Add to Cart button scrolls out of view.
+          ═══════════════════════════════════════════════ */}
+      {product.available && (
+        <div
+          className={cn(
+            "fixed bottom-16 lg:bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.06)] transition-transform duration-300",
+            showStickyCart ? "translate-y-0" : "translate-y-full",
+          )}>
+          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3'>
+            <img
+              src={images[selectedImage]?.url || product.imageUrl || ""}
+              alt={product.name}
+              className='w-10 h-10 object-cover rounded-sm flex-shrink-0'
+            />
+            <div className='min-w-0 flex-1'>
+              <p className='text-xs font-medium text-gray-900 truncate'>
+                {product.name}
+              </p>
+              <div className='flex items-center gap-2'>
+                <p className='text-xs text-gray-600'>
+                  {displayPrice.toFixed(2)} {STORE_CURRENCY}
+                </p>
+                {cartQtyForProduct > 0 && (
+                  <span className='text-[10px] text-emerald-600 font-medium'>
+                    {isAr ? `${cartQtyForProduct} في السلة` : `${cartQtyForProduct} in cart`}
+                  </span>
+                )}
+              </div>
+            </div>
+            <Button
+              size='sm'
+              variant='outline'
+              className='border-gray-900 text-gray-900 hover:bg-gray-50 rounded-none px-4 text-xs font-medium shrink-0 gap-1.5'
+              onClick={handleAddToCart}
+              disabled={!allVariantsSelected}>
+              <ShoppingCart className='w-3.5 h-3.5' />
+              {t("add_to_cart")}
+            </Button>
+            <Button
+              size='sm'
+              className='bg-red-600 hover:bg-red-700 text-white rounded-none px-4 text-xs font-semibold shrink-0'
+              onClick={handleBuyNow}
+              disabled={!allVariantsSelected}>
+              {t("buy_now")}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════
           REVIEWS SECTION
@@ -735,7 +1058,14 @@ function ProductReviewsSection({ productId }: { productId: string }) {
   const { t, locale } = useMinimalI18n();
   const isAr = locale === "ar";
   const [reviews, setReviews] = useState<
-    { id: string; userName: string; rating: number; comment: string; createdAt: string }[]
+    {
+      id: string;
+      userName: string;
+      rating: number;
+      comment: string;
+      createdAt: string;
+      imageUrl?: string | null;
+    }[]
   >([]);
   const [avgRating, setAvgRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
@@ -745,6 +1075,40 @@ function ProductReviewsSection({ productId }: { productId: string }) {
   const [hoverRating, setHoverRating] = useState(0);
   const [formComment, setFormComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [formImagePreview, setFormImagePreview] = useState<string | null>(null);
+  const [formImageId, setFormImageId] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    if (!selected) return;
+
+    setFormImagePreview(URL.createObjectURL(selected));
+    setUploadingImage(true);
+    try {
+      const buffer = new Uint8Array(await selected.arrayBuffer());
+      const res = await trpc.product.uploadReviewImage.mutate({
+        file: { name: selected.name, type: selected.type, buffer },
+      });
+      if (res.success && res.result) {
+        setFormImageId(res.result.id);
+      } else {
+        toast.error(
+          "error" in res && res.error
+            ? res.error
+            : isAr
+              ? "فشل رفع الصورة"
+              : "Failed to upload image",
+        );
+        setFormImagePreview(null);
+      }
+    } catch {
+      toast.error(isAr ? "فشل رفع الصورة" : "Failed to upload image");
+      setFormImagePreview(null);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const fetchReviews = useCallback(() => {
     trpc.product.getReviews
@@ -783,12 +1147,19 @@ function ProductReviewsSection({ productId }: { productId: string }) {
         userName: formName.trim(),
         rating: formRating,
         comment: formComment.trim(),
+        imageId: formImageId ?? undefined,
       });
       if (res.success) {
-        toast.success(isAr ? "شكراً لتقييمك!" : "Thank you for your review!");
+        toast.success(
+          isAr
+            ? "شكراً لتقييمك! سيظهر بعد مراجعته"
+            : "Thank you for your review! It'll appear once reviewed.",
+        );
         setFormName("");
         setFormRating(0);
         setFormComment("");
+        setFormImagePreview(null);
+        setFormImageId(null);
         setShowForm(false);
         fetchReviews();
       }
@@ -878,9 +1249,47 @@ function ProductReviewsSection({ productId }: { productId: string }) {
               placeholder={isAr ? "شاركنا رأيك..." : "Share your thoughts..."}
             />
           </div>
+          <div>
+            <label className='block text-sm text-gray-700 mb-1'>
+              {isAr ? "صورة (اختياري)" : "Photo (optional)"}
+            </label>
+            {formImagePreview ? (
+              <div className='relative w-20 h-20'>
+                <img
+                  src={formImagePreview}
+                  alt=''
+                  className='w-20 h-20 object-cover border border-gray-200'
+                />
+                {uploadingImage && (
+                  <div className='absolute inset-0 bg-white/70 flex items-center justify-center'>
+                    <span className='text-[10px] text-gray-600'>
+                      {isAr ? "جاري الرفع..." : "Uploading..."}
+                    </span>
+                  </div>
+                )}
+                <button
+                  type='button'
+                  onClick={() => {
+                    setFormImagePreview(null);
+                    setFormImageId(null);
+                  }}
+                  className='absolute -top-2 -end-2 w-5 h-5 bg-gray-900 text-white rounded-full flex items-center justify-center'
+                  aria-label='Remove image'>
+                  <X className='w-3 h-3' />
+                </button>
+              </div>
+            ) : (
+              <input
+                type='file'
+                accept='image/jpeg,image/png,image/webp'
+                onChange={handleImageSelect}
+                className='text-xs text-gray-600'
+              />
+            )}
+          </div>
           <Button
             type='submit'
-            disabled={submitting}
+            disabled={submitting || uploadingImage}
             className='bg-gray-900 hover:bg-gray-800 text-white rounded-none px-8 py-2'>
             {submitting
               ? (isAr ? "جاري الإرسال..." : "Submitting...")
@@ -910,6 +1319,13 @@ function ProductReviewsSection({ productId }: { productId: string }) {
               </div>
               <MinimalStarRating rating={review.rating} />
               <p className='text-sm text-gray-600 mt-2 leading-relaxed'>{review.comment}</p>
+              {review.imageUrl && (
+                <img
+                  src={review.imageUrl}
+                  alt=''
+                  className='mt-3 w-20 h-20 object-cover border border-gray-100'
+                />
+              )}
             </div>
           ))}
         </div>

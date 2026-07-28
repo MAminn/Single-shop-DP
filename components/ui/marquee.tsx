@@ -7,6 +7,8 @@ interface MarqueeProps {
   /** Animation speed — higher = slower (default 240s) */
   duration?: number;
   className?: string;
+  /** Inline style overrides — used for arbitrary CMS-picked hex colors that don't map to a Tailwind class */
+  style?: React.CSSProperties;
 }
 
 /**
@@ -23,6 +25,7 @@ export function Marquee({
   repeat = 12,
   duration = 240,
   className,
+  style,
 }: MarqueeProps) {
   const items = Array.from({ length: repeat }).map((_, i) => (
     <span
@@ -40,6 +43,7 @@ export function Marquee({
         "overflow-hidden whitespace-nowrap bg-stone-900 text-red-500 py-2.5",
         className,
       )}
+      style={style}
       aria-label={text}>
       <div
         className='flex'

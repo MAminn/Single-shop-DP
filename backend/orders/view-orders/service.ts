@@ -6,7 +6,7 @@ import {
   product,
   user,
 } from "#root/shared/database/drizzle/schema";
-import { and, count, desc, eq, type SQL } from "drizzle-orm";
+import { and, count, desc, eq, gte, lt, sql, type SQL } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 import type { ClientSession } from "#root/backend/auth/shared/entities";
@@ -18,6 +18,10 @@ export const viewOrdersSchema = z.object({
   status: z
     .enum(["pending", "processing", "shipped", "delivered", "cancelled"])
     .optional(),
+  /** Inclusive start of the createdAt range (ISO datetime string) */
+  dateFrom: z.string().optional(),
+  /** Exclusive end of the createdAt range (ISO datetime string) */
+  dateTo: z.string().optional(),
 });
 
 export const viewOrders = (
@@ -41,7 +45,7 @@ export const viewOrders = (
     // Admin can view all orders, users can view their own orders
     // No special authentication needed beyond session check
 
-    const { limit, offset, status } = input;
+    const { limit, offset, status, dateFrom, dateTo } = input;
     const isAdmin = session.role === "admin";
 
     return yield* $(
@@ -51,6 +55,13 @@ export const viewOrders = (
 
           if (status) {
             conditions.push(eq(order.status, status));
+          }
+
+          if (dateFrom) {
+            conditions.push(gte(order.createdAt, new Date(dateFrom)));
+          }
+          if (dateTo) {
+            conditions.push(lt(order.createdAt, new Date(dateTo)));
           }
 
           // Users (non-admins) only see their own orders
@@ -78,6 +89,14 @@ export const viewOrders = (
             .execute();
 
           const total = totalResult[0]?.count ?? 0;
+
+          const salesResult = await tx
+            .select({ sum: sql<string>`coalesce(sum(${order.total}), 0)` })
+            .from(order)
+            .where(whereClause)
+            .execute();
+
+          const totalSales = Number(salesResult[0]?.sum ?? 0);
 
           const orders = await tx
             .select({
@@ -156,7 +175,7 @@ export const viewOrders = (
             }),
           );
 
-          return { items: ordersWithItems, total };
+          return { items: ordersWithItems, total, totalSales };
         });
       }),
     );

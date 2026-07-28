@@ -326,6 +326,31 @@ export const product = pgTable("product", {
   inspiredBy: text("inspired_by"),
   /** Display order within a category (lower = shown first, null = default) */
   sortOrder: integer("sort_order"),
+  /** Fragrance details shown on the product page: character, longevity, when to wear, and top/middle/base notes */
+  fragranceInfo: jsonb("fragrance_info").$type<{
+    tagline?: string;
+    taglineAr?: string;
+    about?: string;
+    aboutAr?: string;
+    longevity?: string;
+    longevityAr?: string;
+    whenToUse?: string;
+    whenToUseAr?: string;
+    concentration?: string;
+    scentIntensity?: string;
+    scentIntensityAr?: string;
+    gender?: string;
+    genderAr?: string;
+    topNotes?: string;
+    topNotesAr?: string;
+    middleNotes?: string;
+    middleNotesAr?: string;
+    baseNotes?: string;
+    baseNotesAr?: string;
+    ingredients?: string;
+    ingredientsAr?: string;
+    badges?: string[];
+  }>(),
 });
 
 export const productVariant = pgTable("product_variant", {
@@ -341,6 +366,12 @@ export const productVariant = pgTable("product_variant", {
     }),
   values: jsonb("values").notNull().default([]).$type<{ value: string; priceModifier?: number; enabledOverride?: boolean }[]>(),
 });
+
+export const reviewStatus = pgEnum("review_status", [
+  "pending",
+  "approved",
+  "rejected",
+]);
 
 export const orderStatus = pgEnum("order_status", [
   "pending",
@@ -462,6 +493,8 @@ export const order = pgTable("order", {
     withTimezone: true,
     mode: "date",
   }),
+  /** True once the reserved stock for this order's items has been restored (on cancel/delete), so it's never restored twice */
+  stockRestored: boolean("stock_restored").notNull().default(false),
 });
 
 export const orderItem = pgTable("order_item", {
@@ -522,6 +555,11 @@ export const productReview = pgTable("product_review", {
   userName: text("user_name").notNull(),
   rating: integer("rating").notNull(),
   comment: text("comment").notNull(),
+  imageId: uuid("image_id").references(() => file.id, {
+    onDelete: "set null",
+    onUpdate: "cascade",
+  }),
+  status: reviewStatus("status").default("pending").notNull(),
   createdAt: timestamp("created_at", {
     withTimezone: true,
     mode: "date",
@@ -920,6 +958,7 @@ export const orderLogAction = pgEnum("order_log_action", [
   "status_changed",
   "cancelled",
   "refunded",
+  "items_edited",
 ]);
 
 export const orderLog = pgTable("order_log", {
@@ -1270,6 +1309,15 @@ export const storeSettings = pgTable("store_settings", {
     .default([])
     .$type<Array<{ id: string; name: string; values: Array<{ value: string; priceModifier?: number }>; defaultValue?: string; strikethroughValues?: string[] }>>(),
   comingSoonMode: boolean("coming_soon_mode").notNull().default(false),
+  productPageContent: jsonb("product_page_content")
+    .default({})
+    .$type<{
+      shippingText?: string;
+      shippingTextAr?: string;
+      returnsText?: string;
+      returnsTextAr?: string;
+      faqs?: Array<{ question: string; questionAr?: string; answer: string; answerAr?: string }>;
+    }>(),
   updatedAt: timestamp("updated_at", {
     withTimezone: true,
     mode: "date",

@@ -96,6 +96,10 @@ export interface HeaderSettings {
   marqueeEnabled?: boolean;
   marqueeText?: string;
   marqueeTextAr?: string;
+  /** Marquee background color (hex). Defaults to white when unset. */
+  marqueeBackgroundColor?: string;
+  /** Marquee text color (hex). Defaults to black when unset. */
+  marqueeTextColor?: string;
   /** Promo text line for product detail page (minimal template) */
   promoText?: string;
   promoTextAr?: string;
@@ -163,6 +167,8 @@ export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
     marqueeEnabled: false,
     marqueeText: "",
     marqueeTextAr: "",
+    marqueeBackgroundColor: "",
+    marqueeTextColor: "",
     promoText: "",
     promoTextAr: "",
     contactEmail: "",

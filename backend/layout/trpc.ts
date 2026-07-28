@@ -73,6 +73,8 @@ const LayoutSettingsSchema = z.object({
     marqueeEnabled: z.boolean().optional(),
     marqueeText: z.string().optional(),
     marqueeTextAr: z.string().optional(),
+    marqueeBackgroundColor: z.string().optional(),
+    marqueeTextColor: z.string().optional(),
     promoText: z.string().optional(),
     promoTextAr: z.string().optional(),
     contactEmail: z.string().optional(),

@@ -13,7 +13,8 @@ import {
 import { Button } from "#root/components/ui/button";
 import { Input } from "#root/components/ui/input";
 import { Label } from "#root/components/ui/label";
-import { Loader2, Save, Truck, Plus, Trash2, Tags, Globe, PackageX, Mail, Send, Users } from "lucide-react";
+import { Loader2, Save, Truck, Plus, Trash2, Tags, Globe, PackageX, Mail, Send, Users, FileText } from "lucide-react";
+import { Textarea } from "#root/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -70,6 +71,20 @@ export default function SettingsPage() {
   const [allUserEmails, setAllUserEmails] = useState<string[] | null>(null);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
+  // Product page content: Shipping / Returns / FAQs
+  interface Faq {
+    question: string;
+    questionAr?: string;
+    answer: string;
+    answerAr?: string;
+  }
+  const [shippingText, setShippingText] = useState("");
+  const [shippingTextAr, setShippingTextAr] = useState("");
+  const [returnsText, setReturnsText] = useState("");
+  const [returnsTextAr, setReturnsTextAr] = useState("");
+  const [faqs, setFaqs] = useState<Faq[]>([]);
+  const [isSavingPageContent, setIsSavingPageContent] = useState(false);
+
   // Fetch current shipping fee on mount
   useEffect(() => {
     let cancelled = false;
@@ -83,6 +98,15 @@ export default function SettingsPage() {
           }).catch(() => {}),
           trpc.settings.getComingSoonSubscribers.query().then((r) => {
             if (r.success) setSubscribers(r.result as Subscriber[]);
+          }).catch(() => {}),
+          trpc.settings.getProductPageContent.query().then((r) => {
+            if (r.success) {
+              setShippingText(r.result.shippingText ?? "");
+              setShippingTextAr(r.result.shippingTextAr ?? "");
+              setReturnsText(r.result.returnsText ?? "");
+              setReturnsTextAr(r.result.returnsTextAr ?? "");
+              setFaqs(r.result.faqs ?? []);
+            }
           }).catch(() => {}),
         ]);
         if (cancelled) return;
@@ -126,6 +150,45 @@ export default function SettingsPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleSavePageContent = async () => {
+    setIsSavingPageContent(true);
+    try {
+      const result = await trpc.settings.updateProductPageContent.mutate({
+        content: {
+          shippingText: shippingText || undefined,
+          shippingTextAr: shippingTextAr || undefined,
+          returnsText: returnsText || undefined,
+          returnsTextAr: returnsTextAr || undefined,
+          faqs: faqs.filter((f) => f.question.trim() && f.answer.trim()),
+        },
+      });
+      if (result.success) {
+        toast.success("Product page content updated successfully");
+      } else {
+        toast.error(result.error || "Failed to update product page content");
+      }
+    } catch (err) {
+      console.error("Failed to update product page content:", err);
+      toast.error("Failed to update product page content");
+    } finally {
+      setIsSavingPageContent(false);
+    }
+  };
+
+  const addFaq = () => {
+    setFaqs((prev) => [...prev, { question: "", questionAr: "", answer: "", answerAr: "" }]);
+  };
+
+  const updateFaq = (index: number, field: keyof Faq, value: string) => {
+    setFaqs((prev) =>
+      prev.map((faq, i) => (i === index ? { ...faq, [field]: value } : faq)),
+    );
+  };
+
+  const removeFaq = (index: number) => {
+    setFaqs((prev) => prev.filter((_, i) => i !== index));
   };
 
   const addPreset = () => {
@@ -356,6 +419,130 @@ export default function SettingsPage() {
 
           <Button onClick={handleSave} disabled={isSaving}>
             {isSaving ? (
+              <>
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className='mr-2 h-4 w-4' />
+                Save Changes
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Product Page Content Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className='flex items-center gap-2'>
+            <FileText className='h-5 w-5' />
+            Product Page Content
+          </CardTitle>
+          <CardDescription>
+            Control the Shipping, Returns and FAQs text shown in the
+            accordion on every product page. Leave blank to use the
+            defaults.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-6'>
+          <div className='space-y-2'>
+            <Label htmlFor='shippingText'>Shipping text (English)</Label>
+            <Textarea
+              id='shippingText'
+              value={shippingText}
+              onChange={(e) => setShippingText(e.target.value)}
+              placeholder='Free shipping with 2+ items.'
+              rows={2}
+            />
+            <Label htmlFor='shippingTextAr'>Shipping text (Arabic)</Label>
+            <Textarea
+              id='shippingTextAr'
+              dir='rtl'
+              value={shippingTextAr}
+              onChange={(e) => setShippingTextAr(e.target.value)}
+              placeholder='شحن مجاني عند طلب قطعتين أو أكثر.'
+              rows={2}
+            />
+          </div>
+
+          <div className='space-y-2'>
+            <Label htmlFor='returnsText'>Returns text (English)</Label>
+            <Textarea
+              id='returnsText'
+              value={returnsText}
+              onChange={(e) => setReturnsText(e.target.value)}
+              placeholder='Free exchanges for all orders.'
+              rows={2}
+            />
+            <Label htmlFor='returnsTextAr'>Returns text (Arabic)</Label>
+            <Textarea
+              id='returnsTextAr'
+              dir='rtl'
+              value={returnsTextAr}
+              onChange={(e) => setReturnsTextAr(e.target.value)}
+              placeholder='استبدال مجاني لجميع الطلبات.'
+              rows={2}
+            />
+          </div>
+
+          <div className='space-y-3'>
+            <div className='flex items-center justify-between'>
+              <Label>FAQs</Label>
+              <Button type='button' variant='outline' size='sm' onClick={addFaq}>
+                <Plus className='h-4 w-4 mr-1' />
+                Add FAQ
+              </Button>
+            </div>
+            {faqs.length === 0 && (
+              <p className='text-xs text-muted-foreground'>
+                No custom FAQs yet — the product page falls back to a
+                built-in default.
+              </p>
+            )}
+            {faqs.map((faq, idx) => (
+              <div key={idx} className='space-y-2 border rounded-md p-3 relative'>
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='sm'
+                  className='absolute top-2 end-2 h-7 w-7 p-0'
+                  onClick={() => removeFaq(idx)}>
+                  <Trash2 className='h-4 w-4 text-red-500' />
+                </Button>
+                <Input
+                  placeholder='Question (English)'
+                  value={faq.question}
+                  onChange={(e) => updateFaq(idx, "question", e.target.value)}
+                  className='max-w-md'
+                />
+                <Input
+                  placeholder='السؤال (Arabic, optional)'
+                  dir='rtl'
+                  value={faq.questionAr ?? ""}
+                  onChange={(e) => updateFaq(idx, "questionAr", e.target.value)}
+                  className='max-w-md'
+                />
+                <Textarea
+                  placeholder='Answer (English)'
+                  value={faq.answer}
+                  onChange={(e) => updateFaq(idx, "answer", e.target.value)}
+                  rows={2}
+                />
+                <Textarea
+                  placeholder='الإجابة (Arabic, optional)'
+                  dir='rtl'
+                  value={faq.answerAr ?? ""}
+                  onChange={(e) => updateFaq(idx, "answerAr", e.target.value)}
+                  rows={2}
+                />
+              </div>
+            ))}
+          </div>
+
+          <Button onClick={handleSavePageContent} disabled={isSavingPageContent}>
+            {isSavingPageContent ? (
               <>
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                 Saving...

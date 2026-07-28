@@ -2,6 +2,7 @@ import Navbar from "#root/components/globals/Navbar.jsx";
 import { EditorialNavbar } from "#root/components/template-system/editorial/EditorialNavbar";
 import { MinimalNavbar } from "#root/components/template-system/minimal/MinimalNavbar";
 import { MinimalFooter } from "#root/components/template-system/minimal/MinimalFooter";
+import { MinimalMobileBottomNav } from "#root/components/template-system/minimal/MinimalMobileBottomNav";
 import { MinimalComingSoonPage } from "#root/components/template-system/minimal/MinimalComingSoonPage";
 import { MinimalI18nProvider } from "#root/lib/i18n/MinimalI18nContext";
 import { Footer } from "#root/components/globals/Footer";
@@ -235,7 +236,7 @@ function LayoutShell({
         <TrackingProvider>
           <main
             id='page-content'
-            className={`bg-background h-full text-foreground w-full font-poppins${isMinimal && !isDashboardRoute ? " minimal-template" : ""}`}>
+            className={`bg-background h-full text-foreground w-full font-poppins${isMinimal && !isDashboardRoute ? " minimal-template pb-16 lg:pb-0" : ""}`}>
             {!isDashboardRoute && (
               <GlobalNavbarChrome navbarMode={navbarMode}>
                 {renderNavbar()}
@@ -250,7 +251,10 @@ function LayoutShell({
             )}
             {!isDashboardRoute && <GlobalFooter />}
             {!isDashboardRoute && <CartToastContainer />}
-            {!isDashboardRoute && <StickyCartBar />}
+            {!isDashboardRoute && (
+              <StickyCartBar raiseForBottomNav={isMinimal} />
+            )}
+            {!isDashboardRoute && isMinimal && <MinimalMobileBottomNav />}
             <Toaster />
             <ShadcnToaster />
             {/* Phase 3 — page-transition overlay (CSS-only, SSR-inert) */}

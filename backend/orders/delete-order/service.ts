@@ -1,10 +1,14 @@
 import { query } from "#root/shared/database/drizzle/db";
-import { order, orderItem } from "#root/shared/database/drizzle/schema";
+import {
+  order,
+  orderItem,
+  product,
+} from "#root/shared/database/drizzle/schema";
 import { Effect } from "effect";
 import { z } from "zod";
 import type { ClientSession } from "#root/backend/auth/shared/entities";
 import { ServerError } from "#root/shared/error/server";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 export const deleteOrderSchema = z.object({
   orderId: z.string().uuid(),
@@ -50,7 +54,7 @@ export const deleteOrder = (
         return await db.transaction(async (tx) => {
           // Check if order exists
           const orderData = await tx
-            .select({ id: order.id })
+            .select({ id: order.id, stockRestored: order.stockRestored })
             .from(order)
             .where(eq(order.id, orderId))
             .execute();
@@ -62,6 +66,26 @@ export const deleteOrder = (
               statusCode: 404,
               clientMessage: "Order not found",
             });
+          }
+
+          // Restore the stock this order reserved, unless it was already
+          // restored (e.g. the order was cancelled before being deleted).
+          if (!orderData[0]?.stockRestored) {
+            const items = await tx
+              .select({
+                productId: orderItem.productId,
+                quantity: orderItem.quantity,
+              })
+              .from(orderItem)
+              .where(eq(orderItem.orderId, orderId))
+              .execute();
+
+            for (const item of items) {
+              await tx
+                .update(product)
+                .set({ stock: sql`${product.stock} + ${item.quantity}` })
+                .where(eq(product.id, item.productId));
+            }
           }
 
           // Delete associated order items first (important for foreign key constraints)

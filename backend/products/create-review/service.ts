@@ -11,6 +11,7 @@ export const createReviewSchema = z.object({
   userName: z.string().min(2).max(50),
   rating: z.number().int().min(1).max(5),
   comment: z.string().min(3).max(500),
+  imageId: z.string().uuid().optional(),
 });
 
 export const createReview = (
@@ -42,6 +43,10 @@ export const createReview = (
             userName: input.userName,
             rating: input.rating,
             comment: input.comment,
+            imageId: input.imageId,
+            // New reviews always start pending — admin approves/rejects
+            // before they become publicly visible.
+            status: "pending",
           })
           .returning()
           .execute();

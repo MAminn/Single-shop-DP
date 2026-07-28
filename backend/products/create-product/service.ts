@@ -9,7 +9,7 @@ import {
 import { ServerError } from "#root/shared/error/server";
 import { Effect } from "effect";
 import { z } from "zod";
-import { validateProductRules } from "../shared";
+import { validateProductRules, fragranceInfoSchema } from "../shared";
 import { getStoreOwnerId } from "#root/shared/config/store";
 
 export const createProductSchema = z.object({
@@ -51,6 +51,7 @@ export const createProductSchema = z.object({
   inspiredBy: z.string().max(1000).optional(),
   sortOrder: z.number().int().min(0).optional(),
   hidden: z.boolean().optional().default(false),
+  fragranceInfo: fragranceInfoSchema,
 });
 
 export const createProduct = (
@@ -92,6 +93,7 @@ export const createProduct = (
               inspiredBy: data.inspiredBy || null,
               sortOrder: data.sortOrder ?? 0,
               hidden: data.hidden ?? false,
+              fragranceInfo: data.fragranceInfo ?? null,
             })
             .returning()
             .then((data) => data[0]);

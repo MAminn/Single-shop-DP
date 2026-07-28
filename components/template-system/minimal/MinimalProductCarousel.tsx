@@ -14,6 +14,7 @@ interface MinimalProductCarouselProps {
   viewAllText?: string;
   className?: string;
   onQuickView?: (product: MinimalProduct) => void;
+  id?: string;
 }
 
 /**
@@ -28,6 +29,7 @@ export function MinimalProductCarousel({
   viewAllText,
   className,
   onQuickView,
+  id,
 }: MinimalProductCarouselProps) {
   const { t } = useMinimalI18n();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -68,7 +70,7 @@ export function MinimalProductCarousel({
   if (!products.length) return null;
 
   return (
-    <section className={cn("py-12 sm:py-16 lg:py-20", className)}>
+    <section id={id} className={cn("py-12 sm:py-16 lg:py-20", className)}>
       <div className='max-w-[1400px] mx-auto'>
         {/* Section heading with underline */}
         {title && (

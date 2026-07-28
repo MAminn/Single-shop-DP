@@ -54,6 +54,31 @@ export interface ProductSpecification {
 /**
  * Extended product type for product pages
  */
+export interface ProductFragranceInfo {
+  tagline?: string;
+  taglineAr?: string;
+  about?: string;
+  aboutAr?: string;
+  longevity?: string;
+  longevityAr?: string;
+  whenToUse?: string;
+  whenToUseAr?: string;
+  concentration?: string;
+  scentIntensity?: string;
+  scentIntensityAr?: string;
+  gender?: string;
+  genderAr?: string;
+  topNotes?: string;
+  topNotesAr?: string;
+  middleNotes?: string;
+  middleNotesAr?: string;
+  baseNotes?: string;
+  baseNotesAr?: string;
+  ingredients?: string;
+  ingredientsAr?: string;
+  badges?: string[];
+}
+
 export interface ProductPageProduct extends FeaturedProduct {
   description?: string;
   longDescription?: string;
@@ -66,6 +91,7 @@ export interface ProductPageProduct extends FeaturedProduct {
   specifications?: ProductSpecification[];
   features?: ProductFeature[];
   variants?: { name: string; values: { value: string; priceModifier?: number; enabledOverride?: boolean }[] }[];
+  fragranceInfo?: ProductFragranceInfo | null;
 }
 
 /**

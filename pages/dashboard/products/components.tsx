@@ -46,6 +46,49 @@ export interface FileMetadata {
   isPrimary?: boolean;
 }
 
+/**
+ * Comma-separated text input for the badges array. Keeps its own local raw
+ * text so a trailing/mid-typing comma isn't immediately stripped by the
+ * split+trim+filter pass (that pass only runs when committing to the array).
+ */
+function BadgesInput({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (badges: string[]) => void;
+}) {
+  const [text, setText] = useState(value.join(", "));
+
+  useEffect(() => {
+    setText(value.join(", "));
+    // Only resync from external value changes (e.g. form reset), not our own keystrokes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value.join(",")]);
+
+  return (
+    <FormItem>
+      <FormLabel>Badges (comma-separated)</FormLabel>
+      <FormControl>
+        <Input
+          placeholder='Vegan, Cruelty-free, Clean ingredients'
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+            onChange(
+              e.target.value
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean),
+            );
+          }}
+        />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  );
+}
+
 export function ProductForm({
   initialValues,
   categories,
@@ -68,6 +111,30 @@ export function ProductForm({
     inspiredBy?: string;
     sortOrder?: number;
     hidden?: boolean;
+    fragranceInfo?: {
+      tagline?: string;
+      taglineAr?: string;
+      about?: string;
+      aboutAr?: string;
+      longevity?: string;
+      longevityAr?: string;
+      whenToUse?: string;
+      whenToUseAr?: string;
+      concentration?: string;
+      scentIntensity?: string;
+      scentIntensityAr?: string;
+      gender?: string;
+      genderAr?: string;
+      topNotes?: string;
+      topNotesAr?: string;
+      middleNotes?: string;
+      middleNotesAr?: string;
+      baseNotes?: string;
+      baseNotesAr?: string;
+      ingredients?: string;
+      ingredientsAr?: string;
+      badges?: string[];
+    } | null;
   }>;
   categories: { id: string; name: string }[];
   vendors?: { id: string; name: string }[];
@@ -120,6 +187,32 @@ export function ProductForm({
     inspiredBy: z.string().max(1000).optional(),
     sortOrder: z.coerce.number().int().min(0).optional(),
     hidden: z.boolean().default(false),
+    fragranceInfo: z
+      .object({
+        tagline: z.string().max(200).optional(),
+        taglineAr: z.string().max(200).optional(),
+        about: z.string().max(1000).optional(),
+        aboutAr: z.string().max(1000).optional(),
+        longevity: z.string().max(200).optional(),
+        longevityAr: z.string().max(200).optional(),
+        whenToUse: z.string().max(200).optional(),
+        whenToUseAr: z.string().max(200).optional(),
+        concentration: z.string().max(50).optional(),
+        scentIntensity: z.string().max(50).optional(),
+        scentIntensityAr: z.string().max(50).optional(),
+        gender: z.string().max(50).optional(),
+        genderAr: z.string().max(50).optional(),
+        topNotes: z.string().max(300).optional(),
+        topNotesAr: z.string().max(300).optional(),
+        middleNotes: z.string().max(300).optional(),
+        middleNotesAr: z.string().max(300).optional(),
+        baseNotes: z.string().max(300).optional(),
+        baseNotesAr: z.string().max(300).optional(),
+        ingredients: z.string().max(1500).optional(),
+        ingredientsAr: z.string().max(1500).optional(),
+        badges: z.array(z.string().max(50)).max(10).optional(),
+      })
+      .optional(),
   });
 
   // Debug initial values
@@ -157,6 +250,7 @@ export function ProductForm({
           ? initialValues.categoryIds[0]
           : initialValues?.categoryId || "",
       hidden: initialValues?.hidden ?? false,
+      fragranceInfo: initialValues?.fragranceInfo ?? undefined,
     },
   });
 
@@ -390,6 +484,180 @@ export function ProductForm({
               </FormItem>
             )}
           />
+
+          <div className='border rounded-md p-4 space-y-3'>
+            <p className='text-sm font-medium'>Fragrance Info (Optional)</p>
+            <p className='text-xs text-muted-foreground -mt-2'>
+              Shown on the product page: character, longevity, when to wear, and notes.
+            </p>
+            <FormField
+              control={form.control}
+              name='fragranceInfo.tagline'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tagline ("This perfume is:")</FormLabel>
+                  <FormControl>
+                    <Input placeholder='Where sweet meets seductive' {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='fragranceInfo.about'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>About the Scent</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder='A warm, sensual blend of...'
+                      className='resize-none'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className='grid grid-cols-2 gap-4'>
+              <FormField
+                control={form.control}
+                name='fragranceInfo.longevity'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Longevity</FormLabel>
+                    <FormControl>
+                      <Input placeholder='e.g. 6-8 hours' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='fragranceInfo.whenToUse'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>When to Use</FormLabel>
+                    <FormControl>
+                      <Input placeholder='e.g. Evening, Fall/Winter' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className='grid grid-cols-3 gap-4'>
+              <FormField
+                control={form.control}
+                name='fragranceInfo.concentration'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Concentration</FormLabel>
+                    <FormControl>
+                      <Input placeholder='18%' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='fragranceInfo.scentIntensity'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Scent Intensity</FormLabel>
+                    <FormControl>
+                      <Input placeholder='Statement' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='fragranceInfo.gender'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gender</FormLabel>
+                    <FormControl>
+                      <Input placeholder='Feminine' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className='grid grid-cols-3 gap-4'>
+              <FormField
+                control={form.control}
+                name='fragranceInfo.topNotes'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Top Notes</FormLabel>
+                    <FormControl>
+                      <Input placeholder='Bergamot, Marshmallow' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='fragranceInfo.middleNotes'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Middle Notes</FormLabel>
+                    <FormControl>
+                      <Input placeholder='Jasmine, Orris' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='fragranceInfo.baseNotes'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Base Notes</FormLabel>
+                    <FormControl>
+                      <Input placeholder='Amber, Vanilla, Musk' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              control={form.control}
+              name='fragranceInfo.ingredients'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ingredients</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder='Alcohol Denat., Fragrance/Parfum, Water/Aqua/Eau, ...'
+                      className='resize-none'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='fragranceInfo.badges'
+              render={({ field }) => (
+                <BadgesInput value={field.value ?? []} onChange={field.onChange} />
+              )}
+            />
+            <p className='text-xs text-muted-foreground'>
+              Arabic versions can be added later via direct API if needed — English fields above are shown when no Arabic override is set.
+            </p>
+          </div>
 
           <div className='grid grid-cols-2 gap-4'>
             <FormField

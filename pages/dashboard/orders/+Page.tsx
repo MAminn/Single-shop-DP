@@ -126,6 +126,12 @@ export default function Orders() {
   const { toast } = useToast();
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<
+    "all" | "today" | "yesterday" | "custom"
+  >("all");
+  const [customDate, setCustomDate] = useState<string>(
+    () => new Date().toISOString().slice(0, 10),
+  );
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -142,6 +148,7 @@ export default function Orders() {
   const pageSize = 20;
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [totalSales, setTotalSales] = useState(0);
 
   const [isDesktop, setIsDesktop] = useState(true);
   useEffect(() => {
@@ -165,7 +172,36 @@ export default function Orders() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional
   useEffect(() => {
     setPage(1);
-  }, [statusFilter, searchQuery]);
+  }, [statusFilter, searchQuery, dateFilter, customDate]);
+
+  /** Resolves the active date filter into a [from, to) local-day range. */
+  const getDateRange = useCallback((): { from?: string; to?: string } => {
+    const startOfLocalDay = (d: Date) => {
+      const copy = new Date(d);
+      copy.setHours(0, 0, 0, 0);
+      return copy;
+    };
+    if (dateFilter === "today") {
+      const from = startOfLocalDay(new Date());
+      const to = new Date(from);
+      to.setDate(to.getDate() + 1);
+      return { from: from.toISOString(), to: to.toISOString() };
+    }
+    if (dateFilter === "yesterday") {
+      const from = startOfLocalDay(new Date());
+      from.setDate(from.getDate() - 1);
+      const to = new Date(from);
+      to.setDate(to.getDate() + 1);
+      return { from: from.toISOString(), to: to.toISOString() };
+    }
+    if (dateFilter === "custom" && customDate) {
+      const from = startOfLocalDay(new Date(`${customDate}T00:00:00`));
+      const to = new Date(from);
+      to.setDate(to.getDate() + 1);
+      return { from: from.toISOString(), to: to.toISOString() };
+    }
+    return {};
+  }, [dateFilter, customDate]);
 
   const fetchOrders = useCallback(async () => {
     setIsLoading(true);
@@ -181,6 +217,8 @@ export default function Orders() {
           | "shipped"
           | "delivered"
           | "cancelled";
+        dateFrom?: string;
+        dateTo?: string;
       } = {
         limit: pageSize,
         offset: (page - 1) * pageSize,
@@ -194,6 +232,10 @@ export default function Orders() {
           | "delivered"
           | "cancelled";
       }
+
+      const { from, to } = getDateRange();
+      if (from) params.dateFrom = from;
+      if (to) params.dateTo = to;
 
       const result = await trpc.order.view.query(params);
 
@@ -212,6 +254,10 @@ export default function Orders() {
             : [],
         );
         setTotal(result.result?.total ?? 0);
+        setTotalSales(
+          (result.result as { totalSales?: number } | undefined)
+            ?.totalSales ?? 0,
+        );
       } else {
         setError(result.error || "Failed to fetch orders");
       }
@@ -221,11 +267,68 @@ export default function Orders() {
     } finally {
       setIsLoading(false);
     }
-  }, [statusFilter, page]);
+  }, [statusFilter, page, getDateRange]);
 
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
+
+  const [isEditingItems, setIsEditingItems] = useState(false);
+  const [editedQuantities, setEditedQuantities] = useState<
+    Record<string, number>
+  >({});
+  const [isSavingItems, setIsSavingItems] = useState(false);
+
+  const startEditingItems = () => {
+    if (!selectedOrder) return;
+    const initial: Record<string, number> = {};
+    for (const item of selectedOrder.items ?? []) {
+      initial[item.id] = item.quantity;
+    }
+    setEditedQuantities(initial);
+    setIsEditingItems(true);
+  };
+
+  const cancelEditingItems = () => {
+    setIsEditingItems(false);
+    setEditedQuantities({});
+  };
+
+  const saveEditedItems = async () => {
+    if (!selectedOrder) return;
+    setIsSavingItems(true);
+    try {
+      const items = Object.entries(editedQuantities).map(
+        ([orderItemId, quantity]) => ({ orderItemId, quantity }),
+      );
+      const result = await trpc.order.edit.mutate({
+        orderId: selectedOrder.id,
+        items,
+      });
+      if (result.success) {
+        toast({ title: "Order items updated" });
+        setIsEditingItems(false);
+        setEditedQuantities({});
+        setIsDetailsOpen(false);
+        fetchOrders();
+      } else {
+        toast({
+          title: "Failed to update items",
+          description: result.error || "Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while saving items.",
+        variant: "destructive",
+      });
+      console.error(err);
+    } finally {
+      setIsSavingItems(false);
+    }
+  };
 
   const updateOrderStatus = async (orderId: string, status: string) => {
     setIsUpdating(true);
@@ -520,7 +623,7 @@ export default function Orders() {
           </span>
         )}
         <span className='ml-2 text-xs text-muted-foreground'>
-          {list.length}
+          {list.reduce((sum, it) => sum + (it.quantity ?? 1), 0)}
         </span>
       </div>
     );
@@ -574,8 +677,43 @@ export default function Orders() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className='flex items-center gap-2'>
+                  <Select
+                    value={dateFilter}
+                    onValueChange={(v) => setDateFilter(v as typeof dateFilter)}>
+                    <SelectTrigger className='h-9 w-[160px]'>
+                      <SelectValue placeholder='Filter by date' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='all'>All Time</SelectItem>
+                      <SelectItem value='today'>Today</SelectItem>
+                      <SelectItem value='yesterday'>Yesterday</SelectItem>
+                      <SelectItem value='custom'>Specific day…</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {dateFilter === "custom" && (
+                    <Input
+                      type='date'
+                      value={customDate}
+                      onChange={(e) => setCustomDate(e.target.value)}
+                      className='h-9 w-[160px]'
+                    />
+                  )}
+                </div>
               </div>
             </div>
+            {dateFilter !== "all" && (
+              <p className='text-sm text-muted-foreground pt-2'>
+                Sales for{" "}
+                {dateFilter === "today"
+                  ? "today"
+                  : dateFilter === "yesterday"
+                    ? "yesterday"
+                    : customDate}
+                : <span className='font-semibold text-foreground'>{totalSales.toFixed(2)} EGP</span>{" "}
+                across {total} order{total === 1 ? "" : "s"}
+              </p>
+            )}
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -720,8 +858,18 @@ export default function Orders() {
                         {order.customerName}
                       </div>
                       <div className='mt-1 text-sm text-muted-foreground'>
-                        {order.items?.length ?? 0} item
-                        {(order.items?.length ?? 0) === 1 ? "" : "s"}
+                        {(() => {
+                          const totalQty =
+                            order.items?.reduce(
+                              (sum, it) => sum + (it.quantity ?? 1),
+                              0,
+                            ) ?? 0;
+                          return (
+                            <>
+                              {totalQty} item{totalQty === 1 ? "" : "s"}
+                            </>
+                          );
+                        })()}
                         {" · "}
                         {Number.parseFloat(order.total).toFixed(2)} EGP
                       </div>
@@ -787,7 +935,10 @@ export default function Orders() {
 
         <Dialog
           open={isDesktop && isDetailsOpen}
-          onOpenChange={setIsDetailsOpen}>
+          onOpenChange={(open) => {
+            setIsDetailsOpen(open);
+            if (!open) cancelEditingItems();
+          }}>
           <DialogContent className='sm:max-w-5xl max-h-[90vh] overflow-y-auto'>
             {selectedOrder && (
               <>
@@ -840,7 +991,38 @@ export default function Orders() {
                 </div>
 
                 <div className='my-4'>
-                  <h3 className='font-medium text-sm mb-2'>Order Items</h3>
+                  <div className='flex items-center justify-between mb-2'>
+                    <h3 className='font-medium text-sm'>Order Items</h3>
+                    {isAdmin && !isEditingItems && (
+                      <Button variant='outline' size='sm' onClick={startEditingItems}>
+                        Edit Items
+                      </Button>
+                    )}
+                    {isAdmin && isEditingItems && (
+                      <div className='flex items-center gap-2'>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={cancelEditingItems}
+                          disabled={isSavingItems}>
+                          Cancel
+                        </Button>
+                        <Button
+                          size='sm'
+                          onClick={saveEditedItems}
+                          disabled={isSavingItems}>
+                          {isSavingItems ? (
+                            <>
+                              <Loader2 className='h-4 w-4 animate-spin mr-1' />
+                              Saving...
+                            </>
+                          ) : (
+                            "Save Changes"
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -871,7 +1053,28 @@ export default function Orders() {
                               <span>{item.name}</span>
                             </div>
                           </TableCell>
-                          <TableCell>{item.quantity}</TableCell>
+                          <TableCell>
+                            {isEditingItems ? (
+                              <Input
+                                type='number'
+                                min={0}
+                                max={1000}
+                                className='h-8 w-20'
+                                value={editedQuantities[item.id] ?? item.quantity}
+                                onChange={(e) =>
+                                  setEditedQuantities((prev) => ({
+                                    ...prev,
+                                    [item.id]: Math.max(
+                                      0,
+                                      Number.parseInt(e.target.value, 10) || 0,
+                                    ),
+                                  }))
+                                }
+                              />
+                            ) : (
+                              item.quantity
+                            )}
+                          </TableCell>
                           <TableCell>
                             {item.discountPrice ? (
                               <>
@@ -895,7 +1098,10 @@ export default function Orders() {
                             {(
                               Number.parseFloat(
                                 item.discountPrice || item.price,
-                              ) * item.quantity
+                              ) *
+                              (isEditingItems
+                                ? (editedQuantities[item.id] ?? item.quantity)
+                                : item.quantity)
                             ).toFixed(2)}{" "}
                             EGP
                           </TableCell>

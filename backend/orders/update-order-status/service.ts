@@ -1,10 +1,16 @@
 import { query } from "#root/shared/database/drizzle/db";
-import { order, orderLog, user } from "#root/shared/database/drizzle/schema";
+import {
+  order,
+  orderItem,
+  orderLog,
+  product,
+  user,
+} from "#root/shared/database/drizzle/schema";
 import { Effect } from "effect";
 import { z } from "zod";
 import type { ClientSession } from "#root/backend/auth/shared/entities";
 import { ServerError } from "#root/shared/error/server";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 export const updateOrderStatusSchema = z.object({
   orderId: z.string().uuid(),
@@ -59,7 +65,11 @@ export const updateOrderStatus = (
         return await db.transaction(async (tx) => {
           // Get current order data including old status
           const currentOrder = await tx
-            .select({ id: order.id, status: order.status })
+            .select({
+              id: order.id,
+              status: order.status,
+              stockRestored: order.stockRestored,
+            })
             .from(order)
             .where(eq(order.id, orderId))
             .execute();
@@ -74,10 +84,38 @@ export const updateOrderStatus = (
           }
 
           const oldStatus = currentOrder[0]?.status || "pending";
+          const alreadyRestored = currentOrder[0]?.stockRestored ?? false;
+
+          // Cancelling an order releases the stock it reserved. Only restore
+          // once per order — flipping status back and forth must not
+          // inflate stock beyond what was actually reserved.
+          const shouldRestoreStock =
+            status === "cancelled" && oldStatus !== "cancelled" && !alreadyRestored;
+
+          if (shouldRestoreStock) {
+            const items = await tx
+              .select({
+                productId: orderItem.productId,
+                quantity: orderItem.quantity,
+              })
+              .from(orderItem)
+              .where(eq(orderItem.orderId, orderId))
+              .execute();
+
+            for (const item of items) {
+              await tx
+                .update(product)
+                .set({ stock: sql`${product.stock} + ${item.quantity}` })
+                .where(eq(product.id, item.productId));
+            }
+          }
 
           const updateResult = await tx
             .update(order)
-            .set({ status })
+            .set({
+              status,
+              ...(shouldRestoreStock ? { stockRestored: true } : {}),
+            })
             .where(eq(order.id, orderId))
             .returning();
 

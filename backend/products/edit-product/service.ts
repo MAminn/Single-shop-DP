@@ -10,7 +10,7 @@ import { ServerError } from "#root/shared/error/server";
 import { and, eq, inArray, not } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
-import { validateProductRules } from "../shared";
+import { validateProductRules, fragranceInfoSchema } from "../shared";
 
 export const editProductSchema = z.object({
   id: z.string().uuid(),
@@ -52,6 +52,7 @@ export const editProductSchema = z.object({
   inspiredBy: z.string().max(1000).optional(),
   sortOrder: z.number().int().min(0).optional(),
   hidden: z.boolean().optional().default(false),
+  fragranceInfo: fragranceInfoSchema,
 });
 
 export const editProduct = (
@@ -103,6 +104,7 @@ export const editProduct = (
               inspiredBy: data.inspiredBy || null,
               sortOrder: data.sortOrder ?? 0,
               hidden: data.hidden ?? false,
+              fragranceInfo: data.fragranceInfo ?? null,
               updatedAt: new Date(),
             })
             .where(eq(product.id, data.id))

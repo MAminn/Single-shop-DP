@@ -382,6 +382,9 @@ export default function HomepageAdminPage() {
                     marqueeEnabled: trimmedContent.marquee?.enabled ?? false,
                     marqueeText: trimmedContent.marquee?.text ?? "",
                     marqueeTextAr: trimmedContent.marquee?.textAr ?? "",
+                    marqueeBackgroundColor:
+                      trimmedContent.marquee?.backgroundColor ?? "",
+                    marqueeTextColor: trimmedContent.marquee?.textColor ?? "",
                     promoText: trimmedContent.promoLine?.text ?? "",
                     promoTextAr: trimmedContent.promoLine?.textAr ?? "",
                   },
@@ -2119,6 +2122,7 @@ export default function HomepageAdminPage() {
                       ...prev,
                       marquee: {
                         enabled: prev.marquee?.enabled ?? false,
+                        ...prev.marquee,
                         text: e.target.value,
                       },
                     }))
@@ -2139,6 +2143,7 @@ export default function HomepageAdminPage() {
                       marquee: {
                         enabled: prev.marquee?.enabled ?? false,
                         text: prev.marquee?.text ?? "",
+                        ...prev.marquee,
                         textAr: e.target.value,
                       },
                     }))
@@ -2146,6 +2151,86 @@ export default function HomepageAdminPage() {
                   placeholder='شحن مجاني للطلبات فوق 50 دولار'
                   disabled={!content.marquee?.enabled}
                 />
+              </div>
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <Label htmlFor='marquee-bg-color'>Background Color</Label>
+                  <div className='flex items-center gap-2'>
+                    <Input
+                      id='marquee-bg-color'
+                      type='color'
+                      className='w-14 p-1 h-9'
+                      value={content.marquee?.backgroundColor || "#ffffff"}
+                      onChange={(e) =>
+                        setContent((prev) => ({
+                          ...prev,
+                          marquee: {
+                            enabled: prev.marquee?.enabled ?? false,
+                            text: prev.marquee?.text ?? "",
+                            ...prev.marquee,
+                            backgroundColor: e.target.value,
+                          },
+                        }))
+                      }
+                      disabled={!content.marquee?.enabled}
+                    />
+                    <Input
+                      value={content.marquee?.backgroundColor ?? ""}
+                      onChange={(e) =>
+                        setContent((prev) => ({
+                          ...prev,
+                          marquee: {
+                            enabled: prev.marquee?.enabled ?? false,
+                            text: prev.marquee?.text ?? "",
+                            ...prev.marquee,
+                            backgroundColor: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder='#ffffff'
+                      disabled={!content.marquee?.enabled}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor='marquee-text-color'>Text Color</Label>
+                  <div className='flex items-center gap-2'>
+                    <Input
+                      id='marquee-text-color'
+                      type='color'
+                      className='w-14 p-1 h-9'
+                      value={content.marquee?.textColor || "#000000"}
+                      onChange={(e) =>
+                        setContent((prev) => ({
+                          ...prev,
+                          marquee: {
+                            enabled: prev.marquee?.enabled ?? false,
+                            text: prev.marquee?.text ?? "",
+                            ...prev.marquee,
+                            textColor: e.target.value,
+                          },
+                        }))
+                      }
+                      disabled={!content.marquee?.enabled}
+                    />
+                    <Input
+                      value={content.marquee?.textColor ?? ""}
+                      onChange={(e) =>
+                        setContent((prev) => ({
+                          ...prev,
+                          marquee: {
+                            enabled: prev.marquee?.enabled ?? false,
+                            text: prev.marquee?.text ?? "",
+                            ...prev.marquee,
+                            textColor: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder='#000000'
+                      disabled={!content.marquee?.enabled}
+                    />
+                  </div>
+                </div>
               </div>
               <div className='bg-muted p-3 rounded-md'>
                 <p className='text-sm text-muted-foreground'>

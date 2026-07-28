@@ -159,7 +159,12 @@ function buildStripState(
   };
 }
 
-export function StickyCartBar() {
+export function StickyCartBar({
+  raiseForBottomNav = false,
+}: {
+  /** When true, adds extra bottom clearance below `lg` so this bar stacks above a fixed mobile bottom nav instead of overlapping it. */
+  raiseForBottomNav?: boolean;
+} = {}) {
   const { totalItems, total, appliedOffers, subtotal, discount } = useCart();
   const { urlPathname } = usePageContext();
   const [visible, setVisible] = useState(false);
@@ -226,6 +231,7 @@ export function StickyCartBar() {
     <div
       className={cn(
         "fixed inset-x-0 bottom-0 z-[9990] px-3 pb-3 sm:px-4 sm:pb-4 pointer-events-none",
+        raiseForBottomNav && "pb-20 lg:pb-3",
         visible ? "animate-offer-bar-enter" : "translate-y-full opacity-0",
       )}
       aria-label="Cart and offers"

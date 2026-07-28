@@ -179,4 +179,28 @@ export type ProductByIdResult = {
   variants: { name: string; values: string[] }[];
   rating: number;
   reviewCount: number;
+  fragranceInfo?: {
+    tagline?: string;
+    taglineAr?: string;
+    about?: string;
+    aboutAr?: string;
+    longevity?: string;
+    longevityAr?: string;
+    whenToUse?: string;
+    whenToUseAr?: string;
+    concentration?: string;
+    scentIntensity?: string;
+    scentIntensityAr?: string;
+    gender?: string;
+    genderAr?: string;
+    topNotes?: string;
+    topNotesAr?: string;
+    middleNotes?: string;
+    middleNotesAr?: string;
+    baseNotes?: string;
+    baseNotesAr?: string;
+    ingredients?: string;
+    ingredientsAr?: string;
+    badges?: string[];
+  } | null;
 };

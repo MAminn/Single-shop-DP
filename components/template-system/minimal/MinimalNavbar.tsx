@@ -1,5 +1,5 @@
 import { useContext, useState, useRef, useEffect, useCallback } from "react";
-import { Search, ShoppingCart, User, X, Menu, Globe, LogOut, Mail, ChevronDown, Loader2, Package, Heart, LayoutDashboard } from "lucide-react";
+import { Search, ShoppingCart, User, X, Menu, Globe, LogOut, Loader2, Package, Heart, LayoutDashboard } from "lucide-react";
 import { Link } from "#root/components/utils/Link";
 import { AuthContext } from "#root/context/AuthContext";
 import { useCart } from "#root/lib/context/CartContext";
@@ -43,8 +43,6 @@ export function MinimalNavbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [categories, setCategories] = useState<{ id: string; name: string; slug?: string }[]>([]);
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
 
   // Live search state
   const [liveResults, setLiveResults] = useState<{
@@ -140,6 +138,8 @@ export function MinimalNavbar() {
   const marqueeText = locale === "ar" && layoutSettings.header.marqueeTextAr
     ? layoutSettings.header.marqueeTextAr
     : layoutSettings.header.marqueeText;
+  const marqueeBackgroundColor = layoutSettings.header.marqueeBackgroundColor;
+  const marqueeTextColor = layoutSettings.header.marqueeTextColor;
 
   return (
     <>
@@ -151,30 +151,14 @@ export function MinimalNavbar() {
           repeat={14}
           duration={240}
           className='bg-white text-black'
+          style={{
+            ...(marqueeBackgroundColor
+              ? { backgroundColor: marqueeBackgroundColor }
+              : {}),
+            ...(marqueeTextColor ? { color: marqueeTextColor } : {}),
+          }}
         />
       )}
-
-      {/* ── Info Bar (language + email) ── */}
-      <div className='w-full bg-gray-100 border-b border-gray-200'>
-        <div className='max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-8 text-[11px] text-gray-600'>
-          <button
-            type='button'
-            onClick={toggleLocale}
-            className='flex items-center gap-1.5 hover:text-black transition-colors'
-            aria-label='Toggle language'>
-            <Globe className='w-3 h-3' />
-            {locale === "en" ? "العربية" : "English"}
-          </button>
-          {layoutSettings.header.contactEmail && (
-            <a
-              href={`mailto:${layoutSettings.header.contactEmail}`}
-              className='flex items-center gap-1.5 hover:text-black transition-colors'>
-              <Mail className='w-3 h-3' />
-              {layoutSettings.header.contactEmail}
-            </a>
-          )}
-        </div>
-      </div>
 
       <nav className='w-full bg-white border-b border-gray-200' dir={dir === "rtl" ? "ltr" : "rtl"}>
         <div className='max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8'>
@@ -385,34 +369,18 @@ export function MinimalNavbar() {
             <div className='hidden lg:flex items-center gap-1'>
               {links.map((link) => {
                 if (link.isDropdown && link.categoryIds.length > 0) {
+                  // Flattened: each category renders as its own top-level link
+                  // instead of a hover dropdown.
                   const dropdownCats = categories.filter((c) => link.categoryIds.includes(c.id));
                   if (dropdownCats.length === 0) return null;
-                  return (
-                    <div
-                      key={link.id}
-                      className='relative'
-                      onMouseEnter={() => setOpenDropdown(link.id)}
-                      onMouseLeave={() => setOpenDropdown(null)}>
-                      <button
-                        type='button'
-                        className='flex items-center gap-1 px-3 py-1.5 text-[15px] font-semibold text-gray-800 hover:text-black transition-colors tracking-wide'>
-                        <ChevronDown className='w-3 h-3' />
-                        {link.label}
-                      </button>
-                      {openDropdown === link.id && (
-                        <div dir="ltr" className='absolute top-full start-0 mt-0 min-w-[180px] bg-white border border-gray-200 shadow-lg z-50 animate-in fade-in slide-in-from-top-1 duration-200'>
-                          {dropdownCats.map((cat) => (
-                            <Link
-                              key={cat.id}
-                              href={`/shop?category=${cat.slug || cat.id}`}
-                              className='block px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-black transition-colors whitespace-nowrap'>
-                              {cat.name}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
+                  return dropdownCats.map((cat) => (
+                    <Link
+                      key={cat.id}
+                      href={`/shop?category=${cat.slug || cat.id}`}
+                      className='px-2 xl:px-3 py-1.5 text-sm xl:text-[15px] font-semibold text-gray-800 hover:text-black transition-colors tracking-wide whitespace-nowrap'>
+                      {cat.name}
+                    </Link>
+                  ));
                 }
                 return (
                   <Link
@@ -550,33 +518,19 @@ export function MinimalNavbar() {
                         <div className='flex flex-col gap-4'>
                           {links.map((link) => {
                             if (link.isDropdown && link.categoryIds.length > 0) {
+                              // Flattened: each category renders as its own
+                              // top-level link instead of an accordion.
                               const dropdownCats = categories.filter((c) => link.categoryIds.includes(c.id));
                               if (dropdownCats.length === 0) return null;
-                              const isExpanded = mobileExpanded === link.id;
-                              return (
-                                <div key={link.id}>
-                                  <button
-                                    type='button'
-                                    onClick={() => setMobileExpanded(isExpanded ? null : link.id)}
-                                    className='flex items-center justify-between w-full text-sm font-normal text-gray-800 hover:text-black transition-colors tracking-wide'>
-                                    {link.label}
-                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
-                                  </button>
-                                  {isExpanded && (
-                                    <div className='flex flex-col gap-2 mt-2 ps-4 animate-in fade-in slide-in-from-top-1 duration-200'>
-                                      {dropdownCats.map((cat) => (
-                                        <Link
-                                          key={cat.id}
-                                          href={`/shop?category=${cat.slug || cat.id}`}
-                                          className='text-sm text-gray-600 hover:text-black transition-colors'
-                                          onClick={handleCloseSheet}>
-                                          {cat.name}
-                                        </Link>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              );
+                              return dropdownCats.map((cat) => (
+                                <Link
+                                  key={cat.id}
+                                  href={`/shop?category=${cat.slug || cat.id}`}
+                                  className='text-sm font-normal text-gray-800 hover:text-black transition-colors tracking-wide'
+                                  onClick={handleCloseSheet}>
+                                  {cat.name}
+                                </Link>
+                              ));
                             }
                             return (
                               <Link
@@ -589,17 +543,6 @@ export function MinimalNavbar() {
                             );
                           })}
                         </div>
-
-                        {/* Language toggle */}
-                        <button
-                          type='button'
-                          onClick={() => {
-                            toggleLocale();
-                          }}
-                          className='mt-4 flex items-center gap-2 text-sm text-gray-600 hover:text-black transition-colors'>
-                          <Globe className='w-4 h-4' />
-                          {locale === "en" ? "العربية" : "English"}
-                        </button>
 
                         {session && (
                           <div className='border-t border-gray-100 pt-5 mt-6 space-y-4'>
@@ -617,14 +560,30 @@ export function MinimalNavbar() {
                                 <LayoutDashboard className="w-4 h-4" /> Dashboard
                               </Link>
                             )}
+                          </div>
+                        )}
+
+                        {/* Language toggle — bottom of menu, just above Logout */}
+                        <div className={session ? "mt-4 space-y-4" : "border-t border-gray-100 pt-5 mt-6"}>
+                          <button
+                            type='button'
+                            onClick={() => {
+                              toggleLocale();
+                            }}
+                            className='flex items-center gap-2 text-sm text-gray-600 hover:text-black transition-colors'>
+                            <Globe className='w-4 h-4' />
+                            {locale === "en" ? "العربية" : "English"}
+                          </button>
+
+                          {session && (
                             <button
                               onClick={() => { logout(); handleCloseSheet(); }}
                               className='flex items-center gap-2.5 text-sm text-red-600 hover:text-red-700'
                               type='button'>
                               <LogOut className="w-4 h-4" /> Logout
                             </button>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                   </SheetContent>

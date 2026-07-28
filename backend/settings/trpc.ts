@@ -19,6 +19,8 @@ import { getVariantPresets } from "./get-variant-presets";
 import { updateVariantPresets } from "./update-variant-presets";
 import { getComingSoonMode } from "./get-coming-soon";
 import { setComingSoonMode } from "./set-coming-soon";
+import { getProductPageContent } from "./get-product-page-content";
+import { updateProductPageContent } from "./update-product-page-content";
 import { linkTreeConfigSchema } from "#root/shared/types/link-tree";
 import { Effect } from "effect";
 import { EmailService, renderEmailTemplate } from "#root/shared/email/service.js";
@@ -123,6 +125,76 @@ export const settingsRouter = router({
     .mutation(async ({ ctx, input }) => {
       return runBackendEffect(
         setComingSoonMode(input.enabled).pipe(provideDatabase(ctx)),
+      ).then(serializeBackendEffectResult);
+    }),
+
+  /** Public: product page needs this to render Shipping/Returns/FAQs text */
+  getProductPageContent: publicProcedure.query(async ({ ctx }) => {
+    return runBackendEffect(
+      getProductPageContent().pipe(provideDatabase(ctx)),
+    ).then(serializeBackendEffectResult);
+  }),
+
+  /** Admin-only: update Shipping/Returns/FAQs text shown on the product page */
+  updateProductPageContent: adminProcedure
+    .input(
+      z.object({
+        content: z.object({
+          shippingText: z.string().max(500).optional(),
+          shippingTextAr: z.string().max(500).optional(),
+          returnsText: z.string().max(500).optional(),
+          returnsTextAr: z.string().max(500).optional(),
+          faqs: z
+            .array(
+              z.object({
+                question: z.string().max(200),
+                questionAr: z.string().max(200).optional(),
+                answer: z.string().max(500),
+                answerAr: z.string().max(500).optional(),
+              }),
+            )
+            .max(20)
+            .optional(),
+        }),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return runBackendEffect(
+        updateProductPageContent(input.content).pipe(provideDatabase(ctx)),
+      ).then(serializeBackendEffectResult);
+    }),
+
+  /**
+   * Public: footer newsletter signup. Shares the same subscriber list as
+   * the coming-soon page (so both show up together on the Settings
+   * subscribers table) but does NOT send the "you got here early" email —
+   * that copy only makes sense for the coming-soon flow.
+   */
+  subscribeNewsletter: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ ctx, input }) => {
+      return runBackendEffect(
+        Effect.gen(function* ($) {
+          const existing = yield* $(
+            query((db) =>
+              db
+                .select({ id: Tables.comingSoonSubscribers.id })
+                .from(Tables.comingSoonSubscribers)
+                .where(eq(Tables.comingSoonSubscribers.email, input.email))
+                .limit(1),
+            ),
+          );
+
+          if (existing.length === 0) {
+            yield* $(
+              query((db) =>
+                db.insert(Tables.comingSoonSubscribers).values({ email: input.email }),
+              ),
+            );
+          }
+
+          return { subscribed: true };
+        }).pipe(provideDatabase(ctx)),
       ).then(serializeBackendEffectResult);
     }),
 

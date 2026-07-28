@@ -179,6 +179,10 @@ export interface HomepageMarqueeContent {
   enabled: boolean;
   text: string;
   textAr?: string;
+  /** Background color (hex). Defaults to white when unset. */
+  backgroundColor?: string;
+  /** Text color (hex). Defaults to black when unset. */
+  textColor?: string;
 }
 
 /**

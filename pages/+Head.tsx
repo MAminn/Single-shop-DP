@@ -111,6 +111,21 @@ export default function HeadDefault() {
       {ogImageUrl && (
         <>
           <meta property='og:image' content={ogImageUrl} />
+          <meta property='og:image:secure_url' content={ogImageUrl} />
+          <meta
+            property='og:image:type'
+            content={
+              ogImageUrl.endsWith(".png")
+                ? "image/png"
+                : ogImageUrl.endsWith(".webp")
+                  ? "image/webp"
+                  : "image/jpeg"
+            }
+          />
+          {/* Required by most link-preview crawlers (WhatsApp, Facebook, iMessage) —
+              without explicit width/height some of them refuse to render the image. */}
+          <meta property='og:image:width' content='1200' />
+          <meta property='og:image:height' content='630' />
           <meta property='og:image:alt' content={`${siteTitle} logo`} />
         </>
       )}

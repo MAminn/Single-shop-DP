@@ -1,6 +1,10 @@
 import { query } from "#root/shared/database/drizzle/db";
-import { product, productReview } from "#root/shared/database/drizzle/schema";
-import { desc, eq } from "drizzle-orm";
+import {
+  file,
+  product,
+  productReview,
+} from "#root/shared/database/drizzle/schema";
+import { and, desc, eq } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 
@@ -12,7 +16,7 @@ export const viewReviews = (input: z.infer<typeof viewReviewsSchema>) =>
   Effect.gen(function* ($) {
     return yield* $(
       query(async (db) => {
-        const reviews = await db
+        const rawReviews = await db
           .select({
             id: productReview.id,
             productId: productReview.productId,
@@ -21,11 +25,23 @@ export const viewReviews = (input: z.infer<typeof viewReviewsSchema>) =>
             rating: productReview.rating,
             comment: productReview.comment,
             createdAt: productReview.createdAt,
+            imageDiskname: file.diskname,
           })
           .from(productReview)
-          .where(eq(productReview.productId, input.productId))
+          .leftJoin(file, eq(productReview.imageId, file.id))
+          .where(
+            and(
+              eq(productReview.productId, input.productId),
+              eq(productReview.status, "approved"),
+            ),
+          )
           .orderBy(desc(productReview.createdAt))
           .execute();
+
+        const reviews = rawReviews.map(({ imageDiskname, ...rest }) => ({
+          ...rest,
+          imageUrl: imageDiskname ? `/uploads/${imageDiskname}` : null,
+        }));
 
         // Calculate average rating
         const avgRating =
@@ -52,7 +68,7 @@ export const viewAllReviews = (input: z.infer<typeof viewAllReviewsSchema>) =>
   Effect.gen(function* ($) {
     return yield* $(
       query(async (db) => {
-        const reviews = await db
+        const rawReviews = await db
           .select({
             id: productReview.id,
             productId: productReview.productId,
@@ -61,14 +77,22 @@ export const viewAllReviews = (input: z.infer<typeof viewAllReviewsSchema>) =>
             userName: productReview.userName,
             rating: productReview.rating,
             comment: productReview.comment,
+            status: productReview.status,
             createdAt: productReview.createdAt,
+            imageDiskname: file.diskname,
           })
           .from(productReview)
           .innerJoin(product, eq(productReview.productId, product.id))
+          .leftJoin(file, eq(productReview.imageId, file.id))
           .orderBy(desc(productReview.createdAt))
           .limit(input.limit ?? 50)
           .offset(input.offset ?? 0)
           .execute();
+
+        const reviews = rawReviews.map(({ imageDiskname, ...rest }) => ({
+          ...rest,
+          imageUrl: imageDiskname ? `/uploads/${imageDiskname}` : null,
+        }));
 
         return { reviews };
       })

@@ -119,6 +119,8 @@ const HomepageContentSchema = z.object({
       enabled: z.boolean(),
       text: z.string(),
       textAr: z.string().nullish(),
+      backgroundColor: z.string().nullish(),
+      textColor: z.string().nullish(),
     })
     .nullish(),
   promoLine: z

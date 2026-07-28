@@ -9,6 +9,7 @@ import { QuickViewDialog } from "#root/components/template-system/minimal/QuickV
 import { TestimonialsSection } from "#root/components/template-system/shared/TestimonialsSection";
 import type { MinimalProduct } from "#root/components/template-system/minimal/MinimalProductCard";
 import { HomeFeaturedProducts } from "../home/HomeFeaturedProducts";
+import { ScrollToProductsButton } from "#root/components/template-system/minimal/ScrollToProductsButton";
 import type { FeaturedProduct } from "../home/HomeFeaturedProducts";
 import type { CategoryStripItem } from "#root/components/shop/CategoryStrip";
 import type { NewArrivalProduct } from "#root/components/shop/NewArrivals";
@@ -255,6 +256,7 @@ export function LandingTemplateMinimal({
 
   return (
     <div className={`landing-template-minimal overflow-x-hidden bg-white ${className}`}>
+      <ScrollToProductsButton targetId='home-products' />
       {/* ═══════════════════════════════════════════════
           2. HERO IMAGE CAROUSEL
           ═══════════════════════════════════════════════ */}
@@ -341,6 +343,7 @@ export function LandingTemplateMinimal({
       {/* ═══════════════════════════════════════════════
           4. DISCOUNTED / ON-SALE PRODUCTS CAROUSEL
           ═══════════════════════════════════════════════ */}
+      <div id='home-products' className='scroll-mt-24' />
       {content.discountedProducts?.enabled !== false &&
         discountedMinimal.length > 0 && (
           <MinimalProductCarousel

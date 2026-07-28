@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef } from "react";
-import { Eye, Heart, ShoppingCart } from "lucide-react";
+import { Eye, Heart, ShoppingBag } from "lucide-react";
 import { Link } from "#root/components/utils/Link";
 import { useCart } from "#root/lib/context/CartContext";
 import { useTracking } from "#root/frontend/contexts/TrackingContext";
@@ -202,15 +202,18 @@ export function MinimalProductCard({
       </div>
 
       {/* Add to cart button */}
-      <button
-        ref={addToCartBtnRef}
-        type='button'
-        onClick={handleAddToCart}
-        disabled={!product.available || isAdding}
-        data-add-to-cart='true'
-        className='mt-1 w-full py-2.5 border border-stone-900 text-stone-900 text-xs font-medium tracking-wide uppercase hover:bg-stone-900 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed'>
-        {product.available ? t("add_to_cart") : t("out_of_stock")}
-      </button>
+      <div className='px-4'>
+        <button
+          ref={addToCartBtnRef}
+          type='button'
+          onClick={handleAddToCart}
+          disabled={!product.available || isAdding}
+          data-add-to-cart='true'
+          className='mt-1 w-full py-2.5 flex items-center justify-center gap-2 rounded-md border border-stone-900 text-stone-900 text-xs font-medium tracking-wide uppercase hover:bg-stone-900 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed'>
+          {product.available ? t("add_to_cart") : t("out_of_stock")}
+          {product.available && <ShoppingBag className='w-3.5 h-3.5' />}
+        </button>
+      </div>
     </div>
   );
 }
