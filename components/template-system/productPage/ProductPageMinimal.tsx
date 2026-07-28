@@ -660,6 +660,69 @@ export function ProductPageMinimal({
               ) : null;
             })()}
 
+            {/* Variant Selector + Quantity stepper + Add to Cart + Buy Now */}
+            <div className='pt-2 border-t border-gray-100 space-y-3'>
+              {/* Variant Selector */}
+              {product.variants && product.variants.length > 0 && (
+                <VariantSelector
+                  variants={product.variants}
+                  selectedVariants={selectedVariants}
+                  onVariantChange={(name, value) =>
+                    setSelectedVariants((prev) => ({ ...prev, [name]: value }))
+                  }
+                  strikethroughMap={strikethroughMap}
+                />
+              )}
+
+              {/* Quantity stepper + Add to Cart, side by side */}
+              <div className='flex items-stretch gap-2'>
+                {product.available && (
+                  <div className='flex items-center border border-gray-300 shrink-0'>
+                    <button
+                      onClick={decrementQty}
+                      disabled={quantity <= 1}
+                      className='w-9 h-11 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors'
+                      aria-label='Decrease quantity'>
+                      <Minus className='w-3.5 h-3.5' />
+                    </button>
+                    <span className='w-8 h-11 flex items-center justify-center text-sm font-medium tabular-nums'>
+                      {quantity}
+                    </span>
+                    <button
+                      onClick={incrementQty}
+                      disabled={quantity >= maxQty}
+                      className='w-9 h-11 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors'
+                      aria-label='Increase quantity'>
+                      <Plus className='w-3.5 h-3.5' />
+                    </button>
+                  </div>
+                )}
+                <Button
+                  ref={addToCartBtnRef}
+                  size='lg'
+                  variant='outline'
+                  className='flex-1 border-gray-900 text-gray-900 hover:bg-gray-50 rounded-none h-11 py-0 text-sm font-medium shadow-none transition-all gap-2'
+                  onClick={handleAddToCart}
+                  disabled={!product.available || !allVariantsSelected}
+                  data-add-to-cart='true'>
+                  <ShoppingCart className='w-4 h-4' />
+                  {product.available ? t("add_to_cart") : t("out_of_stock")}
+                </Button>
+              </div>
+
+              {/* Buy Now — skips the cart, goes straight to checkout */}
+              {product.available && (
+                <Button
+                  size='lg'
+                  className='w-full bg-red-600 hover:bg-red-700 text-white rounded-none py-4 text-sm font-semibold shadow-none hover:shadow-lg transition-all'
+                  onClick={handleBuyNow}
+                  disabled={!allVariantsSelected}
+                  data-buy-now='true'>
+                  {t("buy_now")}
+                </Button>
+              )}
+            </div>
+
             {/* ── Product info accordion: Scent Notes / About / Shipping / Returns / FAQs / Details / Best Layered With ── */}
             <Accordion type='single' collapsible defaultValue='scent-notes' className='pt-2 border-t border-gray-100'>
               {(() => {
@@ -904,78 +967,6 @@ export function ProductPageMinimal({
                 );
               })()}
             </Accordion>
-
-            {/* Price again + Quantity + Add to Cart */}
-            <div className='pt-2 border-t border-gray-100 space-y-3'>
-              <div className='flex items-baseline justify-between'>
-                <span className='text-xs text-gray-500'>
-                  {t("price") || "Price"}
-                </span>
-                <span className='text-base font-semibold text-gray-900'>
-                  {displayPrice.toFixed(2)} {STORE_CURRENCY}
-                </span>
-              </div>
-
-              {/* Variant Selector */}
-              {product.variants && product.variants.length > 0 && (
-                <VariantSelector
-                  variants={product.variants}
-                  selectedVariants={selectedVariants}
-                  onVariantChange={(name, value) =>
-                    setSelectedVariants((prev) => ({ ...prev, [name]: value }))
-                  }
-                  strikethroughMap={strikethroughMap}
-                />
-              )}
-
-              {/* Quantity stepper + Add to Cart, side by side */}
-              <div className='flex items-stretch gap-2'>
-                {product.available && (
-                  <div className='flex items-center border border-gray-300 shrink-0'>
-                    <button
-                      onClick={decrementQty}
-                      disabled={quantity <= 1}
-                      className='w-9 h-11 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors'
-                      aria-label='Decrease quantity'>
-                      <Minus className='w-3.5 h-3.5' />
-                    </button>
-                    <span className='w-8 h-11 flex items-center justify-center text-sm font-medium tabular-nums'>
-                      {quantity}
-                    </span>
-                    <button
-                      onClick={incrementQty}
-                      disabled={quantity >= maxQty}
-                      className='w-9 h-11 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 transition-colors'
-                      aria-label='Increase quantity'>
-                      <Plus className='w-3.5 h-3.5' />
-                    </button>
-                  </div>
-                )}
-                <Button
-                  ref={addToCartBtnRef}
-                  size='lg'
-                  variant='outline'
-                  className='flex-1 border-gray-900 text-gray-900 hover:bg-gray-50 rounded-none h-11 py-0 text-sm font-medium shadow-none transition-all gap-2'
-                  onClick={handleAddToCart}
-                  disabled={!product.available || !allVariantsSelected}
-                  data-add-to-cart='true'>
-                  <ShoppingCart className='w-4 h-4' />
-                  {product.available ? t("add_to_cart") : t("out_of_stock")}
-                </Button>
-              </div>
-
-              {/* Buy Now — skips the cart, goes straight to checkout */}
-              {product.available && (
-                <Button
-                  size='lg'
-                  className='w-full bg-red-600 hover:bg-red-700 text-white rounded-none py-4 text-sm font-semibold shadow-none hover:shadow-lg transition-all'
-                  onClick={handleBuyNow}
-                  disabled={!allVariantsSelected}
-                  data-buy-now='true'>
-                  {t("buy_now")}
-                </Button>
-              )}
-            </div>
           </div>
         </div>
       </div>

@@ -66,7 +66,7 @@ export function CartPageMinimalTemplate({
 
   return (
     <>
-      <div className="min-h-screen bg-white pb-24 sm:pb-0">
+      <div className="min-h-screen bg-white pb-60 sm:pb-0">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
 
           {/* Page title */}
@@ -366,7 +366,7 @@ export function CartPageMinimalTemplate({
       </div>
 
       {/* ── Mobile sticky checkout bar ─────────────────────────────────────── */}
-      <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-100 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
+      <div className="sm:hidden fixed bottom-16 inset-x-0 z-40 bg-white border-t border-gray-100 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
         <AppliedOffersSavings
           appliedOffers={appliedOffers}
           promoDiscount={totals.discount ?? 0}
