@@ -67,6 +67,7 @@ export const updatePromoCodeSchema = z
     appliesToAllProducts: z.boolean().optional(),
     applicableProductIds: z.array(z.string().uuid()).optional(),
     applicableCategoryIds: z.array(z.string().uuid()).optional(),
+    showOnOffersPage: z.boolean().optional(),
   })
   .refine(
     (data) => {
@@ -241,6 +242,8 @@ export const updatePromoCode = (
           : null;
     if (input.appliesToAllProducts !== undefined)
       valuesToUpdate.appliesToAllProducts = input.appliesToAllProducts;
+    if (input.showOnOffersPage !== undefined)
+      valuesToUpdate.showOnOffersPage = input.showOnOffersPage;
 
     if (
       input.status === undefined &&

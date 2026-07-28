@@ -93,6 +93,35 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
           .from(productVariant)
           .where(eq(productVariant.productId, foundProduct.id));
 
+        // Fetch the admin-picked "Best Layered With" products, if any.
+        // Falls back to [] when unset — the frontend uses its own
+        // category-based suggestions in that case.
+        const bestLayeredWithIds = (foundProduct.bestLayeredWithIds ??
+          []) as string[];
+        const bestLayeredWith =
+          bestLayeredWithIds.length > 0
+            ? await db
+                .select({
+                  id: product.id,
+                  name: product.name,
+                  price: product.price,
+                  discountPrice: product.discountPrice,
+                  stock: product.stock,
+                  imageUrl: file.diskname,
+                  categoryName: category.name,
+                })
+                .from(product)
+                .leftJoin(file, eq(product.imageId, file.id))
+                .innerJoin(category, eq(product.categoryId, category.id))
+                .where(
+                  and(
+                    inArray(product.id, bestLayeredWithIds),
+                    eq(product.deleted, false),
+                    eq(product.hidden, false),
+                  ),
+                )
+            : [];
+
         // Format the final product object
         const formattedProduct = {
           ...foundProduct,
@@ -135,6 +164,19 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
           })),
           rating: 0,
           reviewCount: 0,
+          bestLayeredWith: bestLayeredWith.map((p) => ({
+            id: p.id,
+            name: p.name,
+            price: Number(p.price),
+            discountPrice: p.discountPrice ? Number(p.discountPrice) : null,
+            stock: p.stock,
+            available: p.stock > 0,
+            imageUrl: p.imageUrl ? `/uploads/${p.imageUrl}` : undefined,
+            images: p.imageUrl
+              ? [{ url: `/uploads/${p.imageUrl}`, isPrimary: true }]
+              : [],
+            categoryName: formatCategoryName(p.categoryName),
+          })),
         };
 
         return formattedProduct;
@@ -203,4 +245,15 @@ export type ProductByIdResult = {
     ingredientsAr?: string;
     badges?: string[];
   } | null;
+  bestLayeredWith: {
+    id: string;
+    name: string;
+    price: number;
+    discountPrice: number | null;
+    stock: number;
+    available: boolean;
+    imageUrl?: string;
+    images: { url: string; isPrimary?: boolean }[];
+    categoryName: string;
+  }[];
 };

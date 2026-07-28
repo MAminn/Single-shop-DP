@@ -52,6 +52,7 @@ export const createProductSchema = z.object({
   sortOrder: z.number().int().min(0).optional(),
   hidden: z.boolean().optional().default(false),
   fragranceInfo: fragranceInfoSchema,
+  bestLayeredWithIds: z.array(z.string().uuid()).max(12).optional(),
 });
 
 export const createProduct = (
@@ -94,6 +95,7 @@ export const createProduct = (
               sortOrder: data.sortOrder ?? 0,
               hidden: data.hidden ?? false,
               fragranceInfo: data.fragranceInfo ?? null,
+              bestLayeredWithIds: data.bestLayeredWithIds ?? [],
             })
             .returning()
             .then((data) => data[0]);

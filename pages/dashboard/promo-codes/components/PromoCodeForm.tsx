@@ -99,6 +99,7 @@ const formSchema = z.object({
   appliesToAllProducts: z.boolean().default(true),
   productIds: z.array(z.string()).optional(),
   categoryIds: z.array(z.string()).optional(),
+  showOnOffersPage: z.boolean().default(false),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -143,6 +144,7 @@ export function PromoCodeForm({
       appliesToAllProducts: true,
       productIds: [],
       categoryIds: [],
+      showOnOffersPage: false,
     },
   });
 
@@ -173,6 +175,7 @@ export function PromoCodeForm({
             appliesToAllProducts: promoCode.appliesToAllProducts,
             productIds: promoCode.applicableProductIds,
             categoryIds: promoCode.applicableCategoryIds,
+            showOnOffersPage: promoCode.showOnOffersPage,
           });
 
           setSelectedProducts(promoCode.applicableProductIds);
@@ -217,6 +220,7 @@ export function PromoCodeForm({
         applicableCategoryIds: values.appliesToAllProducts
           ? []
           : selectedCategories,
+        showOnOffersPage: values.showOnOffersPage,
       };
 
       if (promoCodeId) {
@@ -321,6 +325,29 @@ export function PromoCodeForm({
                       />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="showOnOffersPage"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Show on Offers page</FormLabel>
+                      <FormDescription>
+                        When checked, this code appears in the "Active Promo
+                        Codes" section of the public /offers page for
+                        customers to copy.
+                      </FormDescription>
+                    </div>
                   </FormItem>
                 )}
               />

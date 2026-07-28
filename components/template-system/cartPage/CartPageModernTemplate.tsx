@@ -138,12 +138,12 @@ export function CartPageModernTemplate({
         </h1>
 
         {/* Offer progress banner */}
-        <OfferProgressBanner
+        {/* <OfferProgressBanner
           cartSubtotal={cartSubtotal}
           cartQuantity={cartQuantity}
           appliedOffers={appliedOffers}
           currency={currency}
-        />
+        /> */}
 
         <div className='lg:grid lg:grid-cols-[1fr_380px] lg:gap-12'>
           {/* ── Items list ─────────────────────────────────── */}

@@ -47,6 +47,131 @@ export interface FileMetadata {
 }
 
 /**
+ * Picker for the "Best Layered With" products shown on this product's page.
+ * Fetches the product catalog once on mount and lets the admin search/select
+ * up to 12 products; leaving it empty falls back to the storefront's
+ * automatic category-based suggestions.
+ */
+function BestLayeredWithPicker({
+  value,
+  onChange,
+  excludeProductId,
+}: {
+  value: string[];
+  onChange: (ids: string[]) => void;
+  excludeProductId?: string;
+}) {
+  const [options, setOptions] = useState<
+    { id: string; name: string }[]
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    trpc.product.view
+      .query({ limit: 100 })
+      .then((res) => {
+        if (cancelled || !res.success || !res.result) return;
+        const items = (res.result.products ?? [])
+          .map((p: any) => ({ id: p.product.id as string, name: p.product.name as string }))
+          .filter((p: { id: string }) => p.id !== excludeProductId);
+        setOptions(items);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [excludeProductId]);
+
+  const selected = options.filter((o) => value.includes(o.id));
+
+  return (
+    <FormItem className='flex flex-col'>
+      <FormLabel>Best Layered With (Optional, up to 12)</FormLabel>
+      <p className='text-xs text-muted-foreground -mt-1 mb-1'>
+        Shown in the "Best Layered With" section on this product's page.
+        Leave empty to fall back to automatic category-based suggestions.
+      </p>
+      {selected.length > 0 && (
+        <div className='flex flex-wrap gap-2 mb-2'>
+          {selected.map((p) => (
+            <Badge key={p.id} className='p-2'>
+              {p.name}
+              <button
+                type='button'
+                className='ml-1'
+                onClick={() => onChange(value.filter((id) => id !== p.id))}>
+                ×
+              </button>
+            </Badge>
+          ))}
+        </div>
+      )}
+      <Popover>
+        <PopoverTrigger asChild>
+          <FormControl>
+            <Button
+              type='button'
+              variant='outline'
+              disabled={isLoading}
+              className={cn(
+                "w-full justify-between",
+                value.length === 0 && "text-muted-foreground",
+              )}>
+              {isLoading
+                ? "Loading products…"
+                : value.length === 0
+                  ? "Select products"
+                  : `${value.length} product${value.length === 1 ? "" : "s"} selected`}
+              <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+            </Button>
+          </FormControl>
+        </PopoverTrigger>
+        <PopoverContent className='w-full p-0'>
+          <Command>
+            <CommandInput placeholder='Search products...' />
+            <CommandList>
+              <CommandEmpty>No products found.</CommandEmpty>
+              <CommandGroup>
+                {options.map((p) => {
+                  const isSelected = value.includes(p.id);
+                  return (
+                    <CommandItem
+                      key={p.id}
+                      onSelect={() => {
+                        if (isSelected) {
+                          onChange(value.filter((id) => id !== p.id));
+                        } else if (value.length < 12) {
+                          onChange([...value, p.id]);
+                        } else {
+                          toast.error("You can pick up to 12 products");
+                        }
+                      }}>
+                      <div className='flex items-center'>
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            isSelected ? "opacity-100" : "opacity-0",
+                          )}
+                        />
+                        {p.name}
+                      </div>
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    </FormItem>
+  );
+}
+
+/**
  * Comma-separated text input for the badges array. Keeps its own local raw
  * text so a trailing/mid-typing comma isn't immediately stripped by the
  * split+trim+filter pass (that pass only runs when committing to the array).
@@ -135,6 +260,7 @@ export function ProductForm({
       ingredientsAr?: string;
       badges?: string[];
     } | null;
+    bestLayeredWithIds?: string[] | null;
   }>;
   categories: { id: string; name: string }[];
   vendors?: { id: string; name: string }[];
@@ -213,6 +339,7 @@ export function ProductForm({
         badges: z.array(z.string().max(50)).max(10).optional(),
       })
       .optional(),
+    bestLayeredWithIds: z.array(z.string()).max(12).optional().default([]),
   });
 
   // Debug initial values
@@ -251,6 +378,9 @@ export function ProductForm({
           : initialValues?.categoryId || "",
       hidden: initialValues?.hidden ?? false,
       fragranceInfo: initialValues?.fragranceInfo ?? undefined,
+      bestLayeredWithIds: Array.isArray(initialValues?.bestLayeredWithIds)
+        ? initialValues.bestLayeredWithIds
+        : [],
     },
   });
 
@@ -658,6 +788,18 @@ export function ProductForm({
               Arabic versions can be added later via direct API if needed — English fields above are shown when no Arabic override is set.
             </p>
           </div>
+
+          <FormField
+            control={form.control}
+            name='bestLayeredWithIds'
+            render={({ field }) => (
+              <BestLayeredWithPicker
+                value={field.value ?? []}
+                onChange={field.onChange}
+                excludeProductId={initialValues?.id}
+              />
+            )}
+          />
 
           <div className='grid grid-cols-2 gap-4'>
             <FormField

@@ -351,6 +351,10 @@ export const product = pgTable("product", {
     ingredientsAr?: string;
     badges?: string[];
   }>(),
+  /** Admin-picked product IDs shown in the "Best Layered With" carousel on this product's page. Empty/unset falls back to the automatic category-based suggestions. */
+  bestLayeredWithIds: jsonb("best_layered_with_ids")
+    .default([])
+    .$type<string[]>(),
 });
 
 export const productVariant = pgTable("product_variant", {
@@ -825,6 +829,10 @@ export const promoCode = pgTable(
     appliesToAllProducts: boolean("applies_to_all_products")
       .notNull()
       .default(true),
+
+    // Admin-controlled: only codes with this on show up in the public
+    // "Active Promo Codes" section of the /offers page.
+    showOnOffersPage: boolean("show_on_offers_page").notNull().default(false),
 
     createdBy: text("created_by").references(() => user.id, {
       onDelete: "set null",

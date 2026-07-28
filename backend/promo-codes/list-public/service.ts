@@ -25,6 +25,7 @@ export const listPublicPromoCodes = () =>
           .where(
             and(
               eq(promoCode.status, "active"),
+              eq(promoCode.showOnOffersPage, true),
               or(isNull(promoCode.startDate), lte(promoCode.startDate, now)),
               or(isNull(promoCode.endDate), gte(promoCode.endDate, now)),
             ),

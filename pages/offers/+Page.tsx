@@ -153,15 +153,15 @@ export default function OffersPage() {
   }
 
   return (
-    <div className='bg-white pb-24 lg:pb-12'>
-      <div className='max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12'>
+    <div className='bg-white pb-24 lg:pb-12 overflow-x-hidden'>
+      <div className='max-w-3xl lg:max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 lg:py-16'>
         {/* Heading */}
-        <div className='mb-8'>
-          <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 inline-block relative pb-2'>
+        <div className='mb-8 lg:mb-12'>
+          <h1 className='text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 inline-block relative pb-2'>
             {isAr ? "العروض" : "Offers"}
             <span className='absolute bottom-0 start-0 w-12 h-[3px] bg-gray-900' />
           </h1>
-          <p className='text-sm text-gray-500 mt-3'>
+          <p className='text-sm lg:text-base text-gray-500 mt-3'>
             {isAr
               ? "عروض حصرية على عطورك المفضلة."
               : "Exclusive deals on your favorite scents."}
@@ -177,7 +177,7 @@ export default function OffersPage() {
             {isAr ? "لا توجد عروض نشطة حالياً." : "No active offers right now."}
           </p>
         ) : (
-          <div className='space-y-4'>
+          <div className='space-y-4 lg:space-y-5'>
             {offers.map((offer, idx) => {
               const isUnlocked = appliedOffers.some((a) => a.name === offer.name);
               const isFlashing = justUnlocked.has(offer.name);
@@ -186,7 +186,7 @@ export default function OffersPage() {
                 <div
                   key={offer.id}
                   className={cn(
-                    "relative border rounded-lg p-3 sm:p-4 flex flex-row items-start gap-3 transition-colors duration-500",
+                    "relative border rounded-lg p-3 sm:p-4 lg:p-6 flex flex-row items-start gap-3 sm:gap-4 lg:gap-6 transition-colors duration-500",
                     isUnlocked
                       ? "border-emerald-400 bg-emerald-50/60 animate-offer-card-glow"
                       : "border-gray-200 bg-white",
@@ -195,37 +195,37 @@ export default function OffersPage() {
                   <img
                     src={bottleImageFor(offer.condition)}
                     alt=''
-                    className='w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-md bg-gray-50 shrink-0 self-start'
+                    className='w-16 h-16 sm:w-24 sm:h-24 lg:w-40 lg:h-40 object-cover rounded-md bg-gray-50 shrink-0 self-start'
                   />
                   <div className='flex-1 min-w-0'>
-                    <div className='flex flex-wrap items-center gap-1.5 mb-1.5'>
+                    <div className='flex flex-wrap items-center gap-1.5 lg:gap-3 mb-1.5 lg:mb-3'>
                       {badge && (
-                        <span className='inline-block bg-black text-white text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded'>
+                        <span className='inline-block bg-black text-white text-[9px] sm:text-[10px] lg:text-xs font-bold uppercase tracking-wide px-2 py-0.5 lg:px-3 lg:py-1.5 rounded'>
                           {badge}
                         </span>
                       )}
                       {isUnlocked && (
                         <span
                           className={cn(
-                            "inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-full",
+                            "inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-[10px] lg:text-sm font-bold px-2 py-1 lg:px-3 lg:py-1.5 rounded-full",
                             isFlashing && "animate-offer-check-pop",
                           )}>
-                          <Check className='w-3 h-3' />
+                          <Check className='w-3 h-3 lg:w-4 lg:h-4' />
                           {isAr ? "لقد فتحت هذا العرض!" : "You have unlocked this offer!"}
                         </span>
                       )}
                     </div>
-                    <h3 className='text-sm font-bold text-gray-900 uppercase'>
+                    <h3 className='text-sm sm:text-base lg:text-2xl font-bold text-gray-900 uppercase'>
                       {offer.name}
                     </h3>
                     {offer.description && (
-                      <p className='text-xs text-gray-600 mt-0.5 mb-2.5'>
+                      <p className='text-xs sm:text-sm lg:text-base text-gray-600 mt-0.5 lg:mt-2 mb-2.5 lg:mb-5'>
                         {offer.description}
                       </p>
                     )}
                     <Link
                       href='/shop'
-                      className='inline-flex items-center gap-1.5 bg-black hover:bg-gray-900 text-white text-[11px] font-semibold uppercase tracking-wide px-3 py-2 rounded-md transition-colors'>
+                      className='inline-flex items-center gap-1.5 bg-black hover:bg-gray-900 text-white text-[11px] sm:text-xs lg:text-sm font-semibold uppercase tracking-wide px-3 py-2 lg:px-6 lg:py-3 rounded-md transition-colors'>
                       {isAr ? "تسوق الآن" : "Shop Now"} →
                     </Link>
                   </div>
@@ -237,17 +237,17 @@ export default function OffersPage() {
 
         {/* Active promo codes */}
         {promoCodes.length > 0 && (
-          <div className='mt-10 border border-gray-200 rounded-lg bg-gray-50 p-4 sm:p-5'>
+          <div className='mt-10 lg:mt-14 border border-gray-200 rounded-lg bg-gray-50 p-4 sm:p-5 lg:p-8'>
             <div className='flex items-center gap-2 mb-1'>
-              <Tag className='w-4 h-4 text-gray-700' />
-              <h4 className='text-sm font-bold text-gray-900'>
+              <Tag className='w-4 h-4 lg:w-5 lg:h-5 text-gray-700' />
+              <h4 className='text-sm lg:text-lg font-bold text-gray-900'>
                 {isAr ? "أكواد الخصم النشطة" : "Active Promo Codes"}
               </h4>
             </div>
-            <p className='text-xs text-gray-500 mb-4'>
+            <p className='text-xs lg:text-sm text-gray-500 mb-4 lg:mb-6'>
               {isAr ? "استخدم هذه الأكواد عند الدفع." : "Use these codes at checkout."}
             </p>
-            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-5'>
               {promoCodes.map((pc) => (
                 <div
                   key={pc.id}
@@ -279,14 +279,14 @@ export default function OffersPage() {
         )}
 
         {/* Newsletter */}
-        <div className='mt-8 border border-gray-200 rounded-lg p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4'>
-          <div className='flex items-start gap-2 flex-1'>
-            <Send className='w-4 h-4 text-gray-700 mt-0.5 shrink-0' />
+        <div className='mt-8 lg:mt-8 border border-gray-200 rounded-lg p-4 sm:p-5 lg:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 lg:gap-6'>
+          <div className='flex items-start gap-2 lg:gap-3 flex-1'>
+            <Send className='w-4 h-4 lg:w-5 lg:h-5 text-gray-700 mt-0.5 shrink-0' />
             <div>
-              <h4 className='text-sm font-bold text-gray-900'>
+              <h4 className='text-sm lg:text-lg font-bold text-gray-900'>
                 {isAr ? "اشترك لتصلك أحدث العروض" : "Subscribe to receive the latest offers"}
               </h4>
-              <p className='text-xs text-gray-500 mt-0.5'>
+              <p className='text-xs lg:text-sm text-gray-500 mt-0.5'>
                 {isAr
                   ? "كن أول من يعرف عن العطور الجديدة والعروض الحصرية."
                   : "Be the first to know about new scents and exclusive deals."}
@@ -300,7 +300,7 @@ export default function OffersPage() {
               value={newsletterEmail}
               onChange={(e) => setNewsletterEmail(e.target.value)}
               placeholder={isAr ? "بريدك الإلكتروني" : "Enter your email"}
-              className='flex-1 sm:w-56 px-3 py-2.5 text-sm rounded-md border border-gray-300 outline-none focus:border-gray-900 transition-colors bg-white'
+              className='flex-1 sm:w-56 lg:w-72 px-3 py-2.5 lg:py-3 text-sm lg:text-base rounded-md border border-gray-300 outline-none focus:border-gray-900 transition-colors bg-white'
             />
             <button
               type='submit'

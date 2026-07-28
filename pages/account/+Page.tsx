@@ -508,18 +508,18 @@ export default function Page() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 rounded-xl shadow-lg border-b border-stone-200 mb-6 overflow-x-auto overflow-y-auto scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-1 rounded-xl shadow-lg border-b border-stone-200 mb-6">
           {tabs.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               type="button"
               onClick={() => setActiveTab(id)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-[13px] font-medium whitespace-nowrap border-b-2 -mb-px transition-colors ${
+              className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-[11px] sm:text-[13px] font-medium whitespace-nowrap border-b-2 -mb-px transition-colors ${
                 activeTab === id
                   ? "border-stone-900 text-black"
                   : "border-transparent text-stone-400 hover:text-stone-700"
               }`}>
-              <Icon className="w-4 h-4" />
+              <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
               {label}
             </button>
           ))}

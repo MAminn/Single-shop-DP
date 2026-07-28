@@ -6,7 +6,7 @@ import { useWishlist } from "#root/lib/hooks/useWishlist";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import { cn } from "#root/lib/utils";
 
-const HIDDEN_PATHS = ["/checkout", "/login", "/register"];
+const HIDDEN_PATHS = ["/checkout"];
 
 /**
  * Sticky bottom nav bar for the minimal template, mobile only.

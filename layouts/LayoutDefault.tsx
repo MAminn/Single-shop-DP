@@ -263,7 +263,9 @@ function LayoutShell({
               />
             )}
             {!isDashboardRoute && isMinimal && <MinimalMobileBottomNav />}
-            <Toaster />
+            {/* Bottom-anchored toasts can visually collide with the fixed
+                mobile bottom nav on the minimal template — keep them up top there. */}
+            <Toaster position={isMinimal ? "top-center" : undefined} />
             <ShadcnToaster />
             {/* Phase 3 — page-transition overlay (CSS-only, SSR-inert) */}
             <div

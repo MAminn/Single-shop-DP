@@ -92,6 +92,8 @@ export interface ProductPageProduct extends FeaturedProduct {
   features?: ProductFeature[];
   variants?: { name: string; values: { value: string; priceModifier?: number; enabledOverride?: boolean }[] }[];
   fragranceInfo?: ProductFragranceInfo | null;
+  /** Admin-picked products for the "Best Layered With" section; empty/absent falls back to automatic category suggestions. */
+  bestLayeredWith?: FeaturedProduct[];
 }
 
 /**

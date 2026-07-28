@@ -224,8 +224,13 @@ export function ProductPageMinimal({
       .catch(() => {});
   }, [product?.variants]);
 
-  /* ── Merged category products ── */
+  /* ── Merged category products ──
+     Admin-picked "Best Layered With" products take priority; falls back to
+     the automatic category-based suggestions when none are set. */
   const mergedCategoryProducts = (() => {
+    if (product?.bestLayeredWith && product.bestLayeredWith.length > 0) {
+      return product.bestLayeredWith;
+    }
     if (!categoryGroups || categoryGroups.length === 0) return [];
     const seen = new Set<string>();
     const all: FeaturedProduct[] = [];
@@ -764,7 +769,7 @@ export function ProductPageMinimal({
                                   <span className='text-sm font-bold text-gray-900'>
                                     {isAr ? "المقدمة: " : "Top: "}
                                   </span>
-                                  <span className='text-sm font-medium text-gray-700'>{topNotes}</span>
+                                  <span className='text-xs font-light text-gray-700'>{topNotes}</span>
                                 </div>
                               )}
                               {middleNotes && (
@@ -772,7 +777,7 @@ export function ProductPageMinimal({
                                   <span className='text-sm font-bold text-gray-900'>
                                     {isAr ? "القلب: " : "Middle: "}
                                   </span>
-                                  <span className='text-sm font-medium text-gray-700'>{middleNotes}</span>
+                                  <span className='text-xs font-light text-gray-700'>{middleNotes}</span>
                                 </div>
                               )}
                               {baseNotes && (
@@ -780,16 +785,18 @@ export function ProductPageMinimal({
                                   <span className='text-sm font-bold text-gray-900'>
                                     {isAr ? "القاعدة: " : "Base: "}
                                   </span>
-                                  <span className='text-sm font-medium text-gray-700'>{baseNotes}</span>
+                                  <span className='text-xs font-light text-gray-700'>{baseNotes}</span>
                                 </div>
                               )}
                             </div>
                             {ingredients && (
                               <p className='text-xs text-gray-600 font-medium leading-relaxed border-t border-gray-200 pt-3'>
-                                <span className='font-bold text-gray-800'>
+                                <span className='font-bold text-lg text-gray-800'>
                                   {isAr ? "المكونات: " : "Ingredients: "}
                                 </span>
-                                {ingredients}
+                                <span className='text-sm text-gray-600 font-light'>
+                                  {ingredients}
+                                </span>
                               </p>
                             )}
                             {badges.length > 0 && (
@@ -825,44 +832,44 @@ export function ProductPageMinimal({
                             <div className='space-y-1 pt-1'>
                               {scentIntensity && (
                                 <div className='flex justify-between items-baseline py-1 border-b border-gray-200'>
-                                  <span className='text-sm font-semibold text-gray-600'>
+                                  <span className='text-sm font-semibold text-black'>
                                     {isAr ? "شدة العطر" : "Scent Intensity"}
                                   </span>
-                                  <span className='text-sm text-gray-900 font-bold'>{scentIntensity}</span>
+                                  <span className='text-xs  text-gray-600 font-bold'>{scentIntensity}</span>
                                 </div>
                               )}
                               {info?.concentration && (
                                 <div className='flex justify-between items-baseline py-1 border-b border-gray-200'>
-                                  <span className='text-sm font-semibold text-gray-600'>
+                                  <span className='text-sm font-semibold text-black'>
                                     {isAr ? "التركيز" : "Concentration"}
                                   </span>
-                                  <span className='text-sm text-gray-900 font-bold'>{info.concentration}</span>
+                                  <span className='text-xs text-gray-600 font-bold'>{info.concentration}</span>
                                 </div>
                               )}
                               {gender && (
                                 <div className='flex justify-between items-baseline py-1'>
-                                  <span className='text-sm font-semibold text-gray-600'>
+                                  <span className='text-sm font-semibold text-black'>
                                     {isAr ? "الفئة" : "Gender"}
                                   </span>
-                                  <span className='text-sm text-gray-900 font-bold'>{gender}</span>
+                                  <span className='text-xs  text-gray-600 font-bold'>{gender}</span>
                                 </div>
                               )}
                               {info?.longevity && (
                                 <div className='flex justify-between items-baseline py-1 border-t border-gray-200'>
-                                  <span className='text-sm font-semibold text-gray-600'>
+                                  <span className='text-sm font-semibold text-black'>
                                     {isAr ? "الثبات" : "Longevity"}
                                   </span>
-                                  <span className='text-sm text-gray-900 font-bold'>
+                                  <span className='text-xs text-gray-600 font-bold'>
                                     {isAr && info.longevityAr ? info.longevityAr : info.longevity}
                                   </span>
                                 </div>
                               )}
                               {info?.whenToUse && (
                                 <div className='flex justify-between items-baseline py-1'>
-                                  <span className='text-sm font-semibold text-gray-600'>
+                                  <span className='text-sm font-semibold text-black'>
                                     {isAr ? "يستخدم في" : "When to Use"}
                                   </span>
-                                  <span className='text-sm text-gray-900 font-bold'>
+                                  <span className='text-xs text-right text-gray-600 font-bold'>
                                     {isAr && info.whenToUseAr ? info.whenToUseAr : info.whenToUse}
                                   </span>
                                 </div>

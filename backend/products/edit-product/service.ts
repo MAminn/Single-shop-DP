@@ -53,6 +53,7 @@ export const editProductSchema = z.object({
   sortOrder: z.number().int().min(0).optional(),
   hidden: z.boolean().optional().default(false),
   fragranceInfo: fragranceInfoSchema,
+  bestLayeredWithIds: z.array(z.string().uuid()).max(12).optional(),
 });
 
 export const editProduct = (
@@ -105,6 +106,7 @@ export const editProduct = (
               sortOrder: data.sortOrder ?? 0,
               hidden: data.hidden ?? false,
               fragranceInfo: data.fragranceInfo ?? null,
+              bestLayeredWithIds: data.bestLayeredWithIds ?? [],
               updatedAt: new Date(),
             })
             .where(eq(product.id, data.id))

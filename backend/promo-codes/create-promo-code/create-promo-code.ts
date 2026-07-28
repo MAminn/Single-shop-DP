@@ -57,6 +57,7 @@ export const createPromoCodeSchema = z
     appliesToAllProducts: z.boolean().default(true),
     applicableProductIds: z.array(z.string().uuid()).optional().default([]),
     applicableCategoryIds: z.array(z.string().uuid()).optional().default([]),
+    showOnOffersPage: z.boolean().default(false),
   })
   .refine(
     (data) => {
