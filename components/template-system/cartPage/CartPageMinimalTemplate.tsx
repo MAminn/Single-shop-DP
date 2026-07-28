@@ -50,7 +50,7 @@ export function CartPageMinimalTemplate({
         <p className="text-[14px] text-gray-400 mb-6">Add items to your cart to continue shopping</p>
         <a
           href="/shop"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white text-[13px] font-medium hover:bg-gray-700 transition-colors">
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-md bg-gray-900 text-white text-[13px] font-medium hover:bg-gray-700 transition-colors">
           Continue Shopping
         </a>
       </div>
@@ -295,13 +295,13 @@ export function CartPageMinimalTemplate({
                         if (e.key === "Enter") handleApplyCoupon();
                       }}
                       placeholder="Enter code"
-                      className="flex-1 px-4 py-2.5 border border-gray-200 text-[13px] text-gray-900 placeholder-gray-300 outline-none focus:border-gray-400 transition-colors bg-white min-w-0"
+                      className="flex-1 px-4 py-2.5 rounded-md border border-gray-200 text-[13px] text-gray-900 placeholder-gray-300 outline-none focus:border-gray-400 transition-colors bg-white min-w-0"
                     />
                     <button
                       type="button"
                       onClick={handleApplyCoupon}
                       disabled={!couponCode.trim()}
-                      className="px-5 py-2.5 bg-gray-900 text-white text-[12px] font-medium uppercase tracking-wide hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
+                      className="px-5 py-2.5 rounded-md bg-gray-900 text-white text-[12px] font-medium uppercase tracking-wide hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
                       Apply
                     </button>
                   </div>
@@ -349,7 +349,7 @@ export function CartPageMinimalTemplate({
                   type="button"
                   onClick={onProceedToCheckout}
                   disabled={isUpdating || items.length === 0}
-                  className="mt-6 w-full py-4 bg-gray-900 text-white text-[13px] font-medium uppercase tracking-wider hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hidden sm:block">
+                  className="mt-6 w-full py-4 rounded-md bg-gray-900 text-white text-[13px] font-medium uppercase tracking-wider hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hidden sm:block">
                   {isUpdating ? "Updating…" : "Proceed to Checkout"}
                 </button>
 
@@ -366,7 +366,7 @@ export function CartPageMinimalTemplate({
       </div>
 
       {/* ── Mobile sticky checkout bar ─────────────────────────────────────── */}
-      <div className="sm:hidden fixed bottom-16 inset-x-0 z-40 bg-white border-t border-gray-100 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
+      <div className="sm:hidden fixed inset-x-0 z-40 border-t border-gray-100 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
         <AppliedOffersSavings
           appliedOffers={appliedOffers}
           promoDiscount={totals.discount ?? 0}
@@ -391,7 +391,7 @@ export function CartPageMinimalTemplate({
             type="button"
             onClick={onProceedToCheckout}
             disabled={isUpdating || items.length === 0}
-            className="flex w-full items-center justify-center gap-2 py-3.5 bg-gray-900 text-white text-[13px] font-medium uppercase tracking-wider hover:bg-gray-700 active:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            className="flex w-full items-center justify-center gap-2 py-3.5 rounded-md bg-gray-900 text-white text-[13px] font-medium uppercase tracking-wider hover:bg-gray-700 active:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             {isUpdating ? "Updating…" : "Proceed to Checkout"}
             <ArrowRight className="h-4 w-4" />
           </button>

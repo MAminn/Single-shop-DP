@@ -650,7 +650,7 @@ export function ProductPageMinimal({
             )}
 
             {/* ── Promo text line (CMS-driven) ── */}
-            {(() => {
+            {/* {(() => {
               const promoText =
                 isAr && layoutSettings.header.promoTextAr
                   ? layoutSettings.header.promoTextAr
@@ -658,7 +658,7 @@ export function ProductPageMinimal({
               return promoText ? (
                 <p className='text-xs font-medium'>{promoText}</p>
               ) : null;
-            })()}
+            })()} */}
 
             {/* Variant Selector + Quantity stepper + Add to Cart + Buy Now */}
             <div className='pt-2 border-t border-gray-100 space-y-3'>
@@ -677,7 +677,7 @@ export function ProductPageMinimal({
               {/* Quantity stepper + Add to Cart, side by side */}
               <div className='flex items-stretch gap-2'>
                 {product.available && (
-                  <div className='flex items-center border border-gray-300 shrink-0'>
+                  <div className='flex items-center border border-gray-300 rounded-md shrink-0 overflow-hidden'>
                     <button
                       onClick={decrementQty}
                       disabled={quantity <= 1}
@@ -701,7 +701,7 @@ export function ProductPageMinimal({
                   ref={addToCartBtnRef}
                   size='lg'
                   variant='outline'
-                  className='flex-1 border-gray-900 text-gray-900 hover:bg-gray-50 rounded-none h-11 py-0 text-sm font-medium shadow-none transition-all gap-2'
+                  className='flex-1 border-gray-900 text-gray-900 hover:bg-gray-50 rounded-md h-11 py-0 text-sm font-medium shadow-none transition-all gap-2'
                   onClick={handleAddToCart}
                   disabled={!product.available || !allVariantsSelected}
                   data-add-to-cart='true'>
@@ -714,7 +714,7 @@ export function ProductPageMinimal({
               {product.available && (
                 <Button
                   size='lg'
-                  className='w-full bg-red-600 hover:bg-red-700 text-white rounded-none py-4 text-sm font-semibold shadow-none hover:shadow-lg transition-all'
+                  className='w-full bg-black hover:bg-gray-900 text-white rounded-md py-4 text-sm font-semibold shadow-none hover:shadow-lg transition-all'
                   onClick={handleBuyNow}
                   disabled={!allVariantsSelected}
                   data-buy-now='true'>
@@ -747,12 +747,12 @@ export function ProductPageMinimal({
                   <>
                     {hasScentNotes && (
                       <AccordionItem value='scent-notes'>
-                        <AccordionTrigger>{isAr ? "نوتات العطر" : "Scent Notes"}</AccordionTrigger>
+                        <AccordionTrigger className='text-base font-bold'>{isAr ? "نوتات العطر" : "Scent Notes"}</AccordionTrigger>
                         <AccordionContent>
                           <div className='bg-gray-50 p-4 space-y-3'>
                             {tagline && (
-                              <p className='text-xs text-gray-800'>
-                                <span className='font-semibold'>
+                              <p className='text-sm text-gray-800 font-medium'>
+                                <span className='font-bold'>
                                   {isAr ? "هذا العطر: " : "This perfume is: "}
                                 </span>
                                 {tagline}
@@ -761,32 +761,32 @@ export function ProductPageMinimal({
                             <div className='space-y-1'>
                               {topNotes && (
                                 <div className='py-1 border-b border-gray-200'>
-                                  <span className='text-xs font-medium text-gray-900'>
+                                  <span className='text-sm font-bold text-gray-900'>
                                     {isAr ? "المقدمة: " : "Top: "}
                                   </span>
-                                  <span className='text-xs text-gray-600'>{topNotes}</span>
+                                  <span className='text-sm font-medium text-gray-700'>{topNotes}</span>
                                 </div>
                               )}
                               {middleNotes && (
                                 <div className='py-1 border-b border-gray-200'>
-                                  <span className='text-xs font-medium text-gray-900'>
+                                  <span className='text-sm font-bold text-gray-900'>
                                     {isAr ? "القلب: " : "Middle: "}
                                   </span>
-                                  <span className='text-xs text-gray-600'>{middleNotes}</span>
+                                  <span className='text-sm font-medium text-gray-700'>{middleNotes}</span>
                                 </div>
                               )}
                               {baseNotes && (
                                 <div className='py-1'>
-                                  <span className='text-xs font-medium text-gray-900'>
+                                  <span className='text-sm font-bold text-gray-900'>
                                     {isAr ? "القاعدة: " : "Base: "}
                                   </span>
-                                  <span className='text-xs text-gray-600'>{baseNotes}</span>
+                                  <span className='text-sm font-medium text-gray-700'>{baseNotes}</span>
                                 </div>
                               )}
                             </div>
                             {ingredients && (
-                              <p className='text-[11px] text-gray-500 leading-relaxed border-t border-gray-200 pt-3'>
-                                <span className='font-medium text-gray-700'>
+                              <p className='text-xs text-gray-600 font-medium leading-relaxed border-t border-gray-200 pt-3'>
+                                <span className='font-bold text-gray-800'>
                                   {isAr ? "المكونات: " : "Ingredients: "}
                                 </span>
                                 {ingredients}
@@ -797,7 +797,7 @@ export function ProductPageMinimal({
                                 {badges.map((badge) => (
                                   <span
                                     key={badge}
-                                    className='text-[10px] px-2 py-1 rounded-full bg-white border border-gray-200 text-gray-700'>
+                                    className='text-xs font-semibold px-2 py-1 rounded-full bg-white border border-gray-200 text-gray-800'>
                                     {badge}
                                   </span>
                                 ))}
@@ -810,13 +810,13 @@ export function ProductPageMinimal({
 
                     {hasAbout && (
                       <AccordionItem value='about'>
-                        <AccordionTrigger>{isAr ? "عن العطر" : "About"}</AccordionTrigger>
+                        <AccordionTrigger className='text-base font-bold'>{isAr ? "عن العطر" : "About"}</AccordionTrigger>
                         <AccordionContent>
                           <div className='bg-gray-50 p-4 space-y-3'>
                             {(about || product.description) && (
                               <ColoredDescription
                                 text={about || product.description || ""}
-                                className='text-xs text-gray-700 leading-relaxed whitespace-pre-line'
+                                className='text-sm text-gray-800 font-medium leading-relaxed whitespace-pre-line'
                               />
                             )}
                             {product.longDescription && (
@@ -825,44 +825,44 @@ export function ProductPageMinimal({
                             <div className='space-y-1 pt-1'>
                               {scentIntensity && (
                                 <div className='flex justify-between items-baseline py-1 border-b border-gray-200'>
-                                  <span className='text-xs text-gray-500'>
+                                  <span className='text-sm font-semibold text-gray-600'>
                                     {isAr ? "شدة العطر" : "Scent Intensity"}
                                   </span>
-                                  <span className='text-xs text-gray-900 font-medium'>{scentIntensity}</span>
+                                  <span className='text-sm text-gray-900 font-bold'>{scentIntensity}</span>
                                 </div>
                               )}
                               {info?.concentration && (
                                 <div className='flex justify-between items-baseline py-1 border-b border-gray-200'>
-                                  <span className='text-xs text-gray-500'>
+                                  <span className='text-sm font-semibold text-gray-600'>
                                     {isAr ? "التركيز" : "Concentration"}
                                   </span>
-                                  <span className='text-xs text-gray-900 font-medium'>{info.concentration}</span>
+                                  <span className='text-sm text-gray-900 font-bold'>{info.concentration}</span>
                                 </div>
                               )}
                               {gender && (
                                 <div className='flex justify-between items-baseline py-1'>
-                                  <span className='text-xs text-gray-500'>
+                                  <span className='text-sm font-semibold text-gray-600'>
                                     {isAr ? "الفئة" : "Gender"}
                                   </span>
-                                  <span className='text-xs text-gray-900 font-medium'>{gender}</span>
+                                  <span className='text-sm text-gray-900 font-bold'>{gender}</span>
                                 </div>
                               )}
                               {info?.longevity && (
                                 <div className='flex justify-between items-baseline py-1 border-t border-gray-200'>
-                                  <span className='text-xs text-gray-500'>
+                                  <span className='text-sm font-semibold text-gray-600'>
                                     {isAr ? "الثبات" : "Longevity"}
                                   </span>
-                                  <span className='text-xs text-gray-900 font-medium'>
+                                  <span className='text-sm text-gray-900 font-bold'>
                                     {isAr && info.longevityAr ? info.longevityAr : info.longevity}
                                   </span>
                                 </div>
                               )}
                               {info?.whenToUse && (
                                 <div className='flex justify-between items-baseline py-1'>
-                                  <span className='text-xs text-gray-500'>
+                                  <span className='text-sm font-semibold text-gray-600'>
                                     {isAr ? "يستخدم في" : "When to Use"}
                                   </span>
-                                  <span className='text-xs text-gray-900 font-medium'>
+                                  <span className='text-sm text-gray-900 font-bold'>
                                     {isAr && info.whenToUseAr ? info.whenToUseAr : info.whenToUse}
                                   </span>
                                 </div>
@@ -874,9 +874,9 @@ export function ProductPageMinimal({
                     )}
 
                     <AccordionItem value='shipping'>
-                      <AccordionTrigger>{isAr ? "الشحن" : "Shipping"}</AccordionTrigger>
+                      <AccordionTrigger className='text-base font-bold'>{isAr ? "الشحن" : "Shipping"}</AccordionTrigger>
                       <AccordionContent>
-                        <p className='text-xs text-gray-600'>
+                        <p className='text-sm text-gray-700 font-medium'>
                           {isAr
                             ? pageContent?.shippingTextAr || pageContent?.shippingText || "شحن مجاني عند طلب قطعتين أو أكثر."
                             : pageContent?.shippingText || "Free shipping with 2+ items."}
@@ -885,9 +885,9 @@ export function ProductPageMinimal({
                     </AccordionItem>
 
                     <AccordionItem value='returns'>
-                      <AccordionTrigger>{isAr ? "الإرجاع" : "Returns"}</AccordionTrigger>
+                      <AccordionTrigger className='text-base font-bold'>{isAr ? "الإرجاع" : "Returns"}</AccordionTrigger>
                       <AccordionContent>
-                        <p className='text-xs text-gray-600'>
+                        <p className='text-sm text-gray-700 font-medium'>
                           {isAr
                             ? pageContent?.returnsTextAr || pageContent?.returnsText || "استبدال مجاني لجميع الطلبات."
                             : pageContent?.returnsText || "Free exchanges for all orders."}
@@ -896,7 +896,7 @@ export function ProductPageMinimal({
                     </AccordionItem>
 
                     <AccordionItem value='faqs'>
-                      <AccordionTrigger>{isAr ? "الأسئلة الشائعة" : "FAQs"}</AccordionTrigger>
+                      <AccordionTrigger className='text-base font-bold'>{isAr ? "الأسئلة الشائعة" : "FAQs"}</AccordionTrigger>
                       <AccordionContent>
                         <div className='space-y-3'>
                           {(pageContent?.faqs && pageContent.faqs.length > 0
@@ -917,10 +917,10 @@ export function ProductPageMinimal({
                               ]
                           ).map((faq, idx) => (
                             <div key={idx}>
-                              <p className='text-xs font-medium text-gray-900'>
+                              <p className='text-sm font-bold text-gray-900'>
                                 {isAr ? faq.questionAr || faq.question : faq.question}
                               </p>
-                              <p className='text-xs text-gray-600 mt-0.5'>
+                              <p className='text-sm text-gray-700 font-medium mt-0.5'>
                                 {isAr ? faq.answerAr || faq.answer : faq.answer}
                               </p>
                             </div>
@@ -931,15 +931,15 @@ export function ProductPageMinimal({
 
                     {product.specifications && product.specifications.length > 0 && (
                       <AccordionItem value='details'>
-                        <AccordionTrigger>{isAr ? "التفاصيل" : "Details"}</AccordionTrigger>
+                        <AccordionTrigger className='text-base font-bold'>{isAr ? "التفاصيل" : "Details"}</AccordionTrigger>
                         <AccordionContent>
                           <div className='space-y-1'>
                             {product.specifications.map((spec, idx) => (
                               <div
                                 key={idx}
                                 className='flex justify-between items-baseline py-1 border-b border-gray-100 last:border-0'>
-                                <span className='text-xs text-gray-500'>{spec.label}</span>
-                                <span className='text-xs text-gray-900 font-medium'>{spec.value}</span>
+                                <span className='text-sm font-semibold text-gray-600'>{spec.label}</span>
+                                <span className='text-sm text-gray-900 font-bold'>{spec.value}</span>
                               </div>
                             ))}
                           </div>
@@ -949,7 +949,7 @@ export function ProductPageMinimal({
 
                     {mergedCategoryProducts.length > 0 && (
                       <AccordionItem value='best-layered-with'>
-                        <AccordionTrigger>
+                        <AccordionTrigger className='text-base font-bold'>
                           {isAr ? "أفضل تنسيق مع" : "Best Layered With"}
                         </AccordionTrigger>
                         <AccordionContent>
@@ -978,25 +978,25 @@ export function ProductPageMinimal({
       {product.available && (
         <div
           className={cn(
-            "fixed bottom-16 lg:bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.06)] transition-transform duration-300",
+            "fixed bottom-15 lg:bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.06)] transition-transform duration-300",
             showStickyCart ? "translate-y-0" : "translate-y-full",
           )}>
-          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3'>
+          <div className='max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-2.5 flex items-center gap-2 sm:gap-3'>
             <img
               src={images[selectedImage]?.url || product.imageUrl || ""}
               alt={product.name}
-              className='w-10 h-10 object-cover rounded-sm flex-shrink-0'
+              className='hidden sm:block w-10 h-10 object-cover rounded-sm flex-shrink-0'
             />
             <div className='min-w-0 flex-1'>
-              <p className='text-xs font-medium text-gray-900 truncate'>
+              <p className='hidden sm:block text-xs font-medium text-gray-900 truncate'>
                 {product.name}
               </p>
               <div className='flex items-center gap-2'>
-                <p className='text-xs text-gray-600'>
+                <p className='text-xs sm:text-xs font-semibold sm:font-normal text-gray-900 sm:text-gray-600 whitespace-nowrap'>
                   {displayPrice.toFixed(2)} {STORE_CURRENCY}
                 </p>
                 {cartQtyForProduct > 0 && (
-                  <span className='text-[10px] text-emerald-600 font-medium'>
+                  <span className='hidden sm:inline text-[10px] text-emerald-600 font-medium'>
                     {isAr ? `${cartQtyForProduct} في السلة` : `${cartQtyForProduct} in cart`}
                   </span>
                 )}
@@ -1005,15 +1005,16 @@ export function ProductPageMinimal({
             <Button
               size='sm'
               variant='outline'
-              className='border-gray-900 text-gray-900 hover:bg-gray-50 rounded-none px-4 text-xs font-medium shrink-0 gap-1.5'
+              className='border-gray-900 text-gray-900 hover:bg-gray-50 rounded-md px-2.5 sm:px-4 text-xs font-medium shrink-0 gap-0 sm:gap-1.5'
               onClick={handleAddToCart}
-              disabled={!allVariantsSelected}>
+              disabled={!allVariantsSelected}
+              aria-label={t("add_to_cart")}>
               <ShoppingCart className='w-3.5 h-3.5' />
-              {t("add_to_cart")}
+              <span className='hidden sm:inline'>{t("add_to_cart")}</span>
             </Button>
             <Button
               size='sm'
-              className='bg-red-600 hover:bg-red-700 text-white rounded-none px-4 text-xs font-semibold shrink-0'
+              className='bg-black hover:bg-gray-900 text-white rounded-md px-2.5 sm:px-4 text-xs font-semibold shrink-0 whitespace-nowrap'
               onClick={handleBuyNow}
               disabled={!allVariantsSelected}>
               {t("buy_now")}

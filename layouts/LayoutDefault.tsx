@@ -236,7 +236,7 @@ function LayoutShell({
         <TrackingProvider>
           <main
             id='page-content'
-            className={`bg-background h-full text-foreground w-full font-poppins${isMinimal && !isDashboardRoute ? " minimal-template pb-16 lg:pb-0" : ""}`}>
+            className={`bg-background h-full text-foreground w-full font-poppins${isMinimal && !isDashboardRoute ? " minimal-template pb-20 lg:pb-0" : ""}`}>
             {!isDashboardRoute && (
               <GlobalNavbarChrome navbarMode={navbarMode}>
                 {renderNavbar()}
@@ -251,8 +251,16 @@ function LayoutShell({
             )}
             {!isDashboardRoute && <GlobalFooter />}
             {!isDashboardRoute && <CartToastContainer />}
-            {!isDashboardRoute && (
+            {/* Minimal template: mobile relies on the bottom nav's "Offers" tab
+                instead, but desktop still gets this pill — pointed at /offers. */}
+            {!isDashboardRoute && !isMinimal && (
               <StickyCartBar raiseForBottomNav={isMinimal} />
+            )}
+            {!isDashboardRoute && isMinimal && (
+              <StickyCartBar
+                desktopOnly
+                ctaHref={{ href: "/offers", label: "VIEW OFFERS" }}
+              />
             )}
             {!isDashboardRoute && isMinimal && <MinimalMobileBottomNav />}
             <Toaster />

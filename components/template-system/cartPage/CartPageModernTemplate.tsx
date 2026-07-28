@@ -573,7 +573,7 @@ export function CartPageModernTemplate({
     </div>
 
     {/* ── Mobile sticky checkout bar ─────────────────────────────────────── */}
-    <div className='sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.10)]'>
+    <div className='sm:hidden fixed bottom-15 inset-x-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.10)]'>
       <AppliedOffersSavings
         appliedOffers={appliedOffers}
         promoDiscount={totals.discount ?? 0}
@@ -591,7 +591,7 @@ export function CartPageModernTemplate({
           </div>
         </div>
         <Button
-          className='w-full font-bold tracking-wide uppercase'
+          className='w-full font-bold tracking-wide text-xs uppercase'
           size='lg'
           onClick={onProceedToCheckout}
           disabled={isUpdating || items.length === 0}>

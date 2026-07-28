@@ -202,16 +202,18 @@ export function MinimalProductCard({
       </div>
 
       {/* Add to cart button */}
-      <div className='px-4'>
+      <div className='px-2 sm:px-3'>
         <button
           ref={addToCartBtnRef}
           type='button'
           onClick={handleAddToCart}
           disabled={!product.available || isAdding}
           data-add-to-cart='true'
-          className='mt-1 w-full py-2.5 flex items-center justify-center gap-2 rounded-md border border-stone-900 text-stone-900 text-xs font-medium tracking-wide uppercase hover:bg-stone-900 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed'>
-          {product.available ? t("add_to_cart") : t("out_of_stock")}
-          {product.available && <ShoppingBag className='w-3.5 h-3.5' />}
+          className='mt-1 w-full py-2.5 px-1.5 flex items-center justify-center gap-1 sm:gap-2 rounded-md border border-stone-900 text-stone-900 text-[10px] sm:text-xs font-medium uppercase hover:bg-stone-900 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap'>
+          <span className='truncate'>
+            {product.available ? t("add_to_cart") : t("out_of_stock")}
+          </span>
+          {product.available && <ShoppingBag className='w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0' />}
         </button>
       </div>
     </div>

@@ -161,9 +161,15 @@ function buildStripState(
 
 export function StickyCartBar({
   raiseForBottomNav = false,
+  desktopOnly = false,
+  ctaHref,
 }: {
   /** When true, adds extra bottom clearance below `lg` so this bar stacks above a fixed mobile bottom nav instead of overlapping it. */
   raiseForBottomNav?: boolean;
+  /** When true, only renders on `lg` and up (the minimal template already has its own mobile bottom nav + dedicated offers page). */
+  desktopOnly?: boolean;
+  /** When set, overrides every state's CTA link + label to point here instead of /cart or /shop. */
+  ctaHref?: { href: string; label: string };
 } = {}) {
   const { totalItems, total, appliedOffers, subtotal, discount } = useCart();
   const { urlPathname } = usePageContext();
@@ -226,12 +232,15 @@ export function StickyCartBar({
 
   const isUnlocked = strip.kind === "unlocked";
   const isProgress = strip.kind === "progress";
+  const ctaLink = ctaHref?.href ?? strip.href;
+  const ctaText = ctaHref?.label ?? strip.ctaLabel;
 
   return (
     <div
       className={cn(
-        "fixed inset-x-0 bottom-0 z-[9990] px-3 pb-3 sm:px-4 sm:pb-4 pointer-events-none",
-        raiseForBottomNav && "pb-20 lg:pb-3",
+        "fixed inset-x-0 bottom-0 z-[9990] px-3 sm:px-4 pointer-events-none",
+        desktopOnly && "hidden lg:block",
+        raiseForBottomNav ? "pb-20 lg:pb-4" : "pb-3 sm:pb-4",
         visible ? "animate-offer-bar-enter" : "translate-y-full opacity-0",
       )}
       aria-label="Cart and offers"
@@ -363,7 +372,7 @@ export function StickyCartBar({
 
           {/* CTA */}
           <a
-            href={strip.href}
+            href={ctaLink}
             className={cn(
               "relative z-10 flex shrink-0 items-center gap-1.5 overflow-hidden rounded-full px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-[#1a1000] transition-transform active:scale-95 sm:px-4 sm:py-2.5 sm:text-[12px]",
               isUnlocked
@@ -371,7 +380,7 @@ export function StickyCartBar({
                 : "bg-gradient-to-r from-amber-300 via-orange-400 to-amber-500 animate-offer-cta-shimmer",
             )}
           >
-            <span className="hidden sm:inline">{strip.ctaLabel}</span>
+            <span className="hidden sm:inline">{ctaText}</span>
             <span
               className={cn(
                 "flex h-6 w-6 items-center justify-center rounded-full sm:h-7 sm:w-7",

@@ -1,5 +1,5 @@
 import { useContext, useState, useRef, useEffect, useCallback } from "react";
-import { Search, ShoppingCart, User, X, Menu, Globe, LogOut, Loader2, Package, Heart, LayoutDashboard } from "lucide-react";
+import { Search, ShoppingCart, User, X, Menu, Globe, LogOut, Loader2, Package, Heart, LayoutDashboard, ChevronDown } from "lucide-react";
 import { Link } from "#root/components/utils/Link";
 import { AuthContext } from "#root/context/AuthContext";
 import { useCart } from "#root/lib/context/CartContext";
@@ -369,18 +369,32 @@ export function MinimalNavbar() {
             <div className='hidden lg:flex items-center gap-1'>
               {links.map((link) => {
                 if (link.isDropdown && link.categoryIds.length > 0) {
-                  // Flattened: each category renders as its own top-level link
-                  // instead of a hover dropdown.
+                  // Desktop: hover dropdown listing the categories.
+                  // (Mobile menu still renders these flattened — see below.)
                   const dropdownCats = categories.filter((c) => link.categoryIds.includes(c.id));
                   if (dropdownCats.length === 0) return null;
-                  return dropdownCats.map((cat) => (
-                    <Link
-                      key={cat.id}
-                      href={`/shop?category=${cat.slug || cat.id}`}
-                      className='px-2 xl:px-3 py-1.5 text-sm xl:text-[15px] font-semibold text-gray-800 hover:text-black transition-colors tracking-wide whitespace-nowrap'>
-                      {cat.name}
-                    </Link>
-                  ));
+                  return (
+                    <div key={link.id} className='relative group'>
+                      <button
+                        type='button'
+                        className='px-2 xl:px-3 py-1.5 text-sm xl:text-[15px] font-semibold text-gray-800 hover:text-black transition-colors tracking-wide whitespace-nowrap flex items-center gap-1'>
+                        {link.label}
+                        <ChevronDown className='w-3.5 h-3.5 transition-transform duration-150 group-hover:rotate-180' />
+                      </button>
+                      <div className='absolute top-full start-0 pt-2 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-150 z-50'>
+                        <div className='bg-white border border-gray-200 shadow-lg min-w-[200px] py-2 rounded-md'>
+                          {dropdownCats.map((cat) => (
+                            <Link
+                              key={cat.id}
+                              href={`/shop?category=${cat.slug || cat.id}`}
+                              className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition-colors whitespace-nowrap'>
+                              {cat.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
                 }
                 return (
                   <Link

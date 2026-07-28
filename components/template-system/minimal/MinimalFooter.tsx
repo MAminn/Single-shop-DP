@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePageContext } from "vike-react/usePageContext";
 import { Link } from "#root/components/utils/Link";
 import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
@@ -65,7 +66,11 @@ const socialIconMap: Record<SocialPlatform, React.FC> = {
 export function MinimalFooter() {
   const layoutSettings = useLayoutSettings();
   const { t, locale, dir } = useMinimalI18n();
+  const { urlPathname } = usePageContext();
   const footer = layoutSettings.footer;
+  // The /offers page has its own newsletter signup box, so hide the
+  // duplicate one here to avoid showing it twice on that page.
+  const hideNewsletter = urlPathname.startsWith("/offers");
 
   const logoText = locale === "ar" && footer.logoTextAr
     ? footer.logoTextAr
@@ -111,45 +116,47 @@ export function MinimalFooter() {
   return (
     <footer className='bg-white border-t border-stone-200'>
       {/* ── Newsletter signup ── */}
-      <div className='border-b border-stone-100'>
-        <div className='max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-10'>
-          <div className='flex flex-col md:flex-row items-start md:items-center justify-between gap-4'>
-            <div>
-              <h4 className='text-sm font-semibold text-stone-900 tracking-wide'>
-                {locale === "ar" ? "اشترك في نشرتنا الإخبارية" : "Join our newsletter"}
-              </h4>
-              <p className='text-sm text-stone-500 mt-1'>
-                {locale === "ar"
-                  ? "اشترك للحصول على أحدث العروض والإصدارات الجديدة."
-                  : "Get the latest offers and new releases in your inbox."}
-              </p>
+      {!hideNewsletter && (
+        <div className='border-b border-stone-100'>
+          <div className='max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-10'>
+            <div className='flex flex-col md:flex-row items-start md:items-center justify-between gap-4'>
+              <div>
+                <h4 className='text-sm font-semibold text-stone-900 tracking-wide'>
+                  {locale === "ar" ? "اشترك في نشرتنا الإخبارية" : "Join our newsletter"}
+                </h4>
+                <p className='text-sm text-stone-500 mt-1'>
+                  {locale === "ar"
+                    ? "اشترك للحصول على أحدث العروض والإصدارات الجديدة."
+                    : "Get the latest offers and new releases in your inbox."}
+                </p>
+              </div>
+              <form
+                onSubmit={handleNewsletterSubmit}
+                className='flex w-full md:w-auto max-w-md gap-2'>
+                <input
+                  type='email'
+                  required
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  placeholder={locale === "ar" ? "بريدك الإلكتروني" : "Your email address"}
+                  className='flex-1 md:w-64 px-4 py-2.5 text-sm border border-stone-300 outline-none focus:border-stone-900 transition-colors bg-white'
+                />
+                <button
+                  type='submit'
+                  disabled={isSubscribing}
+                  className='px-4 py-2.5 bg-stone-900 text-white text-sm font-medium hover:bg-stone-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0'
+                  aria-label={locale === "ar" ? "اشتراك" : "Subscribe"}>
+                  {isSubscribing ? (
+                    <Loader2 className='w-4 h-4 animate-spin' />
+                  ) : (
+                    <Send className='w-4 h-4' />
+                  )}
+                </button>
+              </form>
             </div>
-            <form
-              onSubmit={handleNewsletterSubmit}
-              className='flex w-full md:w-auto max-w-md gap-2'>
-              <input
-                type='email'
-                required
-                value={newsletterEmail}
-                onChange={(e) => setNewsletterEmail(e.target.value)}
-                placeholder={locale === "ar" ? "بريدك الإلكتروني" : "Your email address"}
-                className='flex-1 md:w-64 px-4 py-2.5 text-sm border border-stone-300 outline-none focus:border-stone-900 transition-colors bg-white'
-              />
-              <button
-                type='submit'
-                disabled={isSubscribing}
-                className='px-4 py-2.5 bg-stone-900 text-white text-sm font-medium hover:bg-stone-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0'
-                aria-label={locale === "ar" ? "اشتراك" : "Subscribe"}>
-                {isSubscribing ? (
-                  <Loader2 className='w-4 h-4 animate-spin' />
-                ) : (
-                  <Send className='w-4 h-4' />
-                )}
-              </button>
-            </form>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main content */}
       <div className='max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16'>
