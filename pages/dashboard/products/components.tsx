@@ -49,8 +49,8 @@ export interface FileMetadata {
 /**
  * Picker for the "Best Layered With" products shown on this product's page.
  * Fetches the product catalog once on mount and lets the admin search/select
- * up to 12 products; leaving it empty falls back to the storefront's
- * automatic category-based suggestions.
+ * any number of products; leaving it empty makes the storefront show a
+ * "stay tuned" note instead of the section's contents.
  */
 function BestLayeredWithPicker({
   value,
@@ -90,10 +90,11 @@ function BestLayeredWithPicker({
 
   return (
     <FormItem className='flex flex-col'>
-      <FormLabel>Best Layered With (Optional, up to 12)</FormLabel>
+      <FormLabel>Best Layered With (Optional)</FormLabel>
       <p className='text-xs text-muted-foreground -mt-1 mb-1'>
-        Shown in the "Best Layered With" section on this product's page.
-        Leave empty to fall back to automatic category-based suggestions.
+        Shown in the "Best Layered With" section on this product's page. Leave
+        empty and the section shows "Stay tuned for our recommended layering
+        combination.." instead.
       </p>
       {selected.length > 0 && (
         <div className='flex flex-wrap gap-2 mb-2'>
@@ -144,10 +145,8 @@ function BestLayeredWithPicker({
                       onSelect={() => {
                         if (isSelected) {
                           onChange(value.filter((id) => id !== p.id));
-                        } else if (value.length < 12) {
-                          onChange([...value, p.id]);
                         } else {
-                          toast.error("You can pick up to 12 products");
+                          onChange([...value, p.id]);
                         }
                       }}>
                       <div className='flex items-center'>
@@ -339,7 +338,7 @@ export function ProductForm({
         badges: z.array(z.string().max(50)).max(10).optional(),
       })
       .optional(),
-    bestLayeredWithIds: z.array(z.string()).max(12).optional().default([]),
+    bestLayeredWithIds: z.array(z.string()).optional().default([]),
   });
 
   // Debug initial values

@@ -177,7 +177,7 @@ export function QuickViewDialog({ product, open, onClose }: QuickViewDialogProps
             </h2>
 
             {/* Tax note */}
-            <p className='text-xs text-stone-400 mb-2'>{t("price_includes_tax")}</p>
+            {/* <p className='text-xs text-stone-400 mb-2'>{t("price_includes_tax")}</p> */}
 
             {/* Price */}
             <div className='flex items-center gap-2 mb-4'>

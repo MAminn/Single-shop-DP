@@ -224,26 +224,11 @@ export function ProductPageMinimal({
       .catch(() => {});
   }, [product?.variants]);
 
-  /* ── Merged category products ──
-     Admin-picked "Best Layered With" products take priority; falls back to
-     the automatic category-based suggestions when none are set. */
-  const mergedCategoryProducts = (() => {
-    if (product?.bestLayeredWith && product.bestLayeredWith.length > 0) {
-      return product.bestLayeredWith;
-    }
-    if (!categoryGroups || categoryGroups.length === 0) return [];
-    const seen = new Set<string>();
-    const all: FeaturedProduct[] = [];
-    for (const group of categoryGroups) {
-      for (const p of group.products) {
-        if (!seen.has(p.id)) {
-          seen.add(p.id);
-          all.push(p);
-        }
-      }
-    }
-    return all;
-  })();
+  /* ── "Best Layered With" products ──
+     Strictly the products the admin hand-picked for this product. When the
+     admin hasn't picked any, the accordion shows a "stay tuned" note instead
+     of falling back to automatic category suggestions. */
+  const mergedCategoryProducts: FeaturedProduct[] = product?.bestLayeredWith ?? [];
 
   const toggleAddOn = useCallback((productId: string) => {
     setSelectedAddOns((prev) => {
@@ -338,8 +323,11 @@ export function ProductPageMinimal({
     }
 
     // Also add selected add-on products from inline carousels
-    if (selectedAddOns.size > 0 && categoryGroups) {
-      const allCategoryProducts = categoryGroups.flatMap((g) => g.products);
+    if (selectedAddOns.size > 0) {
+      const allCategoryProducts = [
+        ...mergedCategoryProducts,
+        ...(categoryGroups?.flatMap((g) => g.products) ?? []),
+      ];
       for (const addOnId of selectedAddOns) {
         const addOn = allCategoryProducts.find((p) => p.id === addOnId);
         if (addOn) {
@@ -626,9 +614,9 @@ export function ProductPageMinimal({
                   {product.price.toFixed(2)} {STORE_CURRENCY}
                 </span>
               )}
-              <p className='text-[10px] text-gray-400 mt-0.5'>
+              {/* <p className='text-[10px] text-gray-400 mt-0.5'>
                 {t("price_includes_tax")}
-              </p>
+              </p> */}
             </div>
 
             {/* Inspired By — directly under price */}
@@ -769,7 +757,7 @@ export function ProductPageMinimal({
                                   <span className='text-sm font-bold text-gray-900'>
                                     {isAr ? "المقدمة: " : "Top: "}
                                   </span>
-                                  <span className='text-xs font-light text-gray-700'>{topNotes}</span>
+                                  <span className='text-sm font-light text-gray-600'>{topNotes}</span>
                                 </div>
                               )}
                               {middleNotes && (
@@ -777,7 +765,7 @@ export function ProductPageMinimal({
                                   <span className='text-sm font-bold text-gray-900'>
                                     {isAr ? "القلب: " : "Middle: "}
                                   </span>
-                                  <span className='text-xs font-light text-gray-700'>{middleNotes}</span>
+                                  <span className='text-sm font-light text-gray-600'>{middleNotes}</span>
                                 </div>
                               )}
                               {baseNotes && (
@@ -785,7 +773,7 @@ export function ProductPageMinimal({
                                   <span className='text-sm font-bold text-gray-900'>
                                     {isAr ? "القاعدة: " : "Base: "}
                                   </span>
-                                  <span className='text-xs font-light text-gray-700'>{baseNotes}</span>
+                                  <span className='text-sm font-light text-gray-600'>{baseNotes}</span>
                                 </div>
                               )}
                             </div>
@@ -954,12 +942,12 @@ export function ProductPageMinimal({
                       </AccordionItem>
                     )}
 
-                    {mergedCategoryProducts.length > 0 && (
-                      <AccordionItem value='best-layered-with'>
-                        <AccordionTrigger className='text-base font-bold'>
-                          {isAr ? "أفضل تنسيق مع" : "Best Layered With"}
-                        </AccordionTrigger>
-                        <AccordionContent>
+                    <AccordionItem value='best-layered-with'>
+                      <AccordionTrigger className='text-base font-bold'>
+                        {isAr ? "أفضل تنسيق مع" : "Best Layered With"}
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        {mergedCategoryProducts.length > 0 ? (
                           <InlineCategoryCarousel
                             title={carouselTitle || (isAr ? "منتجات أخرى" : "More Products")}
                             products={mergedCategoryProducts}
@@ -967,9 +955,15 @@ export function ProductPageMinimal({
                             selectedIds={selectedAddOns}
                             onToggle={toggleAddOn}
                           />
-                        </AccordionContent>
-                      </AccordionItem>
-                    )}
+                        ) : (
+                          <p className='text-sm font-light text-gray-600'>
+                            {isAr
+                              ? "ابقوا معنا لمعرفة تركيبات التنسيق التي نوصي بها.."
+                              : "Stay tuned for our recommended layering combination.."}
+                          </p>
+                        )}
+                      </AccordionContent>
+                    </AccordionItem>
                   </>
                 );
               })()}

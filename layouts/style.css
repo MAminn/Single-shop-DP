@@ -250,6 +250,32 @@ html[data-page-transition="out"] body {
 @theme {
   --font-poppins: "Poppins", sans-serif;
   --font-roboto-flex: "Roboto Flex Variable", sans-serif;
+
+  /* Smooth accordion open/close (Radix sets --radix-accordion-content-height) */
+  --animate-accordion-down: accordion-down 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+  --animate-accordion-up: accordion-up 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+      opacity: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+      opacity: 1;
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+      opacity: 1;
+    }
+    to {
+      height: 0;
+      opacity: 0;
+    }
+  }
 }
 
 .men-section-image {

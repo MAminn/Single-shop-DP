@@ -52,7 +52,7 @@ export const createProductSchema = z.object({
   sortOrder: z.number().int().min(0).optional(),
   hidden: z.boolean().optional().default(false),
   fragranceInfo: fragranceInfoSchema,
-  bestLayeredWithIds: z.array(z.string().uuid()).max(12).optional(),
+  bestLayeredWithIds: z.array(z.string().uuid()).optional(),
 });
 
 export const createProduct = (

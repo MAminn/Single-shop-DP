@@ -69,6 +69,7 @@ import { usePageContext } from "vike-react/usePageContext";
 import { trpc } from "#root/shared/trpc/client";
 import { useToast } from "#root/components/ui/use-toast";
 import { Pagination } from "#root/components/utils/Pagination";
+import { OrderEditPanel } from "./OrderEditPanel";
 
 interface OrderItem {
   id: string;
@@ -92,6 +93,7 @@ interface Order {
   shippingCountry: string | null;
   subtotal: string;
   shipping: string;
+  tax: string;
   discount: string | null;
   promoCodeId: string | null;
   total: string;
@@ -273,61 +275,24 @@ export default function Orders() {
     fetchOrders();
   }, [fetchOrders]);
 
-  const [isEditingItems, setIsEditingItems] = useState(false);
-  const [editedQuantities, setEditedQuantities] = useState<
-    Record<string, number>
-  >({});
-  const [isSavingItems, setIsSavingItems] = useState(false);
+  // Full-order editing (customer, address, items, money, payment, status, notes)
+  const [isEditingOrder, setIsEditingOrder] = useState(false);
 
-  const startEditingItems = () => {
-    if (!selectedOrder) return;
-    const initial: Record<string, number> = {};
-    for (const item of selectedOrder.items ?? []) {
-      initial[item.id] = item.quantity;
-    }
-    setEditedQuantities(initial);
-    setIsEditingItems(true);
+  const cancelEditingItems = () => setIsEditingOrder(false);
+
+  const handleOrderSaved = (message: string) => {
+    toast({ title: message });
+    setIsEditingOrder(false);
+    setIsDetailsOpen(false);
+    fetchOrders();
   };
 
-  const cancelEditingItems = () => {
-    setIsEditingItems(false);
-    setEditedQuantities({});
-  };
-
-  const saveEditedItems = async () => {
-    if (!selectedOrder) return;
-    setIsSavingItems(true);
-    try {
-      const items = Object.entries(editedQuantities).map(
-        ([orderItemId, quantity]) => ({ orderItemId, quantity }),
-      );
-      const result = await trpc.order.edit.mutate({
-        orderId: selectedOrder.id,
-        items,
-      });
-      if (result.success) {
-        toast({ title: "Order items updated" });
-        setIsEditingItems(false);
-        setEditedQuantities({});
-        setIsDetailsOpen(false);
-        fetchOrders();
-      } else {
-        toast({
-          title: "Failed to update items",
-          description: result.error || "Please try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred while saving items.",
-        variant: "destructive",
-      });
-      console.error(err);
-    } finally {
-      setIsSavingItems(false);
-    }
+  const handleOrderEditError = (message: string) => {
+    toast({
+      title: "Failed to save order",
+      description: message,
+      variant: "destructive",
+    });
   };
 
   const updateOrderStatus = async (orderId: string, status: string) => {
@@ -943,12 +908,24 @@ export default function Orders() {
             {selectedOrder && (
               <>
                 <DialogHeader>
-                  <DialogTitle>Order Details</DialogTitle>
+                  <DialogTitle>
+                    {isEditingOrder ? "Edit Order" : "Order Details"}
+                  </DialogTitle>
                   <DialogDescription>
                     Order ID: {selectedOrder.id}
                   </DialogDescription>
                 </DialogHeader>
 
+                {isAdmin && isEditingOrder ? (
+                  <OrderEditPanel
+                    key={`edit-${selectedOrder.id}`}
+                    order={selectedOrder}
+                    onCancel={cancelEditingItems}
+                    onSaved={handleOrderSaved}
+                    onError={handleOrderEditError}
+                  />
+                ) : (
+                <>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4 my-4'>
                   <div>
                     <h3 className='font-medium text-sm mb-2'>
@@ -993,34 +970,13 @@ export default function Orders() {
                 <div className='my-4'>
                   <div className='flex items-center justify-between mb-2'>
                     <h3 className='font-medium text-sm'>Order Items</h3>
-                    {isAdmin && !isEditingItems && (
-                      <Button variant='outline' size='sm' onClick={startEditingItems}>
-                        Edit Items
+                    {isAdmin && (
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => setIsEditingOrder(true)}>
+                        Edit Order
                       </Button>
-                    )}
-                    {isAdmin && isEditingItems && (
-                      <div className='flex items-center gap-2'>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          onClick={cancelEditingItems}
-                          disabled={isSavingItems}>
-                          Cancel
-                        </Button>
-                        <Button
-                          size='sm'
-                          onClick={saveEditedItems}
-                          disabled={isSavingItems}>
-                          {isSavingItems ? (
-                            <>
-                              <Loader2 className='h-4 w-4 animate-spin mr-1' />
-                              Saving...
-                            </>
-                          ) : (
-                            "Save Changes"
-                          )}
-                        </Button>
-                      </div>
                     )}
                   </div>
                   <Table>
@@ -1053,28 +1009,7 @@ export default function Orders() {
                               <span>{item.name}</span>
                             </div>
                           </TableCell>
-                          <TableCell>
-                            {isEditingItems ? (
-                              <Input
-                                type='number'
-                                min={0}
-                                max={1000}
-                                className='h-8 w-20'
-                                value={editedQuantities[item.id] ?? item.quantity}
-                                onChange={(e) =>
-                                  setEditedQuantities((prev) => ({
-                                    ...prev,
-                                    [item.id]: Math.max(
-                                      0,
-                                      Number.parseInt(e.target.value, 10) || 0,
-                                    ),
-                                  }))
-                                }
-                              />
-                            ) : (
-                              item.quantity
-                            )}
-                          </TableCell>
+                          <TableCell>{item.quantity}</TableCell>
                           <TableCell>
                             {item.discountPrice ? (
                               <>
@@ -1098,10 +1033,7 @@ export default function Orders() {
                             {(
                               Number.parseFloat(
                                 item.discountPrice || item.price,
-                              ) *
-                              (isEditingItems
-                                ? (editedQuantities[item.id] ?? item.quantity)
-                                : item.quantity)
+                              ) * item.quantity
                             ).toFixed(2)}{" "}
                             EGP
                           </TableCell>
@@ -1335,6 +1267,8 @@ export default function Orders() {
                     Close
                   </Button>
                 </DialogFooter>
+                </>
+                )}
               </>
             )}
           </DialogContent>
@@ -1343,14 +1277,19 @@ export default function Orders() {
         {/* Mobile order details — Sheet */}
         <Sheet
           open={!isDesktop && isDetailsOpen}
-          onOpenChange={setIsDetailsOpen}>
+          onOpenChange={(open) => {
+            setIsDetailsOpen(open);
+            if (!open) cancelEditingItems();
+          }}>
           <SheetContent
             side='bottom'
             className='h-dvh max-h-dvh p-0 flex flex-col'>
             {selectedOrder && (
               <>
                 <SheetHeader className='border-b sticky top-0 bg-background z-10 relative pr-14'>
-                  <SheetTitle>Order Details</SheetTitle>
+                  <SheetTitle>
+                    {isEditingOrder ? "Edit Order" : "Order Details"}
+                  </SheetTitle>
                   <p className='text-xs text-muted-foreground font-mono'>
                     {selectedOrder.id}
                   </p>
@@ -1362,6 +1301,18 @@ export default function Orders() {
                   </SheetClose>
                 </SheetHeader>
 
+                {isAdmin && isEditingOrder ? (
+                  <div className='flex-1 overflow-y-auto p-4'>
+                    <OrderEditPanel
+                      key={`edit-mobile-${selectedOrder.id}`}
+                      order={selectedOrder}
+                      onCancel={cancelEditingItems}
+                      onSaved={handleOrderSaved}
+                      onError={handleOrderEditError}
+                    />
+                  </div>
+                ) : (
+                <>
                 <div className='flex-1 overflow-y-auto p-4 space-y-6'>
                   <div>
                     <h3 className='font-medium text-sm mb-2'>
@@ -1403,7 +1354,17 @@ export default function Orders() {
                   </div>
 
                   <div>
-                    <h3 className='font-medium text-sm mb-2'>Order Items</h3>
+                    <div className='flex items-center justify-between mb-2'>
+                      <h3 className='font-medium text-sm'>Order Items</h3>
+                      {isAdmin && (
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() => setIsEditingOrder(true)}>
+                          Edit Order
+                        </Button>
+                      )}
+                    </div>
                     <div className='space-y-3'>
                       {selectedOrder.items?.map((item) => {
                         const unit = Number.parseFloat(
@@ -1607,6 +1568,8 @@ export default function Orders() {
                     Close
                   </Button>
                 </div>
+                </>
+                )}
               </>
             )}
           </SheetContent>
