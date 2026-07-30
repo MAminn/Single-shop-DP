@@ -877,7 +877,7 @@ export function ProductPageMinimal({
                     <AccordionItem value='shipping'>
                       <AccordionTrigger className='text-base font-bold'>{isAr ? "الشحن" : "Shipping"}</AccordionTrigger>
                       <AccordionContent>
-                        <p className='text-sm text-gray-700 font-medium'>
+                        <p className='text-sm text-gray-700 font-medium whitespace-pre-line'>
                           {isAr
                             ? pageContent?.shippingTextAr || pageContent?.shippingText || "شحن مجاني عند طلب قطعتين أو أكثر."
                             : pageContent?.shippingText || "Free shipping with 2+ items."}
@@ -888,7 +888,7 @@ export function ProductPageMinimal({
                     <AccordionItem value='returns'>
                       <AccordionTrigger className='text-base font-bold'>{isAr ? "الإرجاع" : "Returns"}</AccordionTrigger>
                       <AccordionContent>
-                        <p className='text-sm text-gray-700 font-medium'>
+                        <p className='text-sm text-gray-700 font-medium whitespace-pre-line'>
                           {isAr
                             ? pageContent?.returnsTextAr || pageContent?.returnsText || "استبدال مجاني لجميع الطلبات."
                             : pageContent?.returnsText || "Free exchanges for all orders."}
@@ -921,7 +921,7 @@ export function ProductPageMinimal({
                               <p className='text-sm font-bold text-gray-900'>
                                 {isAr ? faq.questionAr || faq.question : faq.question}
                               </p>
-                              <p className='text-sm text-gray-700 font-medium mt-0.5'>
+                              <p className='text-sm text-gray-700 font-medium mt-0.5 whitespace-pre-line'>
                                 {isAr ? faq.answerAr || faq.answer : faq.answer}
                               </p>
                             </div>
