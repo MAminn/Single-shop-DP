@@ -293,21 +293,23 @@ export default function OffersPage() {
               </p>
             </div>
           </div>
-          <form onSubmit={handleNewsletterSubmit} className='flex w-full sm:w-auto gap-2'>
+          <form
+            onSubmit={handleNewsletterSubmit}
+            className='flex flex-col sm:flex-row w-full sm:w-auto gap-2'>
             <input
               type='email'
               required
               value={newsletterEmail}
               onChange={(e) => setNewsletterEmail(e.target.value)}
               placeholder={isAr ? "بريدك الإلكتروني" : "Enter your email"}
-              className='flex-1 sm:w-56 lg:w-72 px-3 py-2.5 lg:py-3 text-sm lg:text-base rounded-md border border-gray-300 outline-none focus:border-gray-900 transition-colors bg-white'
+              className='w-full sm:w-56 lg:w-72 px-3 py-2.5 lg:py-3 text-sm lg:text-base rounded-md border border-gray-300 outline-none focus:border-gray-900 transition-colors bg-white'
             />
             <button
               type='submit'
               disabled={isSubscribing}
-              className='px-4 py-2.5 rounded-md bg-black hover:bg-gray-900 text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0'>
+              className='w-full sm:w-auto px-4 py-2.5 rounded-md bg-black hover:bg-gray-900 text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0'>
               {isSubscribing ? (
-                <Loader2 className='w-4 h-4 animate-spin' />
+                <Loader2 className='w-4 h-4 animate-spin mx-auto' />
               ) : isAr ? (
                 "اشتراك"
               ) : (

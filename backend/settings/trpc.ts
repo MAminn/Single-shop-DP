@@ -140,17 +140,17 @@ export const settingsRouter = router({
     .input(
       z.object({
         content: z.object({
-          shippingText: z.string().max(500).optional(),
-          shippingTextAr: z.string().max(500).optional(),
-          returnsText: z.string().max(500).optional(),
-          returnsTextAr: z.string().max(500).optional(),
+          shippingText: z.string().max(2000).optional(),
+          shippingTextAr: z.string().max(2000).optional(),
+          returnsText: z.string().max(2000).optional(),
+          returnsTextAr: z.string().max(2000).optional(),
           faqs: z
             .array(
               z.object({
                 question: z.string().max(200),
                 questionAr: z.string().max(200).optional(),
-                answer: z.string().max(500),
-                answerAr: z.string().max(500).optional(),
+                answer: z.string().max(2000),
+                answerAr: z.string().max(2000).optional(),
               }),
             )
             .max(20)

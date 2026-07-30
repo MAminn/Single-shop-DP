@@ -454,6 +454,7 @@ export default function SettingsPage() {
               value={shippingText}
               onChange={(e) => setShippingText(e.target.value)}
               placeholder='Free shipping with 2+ items.'
+              maxLength={2000}
               rows={2}
             />
             <Label htmlFor='shippingTextAr'>Shipping text (Arabic)</Label>
@@ -463,6 +464,7 @@ export default function SettingsPage() {
               value={shippingTextAr}
               onChange={(e) => setShippingTextAr(e.target.value)}
               placeholder='شحن مجاني عند طلب قطعتين أو أكثر.'
+              maxLength={2000}
               rows={2}
             />
           </div>
@@ -474,8 +476,12 @@ export default function SettingsPage() {
               value={returnsText}
               onChange={(e) => setReturnsText(e.target.value)}
               placeholder='Free exchanges for all orders.'
-              rows={2}
+              maxLength={2000}
+              rows={4}
             />
+            <p className='text-xs text-muted-foreground text-right'>
+              {returnsText.length}/2000
+            </p>
             <Label htmlFor='returnsTextAr'>Returns text (Arabic)</Label>
             <Textarea
               id='returnsTextAr'
@@ -483,8 +489,12 @@ export default function SettingsPage() {
               value={returnsTextAr}
               onChange={(e) => setReturnsTextAr(e.target.value)}
               placeholder='استبدال مجاني لجميع الطلبات.'
-              rows={2}
+              maxLength={2000}
+              rows={4}
             />
+            <p className='text-xs text-muted-foreground text-right'>
+              {returnsTextAr.length}/2000
+            </p>
           </div>
 
           <div className='space-y-3'>

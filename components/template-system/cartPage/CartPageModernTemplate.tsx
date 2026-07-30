@@ -94,15 +94,44 @@ export function CartPageModernTemplate({
   onRemoveItem,
   onApplyCoupon,
   onProceedToCheckout,
+  appliedCoupon,
+  onRemoveCoupon,
+  couponNotice,
+  onDismissCouponNotice,
 }: CartPageModernTemplateProps) {
   const [couponCode, setCouponCode] = React.useState("");
+  const [isApplyingCoupon, setIsApplyingCoupon] = React.useState(false);
+  const [couponFeedback, setCouponFeedback] = React.useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
   const { t } = useMinimalI18n();
 
-  const handleApplyCoupon = () => {
-    if (couponCode.trim() && onApplyCoupon) {
-      onApplyCoupon(couponCode);
-      setCouponCode("");
+  const handleApplyCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code || !onApplyCoupon || isApplyingCoupon) return;
+
+    setCouponFeedback(null);
+    onDismissCouponNotice?.();
+    setIsApplyingCoupon(true);
+    try {
+      const result = await onApplyCoupon(code);
+      if (result) {
+        setCouponFeedback(result);
+        // Only clear the field on success, so a typo stays editable.
+        if (result.success) setCouponCode("");
+      } else {
+        setCouponCode("");
+      }
+    } finally {
+      setIsApplyingCoupon(false);
     }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponFeedback(null);
+    onDismissCouponNotice?.();
+    onRemoveCoupon?.();
   };
 
   if (isLoading) {
@@ -214,7 +243,7 @@ export function CartPageModernTemplate({
                                 otherwise it just repeats the same number. */}
                             {item.quantity > 1 && (
                               <span className={`text-sm ${item.originalPrice != null && item.originalPrice > item.price ? "text-red-500 font-semibold" : "text-muted-foreground"}`}>
-                                {currency}{item.price.toFixed(2)}{" "}{t("checkout.each") || "each"}
+                                {currency}{item.price.toFixed(2)}
                               </span>
                             )}
                             {item.originalPrice != null && item.originalPrice > item.price && (
@@ -272,16 +301,9 @@ export function CartPageModernTemplate({
                           <span className='text-xs text-muted-foreground'>
                             {t("cart.total") || "Total"}
                           </span>
-                          <div className='text-right'>
-                            {item.originalPrice != null && item.originalPrice > item.price && (
-                              <p className='text-xs text-muted-foreground line-through'>
-                                {currency}{(item.originalPrice * item.quantity).toFixed(2)}
-                              </p>
-                            )}
-                            <p className={`font-bold ${item.originalPrice != null && item.originalPrice > item.price ? "text-red-500" : ""}`}>
-                              {currency}{(item.price * item.quantity).toFixed(2)}
-                            </p>
-                          </div>
+                          <p className='font-bold'>
+                            {currency}{(item.price * item.quantity).toFixed(2)}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -400,22 +422,75 @@ export function CartPageModernTemplate({
                   <Input
                     placeholder={t("cart.enter_code") || "Enter coupon code"}
                     value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
+                    onChange={(e) => {
+                      setCouponCode(e.target.value);
+                      if (couponFeedback) setCouponFeedback(null);
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleApplyCoupon();
                     }}
-                    disabled={isUpdating}
-                    className='flex-1 text-sm'
+                    disabled={isUpdating || isApplyingCoupon}
+                    aria-invalid={couponFeedback?.success === false}
+                    aria-describedby='promo-code-feedback'
+                    className={`flex-1 text-sm ${
+                      couponFeedback && !couponFeedback.success
+                        ? "border-red-300 focus-visible:ring-red-300"
+                        : ""
+                    }`}
                   />
                   <Button
                     variant='primary'
                     onClick={handleApplyCoupon}
-                    disabled={isUpdating || !couponCode.trim()}
+                    disabled={isUpdating || isApplyingCoupon || !couponCode.trim()}
                     className='shrink-0 font-bold tracking-wide'>
-                    {t("cart.apply") || "Apply"}
+                    {isApplyingCoupon
+                      ? t("cart.checking") || "Checking…"
+                      : t("cart.apply") || "Apply"}
                   </Button>
                 </div>
               </div>
+
+              <div id='promo-code-feedback' aria-live='polite'>
+                {/* A code that stopped being valid on its own (cart edited,
+                    code expired between visits, etc.) */}
+                {couponNotice && (
+                  <p className='text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-3 py-2 mt-3'>
+                    {couponNotice}
+                  </p>
+                )}
+
+                {couponFeedback && (
+                  <p
+                    className={`text-xs mt-2 ${
+                      couponFeedback.success ? "text-green-600" : "text-red-600"
+                    }`}>
+                    {couponFeedback.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Currently applied code, with a way to remove it */}
+              {appliedCoupon && (
+                <div className='flex items-center justify-between gap-3 mt-3 px-3 py-2 rounded-md bg-green-50 border border-green-100'>
+                  <p className='text-xs text-green-700 min-w-0'>
+                    <span className='font-semibold'>{appliedCoupon.code}</span>
+                    {appliedCoupon.discountLabel
+                      ? ` — ${appliedCoupon.discountLabel}`
+                      : ""}
+                    {totals.discount != null && totals.discount > 0
+                      ? ` · saving ${currency}${totals.discount.toFixed(2)}`
+                      : ""}
+                  </p>
+                  {onRemoveCoupon && (
+                    <button
+                      type='button'
+                      onClick={handleRemoveCoupon}
+                      className='text-[11px] font-medium uppercase tracking-wide text-green-700 hover:text-green-900 underline shrink-0'>
+                      Remove
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* ── Trust badges ─────────────────────────────── */}
