@@ -209,9 +209,14 @@ export function CartPageModernTemplate({
                                 {currency}{item.originalPrice.toFixed(2)}
                               </span>
                             )}
-                            <span className={`text-sm ${item.originalPrice != null && item.originalPrice > item.price ? "text-red-500 font-semibold" : "text-muted-foreground"}`}>
-                              {currency}{item.price.toFixed(2)}{" "}{t("checkout.each") || "each"}
-                            </span>
+                            {/* Per-unit price is only shown when it isn't already
+                                identical to the line total below (qty > 1) —
+                                otherwise it just repeats the same number. */}
+                            {item.quantity > 1 && (
+                              <span className={`text-sm ${item.originalPrice != null && item.originalPrice > item.price ? "text-red-500 font-semibold" : "text-muted-foreground"}`}>
+                                {currency}{item.price.toFixed(2)}{" "}{t("checkout.each") || "each"}
+                              </span>
+                            )}
                             {item.originalPrice != null && item.originalPrice > item.price && (
                               <span className='text-[10px] bg-red-100 text-red-600 font-semibold px-1.5 py-0.5 rounded'>
                                 -{Math.round((1 - item.price / item.originalPrice) * 100)}%
@@ -228,8 +233,10 @@ export function CartPageModernTemplate({
                           <Trash2 className='w-4 h-4' />
                         </button>
                       </div>
-                      <div className='flex items-center justify-between mt-3'>
-                        <div className='inline-flex items-center border rounded-lg'>
+                      {/* Quantity and line total stack vertically on phone —
+                          side by side overflowed the card at narrow widths. */}
+                      <div className='flex flex-col gap-2 mt-3'>
+                        <div className='inline-flex items-center border rounded-lg self-start'>
                           <button
                             type='button'
                             onClick={() =>
@@ -261,15 +268,20 @@ export function CartPageModernTemplate({
                             <Plus className='w-3.5 h-3.5' />
                           </button>
                         </div>
-                        <div className='text-right'>
-                          {item.originalPrice != null && item.originalPrice > item.price && (
-                            <p className='text-xs text-muted-foreground line-through'>
-                              {currency}{(item.originalPrice * item.quantity).toFixed(2)}
+                        <div className='flex items-center justify-between'>
+                          <span className='text-xs text-muted-foreground'>
+                            {t("cart.total") || "Total"}
+                          </span>
+                          <div className='text-right'>
+                            {item.originalPrice != null && item.originalPrice > item.price && (
+                              <p className='text-xs text-muted-foreground line-through'>
+                                {currency}{(item.originalPrice * item.quantity).toFixed(2)}
+                              </p>
+                            )}
+                            <p className={`font-bold ${item.originalPrice != null && item.originalPrice > item.price ? "text-red-500" : ""}`}>
+                              {currency}{(item.price * item.quantity).toFixed(2)}
                             </p>
-                          )}
-                          <p className={`font-bold ${item.originalPrice != null && item.originalPrice > item.price ? "text-red-500" : ""}`}>
-                            {currency}{(item.price * item.quantity).toFixed(2)}
-                          </p>
+                          </div>
                         </div>
                       </div>
                     </div>
