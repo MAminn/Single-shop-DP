@@ -119,15 +119,16 @@ const DefaultCartTemplate: React.FC<DefaultCartTemplateProps> = ({ data }) => {
     setPromoCodeError(null);
 
     try {
-      const success = await applyPromoCode(promoCodeInput.trim());
-      if (success) {
+      const result = await applyPromoCode(promoCodeInput.trim());
+      if (result.success) {
         setPromoCodeInput("");
         toast({
           title: "Promo code applied!",
-          description: "Your discount has been applied to the order.",
+          description: result.message,
         });
       } else {
-        setPromoCodeError("Invalid or expired promo code");
+        // Show the specific reason from the server, not a generic message.
+        setPromoCodeError(result.message);
       }
     } catch (error) {
       setPromoCodeError("Failed to apply promo code. Please try again.");

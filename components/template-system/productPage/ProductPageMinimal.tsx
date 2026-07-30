@@ -721,9 +721,15 @@ export function ProductPageMinimal({
               {(() => {
                 const info = product.fragranceInfo;
                 const tagline = isAr && info?.taglineAr ? info.taglineAr : info?.tagline;
-                const topNotes = isAr && info?.topNotesAr ? info.topNotesAr : info?.topNotes;
-                const middleNotes = isAr && info?.middleNotesAr ? info.middleNotesAr : info?.middleNotes;
-                const baseNotes = isAr && info?.baseNotesAr ? info.baseNotesAr : info?.baseNotes;
+                const topNotes = toSimpleText(
+                  isAr && info?.topNotesAr ? info.topNotesAr : info?.topNotes,
+                );
+                const middleNotes = toSimpleText(
+                  isAr && info?.middleNotesAr ? info.middleNotesAr : info?.middleNotes,
+                );
+                const baseNotes = toSimpleText(
+                  isAr && info?.baseNotesAr ? info.baseNotesAr : info?.baseNotes,
+                );
                 const ingredients = isAr && info?.ingredientsAr ? info.ingredientsAr : info?.ingredients;
                 const badges = info?.badges ?? [];
                 const hasScentNotes =
@@ -1736,6 +1742,21 @@ function ExpandableText({ text }: { text: string }) {
 /* ═══════════════════════════════════════════════════════════════════
    Utility: Resolve image URL from a product
    ═══════════════════════════════════════════════════════════════════ */
+
+/**
+ * Renders a fragrance note list as plain sentence-case text.
+ * Notes are typically entered in ALL CAPS in the dashboard, which reads as
+ * shouting next to the rest of the accordion — this normalises them so they
+ * match the Ingredients line. Left untouched for non-Latin text (e.g. Arabic),
+ * where casing doesn't apply.
+ */
+function toSimpleText(value: string | undefined): string | undefined {
+  if (!value) return value;
+  const trimmed = value.trim();
+  if (!/[A-Za-z]/.test(trimmed)) return trimmed;
+  const lowered = trimmed.toLowerCase();
+  return lowered.charAt(0).toUpperCase() + lowered.slice(1);
+}
 
 function resolveImageUrl(product: FeaturedProduct): string {
   if (product.images && product.images.length > 0) {

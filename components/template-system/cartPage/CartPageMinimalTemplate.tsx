@@ -22,16 +22,43 @@ export function CartPageMinimalTemplate({
   onRemoveItem,
   onApplyCoupon,
   onProceedToCheckout,
+  appliedCoupon,
+  onRemoveCoupon,
+  couponNotice,
+  onDismissCouponNotice,
 }: CartPageModernTemplateProps) {
   const [couponCode, setCouponCode] = React.useState("");
-  const [couponApplied, setCouponApplied] = React.useState(false);
+  const [isApplyingCoupon, setIsApplyingCoupon] = React.useState(false);
+  const [couponFeedback, setCouponFeedback] = React.useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
-  const handleApplyCoupon = () => {
-    if (couponCode.trim() && onApplyCoupon) {
-      onApplyCoupon(couponCode.trim());
-      setCouponApplied(true);
-      setCouponCode("");
+  const handleApplyCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code || !onApplyCoupon || isApplyingCoupon) return;
+
+    setCouponFeedback(null);
+    onDismissCouponNotice?.();
+    setIsApplyingCoupon(true);
+    try {
+      const result = await onApplyCoupon(code);
+      if (result) {
+        setCouponFeedback(result);
+        // Only clear the field on success, so a typo stays editable.
+        if (result.success) setCouponCode("");
+      } else {
+        setCouponCode("");
+      }
+    } finally {
+      setIsApplyingCoupon(false);
     }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponFeedback(null);
+    onDismissCouponNotice?.();
+    onRemoveCoupon?.();
   };
 
   if (isLoading) {
@@ -290,26 +317,77 @@ export function CartPageMinimalTemplate({
                     <input
                       type="text"
                       value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
+                      onChange={(e) => {
+                        setCouponCode(e.target.value);
+                        if (couponFeedback) setCouponFeedback(null);
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleApplyCoupon();
                       }}
                       placeholder="Enter code"
-                      className="flex-1 px-4 py-2.5 rounded-md border border-gray-200 text-[13px] text-gray-900 placeholder-gray-300 outline-none focus:border-gray-400 transition-colors bg-white min-w-0"
+                      disabled={isApplyingCoupon}
+                      aria-invalid={couponFeedback?.success === false}
+                      aria-describedby="promo-code-feedback"
+                      className={`flex-1 px-4 py-2.5 rounded-md border text-[13px] text-gray-900 placeholder-gray-300 outline-none transition-colors bg-white min-w-0 disabled:opacity-60 ${
+                        couponFeedback && !couponFeedback.success
+                          ? "border-red-300 focus:border-red-400"
+                          : "border-gray-200 focus:border-gray-400"
+                      }`}
                     />
                     <button
                       type="button"
                       onClick={handleApplyCoupon}
-                      disabled={!couponCode.trim()}
+                      disabled={!couponCode.trim() || isApplyingCoupon}
                       className="px-5 py-2.5 rounded-md bg-gray-900 text-white text-[12px] font-medium uppercase tracking-wide hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
-                      Apply
+                      {isApplyingCoupon ? "Checking…" : "Apply"}
                     </button>
                   </div>
                 </div>
-                {couponApplied && totals.discount != null && totals.discount > 0 && (
-                  <p className="text-[12px] text-green-600 mt-2">
-                    Promo code applied — saving {totals.discount.toFixed(2)} {currency}
-                  </p>
+
+                <div id="promo-code-feedback" aria-live="polite">
+                  {/* A code that stopped being valid on its own (cart edited,
+                      code expired between visits, etc.) */}
+                  {couponNotice && (
+                    <p className="text-[12px] text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-3 py-2 mt-2">
+                      {couponNotice}
+                    </p>
+                  )}
+
+                  {couponFeedback && (
+                    <p
+                      className={`text-[12px] mt-2 ${
+                        couponFeedback.success
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}>
+                      {couponFeedback.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Currently applied code, with a way to take it off */}
+                {appliedCoupon && (
+                  <div className="flex items-center justify-between gap-3 mt-3 px-3 py-2 rounded-md bg-green-50 border border-green-100">
+                    <p className="text-[12px] text-green-700 min-w-0">
+                      <span className="font-semibold">
+                        {appliedCoupon.code}
+                      </span>
+                      {appliedCoupon.discountLabel
+                        ? ` — ${appliedCoupon.discountLabel}`
+                        : ""}
+                      {totals.discount != null && totals.discount > 0
+                        ? ` · saving ${totals.discount.toFixed(2)} ${currency}`
+                        : ""}
+                    </p>
+                    {onRemoveCoupon && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveCoupon}
+                        className="text-[11px] font-medium uppercase tracking-wide text-green-700 hover:text-green-900 underline shrink-0">
+                        Remove
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

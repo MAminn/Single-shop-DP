@@ -23,6 +23,8 @@ export default function CartPage() {
     promoCode,
     applyPromoCode,
     removePromoCode,
+    promoCodeNotice,
+    clearPromoCodeNotice,
     shipping,
     appliedOffers,
   } = useCart();
@@ -104,12 +106,15 @@ export default function CartPage() {
     setIsUpdating(false);
   };
 
-  // Handle apply coupon
-  const handleApplyCoupon = async (code: string): Promise<boolean> => {
+  // Handle apply coupon — the result carries the exact reason the code was
+  // accepted or rejected so the template can show it to the shopper.
+  const handleApplyCoupon = async (
+    code: string,
+  ): Promise<{ success: boolean; message: string }> => {
     setIsUpdating(true);
-    const success = await applyPromoCode(code);
+    const result = await applyPromoCode(code);
     setIsUpdating(false);
-    return success;
+    return result;
   };
 
   // Handle proceed to checkout
@@ -138,6 +143,19 @@ export default function CartPage() {
     onRemoveItem: handleRemoveItem,
     onApplyCoupon: handleApplyCoupon,
     onProceedToCheckout: handleProceedToCheckout,
+    appliedCoupon: promoCode
+      ? {
+          code: promoCode.code,
+          discountLabel:
+            promoCode.discountLabel ??
+            (promoCode.discountType === "percentage"
+              ? `${promoCode.discountValue}% off`
+              : `${promoCode.discountValue.toFixed(2)} EGP off`),
+        }
+      : null,
+    onRemoveCoupon: removePromoCode,
+    couponNotice: promoCodeNotice,
+    onDismissCouponNotice: clearPromoCodeNotice,
   };
 
   return <Template.component {...templateProps} />;

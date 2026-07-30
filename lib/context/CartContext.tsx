@@ -15,6 +15,19 @@ export interface PromoCodeInfo {
   discountType: "percentage" | "fixed_amount";
   discountValue: number;
   appliesToAllProducts: boolean;
+  /** Human-readable discount, e.g. "10% off". Absent on older cached copies. */
+  discountLabel?: string;
+  description?: string | null;
+}
+
+/**
+ * Outcome of applying a promo code. `message` is always populated with
+ * something worth showing the shopper — on failure it's the server's specific
+ * reason, on success a confirmation of what the code did.
+ */
+export interface PromoCodeApplyResult {
+  success: boolean;
+  message: string;
 }
 
 interface CartContextType {
@@ -37,8 +50,11 @@ interface CartContextType {
   shipping: number;
   total: number;
   promoCode: PromoCodeInfo | null;
-  applyPromoCode: (code: string) => Promise<boolean>;
+  applyPromoCode: (code: string) => Promise<PromoCodeApplyResult>;
   removePromoCode: () => void;
+  /** Set when a previously applied code stopped being valid on its own. */
+  promoCodeNotice: string | null;
+  clearPromoCodeNotice: () => void;
   findItemInCart: (
     itemId: string,
     options: CartItem["selectedOptions"],
@@ -49,9 +65,27 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+/**
+ * Pulls the server's user-facing reason out of a failed tRPC result.
+ * The result is a discriminated union, so the error field only exists on the
+ * failure branch.
+ */
+function promoErrorMessage(result: unknown): string | null {
+  if (
+    result &&
+    typeof result === "object" &&
+    "error" in result &&
+    typeof (result as { error: unknown }).error === "string"
+  ) {
+    return (result as { error: string }).error;
+  }
+  return null;
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [promoCode, setPromoCode] = useState<PromoCodeInfo | null>(null);
+  const [promoCodeNotice, setPromoCodeNotice] = useState<string | null>(null);
   const [discount, setDiscount] = useState<number>(0);
   const [shipping, setShipping] = useState<number>(0);
   const [appliedOffers, setAppliedOffers] = useState<AppliedOffer[]>([]);
@@ -96,6 +130,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
             } else {
               setPromoCode(null);
               localStorage.removeItem("promoCode");
+              // Tell the shopper why their saved discount disappeared instead
+              // of silently dropping it. Skipped for an empty cart, where the
+              // code simply has nothing to apply to yet.
+              if (savedCartItems.length > 0) {
+                const reason = promoErrorMessage(result);
+                setPromoCodeNotice(
+                  reason
+                    ? `Your promo code "${parsedPromoCode.code}" was removed: ${reason}`
+                    : `Your promo code "${parsedPromoCode.code}" is no longer valid and has been removed.`,
+                );
+              }
             }
           })
           .catch(() => {
@@ -133,6 +178,42 @@ export function CartProvider({ children }: { children: ReactNode }) {
     // Recalculate promo discount when items change
     if (promoCode) {
       calculateDiscount(promoCode);
+    }
+
+    // Re-check the applied promo code against the new cart. Editing the cart
+    // can invalidate a code (dropping below its minimum, or removing the only
+    // eligible product), and it's far better to surface that here than to let
+    // checkout fail. Only failures act, so this can't loop.
+    if (promoCode && items.length > 0) {
+      const promoCartItems = items.map((item) => ({
+        id: item.id,
+        quantity: item.quantity,
+        price: item.price,
+      }));
+      const promoSubtotal = items.reduce(
+        (t, i) => t + i.price * i.quantity,
+        0,
+      );
+      trpc.promoCode.validate
+        .query({
+          code: promoCode.code,
+          cartItems: promoCartItems,
+          subtotal: promoSubtotal,
+        })
+        .then((result) => {
+          if (!result.success || !result.result) {
+            const reason = promoErrorMessage(result);
+            setPromoCode(null);
+            setPromoCodeNotice(
+              reason
+                ? `Your promo code "${promoCode.code}" was removed: ${reason}`
+                : `Your promo code "${promoCode.code}" no longer applies to your cart and has been removed.`,
+            );
+          }
+        })
+        .catch(() => {
+          /* Network hiccup — leave the code applied; checkout re-validates. */
+        });
     }
 
     // Re-evaluate automatic offers when cart changes
@@ -312,7 +393,41 @@ export function CartProvider({ children }: { children: ReactNode }) {
     removePromoCode();
   };
 
-  const applyPromoCode = async (code: string): Promise<boolean> => {
+  const applyPromoCode = async (
+    rawCode: string,
+  ): Promise<PromoCodeApplyResult> => {
+    const code = rawCode.trim().toUpperCase();
+
+    // ── Client-side guards, so obvious mistakes get instant feedback ──
+    if (code.length === 0) {
+      return { success: false, message: "Enter a promo code first." };
+    }
+    if (code.length < 3) {
+      return {
+        success: false,
+        message: "Promo codes are at least 3 characters long.",
+      };
+    }
+    if (!/^[A-Z0-9_-]+$/.test(code)) {
+      return {
+        success: false,
+        message:
+          "Promo codes only contain letters, numbers, hyphens and underscores.",
+      };
+    }
+    if (items.length === 0) {
+      return {
+        success: false,
+        message: "Add something to your cart before applying a promo code.",
+      };
+    }
+    if (promoCode && promoCode.code === code) {
+      return {
+        success: false,
+        message: `"${code}" is already applied to your order.`,
+      };
+    }
+
     try {
       // Convert cart items to the format expected by the validatePromoCode endpoint
       const cartItems = items.map((item) => ({
@@ -330,23 +445,40 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       if (result.success && result.result) {
         setPromoCode(result.result);
-        return true;
+        const label =
+          result.result.discountLabel ??
+          (result.result.discountType === "percentage"
+            ? `${result.result.discountValue}% off`
+            : `${result.result.discountValue.toFixed(2)} EGP off`);
+        return {
+          success: true,
+          message: `"${code}" applied — ${label}.`,
+        };
       }
 
-      setPromoCode(null);
-      setDiscount(0);
-      return false;
+      // A failed validation leaves any previously applied code alone; only the
+      // code the shopper just tried is rejected.
+      return {
+        success: false,
+        message:
+          promoErrorMessage(result) ||
+          "We couldn't apply that promo code. Please check it and try again.",
+      };
     } catch (error) {
       console.error("Failed to apply promo code:", error);
-      setPromoCode(null);
-      setDiscount(0);
-      return false;
+      return {
+        success: false,
+        message:
+          "We couldn't reach the server to check that code. Please try again.",
+      };
     }
   };
 
   const removePromoCode = () => {
     setPromoCode(null);
   };
+
+  const clearPromoCodeNotice = () => setPromoCodeNotice(null);
 
   const totalItems = items.reduce((total, item) => total + item.quantity, 0);
 
@@ -369,6 +501,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         promoCode,
         applyPromoCode,
         removePromoCode,
+        promoCodeNotice,
+        clearPromoCodeNotice,
         findItemInCart,
         appliedOffers,
         offerDiscount,

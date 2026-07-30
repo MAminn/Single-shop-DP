@@ -6,6 +6,8 @@ import {
   user,
   type orderStatus,
   promoCode,
+  promoCodeProducts,
+  promoCodeCategories,
   cartOffer,
 } from "#root/shared/database/drizzle/schema";
 import { and, asc, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
@@ -393,6 +395,7 @@ export const createOrder = (
               name: product.name,
               stock: product.stock,
               hidden: product.hidden,
+              categoryId: product.categoryId,
             })
             .from(product)
             .where(inArray(product.id, productIds))
@@ -463,91 +466,163 @@ export const createOrder = (
               .where(eq(promoCode.id, input.promoCodeId))
               .then((res) => res[0]);
 
-            if (promoCodeData) {
-              // Convert cart items to the format expected by validatePromoCode
-              const cartItems = input.items
-                .map((item) => {
-                  const productData = products.find(
-                    (p) => p.id === item.productId,
-                  );
-                  if (!productData) return null;
-                  return {
-                    id: item.productId,
-                    quantity: item.quantity,
-                    price: Number.parseFloat(productData.price.toString()),
-                  };
-                })
-                .filter(
-                  (
-                    item,
-                  ): item is { id: string; quantity: number; price: number } =>
-                    item !== null,
-                );
+            // A promo code id that doesn't resolve means the client sent
+            // something stale or tampered with — never silently ignore it.
+            if (!promoCodeData) {
+              throw new ServerError({
+                tag: "PromoCodeValidationFailed",
+                statusCode: 400,
+                clientMessage:
+                  "The promo code on your order is no longer available. Please remove it and try again.",
+              });
+            }
 
-              try {
-                // Validate the promo code synchronously from the database directly
-                // Instead of trying to use Effect.runPromise inside a transaction
-                if (
-                  // Current date is between start and end dates (or they're null)
-                  (!promoCodeData.startDate ||
-                    promoCodeData.startDate <= new Date()) &&
-                  (!promoCodeData.endDate ||
-                    promoCodeData.endDate >= new Date()) &&
-                  // Code is active
-                  (promoCodeData.status === "active" ||
-                    promoCodeData.status === "scheduled") &&
-                  // Usage limits are not exceeded
-                  (promoCodeData.usageLimit === null ||
-                    promoCodeData.usedCount < promoCodeData.usageLimit) &&
-                  // Minimum purchase amount is met
-                  (promoCodeData.minPurchaseAmount === null ||
-                    Number(promoCodeData.minPurchaseAmount) <= subtotal)
-                ) {
-                  // Calculate discount based on validated promo code
-                  if (promoCodeData.discountType === "percentage") {
-                    discount =
-                      subtotal * (Number(promoCodeData.discountValue) / 100);
-                  } else if (promoCodeData.discountType === "fixed_amount") {
-                    discount = Number(promoCodeData.discountValue);
-                    // Make sure discount doesn't exceed subtotal
-                    if (discount > subtotal) {
-                      discount = subtotal;
-                    }
-                  }
+            const nowForPromo = new Date();
 
-                  // Increment used count for the promo code
-                  await tx
-                    .update(promoCode)
-                    .set({
-                      usedCount: promoCodeData.usedCount + 1,
-                      // If this was the last use, set status to exhausted
-                      status:
-                        promoCodeData.usageLimit !== null &&
-                        promoCodeData.usedCount + 1 >= promoCodeData.usageLimit
-                          ? "exhausted"
-                          : promoCodeData.status,
-                    })
-                    .where(eq(promoCode.id, promoCodeData.id));
-                } else {
-                  throw new ServerError({
-                    tag: "PromoCodeValidationFailed",
-                    statusCode: 400,
-                    clientMessage:
-                      "This promo code is not valid or has expired",
-                  });
-                }
-              } catch (error) {
-                console.error("Promo code validation failed:", error);
+            // Re-validate everything server-side at order time. The cart may
+            // have changed since the code was applied, and the client's copy
+            // of the discount is never trusted.
+            const rejection: string | null = (() => {
+              if (
+                promoCodeData.status !== "active" &&
+                promoCodeData.status !== "scheduled"
+              ) {
+                return promoCodeData.status === "expired"
+                  ? "This promo code has expired."
+                  : promoCodeData.status === "exhausted"
+                    ? "This promo code has reached its usage limit and can no longer be used."
+                    : "This promo code isn't active right now.";
+              }
+              if (
+                promoCodeData.startDate &&
+                promoCodeData.startDate > nowForPromo
+              ) {
+                return "This promo code isn't active yet.";
+              }
+              if (promoCodeData.endDate && promoCodeData.endDate < nowForPromo) {
+                return "This promo code has expired.";
+              }
+              if (
+                promoCodeData.usageLimit !== null &&
+                promoCodeData.usedCount >= promoCodeData.usageLimit
+              ) {
+                return "This promo code has reached its usage limit and can no longer be used.";
+              }
+              const minPurchase = promoCodeData.minPurchaseAmount
+                ? Number(promoCodeData.minPurchaseAmount)
+                : 0;
+              if (minPurchase > 0 && subtotal < minPurchase) {
+                return `This promo code needs a minimum order of ${minPurchase.toFixed(2)} EGP.`;
+              }
+              return null;
+            })();
+
+            if (rejection) {
+              throw new ServerError({
+                tag: "PromoCodeValidationFailed",
+                statusCode: 400,
+                clientMessage: rejection,
+              });
+            }
+
+            // Per-user usage limit — signed-in shoppers by user id, guests by
+            // the email they're checking out with.
+            if (promoCodeData.usageLimitPerUser !== null) {
+              const previousUses = await tx
+                .select({ id: order.id })
+                .from(order)
+                .where(
+                  and(
+                    eq(order.promoCodeId, promoCodeData.id),
+                    userId
+                      ? eq(order.userId, userId)
+                      : eq(order.customerEmail, input.customerEmail),
+                  ),
+                )
+                .execute();
+
+              if (previousUses.length >= promoCodeData.usageLimitPerUser) {
                 throw new ServerError({
                   tag: "PromoCodeValidationFailed",
                   statusCode: 400,
                   clientMessage:
-                    error instanceof ServerError
-                      ? error.clientMessage
-                      : "Invalid promo code",
+                    promoCodeData.usageLimitPerUser === 1
+                      ? "You've already used this promo code."
+                      : `You've already used this promo code the maximum of ${promoCodeData.usageLimitPerUser} times.`,
                 });
               }
             }
+
+            // Product / category applicability — this was previously skipped
+            // at order time, letting a restricted code through on any cart.
+            if (!promoCodeData.appliesToAllProducts) {
+              const cartProductIds = input.items.map((item) => item.productId);
+
+              const applicableProducts = await tx
+                .select({ productId: promoCodeProducts.productId })
+                .from(promoCodeProducts)
+                .where(
+                  and(
+                    eq(promoCodeProducts.promoCodeId, promoCodeData.id),
+                    inArray(promoCodeProducts.productId, cartProductIds),
+                  ),
+                )
+                .execute();
+
+              const cartCategoryIds = products
+                .map((p) => p.categoryId)
+                .filter((id): id is string => !!id);
+
+              const applicableCategories =
+                cartCategoryIds.length > 0
+                  ? await tx
+                      .select({ categoryId: promoCodeCategories.categoryId })
+                      .from(promoCodeCategories)
+                      .where(
+                        and(
+                          eq(promoCodeCategories.promoCodeId, promoCodeData.id),
+                          inArray(
+                            promoCodeCategories.categoryId,
+                            cartCategoryIds,
+                          ),
+                        ),
+                      )
+                      .execute()
+                  : [];
+
+              if (
+                applicableProducts.length === 0 &&
+                applicableCategories.length === 0
+              ) {
+                throw new ServerError({
+                  tag: "PromoCodeValidationFailed",
+                  statusCode: 400,
+                  clientMessage:
+                    "This promo code doesn't apply to any of the items in your cart.",
+                });
+              }
+            }
+
+            // Calculate discount from the code's own values, never the client's
+            if (promoCodeData.discountType === "percentage") {
+              discount = subtotal * (Number(promoCodeData.discountValue) / 100);
+            } else if (promoCodeData.discountType === "fixed_amount") {
+              discount = Math.min(Number(promoCodeData.discountValue), subtotal);
+            }
+
+            // Increment used count for the promo code
+            await tx
+              .update(promoCode)
+              .set({
+                usedCount: promoCodeData.usedCount + 1,
+                // If this was the last use, set status to exhausted
+                status:
+                  promoCodeData.usageLimit !== null &&
+                  promoCodeData.usedCount + 1 >= promoCodeData.usageLimit
+                    ? "exhausted"
+                    : promoCodeData.status,
+              })
+              .where(eq(promoCode.id, promoCodeData.id));
           }
 
           // ─── Evaluate automatic cart offers server-side ───────────────────────

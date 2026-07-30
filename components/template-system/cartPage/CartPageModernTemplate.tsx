@@ -62,8 +62,21 @@ export interface CartPageModernTemplateProps {
   currency?: string;
   onQuantityChange?: (id: string, quantity: number) => void;
   onRemoveItem?: (id: string) => void;
-  onApplyCoupon?: (code: string) => void;
+  /**
+   * Applies a promo code. Resolves with whether it worked and a message that
+   * is always safe to show the shopper (the specific rejection reason on
+   * failure, a confirmation of the discount on success).
+   */
+  onApplyCoupon?: (
+    code: string,
+  ) => void | Promise<{ success: boolean; message: string }>;
   onProceedToCheckout?: () => void;
+  /** Currently applied promo code, if any. */
+  appliedCoupon?: { code: string; discountLabel?: string } | null;
+  onRemoveCoupon?: () => void;
+  /** Message about a code that stopped being valid on its own. */
+  couponNotice?: string | null;
+  onDismissCouponNotice?: () => void;
 }
 
 /**
