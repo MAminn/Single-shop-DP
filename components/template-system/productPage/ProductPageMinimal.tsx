@@ -759,28 +759,28 @@ export function ProductPageMinimal({
                             )}
                             <div className='space-y-1'>
                               {topNotes && (
-                                <div className='py-1 border-b border-gray-200'>
+                                <p className='py-1 border-b border-gray-200'>
                                   <span className='text-sm font-bold text-gray-900'>
                                     {isAr ? "المقدمة: " : "Top: "}
                                   </span>
                                   <span className='text-sm font-light text-gray-600'>{topNotes}</span>
-                                </div>
+                                </p>
                               )}
                               {middleNotes && (
-                                <div className='py-1 border-b border-gray-200'>
+                                <p className='py-1 border-b border-gray-200'>
                                   <span className='text-sm font-bold text-gray-900'>
                                     {isAr ? "القلب: " : "Middle: "}
                                   </span>
                                   <span className='text-sm font-light text-gray-600'>{middleNotes}</span>
-                                </div>
+                                </p>
                               )}
                               {baseNotes && (
-                                <div className='py-1'>
+                                <p className='py-1'>
                                   <span className='text-sm font-bold text-gray-900'>
                                     {isAr ? "القاعدة: " : "Base: "}
                                   </span>
                                   <span className='text-sm font-light text-gray-600'>{baseNotes}</span>
-                                </div>
+                                </p>
                               )}
                             </div>
                             {ingredients && (
