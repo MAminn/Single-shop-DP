@@ -24,6 +24,7 @@ import {
 } from "./service";
 import { persistBostaSyncStatus } from "./sync-status";
 import { getBostaCheckoutLocations } from "./districts";
+import { logOrderEvent } from "#root/backend/orders/order-log";
 
 function requireBosta() {
   if (!isBostaEnabled()) {
@@ -102,6 +103,25 @@ export const bostaRouter = t.router({
             );
           }
 
+          // Hard gate: an online-payment order can only go to Bosta once its
+          // payment has actually been confirmed "paid" — never speculatively,
+          // and never just because an admin clicked a button. COD has nothing
+          // to confirm, so it's exempt.
+          const isOnlinePayment =
+            orderRow.paymentMethod === "stripe" ||
+            orderRow.paymentMethod === "paymob";
+          if (isOnlinePayment && orderRow.paymentStatus !== "paid") {
+            return yield* $(
+              Effect.fail(
+                new ServerError({
+                  tag: "PaymentNotConfirmed",
+                  statusCode: 409,
+                  clientMessage: `Cannot send to Bosta — this order's ${orderRow.paymentMethod} payment is "${orderRow.paymentStatus}", not confirmed paid.`,
+                }),
+              ),
+            );
+          }
+
           yield* $(Effect.promise(() => persistBostaSyncStatus(input.orderId, "pending")));
 
           const nameParts = orderRow.customerName.trim().split(/\s+/);
@@ -151,6 +171,15 @@ export const bostaRouter = t.router({
                 }),
               ),
             );
+            yield* $(
+              Effect.promise(() =>
+                logOrderEvent({
+                  orderId: input.orderId,
+                  action: "bosta_send_failed",
+                  note: `Manual "Send to Bosta" by ${ctx.clientSession.email}: ${outcome.error}`,
+                }),
+              ),
+            );
             return yield* $(
               Effect.fail(
                 new ServerError({
@@ -166,6 +195,16 @@ export const bostaRouter = t.router({
             Effect.promise(() =>
               persistBostaSyncStatus(input.orderId, "sent", {
                 delivery: outcome.result,
+              }),
+            ),
+          );
+
+          yield* $(
+            Effect.promise(() =>
+              logOrderEvent({
+                orderId: input.orderId,
+                action: "bosta_sent",
+                note: `Manual "Send to Bosta" by ${ctx.clientSession.email} — tracking ${outcome.result.trackingNumber}`,
               }),
             ),
           );
@@ -236,6 +275,16 @@ export const bostaRouter = t.router({
 
           yield* $(
             Effect.promise(() => persistBostaSyncStatus(input.orderId, "cancelled")),
+          );
+
+          yield* $(
+            Effect.promise(() =>
+              logOrderEvent({
+                orderId: input.orderId,
+                action: "bosta_cancelled",
+                note: `Bosta delivery cancelled by ${ctx.clientSession.email}`,
+              }),
+            ),
           );
 
           return { success: true };

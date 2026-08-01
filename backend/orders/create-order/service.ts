@@ -28,6 +28,7 @@ import { getShippingFeeRaw } from "#root/backend/settings/get-shipping-fee";
 import { createBostaDelivery, isBostaEnabled } from "#root/backend/orders/bosta/service";
 import { persistBostaSyncStatus } from "#root/backend/orders/bosta/sync-status";
 import { isFincartEnabled } from "#root/backend/orders/fincart/config";
+import { logOrderEvent } from "#root/backend/orders/order-log";
 
 const OrderItemSchema = z.object({
   productId: z.string().uuid(),
@@ -348,6 +349,11 @@ async function autoSendOrderToBosta(orderData: CreatedOrder): Promise<void> {
     await persistBostaSyncStatus(orderData.id, "sent", {
       delivery: outcome.result,
     });
+    await logOrderEvent({
+      orderId: orderData.id,
+      action: "bosta_sent",
+      note: `Auto-sent to Bosta at checkout (COD) — tracking ${outcome.result.trackingNumber}`,
+    });
     console.log(
       `[Order ${orderData.id}] Bosta delivery created — tracking: ${outcome.result.trackingNumber}`,
     );
@@ -356,6 +362,11 @@ async function autoSendOrderToBosta(orderData: CreatedOrder): Promise<void> {
 
   await persistBostaSyncStatus(orderData.id, "failed", {
     error: outcome.error,
+  });
+  await logOrderEvent({
+    orderId: orderData.id,
+    action: "bosta_send_failed",
+    note: `Auto-send to Bosta failed at checkout (COD): ${outcome.error}`,
   });
 }
 
@@ -782,6 +793,22 @@ export const createOrder = (
       }),
     );
 
+    // Start of the per-order audit trail. Cart/checkout state before this
+    // point is client-only (no server row exists to log against) — this is
+    // the earliest point an order can be tracked server-side.
+    yield* $(
+      Effect.promise(() =>
+        logOrderEvent({
+          orderId: result.id,
+          action: "created",
+          newStatus: result.status,
+          note: `Order placed — ${result.paymentMethod}${
+            result.paymentMethod === "cod" ? "" : ` (payment ${result.paymentStatus})`
+          }, total ${result.total} EGP`,
+        }),
+      ),
+    );
+
     const emailService = yield* $(EmailService);
 
     const branding = yield* $(Effect.promise(() => getEmailBranding()));
@@ -939,6 +966,15 @@ export const createOrder = (
         Effect.promise(() =>
           persistBostaSyncStatus(result.id, "skipped", {
             error: "Deferred until online payment is confirmed",
+          }),
+        ),
+      );
+      yield* $(
+        Effect.promise(() =>
+          logOrderEvent({
+            orderId: result.id,
+            action: "bosta_skipped",
+            note: `Bosta dispatch deferred — ${input.paymentMethod} payment not yet confirmed`,
           }),
         ),
       );

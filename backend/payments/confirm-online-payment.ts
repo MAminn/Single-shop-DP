@@ -7,6 +7,7 @@ import type { DatabaseClient } from "#root/shared/database/drizzle/db";
 import { order, orderItem } from "#root/shared/database/drizzle/schema";
 import { createBostaDelivery, isBostaEnabled } from "#root/backend/orders/bosta/service";
 import { persistBostaSyncStatus } from "#root/backend/orders/bosta/sync-status";
+import { logOrderEvent } from "#root/backend/orders/order-log";
 
 type PaymentStatus = "paid" | "failed" | "processing";
 
@@ -83,11 +84,21 @@ async function triggerBostaForPaidOrder(
     await persistBostaSyncStatus(orderRow.id, "sent", {
       delivery: outcome.result,
     });
+    await logOrderEvent({
+      orderId: orderRow.id,
+      action: "bosta_sent",
+      note: `Auto-sent to Bosta after payment was confirmed paid — tracking ${outcome.result.trackingNumber}`,
+    });
     return;
   }
 
   await persistBostaSyncStatus(orderRow.id, "failed", {
     error: outcome.error,
+  });
+  await logOrderEvent({
+    orderId: orderRow.id,
+    action: "bosta_send_failed",
+    note: `Auto-send to Bosta failed after payment confirmation: ${outcome.error}`,
   });
 }
 
@@ -130,6 +141,32 @@ export async function applyOnlinePaymentUpdate(
     })
     .where(eq(order.id, orderId))
     .execute();
+
+  // Only log an actual transition — a duplicate "paid" webhook for an
+  // already-paid order isn't a new event worth recording.
+  if (update.paymentStatus !== orderRow.paymentStatus) {
+    if (update.paymentStatus === "paid") {
+      await logOrderEvent({
+        orderId,
+        action: "payment_confirmed",
+        oldStatus: orderRow.paymentStatus,
+        newStatus: "paid",
+        note: `Payment confirmed paid via ${orderRow.paymentMethod}${
+          update.transactionId ? ` (txn ${update.transactionId})` : ""
+        }`,
+      });
+    } else if (update.paymentStatus === "failed") {
+      await logOrderEvent({
+        orderId,
+        action: "payment_failed",
+        oldStatus: orderRow.paymentStatus,
+        newStatus: "failed",
+        note: `Payment failed via ${orderRow.paymentMethod}${
+          update.transactionId ? ` (txn ${update.transactionId})` : ""
+        }`,
+      });
+    }
+  }
 
   if (update.paymentStatus === "paid" && !wasAlreadyPaid) {
     try {

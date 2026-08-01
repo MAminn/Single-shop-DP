@@ -64,12 +64,16 @@ import {
   ExternalLink,
   Send,
   XCircle,
+  Lock,
+  History,
+  ChevronRight,
 } from "lucide-react";
 import { usePageContext } from "vike-react/usePageContext";
 import { trpc } from "#root/shared/trpc/client";
 import { useToast } from "#root/components/ui/use-toast";
 import { Pagination } from "#root/components/utils/Pagination";
 import { OrderEditPanel } from "./OrderEditPanel";
+import { OrderActivityLog } from "./OrderActivityLog";
 
 interface OrderItem {
   id: string;
@@ -535,6 +539,17 @@ export default function Orders() {
         )}
       </div>
     );
+  };
+
+  /**
+   * Mirrors the server-side gate in backend/orders/bosta/trpc.ts sendOrder:
+   * an online-payment order can only go to Bosta once payment is confirmed
+   * paid. COD has nothing to confirm, so it's exempt. This is UI-only
+   * guidance — the backend enforces it regardless of what this returns.
+   */
+  const canSendToBosta = (order: Order) => {
+    const isOnlinePayment = order.paymentMethod === "stripe" || order.paymentMethod === "paymob";
+    return !isOnlinePayment || order.paymentStatus === "paid";
   };
 
   const formatDate = (date: Date) => {
@@ -1144,19 +1159,28 @@ export default function Orders() {
                       </h3>
                       <div className='flex items-center gap-2'>
                         {selectedOrder.bostaSyncStatus !== "sent" && !selectedOrder.bostaDeliveryId ? (
-                          <Button
-                            size='sm'
-                            variant='outline'
-                            className='h-7 text-xs gap-1'
-                            disabled={bostaActionLoading === selectedOrder.id}
-                            onClick={() => sendOrderToBosta(selectedOrder.id)}>
-                            {bostaActionLoading === selectedOrder.id ? (
-                              <Loader2 className='w-3 h-3 animate-spin' />
-                            ) : (
-                              <Send className='w-3 h-3' />
-                            )}
-                            Send to Bosta
-                          </Button>
+                          canSendToBosta(selectedOrder) ? (
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              className='h-7 text-xs gap-1'
+                              disabled={bostaActionLoading === selectedOrder.id}
+                              onClick={() => sendOrderToBosta(selectedOrder.id)}>
+                              {bostaActionLoading === selectedOrder.id ? (
+                                <Loader2 className='w-3 h-3 animate-spin' />
+                              ) : (
+                                <Send className='w-3 h-3' />
+                              )}
+                              Send to Bosta
+                            </Button>
+                          ) : (
+                            <span
+                              title='Online payment must be confirmed paid before this order can be sent to Bosta'
+                              className='inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1'>
+                              <Lock className='w-3 h-3' />
+                              Awaiting payment
+                            </span>
+                          )
                         ) : selectedOrder.bostaDeliveryId ? (
                           <Button
                             size='sm'
@@ -1257,6 +1281,17 @@ export default function Orders() {
                     <p className='text-sm text-muted-foreground'>
                       {selectedOrder.notes}
                     </p>
+                  </div>
+                )}
+
+                {/* ── Activity Log ── */}
+                {isAdmin && (
+                  <div className='my-4 border-t pt-4'>
+                    <h3 className='font-medium text-sm mb-3 flex items-center gap-2'>
+                      <History className='w-4 h-4 text-muted-foreground' />
+                      Activity Log
+                    </h3>
+                    <OrderActivityLog orderId={selectedOrder.id} />
                   </div>
                 )}
 
@@ -1490,15 +1525,24 @@ export default function Orders() {
                           Bosta Delivery
                         </h3>
                         {selectedOrder.bostaSyncStatus !== "sent" && !selectedOrder.bostaDeliveryId ? (
-                          <Button
-                            size='sm'
-                            variant='outline'
-                            className='h-7 text-xs gap-1'
-                            disabled={bostaActionLoading === selectedOrder.id}
-                            onClick={() => sendOrderToBosta(selectedOrder.id)}>
-                            {bostaActionLoading === selectedOrder.id ? <Loader2 className='w-3 h-3 animate-spin' /> : <Send className='w-3 h-3' />}
-                            Send
-                          </Button>
+                          canSendToBosta(selectedOrder) ? (
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              className='h-7 text-xs gap-1'
+                              disabled={bostaActionLoading === selectedOrder.id}
+                              onClick={() => sendOrderToBosta(selectedOrder.id)}>
+                              {bostaActionLoading === selectedOrder.id ? <Loader2 className='w-3 h-3 animate-spin' /> : <Send className='w-3 h-3' />}
+                              Send
+                            </Button>
+                          ) : (
+                            <span
+                              title='Online payment must be confirmed paid before this order can be sent to Bosta'
+                              className='inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1'>
+                              <Lock className='w-3 h-3' />
+                              Awaiting payment
+                            </span>
+                          )
                         ) : selectedOrder.bostaDeliveryId ? (
                           <Button
                             size='sm'
@@ -1556,6 +1600,16 @@ export default function Orders() {
                       <p className='text-sm text-muted-foreground'>
                         {selectedOrder.notes}
                       </p>
+                    </div>
+                  )}
+
+                  {isAdmin && (
+                    <div>
+                      <h3 className='font-medium text-sm mb-3 flex items-center gap-2'>
+                        <History className='w-4 h-4 text-muted-foreground' />
+                        Activity Log
+                      </h3>
+                      <OrderActivityLog orderId={selectedOrder.id} />
                     </div>
                   )}
                 </div>

@@ -967,6 +967,13 @@ export const orderLogAction = pgEnum("order_log_action", [
   "cancelled",
   "refunded",
   "items_edited",
+  "payment_confirmed",
+  "payment_failed",
+  "bosta_sent",
+  "bosta_send_failed",
+  "bosta_skipped",
+  "bosta_cancelled",
+  "bosta_status_updated",
 ]);
 
 export const orderLog = pgTable("order_log", {

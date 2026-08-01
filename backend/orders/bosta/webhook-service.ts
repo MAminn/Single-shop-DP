@@ -5,6 +5,7 @@ import { Effect } from "effect";
 import { z } from "zod";
 import { ServerError } from "#root/shared/error/server";
 import { mapBostaStateToOrderStatus } from "./service";
+import { logOrderEvent, recordWebhookLog } from "#root/backend/orders/order-log";
 
 // ─── Webhook payload schema ───────────────────────────────────────────────────
 // Bosta sends this JSON body to our webhook URL on every status change.
@@ -56,10 +57,22 @@ export const processBostaWebhook = (
 
     const mappedStatus = mapBostaStateToOrderStatus(payload.state.code);
 
+    // Append-only, independent of the order row's single-slot bostaWebhookData.
+    yield* $(
+      Effect.promise(() =>
+        recordWebhookLog({
+          webhookType: "delivery_status",
+          provider: "bosta",
+          payload: payload as unknown as Record<string, unknown>,
+          orderId,
+        }),
+      ),
+    );
+
     return yield* $(
       query(async (db) => {
         const existing = await db
-          .select({ id: order.id })
+          .select({ id: order.id, status: order.status })
           .from(order)
           .where(eq(order.id, orderId))
           .execute();
@@ -68,6 +81,8 @@ export const processBostaWebhook = (
           // Delivery not linked to an order we know about — ignore
           return { success: true, skipped: true };
         }
+
+        const previousStatus = existing[0]!.status;
 
         await db
           .update(order)
@@ -81,6 +96,16 @@ export const processBostaWebhook = (
           })
           .where(eq(order.id, orderId))
           .execute();
+
+        if (mappedStatus !== previousStatus) {
+          await logOrderEvent({
+            orderId,
+            action: "bosta_status_updated",
+            oldStatus: previousStatus,
+            newStatus: mappedStatus,
+            note: `Bosta reported "${payload.state.value}" (code ${payload.state.code})`,
+          });
+        }
 
         console.log(
           `[Bosta Webhook] Order ${orderId} → status: ${mappedStatus} (Bosta: ${payload.state.value})`,
