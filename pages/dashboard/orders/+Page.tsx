@@ -67,6 +67,7 @@ import {
   Lock,
   History,
   ChevronRight,
+  AlertTriangle,
 } from "lucide-react";
 import { usePageContext } from "vike-react/usePageContext";
 import { trpc } from "#root/shared/trpc/client";
@@ -124,6 +125,8 @@ interface Order {
   bostaSyncError?: string | null;
   bostaSyncedAt?: Date | null;
   bostaSyncAttemptedAt?: Date | null;
+  /** Online-payment order that reached (or is mid-flight to) Bosta without a confirmed "paid" status */
+  hasPaymentIssue?: boolean;
 }
 
 export default function Orders() {
@@ -132,6 +135,7 @@ export default function Orders() {
   const { toast } = useToast();
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [paymentIssueOnly, setPaymentIssueOnly] = useState(false);
   const [dateFilter, setDateFilter] = useState<
     "all" | "today" | "yesterday" | "custom"
   >("all");
@@ -178,7 +182,7 @@ export default function Orders() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional
   useEffect(() => {
     setPage(1);
-  }, [statusFilter, searchQuery, dateFilter, customDate]);
+  }, [statusFilter, searchQuery, dateFilter, customDate, paymentIssueOnly]);
 
   /** Resolves the active date filter into a [from, to) local-day range. */
   const getDateRange = useCallback((): { from?: string; to?: string } => {
@@ -225,6 +229,7 @@ export default function Orders() {
           | "cancelled";
         dateFrom?: string;
         dateTo?: string;
+        paymentIssueOnly?: boolean;
       } = {
         limit: pageSize,
         offset: (page - 1) * pageSize,
@@ -242,6 +247,7 @@ export default function Orders() {
       const { from, to } = getDateRange();
       if (from) params.dateFrom = from;
       if (to) params.dateTo = to;
+      if (paymentIssueOnly) params.paymentIssueOnly = true;
 
       const result = await trpc.order.view.query(params);
 
@@ -273,7 +279,7 @@ export default function Orders() {
     } finally {
       setIsLoading(false);
     }
-  }, [statusFilter, page, getDateRange]);
+  }, [statusFilter, page, getDateRange, paymentIssueOnly]);
 
   useEffect(() => {
     fetchOrders();
@@ -680,8 +686,26 @@ export default function Orders() {
                     />
                   )}
                 </div>
+                <Button
+                  type='button'
+                  size='sm'
+                  variant={paymentIssueOnly ? "destructive" : "outline"}
+                  className='h-9 gap-1.5'
+                  title='Online-payment orders that reached (or are mid-flight to) Bosta without a confirmed "paid" status'
+                  onClick={() => setPaymentIssueOnly((v) => !v)}>
+                  <AlertTriangle className='h-3.5 w-3.5' />
+                  Payment Issues
+                </Button>
               </div>
             </div>
+            {paymentIssueOnly && (
+              <p className='text-sm text-muted-foreground pt-2'>
+                Showing online-payment orders sent to Bosta (or mid-send)
+                without a confirmed payment —{" "}
+                <span className='font-semibold text-foreground'>{total}</span>{" "}
+                found.
+              </p>
+            )}
             {dateFilter !== "all" && (
               <p className='text-sm text-muted-foreground pt-2'>
                 Sales for{" "}
@@ -745,9 +769,19 @@ export default function Orders() {
                     </TableHeader>
                     <TableBody>
                       {filteredOrders.map((order) => (
-                        <TableRow key={order.id} className='hover:bg-muted/50'>
+                        <TableRow
+                          key={order.id}
+                          className={`hover:bg-muted/50 ${order.hasPaymentIssue ? "bg-red-50/60" : ""}`}>
                           <TableCell className='font-mono text-xs py-2'>
-                            {order.id.slice(0, 8)}
+                            <div className='flex items-center gap-1.5'>
+                              {order.hasPaymentIssue && (
+                                <AlertTriangle
+                                  className='h-3.5 w-3.5 text-red-600 shrink-0'
+                                  aria-label='Sent to Bosta without confirmed payment'
+                                />
+                              )}
+                              {order.id.slice(0, 8)}
+                            </div>
                           </TableCell>
                           <TableCell className='py-2'>
                             {formatDate(order.createdAt)}
@@ -825,9 +859,15 @@ export default function Orders() {
                   {filteredOrders.map((order) => (
                     <div
                       key={order.id}
-                      className='rounded-lg border bg-card p-4 shadow-sm'>
+                      className={`rounded-lg border bg-card p-4 shadow-sm ${order.hasPaymentIssue ? "bg-red-50/60 border-red-200" : ""}`}>
                       <div className='flex items-center justify-between'>
-                        <span className='font-mono text-xs text-muted-foreground'>
+                        <span className='font-mono text-xs text-muted-foreground flex items-center gap-1.5'>
+                          {order.hasPaymentIssue && (
+                            <AlertTriangle
+                              className='h-3.5 w-3.5 text-red-600 shrink-0'
+                              aria-label='Sent to Bosta without confirmed payment'
+                            />
+                          )}
                           #{order.id.slice(0, 8)}
                         </span>
                         <span className='text-xs text-muted-foreground'>
@@ -930,6 +970,21 @@ export default function Orders() {
                     Order ID: {selectedOrder.id}
                   </DialogDescription>
                 </DialogHeader>
+
+                {selectedOrder.hasPaymentIssue && (
+                  <div className='flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800'>
+                    <AlertTriangle className='h-4 w-4 mt-0.5 shrink-0' />
+                    <p>
+                      This order reached Bosta (or is mid-send) without a
+                      confirmed payment — its {selectedOrder.paymentMethod}{" "}
+                      payment is currently{" "}
+                      <span className='font-semibold'>
+                        {selectedOrder.paymentStatus}
+                      </span>
+                      . Check the Activity Log below for how this happened.
+                    </p>
+                  </div>
+                )}
 
                 {isAdmin && isEditingOrder ? (
                   <OrderEditPanel
@@ -1349,6 +1404,20 @@ export default function Orders() {
                 ) : (
                 <>
                 <div className='flex-1 overflow-y-auto p-4 space-y-6'>
+                  {selectedOrder.hasPaymentIssue && (
+                    <div className='flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800'>
+                      <AlertTriangle className='h-4 w-4 mt-0.5 shrink-0' />
+                      <p>
+                        This order reached Bosta (or is mid-send) without a
+                        confirmed payment — its {selectedOrder.paymentMethod}{" "}
+                        payment is currently{" "}
+                        <span className='font-semibold'>
+                          {selectedOrder.paymentStatus}
+                        </span>
+                        . Check the Activity Log below.
+                      </p>
+                    </div>
+                  )}
                   <div>
                     <h3 className='font-medium text-sm mb-2'>
                       Customer Information

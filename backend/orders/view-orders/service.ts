@@ -6,7 +6,20 @@ import {
   product,
   user,
 } from "#root/shared/database/drizzle/schema";
-import { and, count, desc, eq, gte, lt, sql, type SQL } from "drizzle-orm";
+import {
+  and,
+  count,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  lt,
+  notInArray,
+  or,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 import type { ClientSession } from "#root/backend/auth/shared/entities";
@@ -22,6 +35,12 @@ export const viewOrdersSchema = z.object({
   dateFrom: z.string().optional(),
   /** Exclusive end of the createdAt range (ISO datetime string) */
   dateTo: z.string().optional(),
+  /**
+   * Online-payment orders that reached (or are mid-flight to) Bosta without
+   * a confirmed "paid" status — should never happen post-fix, but surfaces
+   * anything already in that state, or a regression, immediately.
+   */
+  paymentIssueOnly: z.boolean().optional(),
 });
 
 export const viewOrders = (
@@ -45,7 +64,7 @@ export const viewOrders = (
     // Admin can view all orders, users can view their own orders
     // No special authentication needed beyond session check
 
-    const { limit, offset, status, dateFrom, dateTo } = input;
+    const { limit, offset, status, dateFrom, dateTo, paymentIssueOnly } = input;
     const isAdmin = session.role === "admin";
 
     return yield* $(
@@ -62,6 +81,19 @@ export const viewOrders = (
           }
           if (dateTo) {
             conditions.push(lt(order.createdAt, new Date(dateTo)));
+          }
+
+          if (paymentIssueOnly) {
+            conditions.push(
+              and(
+                inArray(order.paymentMethod, ["stripe", "paymob"]),
+                notInArray(order.paymentStatus, ["paid", "refunded"]),
+                or(
+                  isNotNull(order.bostaDeliveryId),
+                  inArray(order.bostaSyncStatus, ["sent", "pending"]),
+                )!,
+              )!,
+            );
           }
 
           // Users (non-admins) only see their own orders
@@ -168,9 +200,21 @@ export const viewOrders = (
                 };
               });
 
+              const isOnlinePayment =
+                orderData.paymentMethod === "stripe" ||
+                orderData.paymentMethod === "paymob";
+              const hasPaymentIssue =
+                isOnlinePayment &&
+                orderData.paymentStatus !== "paid" &&
+                orderData.paymentStatus !== "refunded" &&
+                (orderData.bostaDeliveryId !== null ||
+                  orderData.bostaSyncStatus === "sent" ||
+                  orderData.bostaSyncStatus === "pending");
+
               return {
                 ...orderData,
                 items: itemsWithImage,
+                hasPaymentIssue,
               };
             }),
           );
