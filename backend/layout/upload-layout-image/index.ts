@@ -90,16 +90,31 @@ export const uploadLayoutImage = ({
     const filename = `${prefix}-${fileId}.webp`;
     const filePath = `${uploadsDir}/${filename}`;
 
-    // Share-image is a social-preview banner (recommended 1200x630), not a
-    // navbar logo — resizing it down to the 600px logo cap would leave it
-    // below the minimum size link-preview crawlers want.
-    const resizeWidth = prefix === "share-image" ? 1200 : 600;
+    if (prefix === "share-image") {
+      // The frontend declares this image as exactly 1200x630 in og:image
+      // meta tags, so it must actually BE 1200x630 — "fit: inside" would
+      // preserve the source aspect ratio instead and silently invalidate
+      // that declaration, reproducing the WhatsApp/Instagram crop bug this
+      // field exists to fix. "cover" crops to fill the exact box instead.
+      yield* Effect.tryPromise({
+        try: async () => {
+          await sharp(Buffer.from(buffer))
+            .flatten({ background: "#ffffff" })
+            .resize({ width: 1200, height: 630, fit: "cover" })
+            .webp({ quality: 90, effort: 6 })
+            .toFile(filePath);
+        },
+        catch: (err) => new Error(`Failed to process image: ${err}`),
+      });
+
+      return { url: `/uploads/layout/${filename}`, filename };
+    }
 
     yield* Effect.tryPromise({
       try: async () => {
         await sharp(Buffer.from(buffer))
           .resize({
-            width: resizeWidth,
+            width: 600,
             fit: "inside",
             withoutEnlargement: true,
           })
