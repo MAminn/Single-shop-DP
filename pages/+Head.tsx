@@ -28,8 +28,17 @@ export default function HeadDefault() {
     layoutSettings?.siteTitle ||
     STORE_NAME;
   const siteDescription = STORE_DESCRIPTION;
+  const cmsShareImageUrl = layoutSettings?.shareImageUrl?.trim();
   const cmsLogoUrl = layoutSettings?.header?.logoUrl?.trim();
-  const ogImageUrl = cmsLogoUrl ? toAbsoluteUrl(cmsLogoUrl) : undefined;
+  // Prefer the dedicated share-preview banner. Only fall back to the navbar
+  // logo (small, often transparent) if no banner has been uploaded yet —
+  // and never claim it's 1200x630 below, since it isn't.
+  const ogImageUrl = cmsShareImageUrl
+    ? toAbsoluteUrl(cmsShareImageUrl)
+    : cmsLogoUrl
+      ? toAbsoluteUrl(cmsLogoUrl)
+      : undefined;
+  const ogImageHasKnownSize = Boolean(cmsShareImageUrl);
   const siteOrigin = getPublicOrigin();
   const canonicalUrl =
     typeof pageContext.urlPathname === "string"
@@ -122,10 +131,16 @@ export default function HeadDefault() {
                   : "image/jpeg"
             }
           />
-          {/* Required by most link-preview crawlers (WhatsApp, Facebook, iMessage) —
-              without explicit width/height some of them refuse to render the image. */}
-          <meta property='og:image:width' content='1200' />
-          <meta property='og:image:height' content='630' />
+          {/* Only declare width/height for the dedicated share banner, which is
+              actually processed to this size. Declaring it for the navbar-logo
+              fallback lies about the real dimensions and makes crawlers
+              (WhatsApp, Facebook, iMessage) force-crop/zoom the small logo. */}
+          {ogImageHasKnownSize && (
+            <>
+              <meta property='og:image:width' content='1200' />
+              <meta property='og:image:height' content='630' />
+            </>
+          )}
           <meta property='og:image:alt' content={`${siteTitle} logo`} />
         </>
       )}

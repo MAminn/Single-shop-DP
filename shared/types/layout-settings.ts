@@ -144,6 +144,8 @@ export interface LayoutSettings {
   footer: FooterSettings;
   siteTitle?: string;
   faviconUrl?: string;
+  /** Dedicated social-share preview image (og:image / Twitter card). Should be a 1200x630 banner — never reuse the header logo for this. */
+  shareImageUrl?: string;
   translationOverrides?: TranslationOverrides;
 }
 
@@ -152,6 +154,7 @@ export interface LayoutSettings {
 export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
   siteTitle: "",
   faviconUrl: "",
+  shareImageUrl: "",
   translationOverrides: { en: {}, ar: {} },
   header: {
     logoUrl: "",

@@ -59,6 +59,7 @@ const LogoSizeSchema = z.object({
 const LayoutSettingsSchema = z.object({
   siteTitle: z.string().optional(),
   faviconUrl: z.string().optional(),
+  shareImageUrl: z.string().optional(),
   translationOverrides: z.object({
     en: z.record(z.string(), z.string()).optional(),
     ar: z.record(z.string(), z.string()).optional(),
@@ -134,7 +135,7 @@ export const layoutRouter = router({
           type: z.string(),
           buffer: z.instanceof(Uint8Array),
         }),
-        prefix: z.enum(["header-logo", "footer-logo", "favicon"]),
+        prefix: z.enum(["header-logo", "footer-logo", "favicon", "share-image"]),
       }),
     )
     .mutation(async ({ input }) => {

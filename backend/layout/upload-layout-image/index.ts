@@ -90,11 +90,16 @@ export const uploadLayoutImage = ({
     const filename = `${prefix}-${fileId}.webp`;
     const filePath = `${uploadsDir}/${filename}`;
 
+    // Share-image is a social-preview banner (recommended 1200x630), not a
+    // navbar logo — resizing it down to the 600px logo cap would leave it
+    // below the minimum size link-preview crawlers want.
+    const resizeWidth = prefix === "share-image" ? 1200 : 600;
+
     yield* Effect.tryPromise({
       try: async () => {
         await sharp(Buffer.from(buffer))
           .resize({
-            width: 600,
+            width: resizeWidth,
             fit: "inside",
             withoutEnlargement: true,
           })

@@ -80,6 +80,7 @@ export default function LayoutSettingsPage() {
   const [isUploadingHeaderLogo, setIsUploadingHeaderLogo] = useState(false);
   const [isUploadingFooterLogo, setIsUploadingFooterLogo] = useState(false);
   const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
+  const [isUploadingShareImage, setIsUploadingShareImage] = useState(false);
   const [activeTab, setActiveTab] = useState<"header" | "footer">("header");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(activeLandingTemplate);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
@@ -231,6 +232,35 @@ export default function LayoutSettingsPage() {
       toast.error("Failed to upload favicon");
     } finally {
       setIsUploadingFavicon(false);
+    }
+  };
+
+  const handleShareImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("File too large. Maximum size is 2MB.");
+      return;
+    }
+    setIsUploadingShareImage(true);
+    try {
+      const buffer = new Uint8Array(await file.arrayBuffer());
+      const result = await trpc.layout.uploadImage.mutate({
+        file: { name: file.name, type: file.type, buffer },
+        prefix: "share-image",
+      });
+      if (result.success && result.data) {
+        setSettings((prev) => ({ ...prev, shareImageUrl: result.data!.url }));
+        toast.success("Share image uploaded");
+      } else {
+        toast.error(result.success ? "Upload failed" : result.error);
+      }
+    } catch {
+      toast.error("Failed to upload share image");
+    } finally {
+      setIsUploadingShareImage(false);
     }
   };
 
@@ -559,6 +589,60 @@ export default function LayoutSettingsPage() {
                 className='mt-1'
               />
               {isUploadingFavicon && (
+                <p className='text-xs text-muted-foreground mt-1'>
+                  Uploading…
+                </p>
+              )}
+            </div>
+          </div>
+          <Separator />
+          <div>
+            <Label>Social Share Image</Label>
+            <p className='text-xs text-muted-foreground mt-1 mb-2'>
+              This is the image shown when the site link is shared on
+              WhatsApp, Instagram, Facebook, or iMessage. Use a real banner
+              (product photo + logo), not the small navbar logo — it will
+              look cropped/broken there.
+            </p>
+            {settings.shareImageUrl ? (
+              <div className='flex items-center gap-4 mt-2'>
+                <div className='h-20 w-40 bg-muted rounded flex items-center justify-center overflow-hidden'>
+                  <img
+                    src={settings.shareImageUrl}
+                    alt='Social share preview'
+                    className='max-h-20 max-w-40 object-contain'
+                  />
+                </div>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() =>
+                    setSettings((prev) => ({ ...prev, shareImageUrl: "" }))
+                  }>
+                  Remove
+                </Button>
+              </div>
+            ) : (
+              <div className='flex items-center gap-2 text-sm text-muted-foreground mt-2'>
+                <ImageIcon className='w-4 h-4' />
+                No share image uploaded — link previews will fall back to the
+                header logo (not recommended)
+              </div>
+            )}
+            <div className='mt-2'>
+              <Label htmlFor='share-image-upload' className='text-sm'>
+                Upload share image (JPG, PNG, or WebP — recommended 1200×630,
+                max 2MB)
+              </Label>
+              <Input
+                id='share-image-upload'
+                type='file'
+                accept='image/png,image/jpeg,image/webp'
+                disabled={isUploadingShareImage}
+                onChange={handleShareImageUpload}
+                className='mt-1'
+              />
+              {isUploadingShareImage && (
                 <p className='text-xs text-muted-foreground mt-1'>
                   Uploading…
                 </p>
