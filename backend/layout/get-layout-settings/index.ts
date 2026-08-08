@@ -72,6 +72,7 @@ function mergeWithDefaults(stored: Partial<LayoutSettings>): LayoutSettings {
   return {
     siteTitle: stored.siteTitle ?? DEFAULT_LAYOUT_SETTINGS.siteTitle,
     faviconUrl: stored.faviconUrl ?? DEFAULT_LAYOUT_SETTINGS.faviconUrl,
+    shareImageUrl: stored.shareImageUrl ?? DEFAULT_LAYOUT_SETTINGS.shareImageUrl,
     translationOverrides: stored.translationOverrides ?? DEFAULT_LAYOUT_SETTINGS.translationOverrides,
     header: {
       ...DEFAULT_LAYOUT_SETTINGS.header,
