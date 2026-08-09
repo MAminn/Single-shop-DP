@@ -1,6 +1,7 @@
 import {
   boolean,
   decimal,
+  index,
   integer,
   jsonb,
   pgEnum,
@@ -1115,6 +1116,7 @@ export const pixelPlatform = pgEnum("pixel_platform", [
   "snapchat",
   "pinterest",
   "custom",
+  "clarity",
 ]);
 
 /**
@@ -1305,6 +1307,42 @@ export const trackingConsent = pgTable("tracking_consent", {
 
 // ─── Store Settings ─────────────────────────────────────────────────────────
 // Single-row table holding admin-configurable store-wide settings.
+// ─── Entry Popup config types ───────────────────────────────────────────────
+// Split into two pieces deliberately: PopupConfig is presentational and safe
+// to expose via a public endpoint (the popup needs it before anyone is
+// logged in); PopupDiscountConfig names an internal promo_code id and is
+// read ONLY server-side by the claim flow — never sent to an anonymous
+// client, mirroring how pixelConfig.accessToken is excluded from the public
+// pixel SSR query.
+
+export interface PopupConfig {
+  enabled: boolean;
+  imageUrl: string;
+  titleEn: string;
+  titleAr: string;
+  descriptionEn: string;
+  descriptionAr: string;
+  submitLabelEn: string;
+  submitLabelAr: string;
+  successMessageEn: string;
+  successMessageAr: string;
+  dismissLabelEn: string;
+  dismissLabelAr: string;
+  dismissHref: string;
+  collectPhone: boolean;
+  phoneRequired: boolean;
+  triggerDelaySeconds: number;
+  /** 0 = disabled */
+  triggerScrollPercent: number;
+  triggerExitIntent: boolean;
+  reshowAfterDays: number;
+}
+
+export interface PopupDiscountConfig {
+  promoCodeId: string | null;
+  codeMode: "existing" | "generate";
+}
+
 // We use a fixed key ("default") enforced by a unique constraint so only one
 // row ever exists.
 export const storeSettings = pgTable("store_settings", {
@@ -1333,6 +1371,8 @@ export const storeSettings = pgTable("store_settings", {
       returnsTextAr?: string;
       faqs?: Array<{ question: string; questionAr?: string; answer: string; answerAr?: string }>;
     }>(),
+  popupConfig: jsonb("popup_config").$type<PopupConfig>(),
+  popupDiscountConfig: jsonb("popup_discount_config").$type<PopupDiscountConfig>(),
   updatedAt: timestamp("updated_at", {
     withTimezone: true,
     mode: "date",
@@ -1450,4 +1490,329 @@ export type OfferReward =
   | { type: "free_shipping" }
   | { type: "free_items"; quantity: number; which: "cheapest" | "most_expensive" };
 
+// ─── Email Automation Queue ─────────────────────────────────────────────────
+// Backs the marketing-automation suite (welcome, abandoned cart, win-back,
+// broadcasts, etc). One row = one scheduled send. A worker (see
+// backend/email-automations/worker.ts) polls for due rows and sends them.
+
+export const emailAutomationType = pgEnum("email_automation_type", [
+  "welcome",
+  "review_check",
+  "abandoned_cart",
+  "abandoned_browse",
+  "win_back",
+  "new_drops",
+  "flash_offer",
+  "retention",
+]);
+
+export const scheduledEmailStatus = pgEnum("scheduled_email_status", [
+  "pending",
+  "sending",
+  "sent",
+  "failed",
+  "cancelled",
+]);
+
+export const scheduledEmailLocale = pgEnum("scheduled_email_locale", [
+  "en",
+  "ar",
+]);
+
+export const scheduledEmail = pgTable(
+  "scheduled_email",
+  {
+    id: uuid("id")
+      .$defaultFn(() => v7())
+      .primaryKey(),
+    automationType: emailAutomationType("automation_type").notNull(),
+    recipientEmail: text("recipient_email").notNull(),
+    locale: scheduledEmailLocale("locale").notNull().default("en"),
+    /** Arbitrary data the template needs to render (order items, product, discount code, campaign id, ...). */
+    payload: jsonb("payload").notNull(),
+    scheduledFor: timestamp("scheduled_for", {
+      withTimezone: true,
+      mode: "date",
+    }).notNull(),
+    status: scheduledEmailStatus("status").notNull().default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    lastError: text("last_error"),
+    /**
+     * Identifies the logical send this row represents (e.g.
+     * `abandoned_cart:step1:{cartId}`, `broadcast:{campaignId}:{email}`).
+     * Unique so re-triggering the same logical event never double-enqueues —
+     * the enqueue path upserts against this key instead of inserting blindly.
+     */
+    dedupeKey: text("dedupe_key").notNull(),
+    sentAt: timestamp("sent_at", { withTimezone: true, mode: "date" }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => {
+    return {
+      dedupeKeyIdx: uniqueIndex("scheduled_email_dedupe_key_idx").on(
+        table.dedupeKey,
+      ),
+      // Drives the worker's claim query: WHERE status = 'pending' AND
+      // scheduled_for <= now() ORDER BY scheduled_for.
+      statusScheduledForIdx: index(
+        "scheduled_email_status_scheduled_for_idx",
+      ).on(table.status, table.scheduledFor),
+      recipientEmailIdx: index("scheduled_email_recipient_email_idx").on(
+        table.recipientEmail,
+      ),
+    };
+  },
+);
+
+export type ScheduledEmailRow = typeof scheduledEmail.$inferSelect;
+
 export type CartOfferRow = typeof cartOffer.$inferSelect;
+
+// ─── Email Subscription (marketing unsubscribe) ────────────────────────────
+// One row per email address that has ever received (or could receive) a
+// marketing automation. unsubscribedAt null = subscribed. The token is what
+// the public /unsubscribe page is keyed on — deliberately NOT the row id, so
+// it can be regenerated independently and never doubles as a guessable
+// database identifier.
+
+export const emailSubscription = pgTable(
+  "email_subscription",
+  {
+    id: uuid("id")
+      .$defaultFn(() => v7())
+      .primaryKey(),
+    email: text("email").notNull(),
+    unsubscribeToken: text("unsubscribe_token").notNull(),
+    unsubscribedAt: timestamp("unsubscribed_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => {
+    return {
+      emailIdx: uniqueIndex("email_subscription_email_idx").on(table.email),
+      tokenIdx: uniqueIndex("email_subscription_token_idx").on(
+        table.unsubscribeToken,
+      ),
+    };
+  },
+);
+
+export type EmailSubscriptionRow = typeof emailSubscription.$inferSelect;
+
+// ─── Email Templates (marketing automation content) ────────────────────────
+// One row per (automationType, stepKey). stepKey is "default" for every
+// single-step automation and "step1"/"step2"/"step3" for abandoned_cart's
+// 3-email sequence — this lets one table cover both shapes without a
+// separate steps table or a nested-array jsonb that the admin UI would need
+// special-case logic to edit. delayMinutes lives per-row so each abandoned
+// cart step (or any future multi-step automation) can have its own timing.
+
+export interface EmailTemplateContent {
+  headlineEn: string;
+  headlineAr: string;
+  bodyEn: string;
+  bodyAr: string;
+  ctaLabelEn: string;
+  ctaLabelAr: string;
+  ctaHref: string;
+  /** Shows the featured product/cart-item card (image + name + price) from the send's payload data. */
+  showFeaturedItem: boolean;
+  /** Shows a 1-5 star review-request block (review_check). */
+  showReviewStars: boolean;
+  /** Shows a highlighted discount-code badge, using the code attached via emailTemplate.promoCodeId. */
+  showDiscountCode: boolean;
+  discountBadgeTextEn: string;
+  discountBadgeTextAr: string;
+}
+
+export const emailTemplate = pgTable(
+  "email_template",
+  {
+    id: uuid("id")
+      .$defaultFn(() => v7())
+      .primaryKey(),
+    automationType: emailAutomationType("automation_type").notNull(),
+    stepKey: text("step_key").notNull().default("default"),
+    enabled: boolean("enabled").notNull().default(true),
+    /** Minutes after the triggering event this step should send. 0 = immediate/on-demand (broadcasts). */
+    delayMinutes: integer("delay_minutes").notNull().default(0),
+    subjectEn: text("subject_en").notNull(),
+    subjectAr: text("subject_ar").notNull(),
+    preheaderEn: text("preheader_en"),
+    preheaderAr: text("preheader_ar"),
+    content: jsonb("content").notNull().$type<EmailTemplateContent>(),
+    /**
+     * The real promo code (from the admin's Promo Codes page) this template
+     * shows via {{discountCode}}. Deliberately a proper FK, not a free-typed
+     * value in `content` — the admin picks from codes that actually exist,
+     * nothing generates or invents a code on its own. Null when the template
+     * doesn't show a discount code, or hasn't had one attached yet.
+     */
+    promoCodeId: uuid("promo_code_id").references(() => promoCode.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => {
+    return {
+      automationStepIdx: uniqueIndex("email_template_automation_step_idx").on(
+        table.automationType,
+        table.stepKey,
+      ),
+    };
+  },
+);
+
+export type EmailTemplateRow = typeof emailTemplate.$inferSelect;
+
+// ─── Popup Claims (entry-popup discount abuse gate) ────────────────────────
+// One row per person who has ever claimed the entry-popup's first-order
+// discount. Unique on BOTH email and phone (nullable — unique indexes allow
+// multiple NULLs in Postgres, so phone stays optional) so a returning
+// visitor with cleared cookies/incognito gets their EXISTING code back
+// instead of a fresh one, and can never claim twice under a different
+// address for the same phone number or vice versa.
+
+export const popupClaim = pgTable(
+  "popup_claim",
+  {
+    id: uuid("id")
+      .$defaultFn(() => v7())
+      .primaryKey(),
+    email: text("email").notNull(),
+    phone: text("phone"),
+    promoCodeId: uuid("promo_code_id").references(() => promoCode.id, {
+      onDelete: "set null",
+    }),
+    issuedCode: text("issued_code").notNull(),
+    claimedAt: timestamp("claimed_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+  },
+  (table) => {
+    return {
+      emailIdx: uniqueIndex("popup_claim_email_idx").on(table.email),
+      phoneIdx: uniqueIndex("popup_claim_phone_idx").on(table.phone),
+    };
+  },
+);
+
+export type PopupClaimRow = typeof popupClaim.$inferSelect;
+
+// ─── Cart Capture (abandoned-cart / abandoned-browse tracking) ─────────────
+// Carts otherwise live only in the browser's localStorage — the server never
+// sees them, which makes abandoned-cart email impossible. This is a
+// lightweight server-side mirror keyed by an anonymous per-browser session
+// token (generated client-side, not tied to login). email/phone/userId are
+// attached the moment they become known (popup signup, checkout entry,
+// login) — before that, a row can exist with no contact info at all, which
+// simply can't be targeted by an abandoned-cart email yet.
+
+export interface CapturedCartItem {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
+  imageUrl?: string;
+}
+
+export const capturedCart = pgTable(
+  "captured_cart",
+  {
+    id: uuid("id")
+      .$defaultFn(() => v7())
+      .primaryKey(),
+    sessionToken: text("session_token").notNull(),
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+    email: text("email"),
+    phone: text("phone"),
+    items: jsonb("items").notNull().$type<CapturedCartItem[]>(),
+    subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+    locale: text("locale").notNull().default("en"),
+    lastActivityAt: timestamp("last_activity_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+    /** Set once the session checks out — abandoned-cart emails must never fire for a completed order. */
+    convertedOrderId: uuid("converted_order_id").references(() => order.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => {
+    return {
+      sessionTokenIdx: uniqueIndex("captured_cart_session_token_idx").on(
+        table.sessionToken,
+      ),
+      // Drives the abandoned-cart trigger scan: WHERE email IS NOT NULL AND
+      // converted_order_id IS NULL AND last_activity_at <= threshold.
+      emailActivityIdx: index("captured_cart_email_activity_idx").on(
+        table.email,
+        table.lastActivityAt,
+      ),
+    };
+  },
+);
+
+export type CapturedCartRow = typeof capturedCart.$inferSelect;
+
+// ─── Viewed Products (abandoned-browse tracking) ────────────────────────────
+// One row per (sessionToken, productId) — a lightweight "last viewed"
+// record, not a full clickstream. Re-viewing the same product just bumps
+// viewedAt rather than creating a new row.
+
+export const viewedProduct = pgTable(
+  "viewed_product",
+  {
+    id: uuid("id")
+      .$defaultFn(() => v7())
+      .primaryKey(),
+    sessionToken: text("session_token").notNull(),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => product.id, { onDelete: "cascade" }),
+    productName: text("product_name").notNull(),
+    productImageUrl: text("product_image_url"),
+    email: text("email"),
+    viewedAt: timestamp("viewed_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => {
+    return {
+      sessionProductIdx: uniqueIndex("viewed_product_session_product_idx").on(
+        table.sessionToken,
+        table.productId,
+      ),
+      emailViewedIdx: index("viewed_product_email_viewed_idx").on(
+        table.email,
+        table.viewedAt,
+      ),
+    };
+  },
+);
+
+export type ViewedProductRow = typeof viewedProduct.$inferSelect;

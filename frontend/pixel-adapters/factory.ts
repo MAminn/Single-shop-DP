@@ -5,6 +5,7 @@ import { GoogleGA4Adapter } from "./google-ga4-adapter";
 import { TikTokPixelAdapter } from "./tiktok-pixel-adapter";
 import { SnapchatPixelAdapter } from "./snapchat-pixel-adapter";
 import { PinterestTagAdapter } from "./pinterest-tag-adapter";
+import { ClarityAdapter } from "./clarity-adapter";
 
 /**
  * Creates the appropriate adapter instance for a given platform.
@@ -24,6 +25,8 @@ export function createAdapterForPlatform(
       return new SnapchatPixelAdapter();
     case PixelPlatform.PINTEREST:
       return new PinterestTagAdapter();
+    case PixelPlatform.CLARITY:
+      return new ClarityAdapter();
     case PixelPlatform.CUSTOM:
       return undefined;
     default:

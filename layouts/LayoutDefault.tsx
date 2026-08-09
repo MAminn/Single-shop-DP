@@ -10,6 +10,7 @@ import { useContext, useEffect, useRef, useState, memo } from "react";
 import "./style.css";
 import { toast, Toaster } from "sonner";
 import { CartToastContainer } from "#root/components/ui/cart-toast";
+import { EntryPopup } from "#root/components/EntryPopup";
 import { StickyCartBar } from "#root/components/ui/StickyCartBar";
 import type { ClientSession } from "#root/backend/auth/shared/entities.js";
 import { usePageContext } from "vike-react/usePageContext";
@@ -251,17 +252,15 @@ function LayoutShell({
             )}
             {!isDashboardRoute && <GlobalFooter />}
             {!isDashboardRoute && <CartToastContainer />}
+            {!isDashboardRoute && <EntryPopup />}
             {/* Minimal template: mobile relies on the bottom nav's "Offers" tab
-                instead, but desktop still gets this pill — pointed at /offers. */}
+                instead, but desktop still gets this pill — CTA uses the
+                component's own default (/shop, "SHOP MORE") so users chasing
+                a reward threshold land on the catalogue, not a dead end. */}
             {!isDashboardRoute && !isMinimal && (
               <StickyCartBar raiseForBottomNav={isMinimal} />
             )}
-            {!isDashboardRoute && isMinimal && (
-              <StickyCartBar
-                desktopOnly
-                ctaHref={{ href: "/offers", label: "VIEW OFFERS" }}
-              />
-            )}
+            {!isDashboardRoute && isMinimal && <StickyCartBar desktopOnly />}
             {!isDashboardRoute && isMinimal && <MinimalMobileBottomNav />}
             {/* Bottom-anchored toasts can visually collide with the fixed
                 mobile bottom nav on the minimal template — keep them up top there. */}

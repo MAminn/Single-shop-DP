@@ -23,6 +23,7 @@ import { getEmailBranding } from "#root/backend/emails/branding";
 import axios from "axios";
 import { validatePromoCode } from "#root/backend/promo-codes/validate-promo-code/validate-promo-code";
 import { applyOffersToCart } from "#root/backend/offers/service";
+import { computePromoDiscount } from "#root/shared/pricing/cart-math";
 import { getStoreOwnerId } from "#root/shared/config/store";
 import { getShippingFeeRaw } from "#root/backend/settings/get-shipping-fee";
 import { createBostaDelivery, isBostaEnabled } from "#root/backend/orders/bosta/service";
@@ -465,6 +466,43 @@ export const createOrder = (
 
           const shipping = await getShippingFeeRaw(tx);
 
+          // ─── Evaluate automatic cart offers server-side ───────────────────────
+          // Evaluated before the promo code discount below so the promo code's
+          // percentage/fixed discount applies to what's left *after* automatic
+          // offers, not the raw subtotal (matches the shopper-facing cart math).
+          const now = new Date();
+          const activeOffers = await tx
+            .select()
+            .from(cartOffer)
+            .where(
+              and(
+                eq(cartOffer.isActive, true),
+                or(isNull(cartOffer.startsAt), lte(cartOffer.startsAt, now)),
+                or(isNull(cartOffer.endsAt), gte(cartOffer.endsAt, now)),
+              ),
+            )
+            .orderBy(asc(cartOffer.priority))
+            .execute();
+
+          const cartItemsForOffers = input.items
+            .map((item) => {
+              const p = products.find((prod) => prod.id === item.productId);
+              if (!p) return null;
+              const price = p.discountPrice
+                ? Number.parseFloat(p.discountPrice.toString())
+                : Number.parseFloat(p.price.toString());
+              return { id: item.productId, name: p.name, quantity: item.quantity, price };
+            })
+            .filter(
+              (i): i is { id: string; name: string; quantity: number; price: number } =>
+                i !== null,
+            );
+
+          const appliedOffers = applyOffersToCart(activeOffers, cartItemsForOffers, subtotal);
+          const offerDiscount = appliedOffers.reduce((s, o) => s + o.discountAmount, 0);
+          const hasFreeShippingFromOffer = appliedOffers.some((o) => o.freeShipping);
+          const effectiveShipping = hasFreeShippingFromOffer ? 0 : shipping;
+
           // Check if a promo code is applied
           let discount = 0;
           let promoCodeData = null;
@@ -614,12 +652,13 @@ export const createOrder = (
               }
             }
 
-            // Calculate discount from the code's own values, never the client's
-            if (promoCodeData.discountType === "percentage") {
-              discount = subtotal * (Number(promoCodeData.discountValue) / 100);
-            } else if (promoCodeData.discountType === "fixed_amount") {
-              discount = Math.min(Number(promoCodeData.discountValue), subtotal);
-            }
+            // Calculate discount from the code's own values, never the client's.
+            discount = computePromoDiscount(
+              promoCodeData.discountType,
+              Number(promoCodeData.discountValue),
+              subtotal,
+              offerDiscount,
+            );
 
             // Increment used count for the promo code
             await tx
@@ -635,40 +674,6 @@ export const createOrder = (
               })
               .where(eq(promoCode.id, promoCodeData.id));
           }
-
-          // ─── Evaluate automatic cart offers server-side ───────────────────────
-          const now = new Date();
-          const activeOffers = await tx
-            .select()
-            .from(cartOffer)
-            .where(
-              and(
-                eq(cartOffer.isActive, true),
-                or(isNull(cartOffer.startsAt), lte(cartOffer.startsAt, now)),
-                or(isNull(cartOffer.endsAt), gte(cartOffer.endsAt, now)),
-              ),
-            )
-            .orderBy(asc(cartOffer.priority))
-            .execute();
-
-          const cartItemsForOffers = input.items
-            .map((item) => {
-              const p = products.find((prod) => prod.id === item.productId);
-              if (!p) return null;
-              const price = p.discountPrice
-                ? Number.parseFloat(p.discountPrice.toString())
-                : Number.parseFloat(p.price.toString());
-              return { id: item.productId, name: p.name, quantity: item.quantity, price };
-            })
-            .filter(
-              (i): i is { id: string; name: string; quantity: number; price: number } =>
-                i !== null,
-            );
-
-          const appliedOffers = applyOffersToCart(activeOffers, cartItemsForOffers, subtotal);
-          const offerDiscount = appliedOffers.reduce((s, o) => s + o.discountAmount, 0);
-          const hasFreeShippingFromOffer = appliedOffers.some((o) => o.freeShipping);
-          const effectiveShipping = hasFreeShippingFromOffer ? 0 : shipping;
 
           const combinedDiscount = discount + offerDiscount;
           const discountedSubtotal = subtotal - combinedDiscount;

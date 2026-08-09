@@ -1,19 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useCart } from "#root/lib/context/CartContext";
 import { useLayoutSettings } from "#root/frontend/contexts/LayoutSettingsContext";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import { trpc } from "#root/shared/trpc/client";
 import { Link } from "#root/components/utils/Link";
 import { STORE_CURRENCY } from "#root/shared/config/branding";
-import { Check, Copy, Loader2, Send, Tag } from "lucide-react";
+import { Check, Copy, Loader2, Lock, Send, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "#root/lib/utils";
 import type {
   OfferCondition,
   OfferReward,
 } from "#root/shared/database/drizzle/schema";
+import { AuthContext } from "#root/context/AuthContext.js";
 
 import oneBottle from "#root/assets/1-bottles.jpg.jpeg";
 import twoBottles from "#root/assets/2-bottles.jpg.jpeg";
@@ -60,6 +61,8 @@ export default function OffersPage() {
   const isAr = locale === "ar";
 
   const { appliedOffers } = useCart();
+  const { session } = useContext(AuthContext);
+  const isSignedIn = !!session;
 
   const [offers, setOffers] = useState<ActiveOffer[]>([]);
   const [promoCodes, setPromoCodes] = useState<PublicPromoCode[]>([]);
@@ -247,33 +250,65 @@ export default function OffersPage() {
             <p className='text-xs lg:text-sm text-gray-500 mb-4 lg:mb-6'>
               {isAr ? "استخدم هذه الأكواد عند الدفع." : "Use these codes at checkout."}
             </p>
-            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-5'>
-              {promoCodes.map((pc) => (
-                <div
-                  key={pc.id}
-                  className='bg-white border border-dashed border-gray-300 rounded-lg p-3 text-center'>
-                  <p className='text-sm font-bold tracking-wider text-gray-900'>
-                    {pc.code}
-                  </p>
-                  <p className='text-xs text-gray-500 mt-1 mb-3'>
-                    {pc.discountType === "percentage"
-                      ? `${pc.discountValue}% OFF`
-                      : `${pc.discountValue.toFixed(0)} ${STORE_CURRENCY} OFF`}
-                    {pc.minPurchaseAmount
-                      ? isAr
-                        ? ` — بحد أدنى ${pc.minPurchaseAmount.toFixed(0)} ${STORE_CURRENCY}`
-                        : ` on orders above ${pc.minPurchaseAmount.toFixed(0)} ${STORE_CURRENCY}`
-                      : ""}
-                  </p>
-                  <button
-                    type='button'
-                    onClick={() => handleCopyCode(pc.code)}
-                    className='inline-flex items-center gap-1.5 text-xs font-semibold text-gray-700 hover:text-black border border-gray-300 rounded-md px-3 py-1.5 transition-colors'>
-                    <Copy className='w-3 h-3' />
-                    {isAr ? "نسخ" : "Copy"}
-                  </button>
+            <div className='relative'>
+              <div
+                className={cn(
+                  "grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-5 transition-[filter] duration-700 ease-out",
+                  !isSignedIn && "blur-md select-none pointer-events-none",
+                )}
+                aria-hidden={!isSignedIn}>
+                {promoCodes.map((pc) => (
+                  <div
+                    key={pc.id}
+                    className='bg-white border border-dashed border-gray-300 rounded-lg p-3 text-center'>
+                    <p className='text-sm font-bold tracking-wider text-gray-900'>
+                      {pc.code}
+                    </p>
+                    <p className='text-xs text-gray-500 mt-1 mb-3'>
+                      {pc.discountType === "percentage"
+                        ? `${pc.discountValue}% OFF`
+                        : `${pc.discountValue.toFixed(0)} ${STORE_CURRENCY} OFF`}
+                      {pc.minPurchaseAmount
+                        ? isAr
+                          ? ` — بحد أدنى ${pc.minPurchaseAmount.toFixed(0)} ${STORE_CURRENCY}`
+                          : ` on orders above ${pc.minPurchaseAmount.toFixed(0)} ${STORE_CURRENCY}`
+                        : ""}
+                    </p>
+                    <button
+                      type='button'
+                      onClick={() => handleCopyCode(pc.code)}
+                      className='inline-flex items-center gap-1.5 text-xs font-semibold text-gray-700 hover:text-black border border-gray-300 rounded-md px-3 py-1.5 transition-colors'>
+                      <Copy className='w-3 h-3' />
+                      {isAr ? "نسخ" : "Copy"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {!isSignedIn && (
+                <div className='absolute inset-0 flex items-center justify-center'>
+                  <div className='animate-reveal-overlay-in flex flex-col items-center gap-2.5 text-center px-4 py-5 sm:px-8 sm:py-6 rounded-xl bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm'>
+                    <span className='animate-reveal-lock-pulse flex items-center justify-center w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-black text-white'>
+                      <Lock className='w-4 h-4 lg:w-[18px] lg:h-[18px]' />
+                    </span>
+                    <div>
+                      <p className='text-sm lg:text-base font-bold text-gray-900 uppercase tracking-wide'>
+                        {isAr ? "سجّل الدخول لكشف الأكواد" : "Sign in to reveal"}
+                      </p>
+                      <p className='text-xs lg:text-sm text-gray-500 mt-0.5'>
+                        {isAr
+                          ? "أنشئ حسابًا مجانيًا لعرض أكواد الخصم النشطة."
+                          : "Create a free account to view active discount codes."}
+                      </p>
+                    </div>
+                    <Link
+                      href='/login'
+                      className='mt-1 inline-flex items-center gap-1.5 bg-black hover:bg-gray-900 text-white text-xs lg:text-sm font-semibold uppercase tracking-wide px-4 py-2 lg:px-5 lg:py-2.5 rounded-md transition-colors'>
+                      {isAr ? "تسجيل الدخول" : "Sign In"} →
+                    </Link>
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}

@@ -15,6 +15,11 @@ import { analyticsRouter } from "#root/backend/analytics/trpc";
 import { contactRouter } from "#root/backend/contact/trpc";
 import { usersRouter } from "#root/backend/users/trpc";
 import { offersRouter } from "#root/backend/offers/trpc";
+import { emailSubscriptionRouter } from "#root/backend/email-subscription/trpc";
+import { emailTemplatesRouter } from "#root/backend/email-automations/templates/trpc";
+import { popupRouter } from "#root/backend/popup/trpc";
+import { cartCaptureRouter } from "#root/backend/cart-capture/trpc";
+import { broadcastRouter } from "#root/backend/email-automations/broadcast/trpc";
 import { publicProcedure, router, t } from "./server";
 
 const authRouter = t.router({
@@ -42,6 +47,11 @@ export const appRouter = router({
   contact: contactRouter,
   users: usersRouter,
   offer: offersRouter,
+  emailSubscription: emailSubscriptionRouter,
+  emailTemplates: emailTemplatesRouter,
+  popup: popupRouter,
+  cartCapture: cartCaptureRouter,
+  broadcast: broadcastRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -16,6 +16,8 @@ import {
   Star,
   BarChart3,
   Tag,
+  Mail,
+  Gift,
 } from "lucide-react";
 
 import {
@@ -112,6 +114,16 @@ export function DashboardSidebar() {
       label: "Pixels & Tracking",
       href: "/dashboard/admin/pixels",
       icon: Radio,
+    },
+    {
+      label: "Marketing Emails",
+      href: "/dashboard/admin/marketing-emails",
+      icon: Mail,
+    },
+    {
+      label: "Entry Popup",
+      href: "/dashboard/admin/popup",
+      icon: Gift,
     },
     {
       label: "Analytics",

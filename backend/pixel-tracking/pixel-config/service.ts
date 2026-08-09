@@ -13,6 +13,7 @@ const platformEnum = z.enum([
   "snapchat",
   "pinterest",
   "custom",
+  "clarity",
 ]);
 
 export const createPixelConfigSchema = z.object({

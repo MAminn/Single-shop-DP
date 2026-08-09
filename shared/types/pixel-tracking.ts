@@ -32,6 +32,7 @@ export enum PixelPlatform {
   SNAPCHAT = "snapchat",
   PINTEREST = "pinterest",
   CUSTOM = "custom",
+  CLARITY = "clarity",
 }
 
 // ─── Consent Categories ─────────────────────────────────────────────────────
@@ -167,6 +168,9 @@ export const PLATFORM_EVENT_MAP: Record<
     [TrackingEventName.NEWSLETTER_SUBSCRIBED]: "lead",
   },
   [PixelPlatform.CUSTOM]: {},
+  // Clarity is a session-recording/heatmap tool, not a conversion pixel — it
+  // has no standard e-commerce event taxonomy to map into.
+  [PixelPlatform.CLARITY]: {},
 };
 
 // ─── Custom Event Trigger Types ─────────────────────────────────────────────

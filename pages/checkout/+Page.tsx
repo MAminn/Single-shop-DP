@@ -20,6 +20,7 @@ import { STORE_CURRENCY } from "#root/shared/config/branding";
 import { navigate } from "vike/client/router";
 import { useTracking } from "#root/frontend/contexts/TrackingContext";
 import { TrackingEventName } from "#root/shared/types/pixel-tracking";
+import { getCartSessionToken } from "#root/lib/cart-session";
 
 /** Parse a Zod validation error (JSON array) into a friendly message */
 function parseOrderError(error: unknown): string {
@@ -263,6 +264,17 @@ export default function CheckoutPage() {
       const orderId = result.result?.id ?? "";
       const orderTotal = result.result?.total ?? "";
       const email = encodeURIComponent(formValues.email || "");
+
+      // Stop any pending abandoned-cart emails for this browser session now
+      // that a real order exists. Fire-and-forget by design — this must
+      // never delay or block checkout. A failure here is rare and would
+      // only mean a stale abandoned-cart email could still go out for an
+      // order that already completed.
+      if (orderId) {
+        trpc.cartCapture.markConverted
+          .mutate({ sessionToken: getCartSessionToken(), orderId })
+          .catch(() => {});
+      }
 
       // Persist cart items for the Purchase tracking event on confirmation page
       try {

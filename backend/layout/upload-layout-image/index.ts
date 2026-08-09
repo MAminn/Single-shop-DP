@@ -110,6 +110,24 @@ export const uploadLayoutImage = ({
       return { url: `/uploads/layout/${filename}`, filename };
     }
 
+    if (prefix === "popup") {
+      // Popup hero image is a portrait-ish lifestyle photo filling the top
+      // of a modal card, not a small icon — needs more resolution than the
+      // 600px logo cap, but (unlike share-image) has no fixed aspect ratio
+      // to enforce, so "inside" (preserve ratio) is correct here.
+      yield* Effect.tryPromise({
+        try: async () => {
+          await sharp(Buffer.from(buffer))
+            .resize({ width: 800, fit: "inside", withoutEnlargement: true })
+            .webp({ quality: 90, effort: 6 })
+            .toFile(filePath);
+        },
+        catch: (err) => new Error(`Failed to process image: ${err}`),
+      });
+
+      return { url: `/uploads/layout/${filename}`, filename };
+    }
+
     yield* Effect.tryPromise({
       try: async () => {
         await sharp(Buffer.from(buffer))

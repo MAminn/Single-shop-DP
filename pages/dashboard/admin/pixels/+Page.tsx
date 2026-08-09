@@ -93,6 +93,7 @@ const PLATFORM_LABELS: Record<string, string> = {
   snapchat: "Snapchat",
   pinterest: "Pinterest",
   custom: "Custom",
+  clarity: "Microsoft Clarity",
 };
 
 const PIXEL_ID_PLACEHOLDERS: Record<string, string> = {
@@ -102,7 +103,12 @@ const PIXEL_ID_PLACEHOLDERS: Record<string, string> = {
   snapchat: "e.g. xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
   pinterest: "e.g. 1234567890123",
   custom: "Your pixel/tracking ID",
+  clarity: "e.g. abcdefghij (from your Clarity project's install snippet)",
 };
+
+// Clarity is a session-recording/heatmap tool: it has no server-side
+// Conversions API and no access-token concept, unlike the ad pixels above.
+const PLATFORMS_WITHOUT_SERVER_SIDE = new Set(["clarity"]);
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -682,7 +688,18 @@ export default function AdminPixelsPage() {
               <Label htmlFor='platform'>Platform</Label>
               <Select
                 value={form.platform}
-                onValueChange={(v) => setForm((f) => ({ ...f, platform: v }))}
+                onValueChange={(v) =>
+                  setForm((f) =>
+                    PLATFORMS_WITHOUT_SERVER_SIDE.has(v)
+                      ? {
+                          ...f,
+                          platform: v,
+                          enableServerSide: false,
+                          accessToken: "",
+                        }
+                      : { ...f, platform: v },
+                  )
+                }
                 disabled={!!editingId}>
                 <SelectTrigger>
                   <SelectValue />
@@ -710,24 +727,27 @@ export default function AdminPixelsPage() {
               />
             </div>
 
-            {/* Access Token (optional, for server-side) */}
-            <div className='space-y-2'>
-              <Label htmlFor='accessToken'>
-                Access Token{" "}
-                <span className='text-muted-foreground text-xs'>
-                  (optional — for server-side Conversions API)
-                </span>
-              </Label>
-              <Input
-                id='accessToken'
-                type='password'
-                value={form.accessToken}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, accessToken: e.target.value }))
-                }
-                placeholder='Paste your access token here'
-              />
-            </div>
+            {/* Access Token (optional, for server-side) — not applicable to
+                platforms with no server-side Conversions API */}
+            {!PLATFORMS_WITHOUT_SERVER_SIDE.has(form.platform) && (
+              <div className='space-y-2'>
+                <Label htmlFor='accessToken'>
+                  Access Token{" "}
+                  <span className='text-muted-foreground text-xs'>
+                    (optional — for server-side Conversions API)
+                  </span>
+                </Label>
+                <Input
+                  id='accessToken'
+                  type='password'
+                  value={form.accessToken}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, accessToken: e.target.value }))
+                  }
+                  placeholder='Paste your access token here'
+                />
+              </div>
+            )}
 
             {/* Toggles */}
             <div className='space-y-3'>
@@ -753,16 +773,18 @@ export default function AdminPixelsPage() {
                 />
               </div>
 
-              <div className='flex items-center justify-between'>
-                <Label htmlFor='enableServerSide'>Server-Side Tracking</Label>
-                <Switch
-                  id='enableServerSide'
-                  checked={form.enableServerSide}
-                  onCheckedChange={(v) =>
-                    setForm((f) => ({ ...f, enableServerSide: v }))
-                  }
-                />
-              </div>
+              {!PLATFORMS_WITHOUT_SERVER_SIDE.has(form.platform) && (
+                <div className='flex items-center justify-between'>
+                  <Label htmlFor='enableServerSide'>Server-Side Tracking</Label>
+                  <Switch
+                    id='enableServerSide'
+                    checked={form.enableServerSide}
+                    onCheckedChange={(v) =>
+                      setForm((f) => ({ ...f, enableServerSide: v }))
+                    }
+                  />
+                </div>
+              )}
 
               <div className='flex items-center justify-between'>
                 <Label htmlFor='consentRequired'>Require Consent</Label>

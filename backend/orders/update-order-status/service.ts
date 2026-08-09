@@ -11,6 +11,7 @@ import { z } from "zod";
 import type { ClientSession } from "#root/backend/auth/shared/entities";
 import { ServerError } from "#root/shared/error/server";
 import { eq, sql } from "drizzle-orm";
+import { enqueueReviewCheckForOrder } from "#root/backend/email-automations/triggers/order-delivered";
 
 export const updateOrderStatusSchema = z.object({
   orderId: z.string().uuid(),
@@ -144,6 +145,14 @@ export const updateOrderStatus = (
             newStatus: status,
             note: `Status changed from ${oldStatus} to ${status} by ${session.role}`,
           });
+
+          if (status === "delivered" && oldStatus !== "delivered") {
+            await enqueueReviewCheckForOrder({
+              orderId,
+              customerEmail: updateResult[0]!.customerEmail,
+              customerName: updateResult[0]!.customerName,
+            });
+          }
 
           return updateResult[0];
         });

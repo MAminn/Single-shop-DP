@@ -4,6 +4,7 @@ import { Effect } from "effect";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { ServerError } from "#root/shared/error/server";
+import { enqueueReviewCheckForOrder } from "#root/backend/email-automations/triggers/order-delivered";
 
 // Define the webhook payload schema based on Fincart documentation
 const fincartWebhookPayloadSchema = z.object({
@@ -135,7 +136,7 @@ export const processFincartWebhook = (
         try {
           // First, check if the order exists
           const existingOrder = await db
-            .select({ id: order.id })
+            .select({ id: order.id, status: order.status })
             .from(order)
             .where(eq(order.id, orderId))
             .execute();
@@ -173,6 +174,14 @@ export const processFincartWebhook = (
               message: "Failed to update order with Fincart data",
               statusCode: 500,
               clientMessage: "Failed to update order status",
+            });
+          }
+
+          if (mappedStatus === "delivered" && existingOrder[0]!.status !== "delivered") {
+            await enqueueReviewCheckForOrder({
+              orderId,
+              customerEmail: updateResult[0]!.customerEmail,
+              customerName: updateResult[0]!.customerName,
             });
           }
 

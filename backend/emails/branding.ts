@@ -48,6 +48,7 @@ export interface EmailBranding {
   contactEmail: string | undefined;
   currency: string;
   isMinimal: boolean;
+  socialLinks: Array<{ platform: string; url: string }>;
 }
 
 /**
@@ -83,6 +84,9 @@ export async function getEmailBranding(): Promise<EmailBranding> {
       contactEmail: settings.header.contactEmail || undefined,
       currency: STORE_CURRENCY,
       isMinimal,
+      socialLinks: (settings.footer.socialLinks ?? []).filter(
+        (s) => s.url && s.url !== "#",
+      ),
     };
   } catch {
     return {
@@ -91,6 +95,7 @@ export async function getEmailBranding(): Promise<EmailBranding> {
       contactEmail: undefined,
       currency: STORE_CURRENCY,
       isMinimal: false,
+      socialLinks: [],
     };
   }
 }

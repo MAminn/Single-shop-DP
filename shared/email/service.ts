@@ -3,14 +3,44 @@ import { ServerError } from "../error/server";
 import { createTransport } from "nodemailer";
 import type { JSXElementConstructor, ReactElement } from "react";
 import { render } from "@react-email/components";
-import type { FastifyBaseLogger } from "fastify";
+
+/** Minimal logger shape createDummyEmailService needs — satisfied by both FastifyBaseLogger and a plain console wrapper. */
+export interface MinimalWarnLogger {
+  warn(obj: unknown, msg?: string): void;
+}
+
+export interface SendEmailOptions {
+  /** Overrides EMAIL_FROM_NAME for this send only. */
+  fromName?: string;
+  /** Overrides EMAIL_FROM_ADDRESS/smtpUser for this send only. */
+  fromAddress?: string;
+  replyTo?: string;
+  /** Raw headers merged into the message — used for List-Unsubscribe etc. */
+  headers?: Record<string, string>;
+}
+
+/**
+ * Result of a send attempt. Kept on the SUCCESS channel (not the Effect
+ * error channel) intentionally: a transactional send (order confirmation,
+ * password reset) must never fail the surrounding Effect and roll back the
+ * triggering operation. Callers that need to know whether the message
+ * actually went out (the scheduled-automation worker, in particular — it
+ * must retry failed sends) inspect `.success`; callers that don't care
+ * (the existing transactional call sites) can keep ignoring the return
+ * value exactly as they do today.
+ */
+export interface SendEmailResult {
+  success: boolean;
+  error?: string;
+}
 
 export interface EmailServiceInterface {
   sendEmail(
     to: string,
     subject: string,
-    body: string
-  ): Effect.Effect<void, ServerError<string>, never>;
+    body: string,
+    options?: SendEmailOptions
+  ): Effect.Effect<SendEmailResult, ServerError<string>, never>;
 }
 
 export class EmailService extends Context.Tag("EmailService")<
@@ -23,6 +53,10 @@ export const makeEmailService = (input: {
   smtpUser: string;
   smtpPassword: Redacted.Redacted<string>;
   smtpPort: number;
+  /** Default From address for all sends. Falls back to smtpUser when unset. */
+  fromAddress?: string;
+  /** Default From display name for all sends. */
+  fromName?: string;
 }) =>
   Effect.gen(function* ($) {
     // Validate SMTP host - remove any http:// or https:// prefixes
@@ -38,7 +72,7 @@ export const makeEmailService = (input: {
     const createDummyService = () => ({
       sendEmail: (to: string, subject: string, body: string) =>
         Effect.succeed(
-          void (() => {
+          (() => {
             console.warn(
               `[DUMMY EMAIL] Not sending email to ${to}: ${subject}`
             );
@@ -46,39 +80,44 @@ export const makeEmailService = (input: {
               "Email body would have been:",
               `${body.substring(0, 100)}...`
             );
+            return {
+              success: false,
+              error: "Email service not configured (dummy service active)",
+            };
           })()
-        ) as Effect.Effect<void, ServerError<string>, never>,
+        ) as Effect.Effect<SendEmailResult, ServerError<string>, never>,
     });
 
     try {
-      // Try to create the transport but don't throw if it fails
-      let transport: ReturnType<typeof createTransport> | null;
-      try {
-        transport = yield* $(
-          Effect.try({
-            try: () =>
-              createTransport({
-                host: cleanedHost,
-                port: input.smtpPort,
-                secure: true,
-                auth: {
-                  user: input.smtpUser,
-                  pass: Redacted.value(input.smtpPassword),
-                },
-              }),
-            catch: (err) => {
-              console.warn(
-                `Failed to create email transport: ${err instanceof Error ? err.message : String(err)}`
-              );
-              // Return null to indicate failure instead of throwing
-              return null;
-            },
-          })
-        );
-      } catch (transportError) {
-        console.warn("Error creating transport:", transportError);
-        transport = null;
-      }
+      // Create the transport, falling back to null on any synchronous throw.
+      // IMPORTANT: this catches the exception INSIDE the Effect.sync body and
+      // returns null as a normal success value — it does NOT route through
+      // Effect.try's `catch` (which maps to the Effect *failure* channel).
+      // A JS `try { ... yield* $(effect) ... } catch {}` around a failing
+      // Effect does not catch it: Effect's fiber runtime short-circuits the
+      // generator without going through JS exception machinery, so that
+      // pattern silently never runs its catch block. Keeping the recovery
+      // entirely inside a success-producing Effect.sync sidesteps that trap.
+      const transport = yield* $(
+        Effect.sync(() => {
+          try {
+            return createTransport({
+              host: cleanedHost,
+              port: input.smtpPort,
+              secure: true,
+              auth: {
+                user: input.smtpUser,
+                pass: Redacted.value(input.smtpPassword),
+              },
+            });
+          } catch (err) {
+            console.warn(
+              `Failed to create email transport: ${err instanceof Error ? err.message : String(err)}`
+            );
+            return null;
+          }
+        })
+      );
 
       // If transport creation failed, return dummy service
       if (!transport) {
@@ -88,17 +127,25 @@ export const makeEmailService = (input: {
         return createDummyService();
       }
 
+      const defaultFromAddress = input.fromAddress || input.smtpUser;
+      const defaultFromName = input.fromName;
+
       // Don't even attempt to verify if we know authentication will fail
       // Instead, just check if the transport exists and return the proper service
       return {
-        sendEmail: (to: string, subject: string, body: string) =>
+        sendEmail: (
+          to: string,
+          subject: string,
+          body: string,
+          options?: SendEmailOptions
+        ) =>
           Effect.tryPromise({
-            try: async () => {
+            try: async (): Promise<SendEmailResult> => {
               try {
                 console.log(`Attempting to send email to ${to}: ${subject}`);
 
                 // Wrap in timeout to prevent long hanging connections
-                const timeoutPromise = new Promise((_, reject) => {
+                const timeoutPromise = new Promise<never>((_, reject) => {
                   setTimeout(
                     () =>
                       reject(
@@ -134,11 +181,19 @@ export const makeEmailService = (input: {
                   },
                 );
 
+                const fromAddress = options?.fromAddress || defaultFromAddress;
+                const fromName = options?.fromName ?? defaultFromName;
+                const from = fromName
+                  ? `"${fromName.replace(/"/g, "'")}" <${fromAddress}>`
+                  : fromAddress;
+
                 const sendPromise = transport.sendMail({
-                  from: input.smtpUser,
+                  from,
                   to,
                   subject,
                   html: processedBody,
+                  replyTo: options?.replyTo,
+                  headers: options?.headers,
                   attachments:
                     inlineAttachments.length > 0
                       ? inlineAttachments
@@ -146,14 +201,15 @@ export const makeEmailService = (input: {
                 });
 
                 // Race between timeout and actual sending
-                const result = await Promise.race([
-                  sendPromise,
-                  timeoutPromise,
-                ]);
+                await Promise.race([sendPromise, timeoutPromise]);
                 console.log(`Email sent successfully to ${to}`);
-                return result;
+                return { success: true };
               } catch (error) {
-                // Log but don't throw an error that stops the application
+                // Log but don't throw — a transactional send (order
+                // confirmation, password reset) must never block or roll
+                // back the operation that triggered it. Callers that need
+                // to know about the failure (the automation queue worker,
+                // for retry) inspect the returned `.success` instead.
                 console.error(`Failed to send email to ${to}:`, error);
 
                 if (
@@ -167,25 +223,24 @@ export const makeEmailService = (input: {
                   );
                 }
 
-                // Convert this to a soft error that won't block the transaction
-                console.warn(
-                  "Email sending failed, but allowing the operation to continue"
-                );
                 return {
-                  softError: true,
-                  message: "Email failed but operation allowed to continue",
+                  success: false,
+                  error: error instanceof Error ? error.message : String(error),
                 };
               }
             },
-            catch: (err) => {
-              console.error(
-                "Email sending error caught in Effect.tryPromise:",
-                err
-              );
-              // Rather than throwing an error that will block the order,
-              // we'll return a "successful" result but log the error
-              return undefined; // This prevents the error from propagating up
-            },
+            // The inner try/catch above already handles every failure mode
+            // and always resolves — this catch only exists to satisfy
+            // Effect.tryPromise's type signature (it maps promise rejection
+            // to the Effect's error channel), it should be unreachable.
+            catch: (err) =>
+              new ServerError({
+                tag: "EmailSendUnexpectedError",
+                cause: err,
+                message: `Unexpected error escaped sendEmail's inner handler: ${err instanceof Error ? err.message : String(err)}`,
+                statusCode: 500,
+                clientMessage: "Failed to send email",
+              }),
           }),
       };
     } catch (error) {
@@ -210,19 +265,17 @@ export const renderEmailTemplate = (
   });
 
 export const createDummyEmailService = (
-  logger: FastifyBaseLogger
+  logger: MinimalWarnLogger
 ): EmailServiceInterface => {
   const sendEmail = (to: string, subject: string, body: string) => {
     logger.warn({
       msg: `[DUMMY EMAIL] Not sending email to ${to}`,
       subject,
     });
-    // Return a properly typed Effect that matches EmailServiceInterface
-    return Effect.succeed(undefined) as Effect.Effect<
-      void,
-      ServerError<string>,
-      never
-    >;
+    return Effect.succeed({
+      success: false,
+      error: "Email service not configured (dummy service active)",
+    }) as Effect.Effect<SendEmailResult, ServerError<string>, never>;
   };
 
   return { sendEmail };

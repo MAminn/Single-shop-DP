@@ -6,6 +6,7 @@ import { z } from "zod";
 import { ServerError } from "#root/shared/error/server";
 import { mapBostaStateToOrderStatus } from "./service";
 import { logOrderEvent, recordWebhookLog } from "#root/backend/orders/order-log";
+import { enqueueReviewCheckForOrder } from "#root/backend/email-automations/triggers/order-delivered";
 
 // ─── Webhook payload schema ───────────────────────────────────────────────────
 // Bosta sends this JSON body to our webhook URL on every status change.
@@ -72,7 +73,12 @@ export const processBostaWebhook = (
     return yield* $(
       query(async (db) => {
         const existing = await db
-          .select({ id: order.id, status: order.status })
+          .select({
+            id: order.id,
+            status: order.status,
+            customerEmail: order.customerEmail,
+            customerName: order.customerName,
+          })
           .from(order)
           .where(eq(order.id, orderId))
           .execute();
@@ -105,6 +111,14 @@ export const processBostaWebhook = (
             newStatus: mappedStatus,
             note: `Bosta reported "${payload.state.value}" (code ${payload.state.code})`,
           });
+
+          if (mappedStatus === "delivered") {
+            await enqueueReviewCheckForOrder({
+              orderId,
+              customerEmail: existing[0]!.customerEmail,
+              customerName: existing[0]!.customerName,
+            });
+          }
         }
 
         console.log(

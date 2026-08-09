@@ -9,6 +9,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { TRPCClientErrorLike } from "@trpc/client";
 import { trpc } from "#root/shared/trpc/client";
+import { getCartSessionToken } from "#root/lib/cart-session";
 import {
   Loader2,
   ArrowLeft,
@@ -207,6 +208,26 @@ export const ProductDetail = ({ productId }: ProductDetailProps) => {
     fetchProductDetails();
     fetchReviews();
   }, [productId]);
+
+  // Abandoned-browse capture — fire-and-forget, must never affect the
+  // product page itself. New/separate effect from the fetch above so a
+  // capture failure can't touch product-loading state.
+  useEffect(() => {
+    if (!product) return;
+    const imageUrl =
+      product.imagesCombined && product.imagesCombined.length > 0
+        ? product.imagesCombined.find((img) => img.isPrimary)?.url ||
+          product.imagesCombined[0]?.url
+        : undefined;
+    trpc.cartCapture.recordProductView
+      .mutate({
+        sessionToken: getCartSessionToken(),
+        productId: product.id,
+        productName: product.name,
+        productImageUrl: imageUrl,
+      })
+      .catch(() => {});
+  }, [product]);
 
   const handleAddToCart = () => {
     if (!product || !product.available) {

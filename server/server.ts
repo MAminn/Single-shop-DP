@@ -23,6 +23,8 @@ import { getStoreOwnerId } from "#root/shared/config/store.js";
 import { trackBeaconPlugin } from "#root/server/routes/track.js";
 import { envSyncApiPlugin } from "#root/backend/env-sync/api.js";
 import { bootstrapSuperadmin } from "#root/backend/auth/superadmin-bootstrap.js";
+import { startEmailAutomationWorker } from "#root/backend/email-automations/worker.js";
+import { emailUnsubscribeApiPlugin } from "#root/backend/email-subscription/api.js";
 
 // Normalize env vars — Coolify sometimes injects a leading '=' into values
 function normalizeEnv(key: string): string {
@@ -45,6 +47,9 @@ for (const key of [
   "SMTP_PORT",
   "SMTP_USER",
   "SMTP_PASSWORD",
+  "EMAIL_FROM_ADDRESS",
+  "EMAIL_FROM_NAME",
+  "EMAIL_WORKER_ENABLED",
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
   "VITE_STRIPE_PUBLIC_KEY",
@@ -310,6 +315,11 @@ async function buildServer() {
     rootDir: root,
   });
 
+  // RFC 8058 one-click unsubscribe endpoint (mail clients POST here directly)
+  await instance.register(emailUnsubscribeApiPlugin, {
+    prefix: "/api/unsubscribe",
+  });
+
   // Add product detail route handler - updated to new format
   instance.get("/shop/@productId", async (request, reply) => {
     const pageContextInit = {
@@ -425,6 +435,8 @@ async function main() {
   }
 
   const fastify = await buildServer();
+
+  await startEmailAutomationWorker();
 
   fastify.listen({ port: port, host: "0.0.0.0" }, (err) => {
     console.info(`Server running at http://localhost:${port}`);

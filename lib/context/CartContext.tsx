@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import type { Product } from "../mock-data/products";
 import { trpc } from "#root/shared/trpc/client";
 import type { AppliedOffer } from "#root/backend/offers/service";
+import { getCartSessionToken } from "#root/lib/cart-session";
+import { computePromoDiscount, deriveEffectiveShipping } from "#root/shared/pricing/cart-math";
 
 export interface CartItem extends Product {
   quantity: number;
@@ -86,8 +88,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [promoCode, setPromoCode] = useState<PromoCodeInfo | null>(null);
   const [promoCodeNotice, setPromoCodeNotice] = useState<string | null>(null);
-  const [discount, setDiscount] = useState<number>(0);
-  const [shipping, setShipping] = useState<number>(0);
+  // The store's configured shipping fee, fetched once. Never mutate this
+  // directly to reflect "free shipping right now" — `shipping` below derives
+  // that from current offer state instead, so it can never get stuck at 0
+  // after a free-shipping offer stops applying (see appliedOffers).
+  const [baseShippingFee, setBaseShippingFee] = useState<number>(0);
   const [appliedOffers, setAppliedOffers] = useState<AppliedOffer[]>([]);
   const [offerDiscount, setOfferDiscount] = useState<number>(0);
 
@@ -158,7 +163,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       .query()
       .then((result) => {
         if (result.success) {
-          setShipping(result.result);
+          setBaseShippingFee(result.result);
         }
       })
       .catch((err) => {
@@ -172,13 +177,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     0,
   );
 
+  // Derived, not state: recomputes from current offers every render, so it
+  // can never get stuck at 0 after a free-shipping offer stops applying.
+  const shipping = deriveEffectiveShipping(baseShippingFee, appliedOffers);
+
+  // Derived, not state — see shared/pricing/cart-math.ts for why.
+  const discount = promoCode
+    ? computePromoDiscount(promoCode.discountType, promoCode.discountValue, subtotal, offerDiscount)
+    : 0;
+
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(items));
-
-    // Recalculate promo discount when items change
-    if (promoCode) {
-      calculateDiscount(promoCode);
-    }
 
     // Re-check the applied promo code against the new cart. Editing the cart
     // can invalidate a code (dropping below its minimum, or removing the only
@@ -232,9 +241,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
             setAppliedOffers(result.result);
             const totalOfferDiscount = result.result.reduce((s, o) => s + o.discountAmount, 0);
             setOfferDiscount(totalOfferDiscount);
-            // If any offer gives free shipping, zero out shipping
-            const hasFreeShipping = result.result.some((o) => o.freeShipping);
-            if (hasFreeShipping) setShipping(0);
+            // `shipping` derives from `appliedOffers` above — no manual
+            // reset needed here, in either direction.
           } else {
             setAppliedOffers([]);
             setOfferDiscount(0);
@@ -250,28 +258,40 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [items, promoCode]);
 
+  // Server-side cart capture — debounced, purely additive, mirrors the
+  // localStorage cart into captured_cart so abandoned-cart emails have
+  // something to work from. Never blocks or affects the shopping UI: a
+  // failure here is swallowed server-side (syncCart never throws) and
+  // simply means this snapshot is missed, not a broken cart.
+  useEffect(() => {
+    if (items.length === 0) return; // nothing to abandon yet
+    const timeoutId = window.setTimeout(() => {
+      trpc.cartCapture.sync
+        .mutate({
+          sessionToken: getCartSessionToken(),
+          items: items.map((item) => ({
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            imageUrl: item.imageUrl,
+          })),
+          subtotal,
+        })
+        .catch(() => {
+          /* Best-effort — abandoned-cart capture is not shopping-critical. */
+        });
+    }, 3000);
+    return () => window.clearTimeout(timeoutId);
+  }, [items, subtotal]);
+
   useEffect(() => {
     if (promoCode) {
       localStorage.setItem("promoCode", JSON.stringify(promoCode));
-      calculateDiscount(promoCode);
     } else {
       localStorage.removeItem("promoCode");
-      setDiscount(0);
     }
   }, [promoCode]);
-
-  const calculateDiscount = (promoCodeInfo: PromoCodeInfo) => {
-    if (promoCodeInfo.discountType === "percentage") {
-      setDiscount(subtotal * (promoCodeInfo.discountValue / 100));
-    } else if (promoCodeInfo.discountType === "fixed_amount") {
-      let calculatedDiscount = promoCodeInfo.discountValue;
-      // Make sure the discount doesn't exceed the subtotal
-      if (calculatedDiscount > subtotal) {
-        calculatedDiscount = subtotal;
-      }
-      setDiscount(calculatedDiscount);
-    }
-  };
 
   const findItemInCart = (
     itemId: string,
