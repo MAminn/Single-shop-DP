@@ -42,7 +42,7 @@ export const updateOrderStatus = (
     }
 
     const { orderId, status } = input;
-    const isAdmin = session.role === "admin";
+    const isAdmin = session.role === "admin" || session.role === "superadmin";
     // Vendor role no longer supported
     const isVendor = false;
 

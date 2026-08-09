@@ -28,7 +28,7 @@ const DEFAULT_PROMO_SORT_ORDER: z.infer<
 export async function data(ctx: PageContext) {
   const session = ctx.clientSession;
 
-  if (!session || session.role !== "admin") {
+  if (!session || (session.role !== "admin" && session.role !== "superadmin")) {
     return {
       success: false,
       error: "Unauthorized",

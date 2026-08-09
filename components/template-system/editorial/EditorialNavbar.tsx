@@ -266,7 +266,7 @@ export function EditorialNavbar() {
                             onClick={handleCloseSheet}>
                             <Heart className='w-3.5 h-3.5' /> Wishlist
                           </Link>
-                          {session.role === "admin" && (
+                          {(session.role === "admin" || session.role === "superadmin") && (
                             <Link
                               href='/dashboard'
                               className='flex items-center gap-2.5 text-[11px] tracking-[0.2em] uppercase text-stone-500 hover:text-stone-800 transition-colors'
@@ -367,7 +367,7 @@ export function EditorialNavbar() {
                       <Heart className='w-4 h-4 text-stone-500' /> Wishlist
                     </Link>
                   </DropdownMenuItem>
-                  {session.role === "admin" && (
+                  {(session.role === "admin" || session.role === "superadmin") && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>

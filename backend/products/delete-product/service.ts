@@ -16,7 +16,7 @@ export const deleteProduct = (
 ) =>
   Effect.gen(function* ($) {
     // Only admins can delete products (vendor role no longer valid)
-    if (!session || session.role !== "admin") {
+    if (!session || (session.role !== "admin" && session.role !== "superadmin")) {
       return yield* $(
         Effect.fail(
           new ServerError({

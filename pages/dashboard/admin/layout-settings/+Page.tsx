@@ -131,7 +131,7 @@ export default function LayoutSettingsPage() {
   };
 
   const handleSave = async () => {
-    if (!session || session.role !== "admin") {
+    if (!session || (session.role !== "admin" && session.role !== "superadmin")) {
       toast.error("Only administrators can update layout settings");
       return;
     }

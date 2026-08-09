@@ -51,7 +51,7 @@ export const viewPromoCodes = (
   session?: ClientSession
 ) =>
   Effect.gen(function* ($) {
-    if (!session || session.role !== "admin") {
+    if (!session || (session.role !== "admin" && session.role !== "superadmin")) {
       return yield* $(
         Effect.fail(
           new ServerError({
@@ -175,7 +175,7 @@ export const getPromoCodeById = (
   session?: ClientSession
 ) =>
   Effect.gen(function* ($) {
-    if (!session || session.role !== "admin") {
+    if (!session || (session.role !== "admin" && session.role !== "superadmin")) {
       return yield* $(
         Effect.fail(
           new ServerError({

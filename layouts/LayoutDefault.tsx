@@ -185,7 +185,7 @@ function LayoutShell({
 
   // ── Coming-soon gate (minimal template only) ──────────────────────────────
   const { session } = useContext(AuthContext);
-  const isAdmin = session?.role === "admin";
+  const isAdmin = session?.role === "admin" || session?.role === "superadmin";
   const [comingSoonMode, setComingSoonMode] = useState(false);
   const BYPASS_PATHS = ["/login", "/register", "/api", "/dashboard"];
 

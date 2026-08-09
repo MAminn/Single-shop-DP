@@ -266,7 +266,7 @@ const Navbar: React.FC<NavbarProps> = ({
                             onClick={handleCloseSheet}>
                             <Heart className='w-4 h-4' /> Wishlist
                           </Link>
-                          {session.role === "admin" && (
+                          {(session.role === "admin" || session.role === "superadmin") && (
                             <Link
                               href='/dashboard'
                               className='flex items-center gap-2.5 text-sm text-stone-700 hover:text-stone-900'
@@ -390,7 +390,7 @@ const Navbar: React.FC<NavbarProps> = ({
                         Wishlist
                       </Link>
                     </DropdownMenuItem>
-                    {session.role === "admin" && (
+                    {(session.role === "admin" || session.role === "superadmin") && (
                       <>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>

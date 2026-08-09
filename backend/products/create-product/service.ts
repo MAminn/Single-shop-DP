@@ -61,7 +61,7 @@ export const createProduct = (
 ) =>
   Effect.gen(function* ($) {
     // Admin-only product creation
-    if (!session || session.role !== "admin") {
+    if (!session || (session.role !== "admin" && session.role !== "superadmin")) {
       return yield* $(
         Effect.fail(
           new ServerError({

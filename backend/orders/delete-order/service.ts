@@ -33,7 +33,7 @@ export const deleteOrder = (
     }
 
     const { orderId } = input;
-    const isAdmin = session.role === "admin";
+    const isAdmin = session.role === "admin" || session.role === "superadmin";
 
     // Only allow admins to delete orders for now
     if (!isAdmin) {

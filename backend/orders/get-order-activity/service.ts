@@ -47,7 +47,7 @@ export const getOrderActivity = (
   session?: ClientSession,
 ) =>
   Effect.gen(function* ($) {
-    if (!session || session.role !== "admin") {
+    if (!session || (session.role !== "admin" && session.role !== "superadmin")) {
       return yield* $(
         Effect.fail(
           new ServerError({

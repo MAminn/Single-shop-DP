@@ -275,7 +275,7 @@ export const homepageRouter = router({
       const session = ctx.clientSession;
 
       // Only admins can upload homepage hero images
-      if (!session || session.role !== "admin") {
+      if (!session || (session.role !== "admin" && session.role !== "superadmin")) {
         return {
           success: false as const,
           error: "Unauthorized. Only admins can upload homepage images.",
@@ -319,7 +319,7 @@ export const homepageRouter = router({
       const session = ctx.clientSession;
 
       // Only admins can upload homepage hero images
-      if (!session || session.role !== "admin") {
+      if (!session || (session.role !== "admin" && session.role !== "superadmin")) {
         return {
           success: false as const,
           error: "Unauthorized. Only admins can upload homepage images.",

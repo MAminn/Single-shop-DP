@@ -131,7 +131,7 @@ interface Order {
 
 export default function Orders() {
   const { clientSession } = usePageContext();
-  const isAdmin = clientSession?.role === "admin";
+  const isAdmin = clientSession?.role === "admin" || clientSession?.role === "superadmin";
   const { toast } = useToast();
 
   const [statusFilter, setStatusFilter] = useState<string>("all");

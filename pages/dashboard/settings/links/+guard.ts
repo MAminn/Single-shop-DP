@@ -5,7 +5,10 @@ export async function guard(pageContext: Vike.PageContext) {
     throw redirect("/login");
   }
 
-  if (pageContext.clientSession.role !== "admin") {
+  if (
+    pageContext.clientSession.role !== "admin" &&
+    pageContext.clientSession.role !== "superadmin"
+  ) {
     throw redirect("/");
   }
 }

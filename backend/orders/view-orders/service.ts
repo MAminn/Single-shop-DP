@@ -65,7 +65,7 @@ export const viewOrders = (
     // No special authentication needed beyond session check
 
     const { limit, offset, status, dateFrom, dateTo, paymentIssueOnly } = input;
-    const isAdmin = session.role === "admin";
+    const isAdmin = session.role === "admin" || session.role === "superadmin";
 
     return yield* $(
       query(async (db) => {

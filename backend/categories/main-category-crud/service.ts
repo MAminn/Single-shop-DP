@@ -26,7 +26,7 @@ export const createMainCategory = (
   session?: ClientSession,
 ) =>
   Effect.gen(function* ($) {
-    if (!session || session.role !== "admin") {
+    if (!session || (session.role !== "admin" && session.role !== "superadmin")) {
       return yield* $(
         Effect.fail(
           new ServerError({
@@ -108,7 +108,7 @@ export const renameMainCategory = (
   session?: ClientSession,
 ) =>
   Effect.gen(function* ($) {
-    if (!session || session.role !== "admin") {
+    if (!session || (session.role !== "admin" && session.role !== "superadmin")) {
       return yield* $(
         Effect.fail(
           new ServerError({
@@ -211,7 +211,7 @@ export const deleteMainCategory = (
   session?: ClientSession,
 ) =>
   Effect.gen(function* ($) {
-    if (!session || session.role !== "admin") {
+    if (!session || (session.role !== "admin" && session.role !== "superadmin")) {
       return yield* $(
         Effect.fail(
           new ServerError({
@@ -330,7 +330,7 @@ export const toggleCategoryLanding = (
   session?: ClientSession,
 ) =>
   Effect.gen(function* ($) {
-    if (!session || session.role !== "admin") {
+    if (!session || (session.role !== "admin" && session.role !== "superadmin")) {
       return yield* $(
         Effect.fail(
           new ServerError({

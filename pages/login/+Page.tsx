@@ -63,7 +63,7 @@ export default function Page() {
 
       // Redirect based on role
       const role = (result.data?.user as { role?: string } | null)?.role;
-      if (role === "admin") {
+      if (role === "admin" || role === "superadmin") {
         window.location.href = "/dashboard";
       } else {
         window.location.href = "/";

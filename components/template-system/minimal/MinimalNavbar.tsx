@@ -205,7 +205,7 @@ export function MinimalNavbar() {
                         <Heart className="w-4 h-4 text-gray-500" /> Wishlist
                       </Link>
                     </DropdownMenuItem>
-                    {session.role === "admin" && (
+                    {(session.role === "admin" || session.role === "superadmin") && (
                       <>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
@@ -569,7 +569,7 @@ export function MinimalNavbar() {
                             <Link href='/account?tab=wishlist' className='flex items-center gap-2.5 text-sm text-gray-600 hover:text-black' onClick={handleCloseSheet}>
                               <Heart className="w-4 h-4" /> Wishlist
                             </Link>
-                            {session.role === "admin" && (
+                            {(session.role === "admin" || session.role === "superadmin") && (
                               <Link href='/dashboard' className='flex items-center gap-2.5 text-sm text-gray-600 hover:text-black' onClick={handleCloseSheet}>
                                 <LayoutDashboard className="w-4 h-4" /> Dashboard
                               </Link>

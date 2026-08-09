@@ -6,8 +6,12 @@ export async function guard(pageContext: Vike.PageContext) {
     throw redirect("/login");
   }
 
-  // In single-shop mode, only admins can access dashboard
-  if (isSingleShopMode() && pageContext.clientSession.role !== "admin") {
+  // In single-shop mode, only admins (and superadmins) can access dashboard
+  if (
+    isSingleShopMode() &&
+    pageContext.clientSession.role !== "admin" &&
+    pageContext.clientSession.role !== "superadmin"
+  ) {
     throw redirect("/");
   }
 

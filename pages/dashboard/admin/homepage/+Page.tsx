@@ -239,7 +239,7 @@ export default function HomepageAdminPage() {
 
   // ── Save translation overrides to layout settings ────────────────────────
   const handleSaveTranslations = async () => {
-    if (session && session.role !== "admin") {
+    if (session && session.role !== "admin" && session.role !== "superadmin") {
       toast.error("Only administrators can update translations");
       return;
     }
@@ -299,7 +299,7 @@ export default function HomepageAdminPage() {
 
   const handleSave = async () => {
     // Check if user is admin (when auth is fully integrated)
-    if (session && session.role !== "admin") {
+    if (session && session.role !== "admin" && session.role !== "superadmin") {
       toast.error("Only administrators can update homepage content");
       return;
     }
@@ -435,7 +435,7 @@ export default function HomepageAdminPage() {
       // Auto-save before preview
       const saveSuccess = await new Promise<boolean>((resolve) => {
         (async () => {
-          if (session && session.role !== "admin") {
+          if (session && session.role !== "admin" && session.role !== "superadmin") {
             toast.error("Only administrators can update homepage content");
             resolve(false);
             return;
@@ -1048,7 +1048,7 @@ export default function HomepageAdminPage() {
         </Alert>
       )}
 
-      {session && session.role !== "admin" && (
+      {session && session.role !== "admin" && session.role !== "superadmin" && (
         <Alert className='mb-6 border-amber-500 bg-amber-50'>
           <AlertCircle className='h-4 w-4 text-amber-600' />
           <AlertDescription className='text-amber-800'>

@@ -17,8 +17,8 @@ export async function data(ctx: Vike.PageContext) {
 		} as const;
 	}
 
-	// Single-shop mode: Only admins can access dashboard
-	if (session.role !== "admin") {
+	// Single-shop mode: Only admins (and superadmins) can access dashboard
+	if (session.role !== "admin" && session.role !== "superadmin") {
 		throw redirect("/");
 	}
 

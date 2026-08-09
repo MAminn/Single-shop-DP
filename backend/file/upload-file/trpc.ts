@@ -37,7 +37,7 @@ export const uploadFileProcedure = protectedProcedure
     const session = ctx.clientSession;
 
     // In single-shop mode, only admins can upload files
-    if (!session || session.role !== "admin") {
+    if (!session || (session.role !== "admin" && session.role !== "superadmin")) {
       return {
         success: false as const,
         error: "Unauthorized",

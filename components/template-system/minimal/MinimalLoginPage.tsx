@@ -75,7 +75,7 @@ export function MinimalLoginPage() {
 
       toast.success("Login successful");
       const role = (result.data?.user as { role?: string } | null)?.role;
-      if (role === "admin") {
+      if (role === "admin" || role === "superadmin") {
         window.location.href = "/dashboard";
       } else {
         window.location.href = "/";

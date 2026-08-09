@@ -37,7 +37,7 @@ export const getOrderStats = (
       );
     }
 
-    if (session.role !== "admin") {
+    if (session.role !== "admin" && session.role !== "superadmin") {
       return yield* $(
         Effect.fail(
           new ServerError({
