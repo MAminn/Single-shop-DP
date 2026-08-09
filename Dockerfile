@@ -19,7 +19,14 @@ RUN NODE_ENV=production pnpm run build \
 
 # Production runtime
 FROM base AS runner
-RUN apt-get update && apt-get install -y --no-install-recommends curl \
+# postgresql-client-16 (not Debian's default v15) — pg_dump refuses to run
+# against a server on a *newer* major version than itself, and this project's
+# Postgres is v16 (see docker-compose.yml). Pulled from the official PGDG apt
+# repo since Debian bookworm's own repo only ships v15.
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates gnupg lsb-release \
+  && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/postgresql.gpg \
+  && echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+  && apt-get update && apt-get install -y --no-install-recommends postgresql-client-16 \
   && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 

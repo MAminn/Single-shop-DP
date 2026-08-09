@@ -21,6 +21,8 @@ import { getLayoutSettingsRaw } from "#root/backend/layout/get-layout-settings-r
 import { getLinkTreeConfigRaw } from "#root/backend/settings/get-link-tree-config.js";
 import { getStoreOwnerId } from "#root/shared/config/store.js";
 import { trackBeaconPlugin } from "#root/server/routes/track.js";
+import { envSyncApiPlugin } from "#root/backend/env-sync/api.js";
+import { bootstrapSuperadmin } from "#root/backend/auth/superadmin-bootstrap.js";
 
 // Normalize env vars — Coolify sometimes injects a leading '=' into values
 function normalizeEnv(key: string): string {
@@ -32,6 +34,9 @@ for (const key of [
   "NODE_ENV",
   "ADMIN_EMAIL",
   "ADMIN_PASSWORD",
+  "SUPERADMIN_EMAIL",
+  "SUPERADMIN_PASSWORD",
+  "PROD_ASSET_ORIGIN",
   "DATABASE_URL",
   "BASE_URL",
   "PUBLIC_ORIGIN",
@@ -90,6 +95,11 @@ export const instance = Fastify({
 
 // Configure body size limit for all routes
 instance.addHook("onRoute", (routeOptions) => {
+  // env-sync's /import route sets its own (much larger) bodyLimit at
+  // registration time — a full DB+assets snapshot routinely exceeds 100MB.
+  if (routeOptions.url?.startsWith("/api/superadmin/sync")) {
+    return;
+  }
   if (
     routeOptions.method === "POST" ||
     routeOptions.method === "PUT" ||
@@ -180,6 +190,13 @@ async function buildServer() {
     const fullPath = `${root}/uploads/${filePath}`;
     const { createReadStream, existsSync } = await import("node:fs");
     if (!existsSync(fullPath)) {
+      // Dev-only: DB records synced down from prod (see env-sync) reference
+      // files that intentionally stay on prod's storage rather than being
+      // copied locally. Redirect to the real file there instead of 404ing.
+      const fallbackOrigin = !isProduction ? process.env.PROD_ASSET_ORIGIN : "";
+      if (fallbackOrigin) {
+        return reply.redirect(`${fallbackOrigin}/uploads/${filePath}`, 302);
+      }
       return reply.code(404).send({ error: "File not found" });
     }
     const stream = createReadStream(fullPath);
@@ -207,6 +224,8 @@ async function buildServer() {
   await instance.register(emailServiceMiddleware);
 
   await instance.register(authFasitfyMiddleware);
+
+  await bootstrapSuperadmin(instance);
 
   // Mount better-auth HTTP handler at /api/auth/*
   // Use auth.handler (Web fetch API) instead of toNodeHandler so Fastify's already-parsed
@@ -266,6 +285,12 @@ async function buildServer() {
   // Register tracking beacon endpoint
   await instance.register(trackBeaconPlugin, {
     prefix: "/api/track",
+  });
+
+  // Superadmin-only prod->dev environment sync (export/import full DB + uploads)
+  await instance.register(envSyncApiPlugin, {
+    prefix: "/api/superadmin/sync",
+    rootDir: root,
   });
 
   // Add product detail route handler - updated to new format
