@@ -1,6 +1,6 @@
 import { adminProcedure, publicProcedure, router } from "#root/shared/trpc/server";
 import { z } from "zod";
-import { eq, and, desc, ilike, or, count, sql, sum, inArray } from "drizzle-orm";
+import { eq, and, desc, ilike, ne, or, count, sql, sum, inArray } from "drizzle-orm";
 import { hashPassword } from "better-auth/crypto";
 import { user, order, orderItem, account, session, trackingEvent } from "#root/shared/database/drizzle/schema";
 import { auth } from "#root/backend/auth/auth.server.js";
@@ -20,13 +20,19 @@ export const usersRouter = router({
       const db = ctx.db;
       const { limit, offset, search } = input;
 
+      // Superadmin is a hidden, higher-privilege identity bootstrapped from
+      // env vars — it should never show up in the regular admin Users list.
+      const notSuperadmin = ne(user.role, "superadmin");
       const where = search
-        ? or(
-            ilike(user.name, `%${search}%`),
-            ilike(user.email, `%${search}%`),
-            ilike(user.phone, `%${search}%`),
+        ? and(
+            notSuperadmin,
+            or(
+              ilike(user.name, `%${search}%`),
+              ilike(user.email, `%${search}%`),
+              ilike(user.phone, `%${search}%`),
+            ),
           )
-        : undefined;
+        : notSuperadmin;
 
       const [rows, totalRows] = await Promise.all([
         db
@@ -72,7 +78,9 @@ export const usersRouter = router({
         .limit(1);
 
       const userRow = userRows[0];
-      if (!userRow) return { success: false as const, error: "User not found" };
+      if (!userRow || userRow.role === "superadmin") {
+        return { success: false as const, error: "User not found" };
+      }
 
       const orders = await db
         .select()
@@ -184,8 +192,8 @@ export const usersRouter = router({
       const db = ctx.db;
       const { id, ...fields } = input;
 
-      const existing = await db.select({ id: user.id }).from(user).where(eq(user.id, id)).limit(1);
-      if (!existing.length) {
+      const existing = await db.select({ id: user.id, role: user.role }).from(user).where(eq(user.id, id)).limit(1);
+      if (!existing.length || existing[0]?.role === "superadmin") {
         throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
       }
 
@@ -203,8 +211,8 @@ export const usersRouter = router({
     .mutation(async ({ ctx, input }) => {
       const db = ctx.db;
 
-      const existing = await db.select({ id: user.id }).from(user).where(eq(user.id, input.id)).limit(1);
-      if (!existing.length) {
+      const existing = await db.select({ id: user.id, role: user.role }).from(user).where(eq(user.id, input.id)).limit(1);
+      if (!existing.length || existing[0]?.role === "superadmin") {
         throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
       }
 
@@ -220,6 +228,15 @@ export const usersRouter = router({
   setVerified: adminProcedure
     .input(z.object({ id: z.string().min(1), verified: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.db
+        .select({ id: user.id, role: user.role })
+        .from(user)
+        .where(eq(user.id, input.id))
+        .limit(1);
+      if (!existing.length || existing[0]?.role === "superadmin") {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      }
+
       await ctx.db
         .update(user)
         .set({ emailVerified: input.verified, updatedAt: new Date() })
@@ -239,12 +256,12 @@ export const usersRouter = router({
       const db = ctx.db;
 
       const userRow = await db
-        .select({ id: user.id, email: user.email })
+        .select({ id: user.id, email: user.email, role: user.role })
         .from(user)
         .where(eq(user.id, input.id))
         .limit(1);
 
-      if (!userRow.length) {
+      if (!userRow.length || userRow[0]?.role === "superadmin") {
         throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
       }
 
@@ -285,6 +302,7 @@ export const usersRouter = router({
     const rows = await ctx.db
       .select({ email: user.email })
       .from(user)
+      .where(ne(user.role, "superadmin"))
       .orderBy(user.email);
     return { success: true as const, result: { emails: rows.map((r) => r.email) } };
   }),
@@ -293,6 +311,15 @@ export const usersRouter = router({
   setBanned: adminProcedure
     .input(z.object({ id: z.string().min(1), banned: z.boolean(), reason: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.db
+        .select({ id: user.id, role: user.role })
+        .from(user)
+        .where(eq(user.id, input.id))
+        .limit(1);
+      if (!existing.length || existing[0]?.role === "superadmin") {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      }
+
       await ctx.db
         .update(user)
         .set({
