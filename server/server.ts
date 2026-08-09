@@ -192,10 +192,27 @@ async function buildServer() {
     if (!existsSync(fullPath)) {
       // Dev-only: DB records synced down from prod (see env-sync) reference
       // files that intentionally stay on prod's storage rather than being
-      // copied locally. Redirect to the real file there instead of 404ing.
+      // copied locally. Fetch the real file from there and stream it back
+      // same-origin — a redirect would send the browser straight to prod,
+      // and prod's Cross-Origin-Resource-Policy: same-origin header (from
+      // helmet) makes browsers silently block that cross-origin image load.
       const fallbackOrigin = !isProduction ? process.env.PROD_ASSET_ORIGIN : "";
       if (fallbackOrigin) {
-        return reply.redirect(`${fallbackOrigin}/uploads/${filePath}`, 302);
+        try {
+          const upstream = await fetch(`${fallbackOrigin}/uploads/${filePath}`);
+          if (!upstream.ok || !upstream.body) {
+            return reply.code(404).send({ error: "File not found" });
+          }
+          reply.header(
+            "Content-Type",
+            upstream.headers.get("content-type") ?? "application/octet-stream",
+          );
+          const { Readable } = await import("node:stream");
+          return reply.send(Readable.fromWeb(upstream.body as import("stream/web").ReadableStream));
+        } catch (err) {
+          console.error("[uploads fallback] failed to fetch from PROD_ASSET_ORIGIN:", err);
+          return reply.code(404).send({ error: "File not found" });
+        }
       }
       return reply.code(404).send({ error: "File not found" });
     }
