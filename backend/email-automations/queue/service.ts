@@ -174,10 +174,17 @@ export async function markScheduledEmailFailed(
     .where(eq(scheduledEmail.id, id));
 }
 
-/** Marks a claimed row cancelled without sending — used when a send-time check (e.g. unsubscribe) says it shouldn't go out. */
-export async function markScheduledEmailCancelled(id: string): Promise<void> {
+/** Marks a claimed row cancelled without sending — used when a send-time check (e.g. unsubscribe, test mode) says it shouldn't go out. */
+export async function markScheduledEmailCancelled(
+  id: string,
+  reason?: string,
+): Promise<void> {
   await db()
     .update(scheduledEmail)
-    .set({ status: "cancelled", updatedAt: new Date() })
+    .set({
+      status: "cancelled",
+      ...(reason ? { lastError: reason } : {}),
+      updatedAt: new Date(),
+    })
     .where(eq(scheduledEmail.id, id));
 }

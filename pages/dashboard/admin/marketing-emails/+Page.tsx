@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#root/components/ui/select";
-import { Loader2, Send, RefreshCw, Save } from "lucide-react";
+import { Loader2, Send, RefreshCw, Save, ShieldAlert } from "lucide-react";
 
 // ─── Types (mirrors backend/email-automations/templates) ──────────────────
 
@@ -83,6 +83,12 @@ interface PromoCodeOption {
   code: string;
   discountType: "percentage" | "fixed_amount";
   discountValue: number;
+}
+
+interface EmailAutomationSettings {
+  workerEnabled: boolean;
+  testModeEnabled: boolean;
+  testModeEmail: string;
 }
 
 const AUTOMATION_LABELS: Record<AutomationType, string> = {
@@ -211,6 +217,114 @@ function formatDelay(minutes: number): string {
   return `${days} day${days === 1 ? "" : "s"} after trigger`;
 }
 
+function AutomationSettingsCard({
+  settings,
+  saving,
+  onSave,
+}: {
+  settings: EmailAutomationSettings;
+  saving: boolean;
+  onSave: (next: EmailAutomationSettings) => void;
+}) {
+  const [emailDraft, setEmailDraft] = useState(settings.testModeEmail);
+
+  useEffect(() => {
+    setEmailDraft(settings.testModeEmail);
+  }, [settings.testModeEmail]);
+
+  const commitEmail = () => {
+    const trimmed = emailDraft.trim();
+    if (trimmed !== settings.testModeEmail) {
+      onSave({ ...settings, testModeEmail: trimmed });
+    }
+  };
+
+  return (
+    <Card className='border-amber-200 bg-amber-50/40'>
+      <CardHeader>
+        <CardTitle className='flex items-center gap-2 text-base'>
+          <ShieldAlert className='w-4 h-4 text-amber-600' />
+          Automation Sending
+        </CardTitle>
+        <CardDescription>
+          Controls whether the background worker actually sends welcome,
+          abandoned-cart, win-back, and broadcast emails to real customers.
+          Takes effect within a minute — no redeploy needed.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className='space-y-4'>
+        <div className='flex items-center justify-between gap-4'>
+          <div>
+            <p className='text-sm font-medium'>Automations enabled</p>
+            <p className='text-xs text-muted-foreground'>
+              Off by default. While off, nothing is sent and no new
+              abandoned-cart/browse/win-back emails are even scheduled.
+            </p>
+          </div>
+          <Switch
+            checked={settings.workerEnabled}
+            disabled={saving}
+            onCheckedChange={(checked) =>
+              onSave({ ...settings, workerEnabled: checked })
+            }
+          />
+        </div>
+
+        <Separator />
+
+        <div className='flex items-center justify-between gap-4'>
+          <div>
+            <p className='text-sm font-medium'>Test mode</p>
+            <p className='text-xs text-muted-foreground'>
+              While on, the worker still runs but only ever delivers to the
+              test email below — every other recipient is skipped (marked
+              cancelled), not sent to. Recommended while automations are
+              enabled but you're still verifying things.
+            </p>
+          </div>
+          <Switch
+            checked={settings.testModeEnabled}
+            disabled={saving}
+            onCheckedChange={(checked) =>
+              onSave({ ...settings, testModeEnabled: checked })
+            }
+          />
+        </div>
+
+        {settings.testModeEnabled && (
+          <div>
+            <Label htmlFor='automation-test-email' className='text-xs'>
+              Test email address
+            </Label>
+            <Input
+              id='automation-test-email'
+              type='email'
+              placeholder='you@syntperfumes.com'
+              value={emailDraft}
+              disabled={saving}
+              onChange={(e) => setEmailDraft(e.target.value)}
+              onBlur={commitEmail}
+              className='mt-1'
+            />
+            {settings.workerEnabled && !settings.testModeEmail && (
+              <p className='text-xs text-amber-700 mt-1'>
+                No test email set yet — automations are enabled with test
+                mode on, so nothing will send to anyone until you add one.
+              </p>
+            )}
+          </div>
+        )}
+
+        {settings.workerEnabled && !settings.testModeEnabled && (
+          <p className='text-xs font-medium text-red-600'>
+            Live: real customers will receive these emails.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 interface TemplateFormState {
   automationType: AutomationType;
   stepKey: string;
@@ -249,6 +363,10 @@ export default function MarketingEmailsPage() {
   const [countLoading, setCountLoading] = useState(false);
   const [sendingBroadcast, setSendingBroadcast] = useState(false);
 
+  const [automationSettings, setAutomationSettings] =
+    useState<EmailAutomationSettings | null>(null);
+  const [savingAutomationSettings, setSavingAutomationSettings] = useState(false);
+
   const stepKey = activeAutomation === "abandoned_cart" ? activeStep : "default";
 
   const fetchTemplates = async () => {
@@ -286,7 +404,35 @@ export default function MarketingEmailsPage() {
       .catch(() => {
         /* Picker just shows no options — the "no active promo codes" empty state covers this. */
       });
+    trpc.emailAutomationSettings.get
+      .query()
+      .then((result) => {
+        if (result.success && result.result) {
+          setAutomationSettings(result.result as EmailAutomationSettings);
+        }
+      })
+      .catch(() => {
+        /* Card just won't render its current values — save still works from defaults. */
+      });
   }, []);
+
+  const saveAutomationSettings = async (next: EmailAutomationSettings) => {
+    const previous = automationSettings;
+    setAutomationSettings(next); // optimistic — toggles should feel instant
+    setSavingAutomationSettings(true);
+    try {
+      const result = await trpc.emailAutomationSettings.update.mutate(next);
+      if (!result.success) {
+        setAutomationSettings(previous);
+        toast.error(result.error || "Failed to save automation settings");
+      }
+    } catch {
+      setAutomationSettings(previous);
+      toast.error("Failed to save automation settings");
+    } finally {
+      setSavingAutomationSettings(false);
+    }
+  };
 
   const selected = useMemo(
     () =>
@@ -453,6 +599,14 @@ export default function MarketingEmailsPage() {
           to change.
         </p>
       </div>
+
+      {automationSettings && (
+        <AutomationSettingsCard
+          settings={automationSettings}
+          saving={savingAutomationSettings}
+          onSave={saveAutomationSettings}
+        />
+      )}
 
       <Tabs
         value={activeAutomation}

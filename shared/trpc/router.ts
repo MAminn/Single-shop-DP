@@ -20,6 +20,7 @@ import { emailTemplatesRouter } from "#root/backend/email-automations/templates/
 import { popupRouter } from "#root/backend/popup/trpc";
 import { cartCaptureRouter } from "#root/backend/cart-capture/trpc";
 import { broadcastRouter } from "#root/backend/email-automations/broadcast/trpc";
+import { emailAutomationSettingsRouter } from "#root/backend/email-automations/settings-trpc";
 import { publicProcedure, router, t } from "./server";
 
 const authRouter = t.router({
@@ -52,6 +53,7 @@ export const appRouter = router({
   popup: popupRouter,
   cartCapture: cartCaptureRouter,
   broadcast: broadcastRouter,
+  emailAutomationSettings: emailAutomationSettingsRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -18,6 +18,7 @@ import {
 } from "#root/backend/email-subscription/service";
 import { runTriggerScan } from "./triggers/scanner";
 import type { ScheduledEmailRow } from "#root/shared/database/drizzle/schema";
+import { getEmailAutomationSettingsRaw } from "./settings-service";
 
 const TICK_INTERVAL_MS = 60_000;
 const CLAIM_BATCH_SIZE = 20;
@@ -36,10 +37,25 @@ const consoleLogger: EmailEnvLogger = {
 async function processRow(
   row: ScheduledEmailRow,
   emailService: EmailServiceInterface,
+  testMode: { enabled: boolean; email: string },
 ): Promise<void> {
   try {
     if (await isEmailUnsubscribed(row.recipientEmail)) {
       await markScheduledEmailCancelled(row.id);
+      return;
+    }
+
+    // Test mode holds every row that isn't addressed to the admin's chosen
+    // test inbox — the queue still runs (rows still get claimed/rendered),
+    // real customers just never receive anything while it's on.
+    if (
+      testMode.enabled &&
+      row.recipientEmail.toLowerCase() !== testMode.email.toLowerCase()
+    ) {
+      await markScheduledEmailCancelled(
+        row.id,
+        `Skipped: automation test mode is on (only sends to ${testMode.email || "the configured test email"})`,
+      );
       return;
     }
 
@@ -95,15 +111,24 @@ async function tick(emailService: EmailServiceInterface): Promise<void> {
   if (tickInFlight) return; // previous tick still running (slow send/DB) — skip, don't overlap
   tickInFlight = true;
   try {
+    // Re-read every tick (not cached) so the admin's on/off + test-mode
+    // toggles take effect within a minute, no redeploy needed.
+    const settings = await getEmailAutomationSettingsRaw();
+    if (!settings.workerEnabled) return;
+
     const rows = await claimDueScheduledEmails(CLAIM_BATCH_SIZE);
     if (rows.length === 0) return;
 
     console.info(`[EmailWorker] Claimed ${rows.length} due email(s)`);
+    const testMode = {
+      enabled: settings.testModeEnabled,
+      email: settings.testModeEmail,
+    };
     // Sequential, not parallel: this is a low-volume background queue, not
     // a bulk sender — sequential sends are gentler on SMTP rate limits and
     // keep failures isolated and easy to reason about.
     for (const row of rows) {
-      await processRow(row, emailService);
+      await processRow(row, emailService, testMode);
     }
   } catch (err) {
     console.error("[EmailWorker] Tick failed:", err);
@@ -112,25 +137,32 @@ async function tick(emailService: EmailServiceInterface): Promise<void> {
   }
 }
 
+/**
+ * Trigger scanning (abandoned cart/browse, win-back) enqueues rows for
+ * future sends — gated by the same master toggle as tick() so a paused
+ * worker doesn't quietly build up a backlog that would all fire at once
+ * the moment it's turned back on.
+ */
+async function scanIfEnabled(): Promise<void> {
+  const settings = await getEmailAutomationSettingsRaw();
+  if (!settings.workerEnabled) return;
+  await runTriggerScan();
+}
+
 export interface EmailAutomationWorkerHandle {
   stop(): void;
 }
 
 /**
  * Starts the background poller that sends due marketing-automation emails.
- * Gated behind EMAIL_WORKER_ENABLED so dev/test environments never send
- * real mail unless explicitly opted in. Returns a handle to stop the
- * interval (used by graceful shutdown and tests); returns a no-op handle
- * when disabled.
+ * The interval always runs; whether it actually claims/sends anything is
+ * decided per-tick from the admin's DB-backed settings (see
+ * settings-service.ts / emailAutomationSettingsRouter) so the on/off and
+ * test-mode toggles in the marketing-emails admin page take effect live,
+ * without a redeploy. Returns a handle to stop the interval (used by
+ * graceful shutdown and tests).
  */
 export async function startEmailAutomationWorker(): Promise<EmailAutomationWorkerHandle> {
-  if (process.env.EMAIL_WORKER_ENABLED !== "true") {
-    console.info(
-      "[EmailWorker] Disabled (set EMAIL_WORKER_ENABLED=true to enable). Scheduled emails will accumulate unsent.",
-    );
-    return { stop: () => {} };
-  }
-
   const emailService = await createEmailServiceFromEnv(consoleLogger);
 
   const intervalId = setInterval(() => {
@@ -140,17 +172,17 @@ export async function startEmailAutomationWorker(): Promise<EmailAutomationWorke
   intervalId.unref?.();
 
   const scanIntervalId = setInterval(() => {
-    void runTriggerScan();
+    void scanIfEnabled();
   }, TRIGGER_SCAN_INTERVAL_MS);
   scanIntervalId.unref?.();
 
   console.info(
-    `[EmailWorker] Started — polling every ${TICK_INTERVAL_MS / 1000}s, scanning triggers every ${TRIGGER_SCAN_INTERVAL_MS / 60_000}m`,
+    `[EmailWorker] Started — polling every ${TICK_INTERVAL_MS / 1000}s, scanning triggers every ${TRIGGER_SCAN_INTERVAL_MS / 60_000}m (actual sending gated by admin settings, off by default)`,
   );
 
   // Run one tick/scan immediately rather than waiting a full interval on startup.
   void tick(emailService);
-  void runTriggerScan();
+  void scanIfEnabled();
 
   return {
     stop: () => {

@@ -1343,6 +1343,21 @@ export interface PopupDiscountConfig {
   codeMode: "existing" | "generate";
 }
 
+/**
+ * Runtime on/off switches for the marketing-automation worker, checked on
+ * every tick (see backend/email-automations/worker.ts) rather than only at
+ * boot — so the admin can pause sending or restrict it to a single test
+ * inbox without a redeploy. workerEnabled gates both trigger scanning and
+ * actual sending; testModeEnabled (while workerEnabled is true) still lets
+ * the queue run but only ever sends to testModeEmail, holding every other
+ * row as cancelled instead of delivering it.
+ */
+export interface EmailAutomationSettings {
+  workerEnabled: boolean;
+  testModeEnabled: boolean;
+  testModeEmail: string;
+}
+
 // We use a fixed key ("default") enforced by a unique constraint so only one
 // row ever exists.
 export const storeSettings = pgTable("store_settings", {
@@ -1373,6 +1388,7 @@ export const storeSettings = pgTable("store_settings", {
     }>(),
   popupConfig: jsonb("popup_config").$type<PopupConfig>(),
   popupDiscountConfig: jsonb("popup_discount_config").$type<PopupDiscountConfig>(),
+  emailAutomationSettings: jsonb("email_automation_settings").$type<EmailAutomationSettings>(),
   updatedAt: timestamp("updated_at", {
     withTimezone: true,
     mode: "date",
