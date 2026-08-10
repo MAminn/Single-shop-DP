@@ -7,7 +7,7 @@ import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
 import { trpc } from "#root/shared/trpc/client";
 import { Link } from "#root/components/utils/Link";
 import { STORE_CURRENCY } from "#root/shared/config/branding";
-import { Check, Copy, Loader2, Lock, Send, Tag } from "lucide-react";
+import { Check, Copy, Loader2, Lock, Percent, Send, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "#root/lib/utils";
 import type {
@@ -250,13 +250,8 @@ export default function OffersPage() {
             <p className='text-xs lg:text-sm text-gray-500 mb-4 lg:mb-6'>
               {isAr ? "استخدم هذه الأكواد عند الدفع." : "Use these codes at checkout."}
             </p>
-            <div className='relative'>
-              <div
-                className={cn(
-                  "grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-5 transition-[filter] duration-700 ease-out",
-                  !isSignedIn && "blur-md select-none pointer-events-none",
-                )}
-                aria-hidden={!isSignedIn}>
+            {isSignedIn ? (
+              <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-5'>
                 {promoCodes.map((pc) => (
                   <div
                     key={pc.id}
@@ -284,32 +279,33 @@ export default function OffersPage() {
                   </div>
                 ))}
               </div>
-
-              {!isSignedIn && (
-                <div className='absolute inset-0 flex items-center justify-center'>
-                  <div className='animate-reveal-overlay-in flex flex-col items-center gap-2.5 text-center px-4 py-5 sm:px-8 sm:py-6 rounded-xl bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm'>
-                    <span className='animate-reveal-lock-pulse flex items-center justify-center w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-black text-white'>
-                      <Lock className='w-4 h-4 lg:w-[18px] lg:h-[18px]' />
-                    </span>
-                    <div>
-                      <p className='text-sm lg:text-base font-bold text-gray-900 uppercase tracking-wide'>
-                        {isAr ? "سجّل الدخول لكشف الأكواد" : "Sign in to reveal"}
-                      </p>
-                      <p className='text-xs lg:text-sm text-gray-500 mt-0.5'>
-                        {isAr
-                          ? "أنشئ حسابًا مجانيًا لعرض أكواد الخصم النشطة."
-                          : "Create a free account to view active discount codes."}
-                      </p>
-                    </div>
-                    <Link
-                      href='/login'
-                      className='mt-1 inline-flex items-center gap-1.5 bg-black hover:bg-gray-900 text-white text-xs lg:text-sm font-semibold uppercase tracking-wide px-4 py-2 lg:px-5 lg:py-2.5 rounded-md transition-colors'>
-                      {isAr ? "تسجيل الدخول" : "Sign In"} →
-                    </Link>
+            ) : (
+              <div className='animate-reveal-overlay-in flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 bg-white border border-gray-200 rounded-lg p-3 sm:p-4'>
+                <div className='flex items-center gap-3 min-w-0'>
+                  <span className='animate-reveal-lock-pulse flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-emerald-50 text-emerald-600 shrink-0'>
+                    <Percent className='w-4 h-4 sm:w-5 sm:h-5' />
+                  </span>
+                  <div className='min-w-0'>
+                    <p className='text-sm sm:text-base font-bold text-gray-900'>
+                      {isAr
+                        ? "سجّل الدخول لكشف أكواد الخصم النشطة"
+                        : "Sign in to reveal active promo codes"}
+                    </p>
+                    <p className='text-xs sm:text-sm text-gray-500 mt-0.5'>
+                      {isAr
+                        ? "أنشئ حسابًا مجانيًا لعرض ونسخ أكواد الخصم الحصرية."
+                        : "Create a free account to view and copy exclusive discount codes."}
+                    </p>
                   </div>
                 </div>
-              )}
-            </div>
+                <Link
+                  href='/login'
+                  className='shrink-0 inline-flex items-center gap-1.5 bg-black hover:bg-gray-900 text-white text-xs sm:text-sm font-semibold uppercase tracking-wide px-3 py-2 sm:px-4 sm:py-2.5 rounded-md transition-colors'>
+                  <Lock className='w-3.5 h-3.5' />
+                  {isAr ? "دخول" : "Sign In"}
+                </Link>
+              </div>
+            )}
           </div>
         )}
 

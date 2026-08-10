@@ -155,7 +155,7 @@ export function EntryPopup() {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         dir={dir}
-        className='p-0 overflow-hidden gap-0 max-w-[420px] [&>button]:hidden'>
+        className='p-0 overflow-hidden gap-0 w-[calc(100%-2rem)] max-w-[420px] sm:max-w-[420px] [&>button]:hidden'>
         <DialogTitle className='sr-only'>{title}</DialogTitle>
 
         <button
