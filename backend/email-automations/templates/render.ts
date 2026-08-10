@@ -2,6 +2,12 @@ import { Effect } from "effect";
 import { getEmailBranding } from "#root/backend/emails/branding";
 import { renderEmailTemplate } from "#root/shared/email/service";
 import { toAbsoluteUrl } from "#root/shared/config/site-url";
+
+/** Product/upload images are stored as relative paths — an email client has no page to resolve them against, so absolutize (same reason the logo needed the fix in backend/emails/branding.ts). */
+function absolutizeImage(url: string | undefined): string | undefined {
+  if (!url || url.startsWith("data:")) return undefined;
+  return toAbsoluteUrl(url);
+}
 import type { ScheduledEmailRow } from "#root/shared/database/drizzle/schema";
 import {
   registerEmailRenderer,
@@ -36,7 +42,7 @@ function readFeaturedItem(payload: unknown): MarketingEmailFeaturedItem | undefi
     const first = p.items[0] as Record<string, unknown>;
     const extra = p.items.length - 1;
     return {
-      imageUrl: typeof first.imageUrl === "string" ? first.imageUrl : undefined,
+      imageUrl: absolutizeImage(typeof first.imageUrl === "string" ? first.imageUrl : undefined),
       name: typeof first.name === "string" ? first.name : "",
       subtitle:
         extra > 0
@@ -52,7 +58,7 @@ function readFeaturedItem(payload: unknown): MarketingEmailFeaturedItem | undefi
   const productName = readString(payload, "productName");
   if (!productName) return undefined;
   return {
-    imageUrl: readString(payload, "productImageUrl") || undefined,
+    imageUrl: absolutizeImage(readString(payload, "productImageUrl") || undefined),
     name: productName,
     subtitle: readString(payload, "productSubtitle") || undefined,
     priceLabel: readString(payload, "priceLabel") || undefined,

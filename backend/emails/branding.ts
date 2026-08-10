@@ -1,46 +1,7 @@
 import { getLayoutSettings } from "#root/backend/layout/get-layout-settings/index";
 import { getStoreOwnerId } from "#root/shared/config/store";
 import { STORE_NAME, STORE_CURRENCY } from "#root/shared/config/branding";
-import { readFile, existsSync } from "node:fs";
-import { resolve, extname, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import { promisify } from "node:util";
-
-const readFileAsync = promisify(readFile);
-
-const MIME: Record<string, string> = {
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".png": "image/png",
-  ".gif": "image/gif",
-  ".webp": "image/webp",
-  ".svg": "image/svg+xml",
-};
-
-/** Resolve the repo root (works both from source and from build output). */
-function getRepoRoot(): string {
-  const dir = dirname(fileURLToPath(import.meta.url));
-  // source: backend/emails/ → two levels up to root
-  // build:  build/backend/emails/ → three levels up to root
-  const isBuild = dir.includes("build");
-  return resolve(dir, isBuild ? "../../.." : "../..");
-}
-
-/** Reads an uploaded image from disk and returns a base64 data URI. */
-async function logoToDataUri(filename: string): Promise<string | undefined> {
-  try {
-    // Strip any leading /uploads/ prefix that may have been stored
-    const bare = filename.replace(/^\/?uploads\//, "");
-    const filePath = resolve(getRepoRoot(), "uploads", bare);
-    if (!existsSync(filePath)) return undefined;
-    const buf = await readFileAsync(filePath);
-    const ext = extname(filePath).toLowerCase();
-    const mime = MIME[ext] ?? "image/jpeg";
-    return `data:${mime};base64,${buf.toString("base64")}`;
-  } catch {
-    return undefined;
-  }
-}
+import { toAbsoluteUrl } from "#root/shared/config/site-url";
 
 export interface EmailBranding {
   storeName: string;
@@ -62,20 +23,15 @@ export async function getEmailBranding(): Promise<EmailBranding> {
     const isMinimal = settings.header.navbarStyle === "minimal";
     const storeName = settings.siteTitle || STORE_NAME || "Store";
 
+    // Gmail, Outlook.com, and Yahoo all strip `data:` URI images out of HTML
+    // emails (a known anti-phishing measure — they refuse to render an image
+    // that can't be scanned/cached), leaving a broken-image icon where the
+    // logo should be. So this must always resolve to a real fetchable URL —
+    // relative uploads become absolute against PUBLIC_ORIGIN/BASE_URL, never
+    // base64-embedded.
     let logoUrl: string | undefined;
-    if (settings.header.logoUrl) {
-      const raw = settings.header.logoUrl;
-      if (raw.startsWith("data:")) {
-        // Already a data URI
-        logoUrl = raw;
-      } else if (raw.startsWith("http")) {
-        // Absolute external URL — use as-is
-        logoUrl = raw;
-      } else {
-        // Local upload — read from disk and embed as base64
-        const bare = raw.startsWith("/uploads/") ? raw.slice("/uploads/".length) : raw;
-        logoUrl = await logoToDataUri(bare);
-      }
+    if (settings.header.logoUrl && !settings.header.logoUrl.startsWith("data:")) {
+      logoUrl = toAbsoluteUrl(settings.header.logoUrl);
     }
 
     return {

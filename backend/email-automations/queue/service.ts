@@ -1,6 +1,6 @@
 import { db } from "#root/shared/database/drizzle/db";
 import { scheduledEmail } from "#root/shared/database/drizzle/schema";
-import { and, eq, inArray, like, lte } from "drizzle-orm";
+import { and, desc, eq, inArray, like, lte } from "drizzle-orm";
 import { getOrCreateSubscriptionToken } from "#root/backend/email-subscription/service";
 
 export type EmailAutomationType =
@@ -172,6 +172,22 @@ export async function markScheduledEmailFailed(
       updatedAt: new Date(),
     })
     .where(eq(scheduledEmail.id, id));
+}
+
+/**
+ * Most-recently-touched rows across every automation type, for the admin
+ * queue-activity view — lets the admin confirm a triggered send actually
+ * went out (or see why it didn't: cancelled/failed + lastError) without a
+ * direct DB query.
+ */
+export async function listRecentScheduledEmails(
+  limit = 50,
+): Promise<Array<typeof scheduledEmail.$inferSelect>> {
+  return db()
+    .select()
+    .from(scheduledEmail)
+    .orderBy(desc(scheduledEmail.updatedAt))
+    .limit(limit);
 }
 
 /** Marks a claimed row cancelled without sending — used when a send-time check (e.g. unsubscribe, test mode) says it shouldn't go out. */

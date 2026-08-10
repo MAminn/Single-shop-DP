@@ -21,6 +21,7 @@ import { popupRouter } from "#root/backend/popup/trpc";
 import { cartCaptureRouter } from "#root/backend/cart-capture/trpc";
 import { broadcastRouter } from "#root/backend/email-automations/broadcast/trpc";
 import { emailAutomationSettingsRouter } from "#root/backend/email-automations/settings-trpc";
+import { emailQueueRouter } from "#root/backend/email-automations/queue/trpc";
 import { publicProcedure, router, t } from "./server";
 
 const authRouter = t.router({
@@ -54,6 +55,7 @@ export const appRouter = router({
   cartCapture: cartCaptureRouter,
   broadcast: broadcastRouter,
   emailAutomationSettings: emailAutomationSettingsRouter,
+  emailQueue: emailQueueRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -91,6 +91,18 @@ interface EmailAutomationSettings {
   testModeEmail: string;
 }
 
+interface ScheduledEmailRow {
+  id: string;
+  automationType: AutomationType;
+  recipientEmail: string;
+  status: "pending" | "sending" | "sent" | "failed" | "cancelled";
+  scheduledFor: Date;
+  sentAt: Date | null;
+  lastError: string | null;
+  attempts: number;
+  updatedAt: Date;
+}
+
 const AUTOMATION_LABELS: Record<AutomationType, string> = {
   welcome: "Welcome Email",
   review_check: "Review Request",
@@ -325,6 +337,103 @@ function AutomationSettingsCard({
   );
 }
 
+const QUEUE_STATUS_VARIANT: Record<
+  ScheduledEmailRow["status"],
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  pending: "outline",
+  sending: "secondary",
+  sent: "default",
+  failed: "destructive",
+  cancelled: "secondary",
+};
+
+function formatQueueTime(date: Date | null): string {
+  if (!date) return "—";
+  return new Date(date).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function RecentQueueActivity({
+  rows,
+  loading,
+  onRefresh,
+}: {
+  rows: ScheduledEmailRow[];
+  loading: boolean;
+  onRefresh: () => void;
+}) {
+  return (
+    <Card>
+      <CardHeader className='flex flex-row items-center justify-between gap-4 space-y-0'>
+        <div>
+          <CardTitle className='text-base'>Recent Queue Activity</CardTitle>
+          <CardDescription>
+            The last 50 scheduled sends across every automation — use this to
+            confirm a test actually went out (or see why it didn't).
+          </CardDescription>
+        </div>
+        <Button
+          type='button'
+          variant='outline'
+          size='sm'
+          onClick={onRefresh}
+          disabled={loading}>
+          {loading ? (
+            <Loader2 className='w-4 h-4 animate-spin' />
+          ) : (
+            <RefreshCw className='w-4 h-4' />
+          )}
+        </Button>
+      </CardHeader>
+      <CardContent>
+        {rows.length === 0 ? (
+          <p className='text-sm text-muted-foreground'>
+            {loading ? "Loading..." : "Nothing has been scheduled yet."}
+          </p>
+        ) : (
+          <div className='overflow-x-auto'>
+            <table className='w-full text-sm'>
+              <thead>
+                <tr className='border-b text-left text-xs text-muted-foreground'>
+                  <th className='py-2 pe-3 font-medium'>Recipient</th>
+                  <th className='py-2 px-3 font-medium'>Automation</th>
+                  <th className='py-2 px-3 font-medium'>Status</th>
+                  <th className='py-2 px-3 font-medium'>Scheduled For</th>
+                  <th className='py-2 ps-3 font-medium'>Note</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.id} className='border-b last:border-0 align-top'>
+                    <td className='py-2 pe-3 whitespace-nowrap'>{row.recipientEmail}</td>
+                    <td className='py-2 px-3 whitespace-nowrap'>
+                      {AUTOMATION_LABELS[row.automationType] ?? row.automationType}
+                    </td>
+                    <td className='py-2 px-3'>
+                      <Badge variant={QUEUE_STATUS_VARIANT[row.status]}>{row.status}</Badge>
+                    </td>
+                    <td className='py-2 px-3 whitespace-nowrap text-muted-foreground'>
+                      {formatQueueTime(row.status === "sent" ? row.sentAt : row.scheduledFor)}
+                    </td>
+                    <td className='py-2 ps-3 text-muted-foreground max-w-[240px] truncate'>
+                      {row.lastError || "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 interface TemplateFormState {
   automationType: AutomationType;
   stepKey: string;
@@ -366,6 +475,23 @@ export default function MarketingEmailsPage() {
   const [automationSettings, setAutomationSettings] =
     useState<EmailAutomationSettings | null>(null);
   const [savingAutomationSettings, setSavingAutomationSettings] = useState(false);
+
+  const [queueRows, setQueueRows] = useState<ScheduledEmailRow[]>([]);
+  const [queueLoading, setQueueLoading] = useState(false);
+
+  const fetchQueue = async () => {
+    setQueueLoading(true);
+    try {
+      const result = await trpc.emailQueue.listRecent.query({ limit: 50 });
+      if (result.success) {
+        setQueueRows(result.result as ScheduledEmailRow[]);
+      }
+    } catch {
+      /* Table just stays empty/stale — not critical enough to toast. */
+    } finally {
+      setQueueLoading(false);
+    }
+  };
 
   const stepKey = activeAutomation === "abandoned_cart" ? activeStep : "default";
 
@@ -414,6 +540,7 @@ export default function MarketingEmailsPage() {
       .catch(() => {
         /* Card just won't render its current values — save still works from defaults. */
       });
+    fetchQueue();
   }, []);
 
   const saveAutomationSettings = async (next: EmailAutomationSettings) => {
@@ -607,6 +734,8 @@ export default function MarketingEmailsPage() {
           onSave={saveAutomationSettings}
         />
       )}
+
+      <RecentQueueActivity rows={queueRows} loading={queueLoading} onRefresh={fetchQueue} />
 
       <Tabs
         value={activeAutomation}
