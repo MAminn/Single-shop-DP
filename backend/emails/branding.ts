@@ -40,7 +40,12 @@ export async function getEmailBranding(): Promise<EmailBranding> {
     // base64-embedded.
     let logoUrl: string | undefined;
     if (settings.header.logoUrl && !settings.header.logoUrl.startsWith("data:")) {
-      logoUrl = toAbsoluteUrl(settings.header.logoUrl);
+      // Cache-bust: Gmail's image proxy fetched this exact URL (unchanged
+      // since it's the same uploaded file) while it was still blocked by the
+      // old same-origin CORP header, and caches that failure by URL. Adding
+      // a query param forces every mail client to treat it as a URL it's
+      // never seen, guaranteeing a fresh fetch against the now-fixed header.
+      logoUrl = `${toAbsoluteUrl(settings.header.logoUrl)}?cb=corp-fix-20260811`;
     }
 
     return {

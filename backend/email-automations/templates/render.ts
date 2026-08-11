@@ -3,10 +3,10 @@ import { getEmailBranding } from "#root/backend/emails/branding";
 import { renderEmailTemplate } from "#root/shared/email/service";
 import { toAbsoluteUrl } from "#root/shared/config/site-url";
 
-/** Product/upload images are stored as relative paths — an email client has no page to resolve them against, so absolutize (same reason the logo needed the fix in backend/emails/branding.ts). */
+/** Product/upload images are stored as relative paths — an email client has no page to resolve them against, so absolutize (same reason the logo needed the fix in backend/emails/branding.ts). Cache-bust for the same reason as the logo — see the comment there. */
 function absolutizeImage(url: string | undefined): string | undefined {
   if (!url || url.startsWith("data:")) return undefined;
-  return toAbsoluteUrl(url);
+  return `${toAbsoluteUrl(url)}?cb=corp-fix-20260811`;
 }
 import type { ScheduledEmailRow } from "#root/shared/database/drizzle/schema";
 import {
