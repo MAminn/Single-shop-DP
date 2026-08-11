@@ -1,7 +1,6 @@
 import {
   Body,
   Button,
-  Column,
   Container,
   Head,
   Heading,
@@ -10,7 +9,6 @@ import {
   Img,
   Link,
   Preview,
-  Row,
   Section,
   Text,
 } from "@react-email/components";
@@ -62,8 +60,6 @@ export const MarketingEmailLayout = ({
   contactEmail,
   dir = "ltr",
 }: MarketingEmailLayoutProps) => {
-  const textAlign = dir === "rtl" ? ("right" as const) : ("left" as const);
-
   return (
     <Html dir={dir} lang={dir === "rtl" ? "ar" : "en"}>
       <Head>
@@ -89,38 +85,34 @@ export const MarketingEmailLayout = ({
           </Section>
 
           {/* Headline + body */}
-          <Section style={{ ...section, textAlign }}>
+          <Section style={{ ...section, textAlign: "center" as const }}>
             <Heading as="h2" style={headlineStyle}>
               {headline}
             </Heading>
             <Text style={paragraph}>{body}</Text>
           </Section>
 
-          {/* Featured item card */}
+          {/* Featured item card — image stacked above details, everything centered */}
           {featuredItem && (
             <Section style={section}>
-              <Row style={itemCard}>
+              <Section style={itemCard}>
                 {featuredItem.imageUrl && (
-                  <Column style={itemImageCol}>
-                    <Img
-                      src={featuredItem.imageUrl}
-                      alt={featuredItem.name}
-                      width="96"
-                      height="96"
-                      style={itemImage}
-                    />
-                  </Column>
+                  <Img
+                    src={featuredItem.imageUrl}
+                    alt={featuredItem.name}
+                    width="96"
+                    height="96"
+                    style={itemImage}
+                  />
                 )}
-                <Column style={itemDetailsCol}>
-                  <Text style={itemName}>{featuredItem.name}</Text>
-                  {featuredItem.subtitle && (
-                    <Text style={itemSubtitle}>{featuredItem.subtitle}</Text>
-                  )}
-                  {featuredItem.priceLabel && (
-                    <Text style={itemPrice}>{featuredItem.priceLabel}</Text>
-                  )}
-                </Column>
-              </Row>
+                <Text style={itemName}>{featuredItem.name}</Text>
+                {featuredItem.subtitle && (
+                  <Text style={itemSubtitle}>{featuredItem.subtitle}</Text>
+                )}
+                {featuredItem.priceLabel && (
+                  <Text style={itemPrice}>{featuredItem.priceLabel}</Text>
+                )}
+              </Section>
             </Section>
           )}
 
@@ -237,21 +229,15 @@ const paragraph = {
 const itemCard = {
   border: "1px solid #e5e7eb",
   borderRadius: "8px",
-};
-
-const itemImageCol = {
-  width: "96px",
-  padding: "16px",
+  padding: "20px 16px",
+  textAlign: "center" as const,
 };
 
 const itemImage = {
   borderRadius: "6px",
   objectFit: "cover" as const,
-};
-
-const itemDetailsCol = {
-  padding: "16px 16px 16px 0",
-  verticalAlign: "middle" as const,
+  margin: "0 auto 12px",
+  display: "block" as const,
 };
 
 const itemName = {
