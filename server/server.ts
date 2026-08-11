@@ -186,12 +186,23 @@ async function buildServer() {
     decorateReply: false,
     wildcard: false,
     prefix: "/uploads",
+    // helmet's default Cross-Origin-Resource-Policy: same-origin blocks any
+    // cross-origin embedder from loading these files — but uploads (logos,
+    // product photos, share images) are deliberately public assets meant to
+    // be embedded elsewhere: marketing emails (Gmail/Outlook render message
+    // bodies as an opaque/foreign origin), social-preview scrapers, and this
+    // admin's own sandboxed (`sandbox=""`, opaque-origin) preview iframe.
+    // Same-origin CORP was silently breaking all three.
+    setHeaders: (res) => {
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    },
   });
 
   // Dynamic route for uploaded files (wildcard: false only registers files existing at boot)
   instance.get("/uploads/*", async (request, reply) => {
     const filePath = (request.params as { "*": string })["*"];
     const fullPath = `${root}/uploads/${filePath}`;
+    reply.header("Cross-Origin-Resource-Policy", "cross-origin");
     const { createReadStream, existsSync } = await import("node:fs");
     if (!existsSync(fullPath)) {
       // Dev-only: DB records synced down from prod (see env-sync) reference
