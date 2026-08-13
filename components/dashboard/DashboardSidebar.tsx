@@ -5,7 +5,6 @@ import {
   Users,
   Settings,
   Store,
-  UserPlus,
   LayoutGrid,
   TicketPercent,
   Palette,
@@ -24,6 +23,9 @@ import {
 import {
   Sidebar,
   SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -32,142 +34,88 @@ import {
   useSidebar,
 } from "#root/components/ui/sidebar";
 import { Link } from "#root/components/utils/Link";
-import { Button } from "#root/components/ui/button";
 import { useRole } from "#root/lib/context/RoleContext";
 import { isSingleShopMode } from "#root/shared/config/app";
+import { usePageContext } from "vike-react/usePageContext";
+
+interface SidebarItem {
+  label: string;
+  href: string;
+  icon: typeof LayoutDashboard;
+}
+
+interface SidebarSection {
+  label: string | null;
+  items: SidebarItem[];
+}
 
 export function DashboardSidebar() {
-  const { state, toggleSidebar } = useSidebar();
+  const { toggleSidebar } = useSidebar();
   const { userRole } = useRole();
+  const { urlPathname } = usePageContext();
 
-  // Build admin sidebar items based on shop mode
-  const adminSidebarItemsBase = [
-    {
-      label: "Overview",
-      href: "/dashboard",
-      icon: LayoutDashboard,
-    },
+  const catalogItems: SidebarItem[] = [
+    { label: "Categories", href: "/dashboard/categories", icon: LayoutGrid },
+    { label: "Products", href: "/dashboard/products", icon: Package },
+    { label: "Orders", href: "/dashboard/orders", icon: ShoppingCart },
+    { label: "Promo Codes", href: "/dashboard/promo-codes", icon: TicketPercent },
+    { label: "Offers", href: "/dashboard/offers", icon: Tag },
+    { label: "Reviews", href: "/dashboard/reviews", icon: Star },
   ];
 
-  // Only show Vendors in multi-vendor mode
   if (!isSingleShopMode()) {
-    adminSidebarItemsBase.push({
-      label: "Vendors",
-      href: "/dashboard/vendors",
-      icon: Store,
-    });
+    catalogItems.unshift({ label: "Vendors", href: "/dashboard/vendors", icon: Store });
   }
 
-  // Add remaining items
-  const adminSidebarItems = [
-    ...adminSidebarItemsBase,
+  const adminSections: SidebarSection[] = [
     {
-      label: "Categories",
-      href: "/dashboard/categories",
-      icon: LayoutGrid,
+      label: null,
+      items: [{ label: "Overview", href: "/dashboard", icon: LayoutDashboard }],
+    },
+    { label: "Catalog", items: catalogItems },
+    { label: "People", items: [{ label: "Users", href: "/dashboard/users", icon: Users }] },
+    {
+      label: "Storefront",
+      items: [
+        { label: "Homepage", href: "/dashboard/admin/homepage", icon: Home },
+        { label: "Layout", href: "/dashboard/admin/layout-settings", icon: PanelTop },
+        { label: "Templates", href: "/dashboard/admin/templates", icon: Palette },
+        { label: "Typography", href: "/dashboard/admin/typography", icon: Type },
+      ],
     },
     {
-      label: "Products",
-      href: "/dashboard/products",
-      icon: Package,
+      label: "Marketing",
+      items: [
+        { label: "Pixels & Tracking", href: "/dashboard/admin/pixels", icon: Radio },
+        { label: "Marketing Emails", href: "/dashboard/admin/marketing-emails", icon: Mail },
+        { label: "Entry Popup", href: "/dashboard/admin/popup", icon: Gift },
+        { label: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
+      ],
     },
     {
-      label: "Orders",
-      href: "/dashboard/orders",
-      icon: ShoppingCart,
-    },
-    {
-      label: "Promo Codes",
-      href: "/dashboard/promo-codes",
-      icon: TicketPercent,
-    },
-    {
-      label: "Offers",
-      href: "/dashboard/offers",
-      icon: Tag,
-    },
-    {
-      label: "Reviews",
-      href: "/dashboard/reviews",
-      icon: Star,
-    },
-    {
-      label: "Users",
-      href: "/dashboard/users",
-      icon: Users,
-    },
-    {
-      label: "Homepage",
-      href: "/dashboard/admin/homepage",
-      icon: Home,
-    },
-    {
-      label: "Layout",
-      href: "/dashboard/admin/layout-settings",
-      icon: PanelTop,
-    },
-    {
-      label: "Templates",
-      href: "/dashboard/admin/templates",
-      icon: Palette,
-    },
-    {
-      label: "Typography",
-      href: "/dashboard/admin/typography",
-      icon: Type,
-    },
-    {
-      label: "Pixels & Tracking",
-      href: "/dashboard/admin/pixels",
-      icon: Radio,
-    },
-    {
-      label: "Marketing Emails",
-      href: "/dashboard/admin/marketing-emails",
-      icon: Mail,
-    },
-    {
-      label: "Entry Popup",
-      href: "/dashboard/admin/popup",
-      icon: Gift,
-    },
-    {
-      label: "Analytics",
-      href: "/dashboard/admin/analytics",
-      icon: BarChart3,
-    },
-    {
-      label: "Links Page",
-      href: "/dashboard/settings/links",
-      icon: Link2,
-    },
-    {
-      label: "Settings",
-      href: "/dashboard/settings",
-      icon: Settings,
+      label: "General",
+      items: [
+        { label: "Links Page", href: "/dashboard/settings/links", icon: Link2 },
+        { label: "Settings", href: "/dashboard/settings", icon: Settings },
+      ],
     },
   ];
 
-  const defaultSidebarItems = [
+  const defaultSections: SidebarSection[] = [
     {
-      label: "Overview",
-      href: "/dashboard",
-      icon: LayoutDashboard,
-    },
-    {
-      label: "Products",
-      href: "/dashboard/products",
-      icon: Package,
-    },
-    {
-      label: "Orders",
-      href: "/dashboard/orders",
-      icon: ShoppingCart,
+      label: null,
+      items: [
+        { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
+        { label: "Products", href: "/dashboard/products", icon: Package },
+        { label: "Orders", href: "/dashboard/orders", icon: ShoppingCart },
+      ],
     },
   ];
 
-  const sideBarItems =
-    userRole === "admin" ? adminSidebarItems : defaultSidebarItems;
+  const sections = userRole === "admin" ? adminSections : defaultSections;
+
+  const isItemActive = (href: string) =>
+    href === "/dashboard" ? urlPathname === href : urlPathname.startsWith(href);
 
   return (
     <Sidebar collapsible='icon' className='h-full border-none'>
@@ -177,24 +125,40 @@ export function DashboardSidebar() {
         </h1>
         <SidebarTrigger className='block md:hidden' />
       </SidebarHeader>
-      <SidebarContent>
-        <SidebarMenu className='pt-6'>
-          {sideBarItems.map((item) => (
-            <SidebarMenuItem key={item.href} className='py-2 px-3'>
-              <Link
-                href={item.href}
-                className='group-data-[state=collapsed]:flex group-data-[state=collapsed]:justify-center'
-                onClick={() => toggleSidebar()}>
-                <SidebarMenuButton className='group-data-[state=collapsed]:flex group-data-[state=collapsed]:items-center group-data-[state=collapsed]:justify-center'>
-                  <item.icon className='w-4 h-4  ' />
-                  <span className='group-data-[state=collapsed]:hidden'>
-                    {item.label}
-                  </span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
+      <SidebarContent className='gap-1 pt-2'>
+        {sections.map((section, index) => (
+          <SidebarGroup key={section.label ?? `section-${index}`} className='py-1'>
+            {section.label && (
+              <SidebarGroupLabel className='px-3 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40'>
+                {section.label}
+              </SidebarGroupLabel>
+            )}
+            <SidebarGroupContent>
+              <SidebarMenu className='gap-0.5 px-2'>
+                {section.items.map((item) => {
+                  const active = isItemActive(item.href);
+                  return (
+                    <SidebarMenuItem key={item.href}>
+                      <Link
+                        href={item.href}
+                        className='group-data-[state=collapsed]:flex group-data-[state=collapsed]:justify-center'
+                        onClick={() => toggleSidebar()}>
+                        <SidebarMenuButton
+                          isActive={active}
+                          className='group-data-[state=collapsed]:flex group-data-[state=collapsed]:items-center group-data-[state=collapsed]:justify-center rounded-lg transition-colors data-[active=true]:bg-sidebar-accent data-[active=true]:font-semibold data-[active=true]:text-sidebar-accent-foreground data-[active=false]:text-sidebar-foreground/70 hover:text-sidebar-accent-foreground'>
+                          <item.icon className='w-4 h-4 shrink-0' />
+                          <span className='group-data-[state=collapsed]:hidden'>
+                            {item.label}
+                          </span>
+                        </SidebarMenuButton>
+                      </Link>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
     </Sidebar>
   );

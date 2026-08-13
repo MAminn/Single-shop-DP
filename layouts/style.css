@@ -25,17 +25,22 @@
 
 /* ── Admin-configurable typography (Dashboard > Typography) ──────────────
    Reads the --font-* custom properties emitted by
-   shared/typography/build-head-css.ts (see pages/+Head.tsx). Applied
-   globally — not scoped to .minimal-template — so an admin's font choice
-   is honored regardless of which template is active, current or future.
+   shared/typography/build-head-css.ts (see pages/+Head.tsx). Applied to
+   every storefront-facing page — not scoped to .minimal-template — so an
+   admin's font choice is honored regardless of which template is active,
+   current or future. Scoped under .storefront-shell (set in
+   layouts/LayoutDefault.tsx, excluded for dashboard routes) so an admin's
+   public-site font choice never bleeds into the internal /dashboard tool.
    Fallback values reproduce this file's original hardcoded fonts exactly,
    so nothing changes visually until the admin assigns a role. */
 
-h1, h2, h3, h4, h5, h6 {
+.storefront-shell h1, .storefront-shell h2, .storefront-shell h3,
+.storefront-shell h4, .storefront-shell h5, .storefront-shell h6 {
   font-family: var(--font-heading, "LaRojaTV", "Poppins", sans-serif);
 }
 
-p, dd, li, td, blockquote, figcaption {
+.storefront-shell p, .storefront-shell dd, .storefront-shell li,
+.storefront-shell td, .storefront-shell blockquote, .storefront-shell figcaption {
   font-family: var(
     --font-body,
     "Poppins",
@@ -47,7 +52,8 @@ p, dd, li, td, blockquote, figcaption {
   );
 }
 
-label, input, textarea, select {
+.storefront-shell label, .storefront-shell input,
+.storefront-shell textarea, .storefront-shell select {
   font-family: var(
     --font-form-input,
     "Poppins",
@@ -59,11 +65,13 @@ label, input, textarea, select {
   );
 }
 
-button, [type="button"], [type="submit"], [type="reset"], [data-slot="button"] {
+.storefront-shell button, .storefront-shell [type="button"],
+.storefront-shell [type="submit"], .storefront-shell [type="reset"],
+.storefront-shell [data-slot="button"] {
   font-family: var(--font-buttons, "LaRojaTV", "Poppins", sans-serif);
 }
 
-nav, nav a, footer a {
+.storefront-shell nav, .storefront-shell nav a, .storefront-shell footer a {
   font-family: var(--font-nav, "LaRojaTV", "Poppins", sans-serif);
 }
 

@@ -237,7 +237,7 @@ function LayoutShell({
         <TrackingProvider>
           <main
             id='page-content'
-            className={`bg-background h-full text-foreground w-full font-poppins${isMinimal && !isDashboardRoute ? " minimal-template pb-20 lg:pb-0" : ""}`}>
+            className={`bg-background h-full text-foreground w-full font-poppins${!isDashboardRoute ? " storefront-shell" : ""}${isMinimal && !isDashboardRoute ? " minimal-template pb-20 lg:pb-0" : ""}`}>
             {!isDashboardRoute && (
               <GlobalNavbarChrome navbarMode={navbarMode}>
                 {renderNavbar()}

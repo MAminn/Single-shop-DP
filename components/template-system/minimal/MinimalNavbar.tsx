@@ -387,7 +387,7 @@ export function MinimalNavbar() {
                             <Link
                               key={cat.id}
                               href={`/shop?category=${cat.slug || cat.id}`}
-                              className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition-colors whitespace-nowrap'>
+                              className='block px-4 py-2 text-sm font-semibold text-gray-800 tracking-wide hover:bg-gray-50 hover:text-black transition-colors whitespace-nowrap'>
                               {cat.name}
                             </Link>
                           ))}
