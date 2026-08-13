@@ -33,6 +33,16 @@ function escapeCssString(value: string): string {
   return value.replace(/["\\]/g, "\\$&");
 }
 
+// CustomFontFileRow.format stores the short extension token ("ttf") used for
+// matching/display, but @font-face src's format() requires the real CSS
+// keyword — "ttf" is not a valid format() value and browsers silently skip
+// the source when it's wrong, so the font never loads.
+const CSS_FORMAT_KEYWORD: Record<CustomFontFileRow["format"], string> = {
+  woff2: "woff2",
+  woff: "woff",
+  ttf: "truetype",
+};
+
 /**
  * Builds the `<style>` contents for admin-assigned typography: real
  * @font-face rules for every uploaded weight/style actually referenced by a
@@ -65,7 +75,7 @@ export function buildTypographyHeadCss(
     .map(
       (f) => `@font-face {
   font-family: "${escapeCssString(f.familyName)}";
-  src: url("${f.fileUrl}") format("${f.format}");
+  src: url("${f.fileUrl}") format("${CSS_FORMAT_KEYWORD[f.format]}");
   font-weight: ${f.weight};
   font-style: ${f.style};
   font-display: swap;

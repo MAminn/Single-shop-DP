@@ -59,7 +59,7 @@ label, input, textarea, select {
   );
 }
 
-button, [type="button"], [type="submit"], [type="reset"] {
+button, [type="button"], [type="submit"], [type="reset"], [data-slot="button"] {
   font-family: var(--font-buttons, "LaRojaTV", "Poppins", sans-serif);
 }
 
