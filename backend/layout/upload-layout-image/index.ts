@@ -110,6 +110,23 @@ export const uploadLayoutImage = ({
       return { url: `/uploads/layout/${filename}`, filename };
     }
 
+    if (prefix === "email-logo") {
+      // Marketing emails render at a fixed 40px display height (see
+      // MarketingEmailLayout.tsx) — 400px wide covers retina displays with
+      // plenty of headroom without bloating a message that's mostly text.
+      yield* Effect.tryPromise({
+        try: async () => {
+          await sharp(Buffer.from(buffer))
+            .resize({ width: 400, fit: "inside", withoutEnlargement: true })
+            .webp({ quality: 90, effort: 6 })
+            .toFile(filePath);
+        },
+        catch: (err) => new Error(`Failed to process image: ${err}`),
+      });
+
+      return { url: `/uploads/layout/${filename}`, filename };
+    }
+
     if (prefix === "popup") {
       // Popup hero image is a portrait-ish lifestyle photo filling the top
       // of a modal card, not a small icon — needs more resolution than the

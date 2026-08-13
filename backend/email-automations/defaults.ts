@@ -9,4 +9,5 @@ export const DEFAULT_EMAIL_AUTOMATION_SETTINGS: EmailAutomationSettings = {
   workerEnabled: false,
   testModeEnabled: true,
   testModeEmail: "",
+  emailLogoUrl: "",
 };

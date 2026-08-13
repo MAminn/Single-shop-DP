@@ -20,34 +20,62 @@
 }
 
 .minimal-template {
-  font-family: "LaRojaTV", "Poppins", sans-serif;
+  font-family: var(--font-heading, "LaRojaTV", "Poppins", sans-serif);
+}
+
+/* ── Admin-configurable typography (Dashboard > Typography) ──────────────
+   Reads the --font-* custom properties emitted by
+   shared/typography/build-head-css.ts (see pages/+Head.tsx). Applied
+   globally — not scoped to .minimal-template — so an admin's font choice
+   is honored regardless of which template is active, current or future.
+   Fallback values reproduce this file's original hardcoded fonts exactly,
+   so nothing changes visually until the admin assigns a role. */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading, "LaRojaTV", "Poppins", sans-serif);
+}
+
+p, dd, li, td, blockquote, figcaption {
+  font-family: var(
+    --font-body,
+    "Poppins",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif
+  );
+}
+
+label, input, textarea, select {
+  font-family: var(
+    --font-form-input,
+    "Poppins",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif
+  );
+}
+
+button, [type="button"], [type="submit"], [type="reset"] {
+  font-family: var(--font-buttons, "LaRojaTV", "Poppins", sans-serif);
+}
+
+nav, nav a, footer a {
+  font-family: var(--font-nav, "LaRojaTV", "Poppins", sans-serif);
 }
 
 /* Body/description text in the minimal template uses Poppins instead of LaRojaTV.
    Headings, buttons, nav links keep the branded font. */
 /* Arabic text uses Rubik for better Arabic readability — enforced on ALL elements */
 /* NOTE: dir="rtl" is set on <html> by MinimalI18nProvider, so selectors must be html[dir="rtl"] */
+/* Deliberately still hardcoded (not admin-configurable) — Arabic typography
+   is out of scope for the Typography feature for now. */
 html[dir="rtl"] .minimal-template,
 html[dir="rtl"] .minimal-template * {
   font-family: "Rubik", "Poppins", sans-serif !important;
-}
-
-.minimal-template p,
-.minimal-template dd,
-.minimal-template li,
-.minimal-template td,
-.minimal-template blockquote,
-.minimal-template figcaption,
-.minimal-template input,
-.minimal-template textarea,
-.minimal-template select {
-  font-family:
-    "Poppins",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
 }
 
 /* Arabic headings always use Rubik medium (500) for optimal readability */

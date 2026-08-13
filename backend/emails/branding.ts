@@ -1,5 +1,6 @@
 import { getLayoutSettings } from "#root/backend/layout/get-layout-settings/index";
 import { getTemplateSelectionRaw } from "#root/backend/settings/get-template-selection-raw";
+import { getEmailAutomationSettingsRaw } from "#root/backend/email-automations/settings-service";
 import { db } from "#root/shared/database/drizzle/db";
 import { getStoreOwnerId } from "#root/shared/config/store";
 import { STORE_NAME, STORE_CURRENCY } from "#root/shared/config/branding";
@@ -38,14 +39,21 @@ export async function getEmailBranding(): Promise<EmailBranding> {
     // logo should be. So this must always resolve to a real fetchable URL —
     // relative uploads become absolute against PUBLIC_ORIGIN/BASE_URL, never
     // base64-embedded.
+    // Admin can set a dedicated email logo (Marketing Emails > Automation
+    // Settings) that takes priority over the site header logo — falls back
+    // to the header logo below when unset, so nothing breaks for stores
+    // that never touch this field.
+    const automationSettings = await getEmailAutomationSettingsRaw();
+    const rawLogoUrl = automationSettings.emailLogoUrl || settings.header.logoUrl;
+
     let logoUrl: string | undefined;
-    if (settings.header.logoUrl && !settings.header.logoUrl.startsWith("data:")) {
+    if (rawLogoUrl && !rawLogoUrl.startsWith("data:")) {
       // Cache-bust: Gmail's image proxy fetched this exact URL (unchanged
       // since it's the same uploaded file) while it was still blocked by the
       // old same-origin CORP header, and caches that failure by URL. Adding
       // a query param forces every mail client to treat it as a URL it's
       // never seen, guaranteeing a fresh fetch against the now-fixed header.
-      logoUrl = `${toAbsoluteUrl(settings.header.logoUrl)}?cb=corp-fix-20260811`;
+      logoUrl = `${toAbsoluteUrl(rawLogoUrl)}?cb=corp-fix-20260811`;
     }
 
     return {

@@ -18,6 +18,7 @@ import {
   Tag,
   Mail,
   Gift,
+  Type,
 } from "lucide-react";
 
 import {
@@ -109,6 +110,11 @@ export function DashboardSidebar() {
       label: "Templates",
       href: "/dashboard/admin/templates",
       icon: Palette,
+    },
+    {
+      label: "Typography",
+      href: "/dashboard/admin/typography",
+      icon: Type,
     },
     {
       label: "Pixels & Tracking",

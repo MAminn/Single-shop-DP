@@ -13,6 +13,7 @@ const emailAutomationSettingsSchema = z.object({
   workerEnabled: z.boolean(),
   testModeEnabled: z.boolean(),
   testModeEmail: z.string(),
+  emailLogoUrl: z.string(),
 });
 
 export const emailAutomationSettingsRouter = router({

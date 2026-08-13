@@ -19,6 +19,10 @@ import { ensureDefaultStoreVendor } from "#root/shared/database/bootstrap.js";
 import { getTemplateSelectionRaw } from "#root/backend/settings/get-template-selection-raw.js";
 import { getLayoutSettingsRaw } from "#root/backend/layout/get-layout-settings-raw.js";
 import { getLinkTreeConfigRaw } from "#root/backend/settings/get-link-tree-config.js";
+import {
+  getTypographySettingsRaw,
+  listCustomFontsRaw,
+} from "#root/backend/typography/service.js";
 import { getStoreOwnerId } from "#root/shared/config/store.js";
 import { trackBeaconPlugin } from "#root/server/routes/track.js";
 import { envSyncApiPlugin } from "#root/backend/env-sync/api.js";
@@ -90,6 +94,12 @@ const hmrPort = Number.parseInt(process.env.HMR_PORT || "24678", 10) || 24678;
 
 export const instance = Fastify({
   ...(isProduction ? productionFastifyConfig : developmentFastifyConfig),
+  // Fastify's default logger:true logs an "incoming request"/"request
+  // completed" pair for every single request, including every static JS
+  // chunk and image — floods production logs with noise. Errors/warnings
+  // and any explicit request.log.*() calls elsewhere are unaffected; this
+  // only silences the automatic per-request info-level pair.
+  disableRequestLogging: isProduction,
   trustProxy: true, // Required: app runs behind Coolify/Traefik reverse proxy
   bodyLimit: 100 * 1024 * 1024,
   routerOptions: {
@@ -375,6 +385,10 @@ async function buildServer() {
       // Fetch brand name from link-tree config for dynamic page titles
       const linkTreeConfig = await getLinkTreeConfigRaw(request.db);
       const brandName = linkTreeConfig.brandName || undefined;
+      // Fetch admin-configured typography (custom fonts + role assignments)
+      // for SSR so the correct @font-face/CSS vars render on first paint
+      const typographySettings = await getTypographySettingsRaw(request.db);
+      const customFonts = await listCustomFontsRaw(request.db);
 
       // Read locale from cookie for SSR (prevents EN→AR flicker)
       const cookieHeader = request.headers.cookie ?? "";
@@ -390,6 +404,8 @@ async function buildServer() {
         layoutSettingsData,
         brandName,
         ssrLocale,
+        typographySettings,
+        customFonts,
       };
 
       let pageContext: Awaited<ReturnType<typeof renderPage>>;

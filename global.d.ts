@@ -1,6 +1,10 @@
 import type { ClientSession } from "./backend/auth/shared/entities";
 import type { DatabaseClient } from "./shared/database/drizzle/db";
 import type { LayoutSettings } from "./shared/types/layout-settings";
+import type {
+  CustomFontFileRow,
+  TypographySettings,
+} from "./shared/database/drizzle/schema";
 
 declare global {
   namespace Vike {
@@ -11,6 +15,8 @@ declare global {
       layoutSettingsData?: LayoutSettings;
       brandName?: string;
       ssrLocale?: "en" | "ar";
+      typographySettings?: TypographySettings;
+      customFonts?: CustomFontFileRow[];
     }
   }
 

@@ -135,7 +135,7 @@ export const layoutRouter = router({
           type: z.string(),
           buffer: z.instanceof(Uint8Array),
         }),
-        prefix: z.enum(["header-logo", "footer-logo", "favicon", "share-image", "popup"]),
+        prefix: z.enum(["header-logo", "footer-logo", "favicon", "share-image", "popup", "email-logo"]),
       }),
     )
     .mutation(async ({ input }) => {

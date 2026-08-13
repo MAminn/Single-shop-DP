@@ -4,12 +4,17 @@ import { usePageContext } from "vike-react/usePageContext";
 import type { LayoutSettings } from "#root/shared/types/layout-settings";
 import { STORE_NAME, STORE_DESCRIPTION } from "#root/shared/config/branding";
 import { getPublicOrigin, toAbsoluteUrl } from "#root/shared/config/site-url";
+import { buildTypographyHeadCss } from "#root/shared/typography/build-head-css";
 
 export default function HeadDefault() {
   const pageContext = usePageContext();
   const layoutSettings = pageContext.layoutSettingsData as
     | LayoutSettings
     | undefined;
+  const typographyCss = buildTypographyHeadCss(
+    pageContext.typographySettings,
+    pageContext.customFonts,
+  );
 
   // Dynamic favicon from layout settings
   const faviconUrl = layoutSettings?.faviconUrl || defaultFaviconUrl;
@@ -205,6 +210,12 @@ export default function HeadDefault() {
           src: url(https://fonts.gstatic.com/s/poppins/v20/pxiEyp8kv8JHgFVrJJfecg.woff2) format('woff2');
         }
       `}</style>
+
+      {/* Admin-configured typography (Dashboard > Typography): custom
+          @font-face rules for uploaded fonts actually assigned to a role,
+          plus the --font-* CSS vars every template reads from. Falls back
+          to the defaults above when nothing's been configured. */}
+      <style>{typographyCss}</style>
     </>
   );
 }

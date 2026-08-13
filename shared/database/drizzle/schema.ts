@@ -1343,6 +1343,34 @@ export interface PopupDiscountConfig {
   codeMode: "existing" | "generate";
 }
 
+// ─── Typography ─────────────────────────────────────────────────────────────
+// Admin-uploaded fonts (custom_font_file table below) grouped by familyName,
+// assigned per-role here. A role of `null` means "use the site's built-in
+// default font" — nothing changes for stores that never touch this feature.
+
+export type TypographyRoleKey =
+  | "heading"
+  | "body"
+  | "buttons"
+  | "nav"
+  | "productTitle"
+  | "price"
+  | "formInput";
+
+export interface TypographyRoleAssignment {
+  familyName: string;
+  weight: number;
+}
+
+export type TypographyRoles = Record<
+  TypographyRoleKey,
+  TypographyRoleAssignment | null
+>;
+
+export interface TypographySettings {
+  roles: TypographyRoles;
+}
+
 /**
  * Runtime on/off switches for the marketing-automation worker, checked on
  * every tick (see backend/email-automations/worker.ts) rather than only at
@@ -1356,6 +1384,8 @@ export interface EmailAutomationSettings {
   workerEnabled: boolean;
   testModeEnabled: boolean;
   testModeEmail: string;
+  /** Optional override for the logo emails use in place of the site header logo. Empty = fall back to the header logo. */
+  emailLogoUrl: string;
 }
 
 // We use a fixed key ("default") enforced by a unique constraint so only one
@@ -1389,6 +1419,7 @@ export const storeSettings = pgTable("store_settings", {
   popupConfig: jsonb("popup_config").$type<PopupConfig>(),
   popupDiscountConfig: jsonb("popup_discount_config").$type<PopupDiscountConfig>(),
   emailAutomationSettings: jsonb("email_automation_settings").$type<EmailAutomationSettings>(),
+  typographySettings: jsonb("typography_settings").$type<TypographySettings>(),
   updatedAt: timestamp("updated_at", {
     withTimezone: true,
     mode: "date",
@@ -1396,6 +1427,38 @@ export const storeSettings = pgTable("store_settings", {
     .defaultNow()
     .notNull(),
 });
+
+// ─── Custom Fonts ───────────────────────────────────────────────────────────
+// Admin-uploaded @font-face source files. `familyName` is a free-text group
+// key (not a separate table) — multiple rows sharing the same familyName are
+// different weights/styles of the same uploaded family, exactly like stacked
+// real @font-face declarations.
+
+export const customFontFile = pgTable(
+  "custom_font_file",
+  {
+    id: uuid("id")
+      .$defaultFn(() => v7())
+      .primaryKey(),
+    familyName: text("family_name").notNull(),
+    weight: integer("weight").notNull(),
+    style: text("style", { enum: ["normal", "italic"] }).notNull().default("normal"),
+    fileUrl: text("file_url").notNull(),
+    format: text("format", { enum: ["woff2", "woff", "ttf"] }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("custom_font_file_family_weight_style_idx").on(
+      table.familyName,
+      table.weight,
+      table.style,
+    ),
+  ],
+);
+
+export type CustomFontFileRow = typeof customFontFile.$inferSelect;
 
 // ─── Layout Settings (Header / Footer CMS) ─────────────────────────────────
 // Stores CMS-driven header and footer configuration.

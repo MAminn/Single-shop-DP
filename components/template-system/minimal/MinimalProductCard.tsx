@@ -185,17 +185,23 @@ export function MinimalProductCard({
       {/* Product info */}
       <div className='pt-3 pb-1 text-center'>
         <Link href={productUrl}>
-          <h3 className='text-sm font-normal text-stone-800 line-clamp-1 hover:text-stone-600 transition-colors'>
+          <h3
+            style={{ fontFamily: "var(--font-product-title)" }}
+            className='text-sm font-normal text-stone-800 line-clamp-1 hover:text-stone-600 transition-colors'>
             {product.name}
           </h3>
         </Link>
         <div className='mt-1 flex items-center justify-center gap-2'>
           {originalPrice !== null && (
-            <span className='text-sm text-stone-400 line-through'>
+            <span
+              style={{ fontFamily: "var(--font-price)" }}
+              className='text-sm text-stone-400 line-through'>
               {originalPrice} {t("currency")}
             </span>
           )}
-          <span className={cn("text-sm font-medium", hasDiscount ? "text-red-600" : "text-stone-800")}>
+          <span
+            style={{ fontFamily: "var(--font-price)" }}
+            className={cn("text-sm font-medium", hasDiscount ? "text-red-600" : "text-stone-800")}>
             {displayPrice} {t("currency")}
           </span>
         </div>

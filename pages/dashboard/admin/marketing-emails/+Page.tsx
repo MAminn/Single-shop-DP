@@ -89,6 +89,7 @@ interface EmailAutomationSettings {
   workerEnabled: boolean;
   testModeEnabled: boolean;
   testModeEmail: string;
+  emailLogoUrl: string;
 }
 
 interface ScheduledEmailRow {
@@ -251,6 +252,36 @@ function AutomationSettingsCard({
     }
   };
 
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file later
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("File too large. Maximum size is 2MB.");
+      return;
+    }
+    setUploadingLogo(true);
+    try {
+      const buffer = new Uint8Array(await file.arrayBuffer());
+      const result = await trpc.layout.uploadImage.mutate({
+        file: { name: file.name, type: file.type, buffer },
+        prefix: "email-logo",
+      });
+      if (result.success && result.data) {
+        onSave({ ...settings, emailLogoUrl: result.data.url });
+        toast.success("Email logo uploaded");
+      } else {
+        toast.error(result.success ? "Upload failed" : result.error);
+      }
+    } catch {
+      toast.error("Failed to upload logo");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
   return (
     <Card className='border-amber-200 bg-amber-50/40'>
       <CardHeader>
@@ -332,6 +363,49 @@ function AutomationSettingsCard({
             Live: real customers will receive these emails.
           </p>
         )}
+
+        <Separator />
+
+        <div>
+          <p className='text-sm font-medium'>Email logo</p>
+          <p className='text-xs text-muted-foreground mb-2'>
+            Optional — overrides the site header logo just for marketing
+            emails. Leave unset to keep using the site's header logo.
+          </p>
+          <div className='flex items-center gap-3'>
+            {settings.emailLogoUrl && (
+              <img
+                src={settings.emailLogoUrl}
+                alt='Email logo'
+                className='h-10 max-w-[140px] object-contain border rounded bg-white p-1'
+              />
+            )}
+            <label>
+              <input
+                type='file'
+                accept='image/png,image/jpeg,image/webp,image/svg+xml'
+                className='hidden'
+                disabled={uploadingLogo}
+                onChange={handleLogoUpload}
+              />
+              <span className='inline-flex items-center gap-1.5 text-xs font-medium border rounded-md px-3 py-1.5 cursor-pointer hover:bg-muted transition-colors'>
+                {uploadingLogo ? (
+                  <Loader2 className='w-3.5 h-3.5 animate-spin' />
+                ) : null}
+                {settings.emailLogoUrl ? "Replace" : "Upload"}
+              </span>
+            </label>
+            {settings.emailLogoUrl && (
+              <button
+                type='button'
+                disabled={saving}
+                onClick={() => onSave({ ...settings, emailLogoUrl: "" })}
+                className='text-xs text-muted-foreground hover:text-red-600 transition-colors'>
+                Remove
+              </button>
+            )}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

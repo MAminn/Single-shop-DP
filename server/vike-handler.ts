@@ -5,6 +5,10 @@ import { getTemplateSelectionRaw } from "#root/backend/settings/get-template-sel
 import { getLayoutSettingsRaw } from "#root/backend/layout/get-layout-settings-raw.js";
 import { getLinkTreeConfigRaw } from "#root/backend/settings/get-link-tree-config.js";
 import { getStoreOwnerId } from "#root/shared/config/store.js";
+import {
+  getTypographySettingsRaw,
+  listCustomFontsRaw,
+} from "#root/backend/typography/service.js";
 
 export const vikeHonoMiddleware = createMiddleware(
   async (c) => {
@@ -20,6 +24,10 @@ export const vikeHonoMiddleware = createMiddleware(
     // Fetch brand name from link-tree config for dynamic page titles
     const linkTreeConfig = await getLinkTreeConfigRaw(c.var.db);
     const brandName = linkTreeConfig.brandName || undefined;
+    // Fetch admin-configured typography (custom fonts + role assignments)
+    // for SSR so the correct @font-face/CSS vars render on first paint
+    const typographySettings = await getTypographySettingsRaw(c.var.db);
+    const customFonts = await listCustomFontsRaw(c.var.db);
 
     // Read locale from cookie for SSR (prevents EN→AR flicker)
     const cookieHeader = c.req.header("cookie") ?? "";
@@ -35,6 +43,8 @@ export const vikeHonoMiddleware = createMiddleware(
       layoutSettingsData,
       brandName,
       ssrLocale,
+      typographySettings,
+      customFonts,
     };
     const pageContext = await renderPage(pageContextInit);
     const response = pageContext.httpResponse;

@@ -152,7 +152,7 @@ export function CartPageMinimalTemplate({
                           <div className="flex items-start gap-1">
                             <p
                               className="flex-1 text-[14px] font-medium leading-snug break-words overflow-hidden"
-                              style={{ color: "#111827", fontFamily: "'Poppins', sans-serif" }}>
+                              style={{ color: "#111827", fontFamily: "var(--font-product-title)" }}>
                               {item.name}
                             </p>
                             <button
@@ -198,7 +198,7 @@ export function CartPageMinimalTemplate({
                               </button>
                               <span
                                 className="w-8 text-center text-[13px] font-medium"
-                                style={{ color: "#111827", fontFamily: "'Poppins', sans-serif" }}>
+                                style={{ color: "#111827", fontFamily: "var(--font-body)" }}>
                                 {item.quantity}
                               </span>
                               <button
@@ -218,7 +218,7 @@ export function CartPageMinimalTemplate({
                               )}
                               <p
                                 className={`text-[15px] font-semibold ${hasDiscount ? "text-red-600" : ""}`}
-                                style={{ color: hasDiscount ? undefined : "#111827", fontFamily: "'Poppins', sans-serif" }}>
+                                style={{ color: hasDiscount ? undefined : "#111827", fontFamily: "var(--font-price)" }}>
                                 {lineTotal.toFixed(2)} {currency}
                               </p>
                             </div>
@@ -237,7 +237,7 @@ export function CartPageMinimalTemplate({
                           <div className="min-w-0">
                             <p
                               className="text-[14px] font-medium break-words"
-                              style={{ color: "#111827", fontFamily: "'Poppins', sans-serif" }}>
+                              style={{ color: "#111827", fontFamily: "var(--font-product-title)" }}>
                               {item.name}
                             </p>
                             {item.variant && <p className="text-[12px] text-gray-400 mt-0.5">{item.variant}</p>}
@@ -269,7 +269,7 @@ export function CartPageMinimalTemplate({
                           </button>
                           <span
                             className="w-8 text-center text-[13px] font-medium"
-                            style={{ color: "#111827", fontFamily: "'Poppins', sans-serif" }}>
+                            style={{ color: "#111827", fontFamily: "var(--font-body)" }}>
                             {item.quantity}
                           </span>
                           <button
@@ -289,7 +289,7 @@ export function CartPageMinimalTemplate({
                           )}
                           <p
                             className={`text-[14px] font-semibold ${hasDiscount ? "text-red-600" : ""}`}
-                            style={{ color: hasDiscount ? undefined : "#111827", fontFamily: "'Poppins', sans-serif" }}>
+                            style={{ color: hasDiscount ? undefined : "#111827", fontFamily: "var(--font-price)" }}>
                             {lineTotal.toFixed(2)} {currency}
                           </p>
                         </div>
