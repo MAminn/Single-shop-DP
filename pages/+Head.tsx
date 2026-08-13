@@ -15,6 +15,7 @@ export default function HeadDefault() {
     pageContext.typographySettings,
     pageContext.customFonts,
   );
+  const activeGA4PixelId = pageContext.activeGA4PixelId;
 
   // Dynamic favicon from layout settings
   const faviconUrl = layoutSettings?.faviconUrl || defaultFaviconUrl;
@@ -76,6 +77,29 @@ export default function HeadDefault() {
           __html: `(function(){try{var l=localStorage.getItem("minimal-template-locale");if(l==="ar"){document.documentElement.setAttribute("dir","rtl");document.documentElement.setAttribute("lang","ar")}if(l&&document.cookie.indexOf("minimal-locale=")===-1){document.cookie="minimal-locale="+l+";path=/;max-age=31536000;SameSite=Lax"}}catch(e){}})();`,
         }}
       />
+
+      {/* GA4: server-rendered so the tag is live on first paint instead of
+          waiting on client hydration + a tRPC round trip. The adapter
+          (frontend/pixel-adapters/google-ga4-adapter.ts) detects this via
+          the data-pixel-platform/data-pixel-id attributes and skips
+          re-injecting the script or redefining window.gtag. */}
+      {activeGA4PixelId && (
+        <>
+          <script
+            async
+            src={`https://www.googletagmanager.com/gtag/js?id=${activeGA4PixelId}`}
+            data-pixel-platform='google_ga4'
+            data-pixel-id={activeGA4PixelId}
+          />
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag("js",new Date());gtag("config",${JSON.stringify(
+                activeGA4PixelId,
+              )},{send_page_view:false});`,
+            }}
+          />
+        </>
+      )}
 
       {/* Preconnect to critical domains */}
       <link rel='preconnect' href='https://fonts.googleapis.com' />

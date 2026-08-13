@@ -54,7 +54,7 @@ describe("GoogleGA4Adapter", () => {
     delete (window as unknown as Record<string, unknown>).gtag;
     if (!globalThis.document) {
       (globalThis as unknown as Record<string, unknown>).document = {
-        createElement: vi.fn(() => ({ async: false, src: "" })),
+        createElement: vi.fn(() => ({ async: false, src: "", setAttribute: vi.fn() })),
         getElementsByTagName: vi.fn(() => []),
         querySelector: vi.fn(() => null),
         head: { appendChild: vi.fn() },
@@ -86,6 +86,33 @@ describe("GoogleGA4Adapter", () => {
     adapter.initialize(makeConfig({ enabled: false }));
     expect(adapter.isLoaded()).toBe(true);
     expect(adapter.isEnabled()).toBe(false);
+  });
+
+  it("tags the injected script so a second init doesn't duplicate it", () => {
+    const setAttribute = vi.fn();
+    const createElement = vi.fn(() => ({ async: false, src: "", setAttribute }));
+    (document as unknown as Record<string, unknown>).createElement = createElement;
+
+    adapter.initialize(makeConfig({ pixelId: "G-DEDUPE01" }));
+
+    expect(createElement).toHaveBeenCalledTimes(1);
+    expect(setAttribute).toHaveBeenCalledWith("data-pixel-platform", "google_ga4");
+    expect(setAttribute).toHaveBeenCalledWith("data-pixel-id", "G-DEDUPE01");
+  });
+
+  it("skips re-injecting the script when one matching platform+id already exists", () => {
+    const existingScript = { async: true, src: "existing" };
+    const querySelector = vi.fn(() => existingScript);
+    const createElement = vi.fn();
+    (document as unknown as Record<string, unknown>).querySelector = querySelector;
+    (document as unknown as Record<string, unknown>).createElement = createElement;
+
+    adapter.initialize(makeConfig({ pixelId: "G-DEDUPE01" }));
+
+    expect(querySelector).toHaveBeenCalledWith(
+      'script[data-pixel-platform="google_ga4"][data-pixel-id="G-DEDUPE01"]',
+    );
+    expect(createElement).not.toHaveBeenCalled();
   });
 
   it("should track view_item event with GA4 item format", () => {

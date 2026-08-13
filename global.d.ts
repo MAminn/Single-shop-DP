@@ -17,6 +17,7 @@ declare global {
       ssrLocale?: "en" | "ar";
       typographySettings?: TypographySettings;
       customFonts?: CustomFontFileRow[];
+      activeGA4PixelId?: string | null;
     }
   }
 

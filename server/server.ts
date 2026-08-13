@@ -23,6 +23,8 @@ import {
   getTypographySettingsRaw,
   listCustomFontsRaw,
 } from "#root/backend/typography/service.js";
+import { listActiveClientConfigsRaw } from "#root/backend/pixel-tracking/pixel-config/ssr.js";
+import { PixelPlatform } from "#root/shared/types/pixel-tracking.js";
 import { getStoreOwnerId } from "#root/shared/config/store.js";
 import { trackBeaconPlugin } from "#root/server/routes/track.js";
 import { envSyncApiPlugin } from "#root/backend/env-sync/api.js";
@@ -389,6 +391,12 @@ async function buildServer() {
       // for SSR so the correct @font-face/CSS vars render on first paint
       const typographySettings = await getTypographySettingsRaw(request.db);
       const customFonts = await listCustomFontsRaw(request.db);
+      // Fetch the active GA4 config for SSR so the gtag script is present in
+      // the raw HTML rather than only loading after client hydration/tRPC
+      const activePixelConfigs = await listActiveClientConfigsRaw(request.db);
+      const activeGA4PixelId =
+        activePixelConfigs.find((p) => p.platform === PixelPlatform.GOOGLE_GA4)
+          ?.pixelId ?? null;
 
       // Read locale from cookie for SSR (prevents EN→AR flicker)
       const cookieHeader = request.headers.cookie ?? "";
@@ -406,6 +414,7 @@ async function buildServer() {
         ssrLocale,
         typographySettings,
         customFonts,
+        activeGA4PixelId,
       };
 
       let pageContext: Awaited<ReturnType<typeof renderPage>>;

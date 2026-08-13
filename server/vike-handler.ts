@@ -9,6 +9,8 @@ import {
   getTypographySettingsRaw,
   listCustomFontsRaw,
 } from "#root/backend/typography/service.js";
+import { listActiveClientConfigsRaw } from "#root/backend/pixel-tracking/pixel-config/ssr.js";
+import { PixelPlatform } from "#root/shared/types/pixel-tracking.js";
 
 export const vikeHonoMiddleware = createMiddleware(
   async (c) => {
@@ -28,6 +30,12 @@ export const vikeHonoMiddleware = createMiddleware(
     // for SSR so the correct @font-face/CSS vars render on first paint
     const typographySettings = await getTypographySettingsRaw(c.var.db);
     const customFonts = await listCustomFontsRaw(c.var.db);
+    // Fetch the active GA4 config for SSR so the gtag script is present in
+    // the raw HTML rather than only loading after client hydration/tRPC
+    const activePixelConfigs = await listActiveClientConfigsRaw(c.var.db);
+    const activeGA4PixelId =
+      activePixelConfigs.find((p) => p.platform === PixelPlatform.GOOGLE_GA4)
+        ?.pixelId ?? null;
 
     // Read locale from cookie for SSR (prevents EN→AR flicker)
     const cookieHeader = c.req.header("cookie") ?? "";
@@ -45,6 +53,7 @@ export const vikeHonoMiddleware = createMiddleware(
       ssrLocale,
       typographySettings,
       customFonts,
+      activeGA4PixelId,
     };
     const pageContext = await renderPage(pageContextInit);
     const response = pageContext.httpResponse;

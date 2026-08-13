@@ -28,7 +28,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#root/components/ui/select";
-import { Loader2, Send, RefreshCw, Save, ShieldAlert } from "lucide-react";
+import {
+  Loader2,
+  Send,
+  RefreshCw,
+  Save,
+  ShieldAlert,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 // ─── Types (mirrors backend/email-automations/templates) ──────────────────
 
@@ -432,6 +440,8 @@ function formatQueueTime(date: Date | null): string {
   });
 }
 
+const QUEUE_PAGE_SIZE = 10;
+
 function RecentQueueActivity({
   rows,
   loading,
@@ -441,6 +451,17 @@ function RecentQueueActivity({
   loading: boolean;
   onRefresh: () => void;
 }) {
+  const [page, setPage] = useState(0);
+  const totalPages = Math.ceil(rows.length / QUEUE_PAGE_SIZE);
+
+  // Rows come from a fresh fetch each time (refresh, or initial load) —
+  // stay on page 1 rather than stranding the admin on a now-out-of-range page.
+  useEffect(() => {
+    setPage(0);
+  }, [rows]);
+
+  const pageRows = rows.slice(page * QUEUE_PAGE_SIZE, page * QUEUE_PAGE_SIZE + QUEUE_PAGE_SIZE);
+
   return (
     <Card>
       <CardHeader className='flex flex-row items-center justify-between gap-4 space-y-0'>
@@ -470,38 +491,65 @@ function RecentQueueActivity({
             {loading ? "Loading..." : "Nothing has been scheduled yet."}
           </p>
         ) : (
-          <div className='overflow-x-auto'>
-            <table className='w-full text-sm'>
-              <thead>
-                <tr className='border-b text-left text-xs text-muted-foreground'>
-                  <th className='py-2 pe-3 font-medium'>Recipient</th>
-                  <th className='py-2 px-3 font-medium'>Automation</th>
-                  <th className='py-2 px-3 font-medium'>Status</th>
-                  <th className='py-2 px-3 font-medium'>Scheduled For</th>
-                  <th className='py-2 ps-3 font-medium'>Note</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.id} className='border-b last:border-0 align-top'>
-                    <td className='py-2 pe-3 whitespace-nowrap'>{row.recipientEmail}</td>
-                    <td className='py-2 px-3 whitespace-nowrap'>
-                      {AUTOMATION_LABELS[row.automationType] ?? row.automationType}
-                    </td>
-                    <td className='py-2 px-3'>
-                      <Badge variant={QUEUE_STATUS_VARIANT[row.status]}>{row.status}</Badge>
-                    </td>
-                    <td className='py-2 px-3 whitespace-nowrap text-muted-foreground'>
-                      {formatQueueTime(row.status === "sent" ? row.sentAt : row.scheduledFor)}
-                    </td>
-                    <td className='py-2 ps-3 text-muted-foreground max-w-[240px] truncate'>
-                      {row.lastError || "—"}
-                    </td>
+          <>
+            <div className='overflow-x-auto'>
+              <table className='w-full text-sm'>
+                <thead>
+                  <tr className='border-b text-left text-xs text-muted-foreground'>
+                    <th className='py-2 pe-3 font-medium'>Recipient</th>
+                    <th className='py-2 px-3 font-medium'>Automation</th>
+                    <th className='py-2 px-3 font-medium'>Status</th>
+                    <th className='py-2 px-3 font-medium'>Scheduled For</th>
+                    <th className='py-2 ps-3 font-medium'>Note</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {pageRows.map((row) => (
+                    <tr key={row.id} className='border-b last:border-0 align-top'>
+                      <td className='py-2 pe-3 whitespace-nowrap'>{row.recipientEmail}</td>
+                      <td className='py-2 px-3 whitespace-nowrap'>
+                        {AUTOMATION_LABELS[row.automationType] ?? row.automationType}
+                      </td>
+                      <td className='py-2 px-3'>
+                        <Badge variant={QUEUE_STATUS_VARIANT[row.status]}>{row.status}</Badge>
+                      </td>
+                      <td className='py-2 px-3 whitespace-nowrap text-muted-foreground'>
+                        {formatQueueTime(row.status === "sent" ? row.sentAt : row.scheduledFor)}
+                      </td>
+                      <td className='py-2 ps-3 text-muted-foreground max-w-[240px] truncate'>
+                        {row.lastError || "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {totalPages > 1 && (
+              <div className='flex items-center justify-between mt-4'>
+                <p className='text-sm text-muted-foreground'>
+                  Page {page + 1} of {totalPages}
+                </p>
+                <div className='flex gap-2'>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    disabled={page === 0}
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}>
+                    <ChevronLeft className='w-4 h-4' />
+                  </Button>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    disabled={page >= totalPages - 1}
+                    onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}>
+                    <ChevronRight className='w-4 h-4' />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

@@ -22,5 +22,14 @@ export default {
   hydrationCanBeAborted: true,
 
   // Pass client session, pixel configs, and template selection to the client side
-  passToClient: ["clientSession", "templateSelection", "layoutSettingsData", "brandName", "ssrLocale"],
+  passToClient: [
+    "clientSession",
+    "templateSelection",
+    "layoutSettingsData",
+    "brandName",
+    "ssrLocale",
+    "typographySettings",
+    "customFonts",
+    "activeGA4PixelId",
+  ],
 } satisfies Config;

@@ -132,6 +132,8 @@ export class GoogleGA4Adapter implements PixelAdapter {
     const script = document.createElement("script");
     script.async = true;
     script.src = `https://www.googletagmanager.com/gtag/js?id=${this.measurementId}`;
+    script.setAttribute("data-pixel-platform", "google_ga4");
+    script.setAttribute("data-pixel-id", this.measurementId);
     this.scriptElement = script;
 
     const firstScript = document.getElementsByTagName("script")[0];
