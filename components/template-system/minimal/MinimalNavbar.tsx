@@ -377,6 +377,7 @@ export function MinimalNavbar() {
                     <div key={link.id} className='relative group'>
                       <button
                         type='button'
+                        style={{ fontFamily: "var(--font-nav, 'LaRojaTV', 'Poppins', sans-serif)" }}
                         className='px-2 xl:px-3 py-1.5 text-sm xl:text-[15px] font-semibold text-gray-800 hover:text-black transition-colors tracking-wide whitespace-nowrap flex items-center gap-1'>
                         {link.label}
                         <ChevronDown className='w-3.5 h-3.5 transition-transform duration-150 group-hover:rotate-180' />

@@ -145,7 +145,7 @@ export function DashboardSidebar() {
                         onClick={() => toggleSidebar()}>
                         <SidebarMenuButton
                           isActive={active}
-                          className='group-data-[state=collapsed]:flex group-data-[state=collapsed]:items-center group-data-[state=collapsed]:justify-center rounded-lg transition-colors data-[active=true]:bg-sidebar-accent data-[active=true]:font-semibold data-[active=true]:text-sidebar-accent-foreground data-[active=false]:text-sidebar-foreground/70 hover:text-sidebar-accent-foreground'>
+                          className='group-data-[state=collapsed]:flex group-data-[state=collapsed]:items-center group-data-[state=collapsed]:justify-center rounded-lg transition-colors text-sidebar-foreground/70 data-[active=true]:font-semibold'>
                           <item.icon className='w-4 h-4 shrink-0' />
                           <span className='group-data-[state=collapsed]:hidden'>
                             {item.label}
