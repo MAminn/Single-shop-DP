@@ -325,7 +325,7 @@ export function CheckoutPageEditorialTemplate({
                             value={formValues.city}
                             onChange={(v) => updateField("city", v)}
                             className={inputCls}
-                            placeholder='City'
+                            placeholder='Area / Zone'
                           />
                         </div>
                         <div>
@@ -338,7 +338,7 @@ export function CheckoutPageEditorialTemplate({
                               updateField("state", e.target.value)
                             }
                             className={inputCls}
-                            placeholder='Area / Zone'
+                            placeholder='City'
                           />
                         </div>
                       </div>

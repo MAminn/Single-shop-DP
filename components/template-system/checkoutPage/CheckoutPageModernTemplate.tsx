@@ -505,7 +505,7 @@ export function CheckoutPageModernTemplate({
                       id='city'
                       name='address-level2'
                       autoComplete='address-level2'
-                      placeholder={t("checkout.city") || "City"}
+                      placeholder={t("checkout.state") || "Area / Zone"}
                       value={form.city}
                       onChange={(v) => updateField("city", v)}
                       className={fieldErrors.city ? "border-destructive" : ""}
@@ -521,7 +521,7 @@ export function CheckoutPageModernTemplate({
                       id='state'
                       name='address-level1'
                       autoComplete='address-level1'
-                      placeholder={t("checkout.state") || "Area / Zone"}
+                      placeholder={t("checkout.city") || "City"}
                       value={form.state}
                       onChange={(e) => updateField("state", e.target.value)}
                     />
