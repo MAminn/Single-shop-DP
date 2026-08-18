@@ -52,6 +52,7 @@ const Page = () => {
           const mappedProducts: CategoryPageProduct[] =
             productsResult.result.items.map((item) => ({
               id: item.id,
+              slug: item.slug,
               name: item.name,
               price: Number(item.price),
               discountPrice: item.discountPrice

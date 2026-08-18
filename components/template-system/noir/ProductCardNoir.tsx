@@ -25,6 +25,7 @@ interface ProductImage {
 
 export interface NoirProduct {
   id: string;
+  slug?: string | null;
   name: string;
   price: number;
   /** Discounted price — when set and lower than `price`, `price` is shown struck-through. */
@@ -158,7 +159,7 @@ export function ProductCardNoir({
         ? t("best_seller")
         : product.badge || null;
 
-  const productUrl = getProductUrl(product.id);
+  const productUrl = getProductUrl(product);
   const hasRating = typeof product.rating === "number" && product.rating > 0;
 
   const ctaClasses = cn(

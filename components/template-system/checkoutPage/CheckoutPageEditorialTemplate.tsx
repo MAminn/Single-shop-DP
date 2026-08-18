@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Button } from "#root/components/ui/button";
 import { Input } from "#root/components/ui/input";
-import { Label } from "#root/components/ui/label";
+import { CityCombobox } from "#root/components/checkout/CityCombobox";
 import { Skeleton } from "#root/components/ui/skeleton";
 import { Alert, AlertDescription } from "#root/components/ui/alert";
-import { AlertCircle, Loader2, Shield, ChevronLeft } from "lucide-react";
+import { AlertCircle, Loader2, Shield, ChevronLeft, ChevronDown, ShoppingBag } from "lucide-react";
+import { cn } from "#root/lib/utils";
 import type {
   CheckoutCustomerInfo,
   CheckoutAddress,
@@ -33,7 +34,6 @@ export interface CheckoutPageEditorialTemplateProps {
   currency?: string;
   paymentMethods?: PaymentMethodOption[];
   paymentMethodsLoading?: boolean;
-  bostaShippingEnabled?: boolean;
 }
 
 /* ------------------------------------------------------------------ */
@@ -61,17 +61,19 @@ export function CheckoutPageEditorialTemplate({
   paymentMethods,
   paymentMethodsLoading = false,
 }: CheckoutPageEditorialTemplateProps) {
-  /* Internal form state — mirrors the Modern template pattern */
+  /* Internal form state — field names match the Modern template so
+     pages/checkout/+Page.tsx's submit handler works for either template. */
   const [formValues, setFormValues] = useState<Record<string, string>>({
-    name: customer?.name ?? "",
+    fullName: customer?.name ?? "",
     email: customer?.email ?? "",
-    phone: customer?.phone ?? "",
-    address_line1: shippingAddress?.line1 ?? "",
-    address_line2: shippingAddress?.line2 ?? "",
+    phoneNumber: customer?.phone ?? "",
+    address: shippingAddress?.line1 ?? "",
+    buildingNumber: "",
+    apartment: "",
     city: shippingAddress?.city ?? "",
     state: shippingAddress?.state ?? "",
-    postalCode: shippingAddress?.postalCode ?? "",
-    country: shippingAddress?.country ?? "Egypt",
+    // Egypt-only store — no country field shown, always submitted as-is.
+    country: "Egypt",
     paymentMethod: paymentMethods?.[0]?.id ?? "cod",
     notes: "",
   });
@@ -88,6 +90,88 @@ export function CheckoutPageEditorialTemplate({
   /* Pill-style input classes */
   const inputCls =
     "h-11 rounded-full border-stone-200 bg-white text-sm px-5 focus-visible:ring-2 focus-visible:ring-stone-900/15 focus-visible:ring-offset-0";
+
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const cartQuantity = items.reduce((s, i) => s + i.quantity, 0);
+  const originalCartTotal = items.reduce(
+    (s, i) => s + (i.originalPrice ?? i.price) * i.quantity,
+    0,
+  );
+  const originalTotal = originalCartTotal + (totals.shipping ?? 0);
+  const hasDiscount = originalTotal > totals.grandTotal + 0.001;
+
+  // Shared item rows — used by both the desktop card and the mobile expanded panel
+  const renderItemsList = () => (
+    <div className='space-y-4 max-h-60 overflow-y-auto'>
+      {items.map((item) => (
+        <div key={item.id} className='flex justify-between gap-3'>
+          <div className='flex-1 min-w-0'>
+            <p className='text-sm text-stone-900 line-clamp-1'>
+              {item.name}
+            </p>
+            {item.variant && (
+              <p className='text-xs text-stone-400'>{item.variant}</p>
+            )}
+            <p className='text-xs text-stone-500'>Qty: {item.quantity}</p>
+          </div>
+          <div className='text-right shrink-0'>
+            {item.originalPrice != null &&
+              item.originalPrice > item.price && (
+                <p className='text-xs text-stone-400 line-through'>
+                  {formatPrice(item.originalPrice * item.quantity, currency)}
+                </p>
+              )}
+            <p className='text-sm font-medium text-stone-900'>
+              {formatPrice(item.price * item.quantity, currency)}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Shared totals breakdown — used by both the desktop card and the mobile expanded panel
+  const renderTotalsBreakdown = () => (
+    <div className='mt-4 space-y-3 text-sm'>
+      <div className='flex justify-between text-stone-600'>
+        <span>Subtotal</span>
+        <span>{formatPrice(totals.subtotal, currency)}</span>
+      </div>
+      {totals.discount != null && totals.discount > 0 && (
+        <div className='flex justify-between text-stone-600'>
+          <span>Discount</span>
+          <span className='text-green-700'>
+            −{formatPrice(totals.discount, currency)}
+          </span>
+        </div>
+      )}
+      {totals.appliedOffers &&
+        totals.appliedOffers.map((offer) => (
+          <div
+            key={offer.name}
+            className='flex items-start justify-between gap-2 text-red-600'>
+            <span className='flex items-center gap-1 font-medium min-w-0'>
+              🎁 <span className='truncate'>{offer.name}</span>
+            </span>
+            <span className='font-semibold shrink-0'>
+              {offer.freeShipping && offer.discountAmount === 0
+                ? "Free shipping"
+                : `−${formatPrice(offer.discountAmount, currency)}`}
+            </span>
+          </div>
+        ))}
+      {totals.shipping != null && (
+        <div className='flex justify-between text-stone-600'>
+          <span>Shipping</span>
+          <span>
+            {totals.shipping === 0
+              ? "Free"
+              : formatPrice(totals.shipping, currency)}
+          </span>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <EditorialChrome>
@@ -138,54 +222,45 @@ export function CheckoutPageEditorialTemplate({
                     </h2>
                     <div className='space-y-4'>
                       <div>
-                        <Label
-                          htmlFor='checkout-name'
-                          className='text-xs text-stone-500 mb-1.5 block'>
-                          Full Name *
-                        </Label>
                         <Input
                           id='checkout-name'
+                          name='name'
+                          autoComplete='name'
                           required
-                          value={formValues.name}
-                          onChange={(e) => updateField("name", e.target.value)}
+                          value={formValues.fullName}
+                          onChange={(e) => updateField("fullName", e.target.value)}
                           className={inputCls}
-                          placeholder='Your full name'
+                          placeholder='Full Name'
                         />
                       </div>
                       <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
                         <div>
-                          <Label
-                            htmlFor='checkout-email'
-                            className='text-xs text-stone-500 mb-1.5 block'>
-                            Email *
-                          </Label>
                           <Input
                             id='checkout-email'
+                            name='email'
                             type='email'
+                            autoComplete='email'
                             required
                             value={formValues.email}
                             onChange={(e) =>
                               updateField("email", e.target.value)
                             }
                             className={inputCls}
-                            placeholder='you@email.com'
+                            placeholder='Email'
                           />
                         </div>
                         <div>
-                          <Label
-                            htmlFor='checkout-phone'
-                            className='text-xs text-stone-500 mb-1.5 block'>
-                            Phone
-                          </Label>
                           <Input
                             id='checkout-phone'
+                            name='tel'
                             type='tel'
-                            value={formValues.phone}
+                            autoComplete='tel'
+                            value={formValues.phoneNumber}
                             onChange={(e) =>
-                              updateField("phone", e.target.value)
+                              updateField("phoneNumber", e.target.value)
                             }
                             className={inputCls}
-                            placeholder='+20 xxx xxx xxxx'
+                            placeholder='Phone Number'
                           />
                         </div>
                       </div>
@@ -201,104 +276,71 @@ export function CheckoutPageEditorialTemplate({
                     </h2>
                     <div className='space-y-4'>
                       <div>
-                        <Label
-                          htmlFor='checkout-address1'
-                          className='text-xs text-stone-500 mb-1.5 block'>
-                          Address Line 1 *
-                        </Label>
                         <Input
                           id='checkout-address1'
+                          name='address-line1'
+                          autoComplete='address-line1'
                           required
-                          value={formValues.address_line1}
+                          value={formValues.address}
                           onChange={(e) =>
-                            updateField("address_line1", e.target.value)
+                            updateField("address", e.target.value)
                           }
                           className={inputCls}
-                          placeholder='Street address'
+                          placeholder='Street Address'
                         />
                       </div>
-                      <div>
-                        <Label
-                          htmlFor='checkout-address2'
-                          className='text-xs text-stone-500 mb-1.5 block'>
-                          Address Line 2
-                        </Label>
-                        <Input
-                          id='checkout-address2'
-                          value={formValues.address_line2}
-                          onChange={(e) =>
-                            updateField("address_line2", e.target.value)
-                          }
-                          className={inputCls}
-                          placeholder='Apt, suite, etc. (optional)'
-                        />
-                      </div>
-                      <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
+                      <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
                         <div>
-                          <Label
-                            htmlFor='checkout-city'
-                            className='text-xs text-stone-500 mb-1.5 block'>
-                            City *
-                          </Label>
                           <Input
+                            id='checkout-building'
+                            name='address-line2'
+                            autoComplete='address-line2'
+                            value={formValues.buildingNumber}
+                            onChange={(e) =>
+                              updateField("buildingNumber", e.target.value)
+                            }
+                            className={inputCls}
+                            placeholder='Building Number'
+                          />
+                        </div>
+                        <div>
+                          <Input
+                            id='checkout-apartment'
+                            value={formValues.apartment}
+                            onChange={(e) =>
+                              updateField("apartment", e.target.value)
+                            }
+                            className={inputCls}
+                            placeholder='Apartment / Unit'
+                          />
+                        </div>
+                      </div>
+                      <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+                        <div>
+                          <CityCombobox
                             id='checkout-city'
+                            name='address-level2'
+                            autoComplete='address-level2'
                             required
                             value={formValues.city}
-                            onChange={(e) =>
-                              updateField("city", e.target.value)
-                            }
+                            onChange={(v) => updateField("city", v)}
                             className={inputCls}
                             placeholder='City'
                           />
                         </div>
                         <div>
-                          <Label
-                            htmlFor='checkout-state'
-                            className='text-xs text-stone-500 mb-1.5 block'>
-                            State
-                          </Label>
                           <Input
                             id='checkout-state'
+                            name='address-level1'
+                            autoComplete='address-level1'
                             value={formValues.state}
                             onChange={(e) =>
                               updateField("state", e.target.value)
                             }
                             className={inputCls}
-                            placeholder='State'
+                            placeholder='Area / Zone'
                           />
                         </div>
-                        <div>
-                          <Label
-                            htmlFor='checkout-postal'
-                            className='text-xs text-stone-500 mb-1.5 block'>
-                            Postal Code
-                          </Label>
-                          <Input
-                            id='checkout-postal'
-                            value={formValues.postalCode}
-                            onChange={(e) =>
-                              updateField("postalCode", e.target.value)
-                            }
-                            className={inputCls}
-                            placeholder='12345'
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label
-                          htmlFor='checkout-country'
-                          className='text-xs text-stone-500 mb-1.5 block'>
-                          Country
-                        </Label>
-                        <Input
-                          id='checkout-country'
-                          value={formValues.country}
-                          onChange={(e) =>
-                            updateField("country", e.target.value)
-                          }
-                          className={inputCls}
-                          placeholder='Country'
-                        />
                       </div>
                     </div>
                   </section>
@@ -391,75 +433,21 @@ export function CheckoutPageEditorialTemplate({
               {/* ====================================================== */}
               {/*  RIGHT — Order Summary                                  */}
               {/* ====================================================== */}
-              <Reveal variant='fadeUp' delay={0.2} className='lg:col-span-5'>
-                <div className='lg:sticky lg:top-24 rounded-2xl border border-stone-200 bg-white p-6'>
+              <Reveal
+                variant='fadeUp'
+                delay={0.2}
+                className='lg:col-span-5 space-y-3'>
+                {/* Desktop: full itemized card */}
+                <div className='hidden lg:block lg:sticky lg:top-24 rounded-2xl border border-stone-200 bg-white p-6'>
                   <h2 className='text-sm font-medium tracking-[0.2em] uppercase text-stone-500 mb-5'>
                     Order Summary
                   </h2>
 
-                  {/* Items */}
-                  <div className='space-y-4 max-h-60 overflow-y-auto'>
-                    {items.map((item) => (
-                      <div key={item.id} className='flex justify-between gap-3'>
-                        <div className='flex-1 min-w-0'>
-                          <p className='text-sm text-stone-900 line-clamp-1'>
-                            {item.name}
-                          </p>
-                          {item.variant && (
-                            <p className='text-xs text-stone-400'>
-                              {item.variant}
-                            </p>
-                          )}
-                          <p className='text-xs text-stone-500'>
-                            Qty: {item.quantity}
-                          </p>
-                        </div>
-                        <p className='text-sm font-medium text-stone-900 shrink-0'>
-                          {formatPrice(item.price * item.quantity, currency)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
+                  {renderItemsList()}
 
                   <div className='mt-5 h-px w-full bg-stone-200' />
 
-                  {/* Totals */}
-                  <div className='mt-4 space-y-3 text-sm'>
-                    <div className='flex justify-between text-stone-600'>
-                      <span>Subtotal</span>
-                      <span>{formatPrice(totals.subtotal, currency)}</span>
-                    </div>
-                    {totals.discount != null && totals.discount > 0 && (
-                      <div className='flex justify-between text-stone-600'>
-                        <span>Discount</span>
-                        <span className='text-green-700'>
-                          −{formatPrice(totals.discount, currency)}
-                        </span>
-                      </div>
-                    )}
-                    {totals.appliedOffers && totals.appliedOffers.map((offer) => (
-                      <div key={offer.name} className='flex items-start justify-between gap-2 text-red-600'>
-                        <span className='flex items-center gap-1 font-medium min-w-0'>
-                          🎁 <span className='truncate'>{offer.name}</span>
-                        </span>
-                        <span className='font-semibold shrink-0'>
-                          {offer.freeShipping && offer.discountAmount === 0
-                            ? "Free shipping"
-                            : `−${formatPrice(offer.discountAmount, currency)}`}
-                        </span>
-                      </div>
-                    ))}
-                    {totals.shipping != null && (
-                      <div className='flex justify-between text-stone-600'>
-                        <span>Shipping</span>
-                        <span>
-                          {totals.shipping === 0
-                            ? "Free"
-                            : formatPrice(totals.shipping, currency)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                  {renderTotalsBreakdown()}
 
                   <div className='mt-4 h-px w-full bg-stone-200' />
 
@@ -485,6 +473,72 @@ export function CheckoutPageEditorialTemplate({
                   </Button>
 
                   {/* Security note */}
+                  <div className='mt-4 flex items-center justify-center gap-1.5 text-xs text-stone-400'>
+                    <Shield className='h-3 w-3' />
+                    <span>Secure checkout</span>
+                  </div>
+                </div>
+
+                {/* Mobile: compact collapsed summary bar */}
+                <div className='lg:hidden rounded-2xl border border-stone-200 bg-white p-4'>
+                  <button
+                    type='button'
+                    onClick={() => setSummaryExpanded((v) => !v)}
+                    className='w-full flex items-center gap-3'
+                    aria-expanded={summaryExpanded}>
+                    <div className='w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-stone-100 border border-stone-200 flex items-center justify-center'>
+                      <ShoppingBag className='w-4 h-4 text-stone-300' />
+                    </div>
+                    <div className='flex-1 min-w-0 text-left'>
+                      <p className='text-sm font-semibold text-stone-900'>
+                        Total
+                      </p>
+                      <p className='text-xs text-stone-500'>
+                        {cartQuantity} {cartQuantity === 1 ? "item" : "items"}
+                      </p>
+                    </div>
+                    <div className='text-right shrink-0'>
+                      {hasDiscount && (
+                        <p className='text-xs text-stone-400 line-through'>
+                          {formatPrice(originalTotal, currency)}
+                        </p>
+                      )}
+                      <p className='text-base font-semibold text-stone-900'>
+                        {formatPrice(totals.grandTotal, currency)}
+                      </p>
+                    </div>
+                    <ChevronDown
+                      className={cn(
+                        "w-4 h-4 text-stone-400 shrink-0 transition-transform",
+                        summaryExpanded && "rotate-180",
+                      )}
+                    />
+                  </button>
+
+                  {summaryExpanded && (
+                    <div className='mt-4 pt-4 border-t border-stone-200'>
+                      {renderItemsList()}
+                      <div className='mt-4 h-px w-full bg-stone-200' />
+                      {renderTotalsBreakdown()}
+                    </div>
+                  )}
+                </div>
+
+                <div className='lg:hidden'>
+                  <Button
+                    type='submit'
+                    size='lg'
+                    className='w-full rounded-full py-6 text-sm tracking-wide'
+                    disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className='me-2 h-4 w-4 animate-spin' />
+                        Processing…
+                      </>
+                    ) : (
+                      "Place Order"
+                    )}
+                  </Button>
                   <div className='mt-4 flex items-center justify-center gap-1.5 text-xs text-stone-400'>
                     <Shield className='h-3 w-3' />
                     <span>Secure checkout</span>

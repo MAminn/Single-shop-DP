@@ -8,6 +8,7 @@ import { getProductUrl } from "#root/lib/utils/route-helpers";
 
 export interface NewArrivalProduct {
   id: string;
+  slug?: string | null;
   name: string;
   price: number;
   discountPrice?: number | null;
@@ -99,7 +100,7 @@ function NewArrivalCard({ product }: { product: NewArrivalProduct }) {
 
   return (
     <Link
-      href={getProductUrl(product.id)}
+      href={getProductUrl(product)}
       className={cn(
         "group relative block shrink-0 snap-start",
         "w-[72vw] sm:w-[42vw] lg:w-[22%]",

@@ -16,6 +16,7 @@ import { bostaWebhookPlugin } from "#root/backend/orders/bosta/webhook-api.js";
 import { stripeWebhookPlugin } from "#root/backend/payments/stripe-webhook.js";
 import { paymobWebhookPlugin } from "#root/backend/payments/paymob-webhook.js";
 import { ensureDefaultStoreVendor } from "#root/shared/database/bootstrap.js";
+import { backfillProductSlugs } from "#root/backend/products/slug.js";
 import { getTemplateSelectionRaw } from "#root/backend/settings/get-template-selection-raw.js";
 import { getLayoutSettingsRaw } from "#root/backend/layout/get-layout-settings-raw.js";
 import { getLinkTreeConfigRaw } from "#root/backend/settings/get-link-tree-config.js";
@@ -264,6 +265,10 @@ async function buildServer() {
 
   // Bootstrap: Ensure default store vendor exists (single-shop mode)
   await ensureDefaultStoreVendor();
+
+  // Bootstrap: Backfill slugs for products created before URL-slug support
+  // shipped. No-op once every product has one — safe to run every boot.
+  await backfillProductSlugs();
 
   await instance.register(emailServiceMiddleware);
 

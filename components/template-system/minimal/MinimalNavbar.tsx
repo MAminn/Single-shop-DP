@@ -46,7 +46,7 @@ export function MinimalNavbar() {
 
   // Live search state
   const [liveResults, setLiveResults] = useState<{
-    products: { id: string; name: string; price: number; imageUrl?: string }[];
+    products: { id: string; slug?: string | null; name: string; price: number; imageUrl?: string }[];
     categories: { id: string; name: string; slug?: string }[];
   }>({ products: [], categories: [] });
   const [isSearching, setIsSearching] = useState(false);
@@ -77,6 +77,7 @@ export function MinimalNavbar() {
         const matchedProducts = productRes.success && productRes.result
           ? productRes.result.items.map((p: any) => ({
               id: p.id,
+              slug: p.slug,
               name: p.name,
               price: Number(p.price),
               imageUrl: p.imageUrl ? `/uploads/${p.imageUrl}` : p.images?.[0]?.url ? `/uploads/${p.images[0].url}` : undefined,
@@ -302,7 +303,7 @@ export function MinimalNavbar() {
                                 {liveResults.products.map((p) => (
                                   <Link
                                     key={p.id}
-                                    href={getProductUrl(p.id)}
+                                    href={getProductUrl(p)}
                                     className='flex items-center gap-3 py-2 hover:bg-gray-50 -mx-3 px-3 transition-colors'
                                     onClick={() => {
                                       setIsSearchOpen(false);
@@ -499,7 +500,7 @@ export function MinimalNavbar() {
                                     {liveResults.products.map((p) => (
                                       <Link
                                         key={p.id}
-                                        href={getProductUrl(p.id)}
+                                        href={getProductUrl(p)}
                                         className='flex items-center gap-3 py-2 hover:bg-gray-50 -mx-3 px-3 transition-colors'
                                         onClick={() => {
                                           setSearchQuery("");

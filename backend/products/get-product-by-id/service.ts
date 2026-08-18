@@ -8,20 +8,34 @@ import {
   productImage,
   productVariant,
 } from "#root/shared/database/drizzle/schema";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, or } from "drizzle-orm";
 import { Effect } from "effect";
 import { z } from "zod";
 import { ServerError } from "#root/shared/error/server";
 
-// Schema for the input: just the product ID
+// Accepts either the product's slug (new URLs) or its raw UUID (old
+// bookmarked/shared links) — the single query below matches either.
 export const getProductByIdSchema = z.object({
-  productId: z.string().uuid("Invalid product ID format"),
+  productId: z.string().min(1, "Invalid product ID format"),
 });
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
   Effect.gen(function* ($) {
     const result = yield* $(
       query(async (db) => {
+        // product.id is a uuid column — comparing it to a non-UUID slug
+        // string throws at the Postgres driver level, so only include that
+        // branch when the identifier actually looks like a UUID.
+        const identifierMatch = UUID_RE.test(input.productId)
+          ? or(
+              eq(product.slug, input.productId),
+              eq(product.id, input.productId),
+            )
+          : eq(product.slug, input.productId);
+
         // Fetch the main product details
         const productResult = await db
           .select({
@@ -34,7 +48,7 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
           .leftJoin(file, eq(product.imageId, file.id))
           .where(
             and(
-              eq(product.id, input.productId),
+              identifierMatch,
               eq(product.deleted, false), // Exclude soft-deleted products
               eq(product.hidden, false), // Exclude hidden products
               eq(category.deleted, false), // Ensure primary category is not deleted
@@ -103,6 +117,7 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
             ? await db
                 .select({
                   id: product.id,
+                  slug: product.slug,
                   name: product.name,
                   price: product.price,
                   discountPrice: product.discountPrice,
@@ -166,6 +181,7 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
           reviewCount: 0,
           bestLayeredWith: bestLayeredWith.map((p) => ({
             id: p.id,
+            slug: p.slug,
             name: p.name,
             price: Number(p.price),
             discountPrice: p.discountPrice ? Number(p.discountPrice) : null,
@@ -203,6 +219,7 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
 // Note: This might need manual adjustment if the structure changes significantly
 export type ProductByIdResult = {
   id: string;
+  slug: string | null;
   name: string;
   description: string;
   imageId: string;
@@ -247,6 +264,7 @@ export type ProductByIdResult = {
   } | null;
   bestLayeredWith: {
     id: string;
+    slug: string | null;
     name: string;
     price: number;
     discountPrice: number | null;

@@ -28,6 +28,8 @@ export interface BostaReceiverAddress {
   firstLine: string;
   city: string;
   zone?: string;
+  /** Free-text district name from checkout — used as a fuzzy-match hint when districtId isn't set. */
+  districtHint?: string;
   districtId?: string;
   buildingNumber?: string;
   apartment?: string;
@@ -129,6 +131,7 @@ export async function createBostaDelivery(
       resolveBostaDropOffAddress({
         city: input.dropOffAddress.city,
         zone: input.dropOffAddress.zone,
+        districtHint: input.dropOffAddress.districtHint,
         firstLine: input.dropOffAddress.firstLine,
         districtId: input.dropOffAddress.districtId,
         buildingNumber: input.dropOffAddress.buildingNumber,

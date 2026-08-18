@@ -351,6 +351,13 @@
       "when": 1786561087712,
       "tag": "0049_illegal_nighthawk",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1787070432173,
+      "tag": "0050_pink_norman_osborn",
+      "breakpoints": true
     }
   ]
 }

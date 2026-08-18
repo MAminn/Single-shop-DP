@@ -9,10 +9,13 @@ export interface BostaDistrictEntry {
   cityId: string;
   cityCode: string;
   cityName: string;
+  cityOtherName?: string;
   zoneId: string;
   zoneName: string;
+  zoneOtherName?: string;
   districtId: string;
   districtName: string;
+  districtOtherName?: string;
 }
 
 /** Full drop-off shape for Bosta create-delivery API. */
@@ -50,6 +53,33 @@ const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 function normalize(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+/** Space-insensitive normalization — Bosta's own data is inconsistently
+ * spaced (e.g. "ElMaadi" vs "Ein Shams"), so a plain single-space-collapsed
+ * compare misses very common customer input like "el maadi". */
+function normalizeStripped(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, "");
+}
+
+function fuzzyEquals(a: string, b: string): boolean {
+  if (!a.trim() || !b.trim()) return false;
+  const aNorm = normalize(a);
+  const bNorm = normalize(b);
+  if (aNorm === bNorm || aNorm.includes(bNorm) || bNorm.includes(aNorm)) {
+    return true;
+  }
+  const aStripped = normalizeStripped(a);
+  const bStripped = normalizeStripped(b);
+  return (
+    aStripped === bStripped ||
+    aStripped.includes(bStripped) ||
+    bStripped.includes(aStripped)
+  );
+}
+
+function anyMatch(hint: string, ...candidates: Array<string | undefined>): boolean {
+  return candidates.some((candidate) => !!candidate && fuzzyEquals(hint, candidate));
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -90,6 +120,7 @@ function flattenDistrictsPayload(payload: unknown): BostaDistrictEntry[] {
     if (!cityRec) continue;
 
     const cityName = pickString(cityRec, "cityName", "name", "cityNameEn", "nameEn") ?? "Unknown";
+    const cityOtherName = pickString(cityRec, "cityOtherName");
     const cityCode = pickString(cityRec, "cityCode", "code") ?? "";
     const cityId = pickString(cityRec, "cityId", "_id", "id") ?? "";
 
@@ -105,7 +136,9 @@ function flattenDistrictsPayload(payload: unknown): BostaDistrictEntry[] {
 
       const districtId = pickString(dRec, "districtId");
       const districtName = pickString(dRec, "districtName", "name", "nameEn");
+      const districtOtherName = pickString(dRec, "districtOtherName");
       const zoneName = pickString(dRec, "zoneName", "zone") ?? districtName;
+      const zoneOtherName = pickString(dRec, "zoneOtherName");
       const zoneId = pickString(dRec, "zoneId") ?? "";
 
       if (!districtId || !districtName || !cityCode || !zoneId) continue;
@@ -114,10 +147,13 @@ function flattenDistrictsPayload(payload: unknown): BostaDistrictEntry[] {
         cityId,
         cityCode,
         cityName,
+        cityOtherName,
         zoneId,
         zoneName: zoneName ?? districtName,
+        zoneOtherName,
         districtId,
         districtName,
+        districtOtherName,
       });
     }
   }
@@ -155,44 +191,59 @@ async function loadDistricts(): Promise<BostaDistrictEntry[]> {
   return cachedDistricts;
 }
 
-function findDistrictMatch(
+// Exported for direct unit testing — pure matching logic, no I/O.
+export function findDistrictMatch(
   districts: BostaDistrictEntry[],
   city: string,
   zoneHint: string,
+  districtHint?: string,
 ): BostaDistrictEntry | undefined {
-  const cityNorm = normalize(city);
-  const zoneNorm = zoneHint ? normalize(zoneHint) : "";
-
-  const inCity = districts.filter(
-    (d) =>
-      normalize(d.cityName) === cityNorm ||
-      normalize(d.cityName).includes(cityNorm) ||
-      cityNorm.includes(normalize(d.cityName)) ||
-      normalize(d.cityCode) === cityNorm,
+  const inCity = districts.filter((d) =>
+    anyMatch(city, d.cityName, d.cityOtherName, d.cityCode),
   );
 
-  if (zoneNorm && inCity.length > 0) {
-    const zoneMatch = inCity.find(
-      (d) =>
-        normalize(d.zoneName) === zoneNorm ||
-        normalize(d.zoneName).includes(zoneNorm) ||
-        zoneNorm.includes(normalize(d.zoneName)) ||
-        normalize(d.districtName) === zoneNorm ||
-        normalize(d.districtName).includes(zoneNorm) ||
-        zoneNorm.includes(normalize(d.districtName)),
+  const pool = inCity.length > 0 ? inCity : districts;
+
+  // District is the most specific hint the customer gives us — try it first.
+  if (districtHint) {
+    const hit = pool.find((d) =>
+      anyMatch(districtHint, d.districtName, d.districtOtherName),
     );
-    if (zoneMatch) return zoneMatch;
+    if (hit) return hit;
+  }
+
+  if (zoneHint) {
+    const hit = pool.find((d) =>
+      anyMatch(
+        zoneHint,
+        d.zoneName,
+        d.zoneOtherName,
+        d.districtName,
+        d.districtOtherName,
+      ),
+    );
+    if (hit) return hit;
   }
 
   if (inCity.length > 0) return inCity[0];
 
-  if (zoneNorm) {
-    return districts.find(
-      (d) =>
-        normalize(d.zoneName) === zoneNorm ||
-        normalize(d.zoneName).includes(zoneNorm) ||
-        normalize(d.districtName) === zoneNorm ||
-        normalize(d.districtName).includes(zoneNorm),
+  // No city match at all — last resort, search hints across every city.
+  if (districtHint) {
+    const hit = districts.find((d) =>
+      anyMatch(districtHint, d.districtName, d.districtOtherName),
+    );
+    if (hit) return hit;
+  }
+
+  if (zoneHint) {
+    return districts.find((d) =>
+      anyMatch(
+        zoneHint,
+        d.zoneName,
+        d.zoneOtherName,
+        d.districtName,
+        d.districtOtherName,
+      ),
     );
   }
 
@@ -257,6 +308,7 @@ function findDistrictById(
 export async function resolveBostaDropOffAddress(input: {
   city: string;
   zone?: string | null;
+  districtHint?: string | null;
   firstLine: string;
   districtId?: string | null;
   buildingNumber?: string | null;
@@ -265,6 +317,7 @@ export async function resolveBostaDropOffAddress(input: {
 }): Promise<BostaResolvedDropOffAddress> {
   const firstLine = input.firstLine.trim();
   const zoneHint = parseZoneHint(input.zone);
+  const districtHint = input.districtHint?.trim() ?? "";
 
   let match: BostaDistrictEntry | undefined;
 
@@ -276,7 +329,7 @@ export async function resolveBostaDropOffAddress(input: {
     }
 
     if (!match) {
-      match = findDistrictMatch(districts, input.city.trim(), zoneHint);
+      match = findDistrictMatch(districts, input.city.trim(), zoneHint, districtHint);
     }
   } catch (err) {
     console.warn("[Bosta] Could not load districts list:", err);
@@ -284,7 +337,7 @@ export async function resolveBostaDropOffAddress(input: {
 
   if (!match?.districtId || !match.zoneId) {
     throw new Error(
-      `[Bosta] Could not resolve district for city "${input.city}"${zoneHint ? ` / zone "${zoneHint}"` : ""}. Enter a valid city and area.`,
+      `[Bosta] Could not resolve district for city "${input.city}"${zoneHint ? ` / zone "${zoneHint}"` : ""}${districtHint ? ` / district "${districtHint}"` : ""}. Enter a valid city and area.`,
     );
   }
 

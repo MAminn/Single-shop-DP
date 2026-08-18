@@ -63,9 +63,10 @@ export default function ProductDetailPage() {
 
       const product = productResponse.result;
 
-      // Fetch reviews
+      // Fetch reviews — use the resolved real product id, not the route
+      // param, since that may be a slug and getReviews requires a UUID.
       const reviewsResponse = await trpc.product.getReviews.query({
-        productId,
+        productId: product.id,
       });
       const reviewsData = reviewsResponse.success
         ? reviewsResponse.result
@@ -75,6 +76,7 @@ export default function ProductDetailPage() {
       const mapViewToFeatured = (items: any[]): FeaturedProduct[] =>
         items.map((rp: any) => ({
           id: rp.product.id,
+          slug: rp.product.slug,
           name: rp.product.name,
           price: Number(rp.product.price),
           discountPrice: rp.product.discountPrice
@@ -94,6 +96,7 @@ export default function ProductDetailPage() {
       const mapSearchToFeatured = (items: any[]): FeaturedProduct[] =>
         items.map((item: any) => ({
           id: item.id,
+          slug: item.slug,
           name: item.name,
           price: Number(item.price),
           discountPrice: item.discountPrice ? Number(item.discountPrice) : null,
@@ -156,7 +159,7 @@ export default function ProductDetailPage() {
       }
 
       // ── Legacy: relatedProducts for non-minimal templates ──
-      let mappedRelatedProducts = allProds.filter((p) => p.id !== productId);
+      let mappedRelatedProducts = allProds.filter((p) => p.id !== product.id);
 
       // Extract reviews and their statistics
       const reviewStats = {
@@ -167,6 +170,7 @@ export default function ProductDetailPage() {
       // Map product data to ProductPageProduct interface
       const mappedProduct: ProductPageProduct = {
         id: product.id,
+        slug: product.slug,
         name: product.name,
         price: Number(product.price),
         discountPrice: product.discountPrice

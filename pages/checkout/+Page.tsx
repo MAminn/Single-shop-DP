@@ -36,7 +36,7 @@ function parseOrderError(error: unknown): string {
           customerPhone: "Phone Number",
           shippingAddress: "Shipping Address",
           shippingCity: "City",
-          shippingState: "State",
+          shippingState: "Area / Zone",
           shippingPostalCode: "Postal Code",
           shippingCountry: "Country",
           buildingNumber: "Building Number",
@@ -86,22 +86,6 @@ export default function CheckoutPage() {
     Array<{ id: string; label: string; description: string }>
   >([]);
   const [paymentMethodsLoading, setPaymentMethodsLoading] = useState(true);
-  const [bostaShippingEnabled, setBostaShippingEnabled] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await trpc.order.bosta.checkoutIsEnabled.query();
-        if (!cancelled) setBostaShippingEnabled(!!res.enabled);
-      } catch {
-        if (!cancelled) setBostaShippingEnabled(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -184,6 +168,7 @@ export default function CheckoutPage() {
       id: item.id,
       name: item.name,
       price: item.price,
+      originalPrice: item.originalPrice ?? undefined,
       quantity: item.quantity,
       imageUrl: item.imageUrl ?? undefined,
       variant: item.selectedOptions
@@ -252,7 +237,6 @@ export default function CheckoutPage() {
         notes: formValues.notes || undefined,
         promoCodeId: promoCode?.id,
         paymentMethod: selectedPaymentMethod as "cod" | "stripe" | "paymob",
-        bostaDistrictId: formValues.bostaDistrictId || undefined,
         buildingNumber: formValues.buildingNumber || undefined,
         apartment: formValues.apartment || undefined,
       });
@@ -373,7 +357,6 @@ export default function CheckoutPage() {
     currency: STORE_CURRENCY,
     paymentMethods,
     paymentMethodsLoading,
-    bostaShippingEnabled,
   };
 
   return <Template.component {...templateProps} />;

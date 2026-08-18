@@ -554,7 +554,7 @@ function ProductCard({ product, formatPrice, getImageUrl }: ProductCardProps) {
 
   return (
     <Link
-      href={getProductUrl(product.id)}
+      href={getProductUrl(product)}
       className='group block bg-white rounded-lg overflow-hidden border border-transparent hover:border-neutral-200 hover:shadow-lg transition-all duration-300'>
       <div className='relative aspect-square bg-neutral-100 overflow-hidden'>
         {!imageLoaded && (

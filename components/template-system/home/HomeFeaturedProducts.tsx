@@ -6,6 +6,7 @@ import { ShoppingBag } from "lucide-react";
 
 export interface FeaturedProduct {
   id: string;
+  slug?: string | null;
   name: string;
   price: number;
   discountPrice?: number | string | null;

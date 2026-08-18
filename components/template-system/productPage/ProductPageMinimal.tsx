@@ -1441,7 +1441,7 @@ function InlineProductCard({
   const displayPrice = hasDiscount
     ? Number(product.discountPrice)
     : product.price;
-  const productUrl = getProductUrl(product.id);
+  const productUrl = getProductUrl(product);
 
   return (
     <div
@@ -1628,7 +1628,7 @@ function BottomProductCard({
   const displayPrice = hasDiscount
     ? Number(product.discountPrice)
     : product.price;
-  const productUrl = getProductUrl(product.id);
+  const productUrl = getProductUrl(product);
   const wishlisted = isWishlisted(product.id);
 
   return (

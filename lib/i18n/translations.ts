@@ -111,6 +111,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "checkout.required": "*",
     "checkout.building_number": "Building Number",
     "checkout.apartment": "Apartment / Unit",
+    "checkout.district": "District",
 
     // Validation
     "validation.name_required": "Full name is required",
@@ -248,6 +249,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "checkout.required": "*",
     "checkout.building_number": "رقم المبنى",
     "checkout.apartment": "رقم الشقة / الوحدة",
+    "checkout.district": "الحي",
 
     // Validation
     "validation.name_required": "الاسم الكامل مطلوب",

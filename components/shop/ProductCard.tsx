@@ -41,6 +41,7 @@ interface ProductImage {
 
 interface Product {
   id: string;
+  slug?: string | null;
   name: string;
   price: number | string;
   discountPrice?: number | string | null;

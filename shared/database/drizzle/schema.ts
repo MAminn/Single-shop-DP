@@ -282,6 +282,10 @@ export const product = pgTable("product", {
     .primaryKey()
     .$defaultFn(() => v7()),
   name: text("name").notNull(),
+  /** URL slug, e.g. /shop/synt-aura — nullable so existing rows can be
+   * backfilled without blocking the migration; a unique index still allows
+   * multiple NULLs under Postgres semantics. */
+  slug: text("slug"),
   description: text("description").notNull(),
   imageId: uuid("image_id")
     .references(() => file.id, {
@@ -356,7 +360,9 @@ export const product = pgTable("product", {
   bestLayeredWithIds: jsonb("best_layered_with_ids")
     .default([])
     .$type<string[]>(),
-});
+}, (table) => ({
+  slugUnique: uniqueIndex("product_slug_idx").on(table.slug),
+}));
 
 export const productVariant = pgTable("product_variant", {
   id: uuid("id")
@@ -415,6 +421,7 @@ export const order = pgTable("order", {
   shippingAddress: text("shipping_address").notNull(),
   shippingCity: text("shipping_city").notNull(),
   shippingState: text("shipping_state").notNull(),
+  shippingDistrict: text("shipping_district").notNull().default(""),
   shippingPostalCode: text("shipping_postal_code").notNull(),
   shippingCountry: text("shipping_country").notNull(),
   subtotal: decimal("subtotal", {

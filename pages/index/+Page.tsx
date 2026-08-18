@@ -14,6 +14,7 @@ export { Page };
 
 interface FeaturedProduct {
   id: string;
+  slug?: string | null;
   name: string;
   price: number;
   discountPrice?: number | string | null;
@@ -76,6 +77,7 @@ function Page() {
           setFeaturedProducts(
             productsResult.result.items.map((item) => ({
               id: item.id,
+              slug: item.slug,
               name: item.name,
               price: Number(item.price),
               discountPrice: item.discountPrice
@@ -187,6 +189,7 @@ function Page() {
           setNewArrivals(
             result.result.items.map((item) => ({
               id: item.id,
+              slug: item.slug,
               name: item.name,
               price: Number(item.price),
               discountPrice: item.discountPrice
@@ -234,6 +237,7 @@ function Page() {
           setDiscountedProducts(
             result.result.items.map((item) => ({
               id: item.id,
+              slug: item.slug,
               name: item.name,
               price: Number(item.price),
               discountPrice: item.discountPrice

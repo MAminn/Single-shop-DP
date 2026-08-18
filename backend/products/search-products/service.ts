@@ -128,6 +128,7 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
         const productsQuery = db
           .select({
             id: product.id,
+            slug: product.slug,
             name: product.name,
             description: product.description,
             price: product.price,

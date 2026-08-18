@@ -3,10 +3,15 @@
  */
 
 /**
- * Creates a properly formatted URL for a product detail page
+ * Creates a properly formatted URL for a product detail page.
+ * Prefers the slug (hides the raw UUID from the URL); falls back to the
+ * id for any product that hasn't been backfilled with a slug yet.
  */
-export function getProductUrl(productId: string): string {
-  return `/shop/${encodeURIComponent(productId)}`;
+export function getProductUrl(product: {
+  id: string;
+  slug?: string | null;
+}): string {
+  return `/shop/${encodeURIComponent(product.slug || product.id)}`;
 }
 
 /**

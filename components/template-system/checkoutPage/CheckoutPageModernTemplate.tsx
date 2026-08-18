@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Input } from "#root/components/ui/input";
-import { Label } from "#root/components/ui/label";
+import { CityCombobox } from "#root/components/checkout/CityCombobox";
 import { Textarea } from "#root/components/ui/textarea";
 import { Button } from "#root/components/ui/button";
 import { Alert, AlertDescription } from "#root/components/ui/alert";
@@ -18,12 +18,10 @@ import {
   Truck,
   RotateCcw,
   FileText,
+  ChevronDown,
 } from "lucide-react";
+import { cn } from "#root/lib/utils";
 import { useMinimalI18n } from "#root/lib/i18n/MinimalI18nContext";
-import {
-  BostaShippingFields,
-  type BostaShippingSelection,
-} from "#root/components/checkout/BostaShippingFields";
 import { OfferProgressBanner } from "#root/components/template-system/cartPage/OfferProgressBanner";
 import {
   AppliedOffersSavings,
@@ -57,6 +55,7 @@ export interface CheckoutOrderSummaryItem {
   id: string;
   name: string;
   price: number;
+  originalPrice?: number | null;
   quantity: number;
   imageUrl?: string | null;
   variant?: string | null;
@@ -104,8 +103,6 @@ export interface CheckoutPageModernTemplateProps {
   paymentMethods?: PaymentMethodOption[];
   /** Whether payment methods are loading */
   paymentMethodsLoading?: boolean;
-  /** When true, city/zone/district come from Bosta API pickers */
-  bostaShippingEnabled?: boolean;
 }
 
 /**
@@ -126,11 +123,8 @@ export function CheckoutPageModernTemplate({
   currency = "EGP",
   paymentMethods,
   paymentMethodsLoading = false,
-  bostaShippingEnabled = false,
 }: CheckoutPageModernTemplateProps) {
   const { t } = useMinimalI18n();
-  const [bostaSelection, setBostaSelection] =
-    useState<BostaShippingSelection | null>(null);
   const [form, setForm] = useState({
     fullName: customer?.name ?? "",
     email: customer?.email ?? "",
@@ -139,16 +133,17 @@ export function CheckoutPageModernTemplate({
     city: shippingAddress?.city ?? "",
     state: shippingAddress?.state ?? "",
     postalCode: "00000",
-    country: shippingAddress?.country ?? "Egypt",
+    // Egypt-only store — no country field shown, always submitted as-is.
+    country: "Egypt",
     notes: "",
     paymentMethod: "cod",
-    bostaDistrictId: "",
     buildingNumber: "",
     apartment: "",
   });
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [notesOpen, setNotesOpen] = useState(false);
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
 
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -180,22 +175,7 @@ export function CheckoutPageModernTemplate({
     else if (form.address.trim().length < 5) {
       errors.address = "Please enter a full street address (at least 5 characters)";
     }
-    if (bostaShippingEnabled) {
-      if (!bostaSelection?.districtId) {
-        errors.bostaDistrict = "Please select city, area, and district";
-      }
-      if (!form.buildingNumber.trim()) {
-        errors.buildingNumber =
-          t("validation.building_required") || "Building number is required";
-      }
-      if (!form.apartment.trim()) {
-        errors.apartment =
-          t("validation.apartment_required") || "Apartment number is required";
-      }
-    } else {
-      if (!form.city.trim()) errors.city = t("validation.city_required");
-    }
-    if (!form.country.trim()) errors.country = t("validation.country_required");
+    if (!form.city.trim()) errors.city = t("validation.city_required");
 
     setFieldErrors(errors);
 
@@ -215,15 +195,7 @@ export function CheckoutPageModernTemplate({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    const payload = bostaShippingEnabled && bostaSelection
-      ? {
-          ...form,
-          city: bostaSelection.city,
-          state: bostaSelection.zone,
-          bostaDistrictId: bostaSelection.districtId,
-        }
-      : form;
-    onSubmit?.(payload);
+    onSubmit?.(form);
   };
 
   // Resolved payment methods (with COD fallback when none provided)
@@ -260,12 +232,117 @@ export function CheckoutPageModernTemplate({
   const appliedOffers = totals.appliedOffers ?? [];
   const cartSubtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
   const cartQuantity = items.reduce((s, i) => s + i.quantity, 0);
+  const originalCartTotal = items.reduce(
+    (s, i) => s + (i.originalPrice ?? i.price) * i.quantity,
+    0,
+  );
+  const originalTotal = originalCartTotal + (totals.shipping ?? 0);
+  const hasDiscount = originalTotal > totals.grandTotal + 0.001;
 
   // Section number component
   const SectionNum = ({ n }: { n: number }) => (
     <span className='flex items-center justify-center w-7 h-7 rounded-full bg-green-600 text-white text-xs font-bold shrink-0'>
       {n}
     </span>
+  );
+
+  // Shared item rows — used by both the desktop card and the mobile expanded panel
+  const renderItemsList = () => (
+    <div className='space-y-4'>
+      {items.map((item) => (
+        <div key={item.id} className='flex items-center gap-3'>
+          <div className='w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-muted border'>
+            {item.imageUrl ? (
+              <img
+                src={item.imageUrl}
+                alt={item.name}
+                className='w-full h-full object-cover'
+              />
+            ) : (
+              <div className='w-full h-full flex items-center justify-center'>
+                <ShoppingCart className='w-4 h-4 text-muted-foreground/30' />
+              </div>
+            )}
+          </div>
+          <div className='flex-1 min-w-0'>
+            <p className='font-semibold text-sm leading-snug truncate'>
+              {item.name}
+            </p>
+            {item.variant && (
+              <p className='text-xs text-muted-foreground truncate'>
+                {item.variant}
+              </p>
+            )}
+            <p className='text-xs text-muted-foreground'>
+              Qty: {item.quantity}
+            </p>
+          </div>
+          <div className='text-right shrink-0'>
+            {item.originalPrice != null &&
+              item.originalPrice > item.price && (
+                <p className='text-xs text-muted-foreground line-through'>
+                  {currency}
+                  {(item.originalPrice * item.quantity).toFixed(2)}
+                </p>
+              )}
+            <p className='font-semibold text-sm'>
+              {currency}
+              {(item.price * item.quantity).toFixed(2)}
+            </p>
+          </div>
+        </div>
+      ))}
+      {onEditCart && (
+        <button
+          type='button'
+          onClick={onEditCart}
+          className='text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors'>
+          {t("checkout.edit_cart") || "Edit cart"}
+        </button>
+      )}
+    </div>
+  );
+
+  // Shared totals breakdown — used by both the desktop card and the mobile expanded panel
+  const renderTotalsBreakdown = () => (
+    <div className='space-y-2.5 text-xs w-full'>
+      <div className='flex justify-between'>
+        <span className='text-muted-foreground'>
+          {t("cart.subtotal") || "Subtotal"}
+        </span>
+        <span className='font-semibold'>
+          {currency}
+          {totals.subtotal.toFixed(2)}
+        </span>
+      </div>
+      {totals.discount !== undefined && totals.discount > 0 && (
+        <div className='flex justify-between text-red-600'>
+          <span className='font-medium'>
+            {t("cart.discount") || "Discount"}
+          </span>
+          <span className='font-semibold'>
+            - {currency}
+            {totals.discount.toFixed(2)}
+          </span>
+        </div>
+      )}
+      <AppliedOffersSavings
+        appliedOffers={appliedOffers}
+        currency={currency}
+      />
+      {totals.shipping !== undefined && (
+        <div className='flex justify-between'>
+          <span className='text-muted-foreground'>
+            {t("cart.shipping") || "Shipping"}
+          </span>
+          <span className='font-semibold'>
+            {totals.shipping === 0
+              ? t("cart.free") || "Free"
+              : `${currency}${totals.shipping.toFixed(2)}`}
+          </span>
+        </div>
+      )}
+    </div>
   );
 
   return (
@@ -313,13 +390,11 @@ export function CheckoutPageModernTemplate({
               <div className='space-y-4'>
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                   <div className='space-y-1.5'>
-                    <Label htmlFor='fullName'>
-                      {t("checkout.full_name") || "Full Name"}{" "}
-                      <span className='text-destructive'>*</span>
-                    </Label>
                     <Input
                       id='fullName'
-                      placeholder='John Doe'
+                      name='name'
+                      autoComplete='name'
+                      placeholder={t("checkout.full_name") || "Full Name"}
                       value={form.fullName}
                       onChange={(e) => updateField("fullName", e.target.value)}
                       className={
@@ -333,14 +408,12 @@ export function CheckoutPageModernTemplate({
                     )}
                   </div>
                   <div className='space-y-1.5'>
-                    <Label htmlFor='email'>
-                      {t("checkout.email") || "Email Address"}{" "}
-                      <span className='text-destructive'>*</span>
-                    </Label>
                     <Input
                       id='email'
+                      name='email'
                       type='email'
-                      placeholder='john@example.com'
+                      autoComplete='email'
+                      placeholder={t("checkout.email") || "Email Address"}
                       value={form.email}
                       onChange={(e) => updateField("email", e.target.value)}
                       className={fieldErrors.email ? "border-destructive" : ""}
@@ -353,14 +426,12 @@ export function CheckoutPageModernTemplate({
                   </div>
                 </div>
                 <div className='space-y-1.5'>
-                  <Label htmlFor='phoneNumber'>
-                    {t("checkout.phone") || "Phone Number"}{" "}
-                    <span className='text-destructive'>*</span>
-                  </Label>
                   <Input
                     id='phoneNumber'
+                    name='tel'
                     type='tel'
-                    placeholder='+20 1XX XXX XXXX'
+                    autoComplete='tel'
+                    placeholder={t("checkout.phone") || "Phone Number"}
                     value={form.phoneNumber}
                     onChange={(e) => updateField("phoneNumber", e.target.value)}
                     className={
@@ -389,13 +460,11 @@ export function CheckoutPageModernTemplate({
               </div>
               <div className='space-y-4'>
                 <div className='space-y-1.5'>
-                  <Label htmlFor='address'>
-                    {t("checkout.street") || "Street Address"}{" "}
-                    <span className='text-destructive'>*</span>
-                  </Label>
                   <Input
                     id='address'
-                    placeholder='123 Main St, Apt 4B'
+                    name='address-line1'
+                    autoComplete='address-line1'
+                    placeholder={t("checkout.street") || "Street Address"}
                     value={form.address}
                     onChange={(e) => updateField("address", e.target.value)}
                     className={fieldErrors.address ? "border-destructive" : ""}
@@ -407,118 +476,56 @@ export function CheckoutPageModernTemplate({
                   )}
                 </div>
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                  {bostaShippingEnabled ? (
-                    <div className='sm:col-span-2'>
-                      <BostaShippingFields
-                        value={bostaSelection}
-                        onChange={setBostaSelection}
-                        error={fieldErrors.bostaDistrict}
-                      />
-                    </div>
-                  ) : (
-                    <>
-                      <div className='space-y-1.5'>
-                        <Label htmlFor='city'>
-                          {t("checkout.city") || "City"}{" "}
-                          <span className='text-destructive'>*</span>
-                        </Label>
-                        <Input
-                          id='city'
-                          placeholder='Cairo'
-                          value={form.city}
-                          onChange={(e) => updateField("city", e.target.value)}
-                          className={fieldErrors.city ? "border-destructive" : ""}
-                        />
-                        {fieldErrors.city && (
-                          <p className='text-xs text-destructive'>
-                            {fieldErrors.city}
-                          </p>
-                        )}
-                      </div>
-                      <div className='space-y-1.5'>
-                        <Label htmlFor='state'>
-                          {t("checkout.state") || "State / Governorate"}
-                        </Label>
-                        <Input
-                          id='state'
-                          placeholder='Cairo'
-                          value={form.state}
-                          onChange={(e) => updateField("state", e.target.value)}
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-                {bostaShippingEnabled && (
-                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                    <div className='space-y-1.5'>
-                      <Label htmlFor='buildingNumber'>
-                        {t("checkout.building_number") || "Building Number"}{" "}
-                        <span className='text-destructive'>*</span>
-                      </Label>
-                      <Input
-                        id='buildingNumber'
-                        placeholder='117B'
-                        value={form.buildingNumber}
-                        onChange={(e) =>
-                          updateField("buildingNumber", e.target.value)
-                        }
-                        className={
-                          fieldErrors.buildingNumber ? "border-destructive" : ""
-                        }
-                      />
-                      {fieldErrors.buildingNumber && (
-                        <p className='text-xs text-destructive'>
-                          {fieldErrors.buildingNumber}
-                        </p>
-                      )}
-                    </div>
-                    <div className='space-y-1.5'>
-                      <Label htmlFor='apartment'>
-                        {t("checkout.apartment") || "Apartment / Unit"}{" "}
-                        <span className='text-destructive'>*</span>
-                      </Label>
-                      <Input
-                        id='apartment'
-                        placeholder='4B'
-                        value={form.apartment}
-                        onChange={(e) => updateField("apartment", e.target.value)}
-                        className={fieldErrors.apartment ? "border-destructive" : ""}
-                      />
-                      {fieldErrors.apartment && (
-                        <p className='text-xs text-destructive'>
-                          {fieldErrors.apartment}
-                        </p>
-                      )}
-                    </div>
+                  <div className='space-y-1.5'>
+                    <Input
+                      id='buildingNumber'
+                      name='address-line2'
+                      autoComplete='address-line2'
+                      placeholder={
+                        t("checkout.building_number") || "Building Number"
+                      }
+                      value={form.buildingNumber}
+                      onChange={(e) =>
+                        updateField("buildingNumber", e.target.value)
+                      }
+                    />
                   </div>
-                )}
-                <div className='space-y-1.5'>
-                  <Label htmlFor='country'>
-                    {t("checkout.country") || "Country"}{" "}
-                    <span className='text-destructive'>*</span>
-                  </Label>
-                  <select
-                    id='country'
-                    value={form.country}
-                    onChange={(e) => updateField("country", e.target.value)}
-                    className={`flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${fieldErrors.country ? "border-destructive" : "border-input"}`}>
-                    <option value='Egypt'>Egypt</option>
-                    <option value='Saudi Arabia'>Saudi Arabia</option>
-                    <option value='UAE'>UAE</option>
-                    <option value='Kuwait'>Kuwait</option>
-                    <option value='Qatar'>Qatar</option>
-                    <option value='Bahrain'>Bahrain</option>
-                    <option value='Oman'>Oman</option>
-                    <option value='Jordan'>Jordan</option>
-                    <option value='Lebanon'>Lebanon</option>
-                    <option value='Other'>Other</option>
-                  </select>
-                  {fieldErrors.country && (
-                    <p className='text-xs text-destructive'>
-                      {fieldErrors.country}
-                    </p>
-                  )}
+                  <div className='space-y-1.5'>
+                    <Input
+                      id='apartment'
+                      placeholder={t("checkout.apartment") || "Apartment / Unit"}
+                      value={form.apartment}
+                      onChange={(e) => updateField("apartment", e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                  <div className='space-y-1.5'>
+                    <CityCombobox
+                      id='city'
+                      name='address-level2'
+                      autoComplete='address-level2'
+                      placeholder={t("checkout.city") || "City"}
+                      value={form.city}
+                      onChange={(v) => updateField("city", v)}
+                      className={fieldErrors.city ? "border-destructive" : ""}
+                    />
+                    {fieldErrors.city && (
+                      <p className='text-xs text-destructive'>
+                        {fieldErrors.city}
+                      </p>
+                    )}
+                  </div>
+                  <div className='space-y-1.5'>
+                    <Input
+                      id='state'
+                      name='address-level1'
+                      autoComplete='address-level1'
+                      placeholder={t("checkout.state") || "Area / Zone"}
+                      value={form.state}
+                      onChange={(e) => updateField("state", e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -608,100 +615,18 @@ export function CheckoutPageModernTemplate({
           </div>
 
           {/* ── Right column: Order Summary ────────────────── */}
-          <div className='lg:sticky lg:top-6 lg:self-start w-full'>
-            <div className='border rounded-2xl p-6 space-y-5 w-full'>
+          <div className='lg:sticky lg:top-6 lg:self-start w-full space-y-3'>
+            {/* Desktop: full itemized card */}
+            <div className='hidden lg:block border rounded-2xl p-6 space-y-5 w-full'>
               <h2 className='font-extrabold text-base uppercase tracking-widest'>
                 {t("checkout.order_summary") || "Order Summary"}
               </h2>
 
-              {/* Items */}
-              <div className='space-y-4'>
-                {items.map((item) => (
-                  <div key={item.id} className='flex items-center gap-3'>
-                    <div className='w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-muted border'>
-                      {item.imageUrl ? (
-                        <img
-                          src={item.imageUrl}
-                          alt={item.name}
-                          className='w-full h-full object-cover'
-                        />
-                      ) : (
-                        <div className='w-full h-full flex items-center justify-center'>
-                          <ShoppingCart className='w-4 h-4 text-muted-foreground/30' />
-                        </div>
-                      )}
-                    </div>
-                    <div className='flex-1 min-w-0'>
-                      <p className='font-semibold text-sm leading-snug truncate'>
-                        {item.name}
-                      </p>
-                      {item.variant && (
-                        <p className='text-xs text-muted-foreground truncate'>
-                          {item.variant}
-                        </p>
-                      )}
-                      <p className='text-xs text-muted-foreground'>
-                        Qty: {item.quantity}
-                      </p>
-                    </div>
-                    <p className='font-semibold text-sm shrink-0'>
-                      {currency}
-                      {(item.price * item.quantity).toFixed(2)}
-                    </p>
-                  </div>
-                ))}
-                {onEditCart && (
-                  <button
-                    type='button'
-                    onClick={onEditCart}
-                    className='text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors'>
-                    {t("checkout.edit_cart") || "Edit cart"}
-                  </button>
-                )}
-              </div>
+              {renderItemsList()}
 
-              {/* Divider */}
               <div className='border-t' />
 
-              {/* Totals */}
-              <div className='space-y-2.5 text-xs w-full'>
-                <div className='flex justify-between'>
-                  <span className='text-muted-foreground'>
-                    {t("cart.subtotal") || "Subtotal"}
-                  </span>
-                  <span className='font-semibold'>
-                    {currency}
-                    {totals.subtotal.toFixed(2)}
-                  </span>
-                </div>
-                {totals.discount !== undefined && totals.discount > 0 && (
-                  <div className='flex justify-between text-red-600'>
-                    <span className='font-medium'>
-                      {t("cart.discount") || "Discount"}
-                    </span>
-                    <span className='font-semibold'>
-                      - {currency}
-                      {totals.discount.toFixed(2)}
-                    </span>
-                  </div>
-                )}
-                <AppliedOffersSavings
-                  appliedOffers={appliedOffers}
-                  currency={currency}
-                />
-                {totals.shipping !== undefined && (
-                  <div className='flex justify-between'>
-                    <span className='text-muted-foreground'>
-                      {t("cart.shipping") || "Shipping"}
-                    </span>
-                    <span className='font-semibold'>
-                      {totals.shipping === 0
-                        ? t("cart.free") || "Free"
-                        : `${currency}${totals.shipping.toFixed(2)}`}
-                    </span>
-                  </div>
-                )}
-              </div>
+              {renderTotalsBreakdown()}
 
               {/* Grand total */}
               <div className='border-t pt-4 flex justify-between items-center'>
@@ -747,6 +672,97 @@ export function CheckoutPageModernTemplate({
               </div>
 
               {/* Submit */}
+              <Button
+                type='submit'
+                className='w-full font-bold tracking-wide uppercase'
+                size='lg'
+                disabled={isSubmitting || items.length === 0}>
+                {isSubmitting ? (
+                  <span className='flex items-center gap-2'>
+                    <Loader2 className='w-4 h-4 animate-spin' />
+                    {t("checkout.processing") || "Processing..."}
+                  </span>
+                ) : (
+                  <span className='flex items-center gap-2'>
+                    <Lock className='w-4 h-4' />
+                    {form.paymentMethod === "cod"
+                      ? t("checkout.place_order") || "Place Order"
+                      : t("checkout.place_order_pay") || "Place Order & Pay"}
+                  </span>
+                )}
+              </Button>
+
+              <p className='text-xs text-center text-muted-foreground'>
+                {t("checkout.terms") || (
+                  <>
+                    By placing your order, you agree to our{" "}
+                    <a
+                      href='/links'
+                      className='underline underline-offset-2 text-foreground'>
+                      Terms &amp; Conditions
+                    </a>
+                  </>
+                )}
+              </p>
+            </div>
+
+            {/* Mobile: compact collapsed summary bar */}
+            <div className='lg:hidden border rounded-2xl p-4'>
+              <button
+                type='button'
+                onClick={() => setSummaryExpanded((v) => !v)}
+                className='w-full flex items-center gap-3'
+                aria-expanded={summaryExpanded}>
+                <div className='w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-muted border'>
+                  {items[0]?.imageUrl ? (
+                    <img
+                      src={items[0].imageUrl}
+                      alt={items[0].name}
+                      className='w-full h-full object-cover'
+                    />
+                  ) : (
+                    <div className='w-full h-full flex items-center justify-center'>
+                      <ShoppingCart className='w-4 h-4 text-muted-foreground/30' />
+                    </div>
+                  )}
+                </div>
+                <div className='flex-1 min-w-0 text-left'>
+                  <p className='font-bold text-sm'>
+                    {t("cart.total") || "Total"}
+                  </p>
+                  <p className='text-xs text-muted-foreground'>
+                    {cartQuantity} {cartQuantity === 1 ? "item" : "items"}
+                  </p>
+                </div>
+                <div className='text-right shrink-0'>
+                  {hasDiscount && (
+                    <p className='text-xs text-muted-foreground line-through'>
+                      {currency}
+                      {originalTotal.toFixed(2)}
+                    </p>
+                  )}
+                  <p className='font-extrabold text-base'>
+                    {currency} {totals.grandTotal.toFixed(2)}
+                  </p>
+                </div>
+                <ChevronDown
+                  className={cn(
+                    "w-4 h-4 text-muted-foreground shrink-0 transition-transform",
+                    summaryExpanded && "rotate-180",
+                  )}
+                />
+              </button>
+
+              {summaryExpanded && (
+                <div className='mt-4 pt-4 border-t space-y-4'>
+                  {renderItemsList()}
+                  <div className='border-t' />
+                  {renderTotalsBreakdown()}
+                </div>
+              )}
+            </div>
+
+            <div className='lg:hidden space-y-3'>
               <Button
                 type='submit'
                 className='w-full font-bold tracking-wide uppercase'

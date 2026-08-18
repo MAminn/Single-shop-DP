@@ -11,6 +11,8 @@ import { Effect } from "effect";
 import { z } from "zod";
 import { validateProductRules, fragranceInfoSchema } from "../shared";
 import { getStoreOwnerId } from "#root/shared/config/store";
+import { generateUniqueProductSlug } from "../slug";
+import { eq } from "drizzle-orm";
 
 export const createProductSchema = z.object({
   name: z.string().nonempty().max(255),
@@ -103,6 +105,17 @@ export const createProduct = (
           if (!newProduct) {
             throw new Error("Product not created");
           }
+
+          const newSlug = await generateUniqueProductSlug(
+            data.name,
+            newProduct.id,
+            newProduct.id,
+          );
+          await tx
+            .update(product)
+            .set({ slug: newSlug })
+            .where(eq(product.id, newProduct.id));
+          newProduct.slug = newSlug;
 
           // Create product-category relationships
           if (data.categoryIds && data.categoryIds.length > 0) {

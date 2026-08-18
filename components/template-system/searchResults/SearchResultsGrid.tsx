@@ -25,6 +25,7 @@ import {
  */
 export interface SearchResultProduct {
   id: string;
+  slug?: string | null;
   name: string;
   price: number;
   discountPrice?: number | null;

@@ -136,7 +136,7 @@ const RelatedTile = memo(function RelatedTile({
 
   return (
     <a
-      href={getProductUrl(product.id)}
+      href={getProductUrl(product)}
       className='group block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-stone-900/25 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-50'>
       <div className='relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-stone-200'>
         {img ? (

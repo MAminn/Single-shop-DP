@@ -381,7 +381,7 @@ function OrdersTab() {
 
 function WishlistTab() {
   const { items: wishlistIds, toggle } = useWishlist();
-  const [products, setProducts] = useState<{ id: string; name: string; price: number; discountPrice?: number | null; imageUrl?: string; stock?: number }[]>([]);
+  const [products, setProducts] = useState<{ id: string; slug?: string | null; name: string; price: number; discountPrice?: number | null; imageUrl?: string; stock?: number }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -392,6 +392,7 @@ function WishlistTab() {
         if (res.success && res.result) {
           setProducts(res.result.map((p: any) => ({
             id: p.id,
+            slug: p.slug,
             name: p.name,
             price: Number(p.price),
             discountPrice: p.discountPrice != null ? Number(p.discountPrice) : null,
@@ -428,7 +429,7 @@ function WishlistTab() {
         const hasDiscount = product.discountPrice != null && product.discountPrice < product.price;
         return (
           <div key={product.id} className="bg-white rounded-xl border border-stone-100 overflow-hidden group">
-            <Link href={getProductUrl(product.id)} className="block relative aspect-square bg-stone-50 overflow-hidden">
+            <Link href={getProductUrl(product)} className="block relative aspect-square bg-stone-50 overflow-hidden">
               {product.imageUrl ? (
                 <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
               ) : (
@@ -438,7 +439,7 @@ function WishlistTab() {
               )}
             </Link>
             <div className="p-3">
-              <Link href={getProductUrl(product.id)} className="block">
+              <Link href={getProductUrl(product)} className="block">
                 <p className="text-[13px] font-medium text-stone-800 truncate hover:text-stone-600 transition-colors">{product.name}</p>
               </Link>
               <div className="flex items-center gap-1.5 mt-1">

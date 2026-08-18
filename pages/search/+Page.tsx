@@ -46,6 +46,7 @@ export default function SearchPage() {
           const mapped: SearchResultProduct[] = (res.result.items ?? []).map(
             (p: any) => ({
               id: p.id,
+              slug: p.slug,
               name: p.name,
               price: typeof p.price === "string" ? Number.parseFloat(p.price) : p.price,
               discountPrice: p.discountPrice

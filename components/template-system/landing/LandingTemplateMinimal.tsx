@@ -214,6 +214,7 @@ export function LandingTemplateMinimal({
   // Convert newArrivals to MinimalProduct[] for the carousel
   const newArrivalProducts: MinimalProduct[] = newArrivals.map((p) => ({
     id: p.id,
+    slug: p.slug,
     name: p.name,
     price: p.price,
     discountPrice: p.discountPrice,
@@ -229,6 +230,7 @@ export function LandingTemplateMinimal({
   // Convert featuredProducts to MinimalProduct[]
   const featuredMinimal: MinimalProduct[] = featuredProducts.map((p) => ({
     id: p.id,
+    slug: p.slug,
     name: p.name,
     price: p.price,
     discountPrice: p.discountPrice,
@@ -243,6 +245,7 @@ export function LandingTemplateMinimal({
   // Convert discountedProducts to MinimalProduct[]
   const discountedMinimal: MinimalProduct[] = discountedProducts.map((p) => ({
     id: p.id,
+    slug: p.slug,
     name: p.name,
     price: p.price,
     discountPrice: p.discountPrice,

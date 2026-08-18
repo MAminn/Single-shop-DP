@@ -46,6 +46,7 @@ export const productRouter = t.router({
         const rows = await ctx.db
           .select({
             id: product.id,
+            slug: product.slug,
             name: product.name,
             price: product.price,
             discountPrice: product.discountPrice,
@@ -82,6 +83,7 @@ export const productRouter = t.router({
           success: true as const,
           result: rows.map((r) => ({
             id: r.id,
+            slug: r.slug,
             name: r.name,
             price: Number(r.price),
             discountPrice: r.discountPrice ? Number(r.discountPrice) : null,

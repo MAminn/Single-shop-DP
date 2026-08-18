@@ -44,34 +44,19 @@ export const createOrderSchema = z.object({
   shippingAddress: z.string().min(1),
   shippingCity: z.string().min(1),
   shippingState: z.string().optional().nullable(),
+  /** Free-text district hint — fuzzy-matched against Bosta's district list server-side */
+  shippingDistrict: z.string().optional().nullable(),
   shippingPostalCode: z.string().optional().nullable(),
   shippingCountry: z.string().optional().nullable(),
   items: z.array(OrderItemSchema).min(1),
   notes: z.string().optional(),
   promoCodeId: z.string().uuid().optional(),
   paymentMethod: z.enum(["cod", "stripe", "paymob"]).optional().default("cod"),
-  /** Bosta district ID from checkout location picker (when Bosta is enabled) */
+  /** Legacy: Bosta district ID from the old checkout location picker. No
+   * longer collected by checkout, kept optional for backward compatibility. */
   bostaDistrictId: z.string().min(1).optional(),
-  /** Required when Bosta district is selected — sent as dropOffAddress.buildingNumber */
-  buildingNumber: z.string().trim().min(1).optional(),
-  /** Required when Bosta district is selected — sent as dropOffAddress.apartment */
-  apartment: z.string().trim().min(1).optional(),
-}).superRefine((data, ctx) => {
-  if (!data.bostaDistrictId) return;
-  if (!data.buildingNumber?.trim()) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Building number is required",
-      path: ["buildingNumber"],
-    });
-  }
-  if (!data.apartment?.trim()) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Apartment number is required",
-      path: ["apartment"],
-    });
-  }
+  buildingNumber: z.string().trim().optional(),
+  apartment: z.string().trim().optional(),
 });
 
 // Manually define the insert type matching the schema's nullability
@@ -294,6 +279,7 @@ interface CreatedOrder {
   shippingAddress: string;
   shippingCity: string;
   shippingState?: string | null;
+  shippingDistrict?: string | null;
   bostaDistrictId?: string | null;
   buildingNumber?: string | null;
   apartment?: string | null;
@@ -335,6 +321,7 @@ async function autoSendOrderToBosta(orderData: CreatedOrder): Promise<void> {
       firstLine: orderData.shippingAddress,
       city: orderData.shippingCity,
       zone: orderData.shippingState ?? undefined,
+      districtHint: orderData.shippingDistrict ?? undefined,
       districtId: orderData.bostaDistrictId ?? undefined,
       buildingNumber: orderData.buildingNumber ?? undefined,
       apartment: orderData.apartment ?? undefined,
@@ -696,6 +683,7 @@ export const createOrder = (
             }),
             shippingCity: input.shippingCity,
             shippingState: input.shippingState,
+            shippingDistrict: input.shippingDistrict,
             shippingPostalCode: input.shippingPostalCode,
             shippingCountry: input.shippingCountry,
             subtotal: subtotal.toString(),

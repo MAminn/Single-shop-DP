@@ -110,6 +110,7 @@ export default function CategoryPage() {
         if (result.success && result.result) {
           const mapped: SortingPageProduct[] = result.result.items.map((p) => ({
             id: p.id,
+            slug: p.slug,
             name: p.name,
             price: Number(p.price),
             discountPrice: p.discountPrice ? Number(p.discountPrice) : null,

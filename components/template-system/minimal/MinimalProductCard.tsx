@@ -17,6 +17,7 @@ interface ProductImage {
 
 export interface MinimalProduct {
   id: string;
+  slug?: string | null;
   name: string;
   price: number;
   discountPrice?: number | string | null;
@@ -121,7 +122,7 @@ export function MinimalProductCard({
   const tagText = product.tag || (product.isNew ? t("new") : hasDiscount ? t("sale") : null);
 
   const wishlisted = isWishlisted(product.id);
-  const productUrl = getProductUrl(product.id);
+  const productUrl = getProductUrl(product);
 
   return (
     <div className={cn("group flex flex-col", className)}>
