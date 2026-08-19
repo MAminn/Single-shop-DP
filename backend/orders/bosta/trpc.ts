@@ -142,8 +142,11 @@ export const bostaRouter = t.router({
                 },
                 dropOffAddress: {
                   firstLine: orderRow.shippingAddress,
-                  city: orderRow.shippingCity,
-                  zone: orderRow.shippingState ?? undefined,
+                  // Same routing as autoSendOrderToBosta: shippingState is
+                  // the Bosta-governorate combobox pick, shippingCity is
+                  // the free-text city/area used as the zone hint.
+                  city: orderRow.shippingState || orderRow.shippingCity,
+                  zone: orderRow.shippingCity ?? undefined,
                 },
                 cod: codAmount,
                 notes: orderRow.notes,

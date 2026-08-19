@@ -36,7 +36,7 @@ function parseOrderError(error: unknown): string {
           customerPhone: "Phone Number",
           shippingAddress: "Shipping Address",
           shippingCity: "City",
-          shippingState: "Area / Zone",
+          shippingState: "Governorate",
           shippingPostalCode: "Postal Code",
           shippingCountry: "Country",
           buildingNumber: "Building Number",

@@ -319,8 +319,11 @@ async function autoSendOrderToBosta(orderData: CreatedOrder): Promise<void> {
     receiver: { firstName, lastName, phone: orderData.customerPhone },
     dropOffAddress: {
       firstLine: orderData.shippingAddress,
-      city: orderData.shippingCity,
-      zone: orderData.shippingState ?? undefined,
+      // shippingState holds the customer's Bosta-governorate combobox pick
+      // (Bosta's own "city" concept); shippingCity holds the free-text
+      // city/area name, used as the zone hint.
+      city: orderData.shippingState || orderData.shippingCity,
+      zone: orderData.shippingCity ?? undefined,
       districtHint: orderData.shippingDistrict ?? undefined,
       districtId: orderData.bostaDistrictId ?? undefined,
       buildingNumber: orderData.buildingNumber ?? undefined,

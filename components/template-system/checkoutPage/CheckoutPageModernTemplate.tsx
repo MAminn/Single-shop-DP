@@ -501,13 +501,13 @@ export function CheckoutPageModernTemplate({
                 </div>
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                   <div className='space-y-1.5'>
-                    <CityCombobox
+                    <Input
                       id='city'
                       name='address-level2'
                       autoComplete='address-level2'
-                      placeholder={t("checkout.state") || "Area / Zone"}
+                      placeholder={t("checkout.city") || "City"}
                       value={form.city}
-                      onChange={(v) => updateField("city", v)}
+                      onChange={(e) => updateField("city", e.target.value)}
                       className={fieldErrors.city ? "border-destructive" : ""}
                     />
                     {fieldErrors.city && (
@@ -517,13 +517,13 @@ export function CheckoutPageModernTemplate({
                     )}
                   </div>
                   <div className='space-y-1.5'>
-                    <Input
+                    <CityCombobox
                       id='state'
                       name='address-level1'
                       autoComplete='address-level1'
-                      placeholder={t("checkout.city") || "City"}
+                      placeholder={t("checkout.state") || "Governorate"}
                       value={form.state}
-                      onChange={(e) => updateField("state", e.target.value)}
+                      onChange={(v) => updateField("state", v)}
                     />
                   </div>
                 </div>

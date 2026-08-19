@@ -317,28 +317,28 @@ export function CheckoutPageEditorialTemplate({
                       </div>
                       <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
                         <div>
-                          <CityCombobox
+                          <Input
                             id='checkout-city'
                             name='address-level2'
                             autoComplete='address-level2'
                             required
                             value={formValues.city}
-                            onChange={(v) => updateField("city", v)}
+                            onChange={(e) =>
+                              updateField("city", e.target.value)
+                            }
                             className={inputCls}
-                            placeholder='Area / Zone'
+                            placeholder='City'
                           />
                         </div>
                         <div>
-                          <Input
+                          <CityCombobox
                             id='checkout-state'
                             name='address-level1'
                             autoComplete='address-level1'
                             value={formValues.state}
-                            onChange={(e) =>
-                              updateField("state", e.target.value)
-                            }
+                            onChange={(v) => updateField("state", v)}
                             className={inputCls}
-                            placeholder='City'
+                            placeholder='Governorate'
                           />
                         </div>
                       </div>
