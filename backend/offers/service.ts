@@ -39,6 +39,7 @@ const conditionSchema: z.ZodType<OfferCondition> = z.discriminatedUnion("type", 
     minQuantity: z.number().int().min(1),
     productIds: z.array(z.string().uuid()).optional(),
     categoryIds: z.array(z.string().uuid()).optional(),
+    repeatsPerMultiple: z.boolean().optional(),
   }),
   z.object({
     type: z.literal("cart_total"),
@@ -135,6 +136,45 @@ function conditionMet(condition: OfferCondition, cartItems: CartItemInput[], sub
   }
 }
 
+/**
+ * How many times a quantity_threshold condition's own reward should repeat,
+ * given the cart. 1 for every other condition type, and for quantity_threshold
+ * unless the admin opted into `repeatsPerMultiple` (this is separate from
+ * `isExclusive`/offer-vs-offer stacking — see the schema.ts doc comment).
+ */
+function rewardMultiplier(condition: OfferCondition, cartItems: CartItemInput[]): number {
+  if (condition.type !== "quantity_threshold" || !condition.repeatsPerMultiple) return 1;
+
+  let relevantItems = cartItems;
+  if (condition.productIds?.length) {
+    relevantItems = cartItems.filter((i) => condition.productIds!.includes(i.id));
+  } else if (condition.categoryIds?.length) {
+    relevantItems = cartItems.filter((i) =>
+      i.categoryIds?.some((c) => condition.categoryIds!.includes(c))
+    );
+  }
+  const totalQty = relevantItems.reduce((s, i) => s + i.quantity, 0);
+  return Math.max(1, Math.floor(totalQty / condition.minQuantity));
+}
+
+/**
+ * Returns the reward as actually applied to this cart — identical to the
+ * stored reward when multiplier is 1, otherwise scaled so downstream
+ * consumers (discount math, free-item badges) see the effective amount
+ * without needing to know about repeatsPerMultiple themselves.
+ */
+function effectiveReward(reward: OfferReward, multiplier: number): OfferReward {
+  if (multiplier <= 1) return reward;
+  switch (reward.type) {
+    case "fixed_off":
+      return { ...reward, amountOff: reward.amountOff * multiplier };
+    case "free_items":
+      return { ...reward, quantity: reward.quantity * multiplier };
+    default:
+      return reward;
+  }
+}
+
 function computeDiscount(reward: OfferReward, cartItems: CartItemInput[], subtotal: number): { discountAmount: number; freeShipping: boolean } {
   switch (reward.type) {
     case "percentage_off":
@@ -187,22 +227,21 @@ export function applyOffersToCart(
 
   for (const offer of offers) {
     if (exclusiveTriggered) break;
-    if (!conditionMet(offer.condition as OfferCondition, cartItems, subtotal)) continue;
+    const condition = offer.condition as OfferCondition;
+    if (!conditionMet(condition, cartItems, subtotal)) continue;
 
-    const { discountAmount, freeShipping } = computeDiscount(
-      offer.reward as OfferReward,
-      cartItems,
-      subtotal,
-    );
+    const multiplier = rewardMultiplier(condition, cartItems);
+    const reward = effectiveReward(offer.reward as OfferReward, multiplier);
+    const { discountAmount, freeShipping } = computeDiscount(reward, cartItems, subtotal);
 
     applied.push({
       id: offer.id,
       name: offer.name,
       description: offer.description,
-      reward: offer.reward as OfferReward,
+      reward,
       discountAmount,
       freeShipping,
-      label: rewardLabel(offer.reward as OfferReward),
+      label: rewardLabel(reward),
     });
 
     if (offer.isExclusive) exclusiveTriggered = true;
@@ -244,22 +283,21 @@ export const evaluateOffers = (input: EvaluateOffersInput) =>
 
     for (const offer of offers) {
       if (exclusiveTriggered) break;
-      if (!conditionMet(offer.condition as OfferCondition, input.cartItems, input.subtotal)) continue;
+      const condition = offer.condition as OfferCondition;
+      if (!conditionMet(condition, input.cartItems, input.subtotal)) continue;
 
-      const { discountAmount, freeShipping } = computeDiscount(
-        offer.reward as OfferReward,
-        input.cartItems,
-        input.subtotal
-      );
+      const multiplier = rewardMultiplier(condition, input.cartItems);
+      const reward = effectiveReward(offer.reward as OfferReward, multiplier);
+      const { discountAmount, freeShipping } = computeDiscount(reward, input.cartItems, input.subtotal);
 
       applied.push({
         id: offer.id,
         name: offer.name,
         description: offer.description,
-        reward: offer.reward as OfferReward,
+        reward,
         discountAmount,
         freeShipping,
-        label: rewardLabel(offer.reward as OfferReward),
+        label: rewardLabel(reward),
       });
 
       if (offer.isExclusive) exclusiveTriggered = true;

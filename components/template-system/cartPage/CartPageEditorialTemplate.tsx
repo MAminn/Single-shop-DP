@@ -176,9 +176,20 @@ export function CartPageEditorialTemplate({
                         {item.variant}
                       </p>
                     )}
-                    <p className="mt-1 text-sm font-medium text-stone-900">
-                      {formatPrice(item.price, currency)}
-                    </p>
+                    {item.freeQuantity && item.freeQuantity >= item.quantity ? (
+                      <p className="mt-1 text-sm font-semibold text-emerald-600 uppercase tracking-wide">
+                        Free
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-sm font-medium text-stone-900">
+                        {formatPrice(item.price, currency)}
+                        {item.freeQuantity != null && item.freeQuantity > 0 && (
+                          <span className="ms-2 text-xs font-semibold text-emerald-600">
+                            ({item.freeQuantity} free)
+                          </span>
+                        )}
+                      </p>
+                    )}
                   </div>
 
                   {/* Controls row */}

@@ -126,6 +126,8 @@ export function CartPageMinimalTemplate({
                 {items.map((item) => {
                   const lineTotal = item.price * item.quantity;
                   const hasDiscount = item.originalPrice != null && item.originalPrice > item.price;
+                  const freeQty = item.freeQuantity ?? 0;
+                  const isFullyFree = freeQty > 0 && freeQty >= item.quantity;
                   return (
                     <div key={item.id} className={`py-5 sm:py-6 transition-opacity ${isUpdating ? "opacity-60 pointer-events-none" : ""}`}>
 
@@ -211,16 +213,38 @@ export function CartPageMinimalTemplate({
                               </button>
                             </div>
                             <div className="flex items-baseline gap-1.5 mt-1">
-                              {hasDiscount && (
-                                <span className="text-[12px] text-gray-400 line-through">
-                                  {(item.originalPrice! * item.quantity).toFixed(2)} {currency}
-                                </span>
+                              {freeQty > 0 ? (
+                                <>
+                                  <span className="text-[12px] text-gray-400 line-through">
+                                    {lineTotal.toFixed(2)} {currency}
+                                  </span>
+                                  {isFullyFree ? (
+                                    <p className="text-[15px] font-semibold text-emerald-600 uppercase" style={{ fontFamily: "var(--font-price)" }}>
+                                      Free
+                                    </p>
+                                  ) : (
+                                    <p className="text-[15px] font-semibold" style={{ color: "#111827", fontFamily: "var(--font-price)" }}>
+                                      {(item.price * (item.quantity - freeQty)).toFixed(2)} {currency}
+                                      <span className="ms-1 text-[10px] text-emerald-600 font-semibold">
+                                        ({freeQty} free)
+                                      </span>
+                                    </p>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  {hasDiscount && (
+                                    <span className="text-[12px] text-gray-400 line-through">
+                                      {(item.originalPrice! * item.quantity).toFixed(2)} {currency}
+                                    </span>
+                                  )}
+                                  <p
+                                    className={`text-[15px] font-semibold ${hasDiscount ? "text-red-600" : ""}`}
+                                    style={{ color: hasDiscount ? undefined : "#111827", fontFamily: "var(--font-price)" }}>
+                                    {lineTotal.toFixed(2)} {currency}
+                                  </p>
+                                </>
                               )}
-                              <p
-                                className={`text-[15px] font-semibold ${hasDiscount ? "text-red-600" : ""}`}
-                                style={{ color: hasDiscount ? undefined : "#111827", fontFamily: "var(--font-price)" }}>
-                                {lineTotal.toFixed(2)} {currency}
-                              </p>
                             </div>
                           </div>
                         </div>
@@ -282,16 +306,38 @@ export function CartPageMinimalTemplate({
                           </button>
                         </div>
                         <div className="text-right">
-                          {hasDiscount && (
-                            <p className="text-[11px] text-gray-400 line-through">
-                              {(item.originalPrice! * item.quantity).toFixed(2)} {currency}
-                            </p>
+                          {freeQty > 0 ? (
+                            <>
+                              <p className="text-[11px] text-gray-400 line-through">
+                                {lineTotal.toFixed(2)} {currency}
+                              </p>
+                              {isFullyFree ? (
+                                <p className="text-[14px] font-semibold text-emerald-600 uppercase" style={{ fontFamily: "var(--font-price)" }}>
+                                  Free
+                                </p>
+                              ) : (
+                                <p className="text-[14px] font-semibold" style={{ color: "#111827", fontFamily: "var(--font-price)" }}>
+                                  {(item.price * (item.quantity - freeQty)).toFixed(2)} {currency}
+                                  <span className="ms-1 text-[10px] text-emerald-600 font-semibold">
+                                    ({freeQty} free)
+                                  </span>
+                                </p>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              {hasDiscount && (
+                                <p className="text-[11px] text-gray-400 line-through">
+                                  {(item.originalPrice! * item.quantity).toFixed(2)} {currency}
+                                </p>
+                              )}
+                              <p
+                                className={`text-[14px] font-semibold ${hasDiscount ? "text-red-600" : ""}`}
+                                style={{ color: hasDiscount ? undefined : "#111827", fontFamily: "var(--font-price)" }}>
+                                {lineTotal.toFixed(2)} {currency}
+                              </p>
+                            </>
                           )}
-                          <p
-                            className={`text-[14px] font-semibold ${hasDiscount ? "text-red-600" : ""}`}
-                            style={{ color: hasDiscount ? undefined : "#111827", fontFamily: "var(--font-price)" }}>
-                            {lineTotal.toFixed(2)} {currency}
-                          </p>
                         </div>
                         <button
                           type="button"

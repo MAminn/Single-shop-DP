@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
 import type { ReactNode } from "react";
 import type { Product } from "../mock-data/products";
 import { trpc } from "#root/shared/trpc/client";
 import type { AppliedOffer } from "#root/backend/offers/service";
 import { getCartSessionToken } from "#root/lib/cart-session";
-import { computePromoDiscount, deriveEffectiveShipping } from "#root/shared/pricing/cart-math";
+import { computePromoDiscount, deriveEffectiveShipping, computeFreeItemQuantities } from "#root/shared/pricing/cart-math";
 
 export interface CartItem extends Product {
   quantity: number;
@@ -63,6 +63,9 @@ interface CartContextType {
   ) => CartItem | undefined;
   appliedOffers: AppliedOffer[];
   offerDiscount: number;
+  /** How many units of each cart item (by index, same order as `items`) an
+   * offer made free — e.g. [0, 1, 0] means the second item has 1 free unit. */
+  freeQuantities: number[];
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -185,6 +188,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const discount = promoCode
     ? computePromoDiscount(promoCode.discountType, promoCode.discountValue, subtotal, offerDiscount)
     : 0;
+
+  // Which specific cart line(s) an offer made free, so the UI can show a
+  // "FREE" badge on the exact item instead of only an aggregate savings line.
+  const freeQuantities = useMemo(
+    () => computeFreeItemQuantities(items, appliedOffers),
+    [items, appliedOffers],
+  );
 
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(items));
@@ -526,6 +536,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         findItemInCart,
         appliedOffers,
         offerDiscount,
+        freeQuantities,
       }}>
       {children}
     </CartContext.Provider>

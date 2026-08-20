@@ -106,3 +106,47 @@ describe("applyOffersToCart — percentage/fixed discounts stack additively with
     expect(applied[0]!.discountAmount).toBe(200);
   });
 });
+
+describe("applyOffersToCart — repeatsPerMultiple (Buy 2 Get 1 scaling with quantity)", () => {
+  const buy2Get1 = makeOffer({
+    condition: { type: "quantity_threshold", minQuantity: 3, repeatsPerMultiple: true },
+    reward: { type: "free_items", quantity: 1, which: "cheapest" },
+  });
+
+  it("frees only 1 item at exactly the threshold (3 in cart)", () => {
+    const applied = applyOffersToCart([buy2Get1], [item("p1", 3, 100)], 300);
+    expect(applied[0]!.discountAmount).toBe(100);
+    expect((applied[0]!.reward as { quantity: number }).quantity).toBe(1);
+  });
+
+  it("frees 2 items at double the threshold (6 in cart) — the client's exact ask", () => {
+    const applied = applyOffersToCart([buy2Get1], [item("p1", 6, 100)], 600);
+    expect(applied[0]!.discountAmount).toBe(200);
+    expect((applied[0]!.reward as { quantity: number }).quantity).toBe(2);
+  });
+
+  it("frees 3 items at triple the threshold (9 in cart)", () => {
+    const applied = applyOffersToCart([buy2Get1], [item("p1", 9, 100)], 900);
+    expect(applied[0]!.discountAmount).toBe(300);
+    expect((applied[0]!.reward as { quantity: number }).quantity).toBe(3);
+  });
+
+  it("does not multiply when repeatsPerMultiple is off (today's default behavior, unchanged)", () => {
+    const flatBuy2Get1 = makeOffer({
+      condition: { type: "quantity_threshold", minQuantity: 3 },
+      reward: { type: "free_items", quantity: 1, which: "cheapest" },
+    });
+    const applied = applyOffersToCart([flatBuy2Get1], [item("p1", 9, 100)], 900);
+    expect(applied[0]!.discountAmount).toBe(100);
+    expect((applied[0]!.reward as { quantity: number }).quantity).toBe(1);
+  });
+
+  it("also scales fixed_off rewards the same way", () => {
+    const offer = makeOffer({
+      condition: { type: "quantity_threshold", minQuantity: 3, repeatsPerMultiple: true },
+      reward: { type: "fixed_off", amountOff: 50 },
+    });
+    const applied = applyOffersToCart([offer], [item("p1", 6, 100)], 600);
+    expect(applied[0]!.discountAmount).toBe(100); // 50 * 2
+  });
+});

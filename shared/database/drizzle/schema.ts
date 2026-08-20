@@ -1539,9 +1539,15 @@ export const cartOffer = pgTable("cart_offer", {
   /**
    * Condition JSONB — one of:
    *   { type: "always" }
-   *   { type: "quantity_threshold"; minQuantity: number; productIds?: string[]; categoryIds?: string[] }
+   *   { type: "quantity_threshold"; minQuantity: number; productIds?: string[]; categoryIds?: string[]; repeatsPerMultiple?: boolean }
    *   { type: "cart_total"; minTotal: number }
    *   { type: "product_bundle"; requiredProductIds: string[] }
+   *
+   * `repeatsPerMultiple` (quantity_threshold only) is unrelated to
+   * `isExclusive`/"stackable" below — that controls combining with OTHER
+   * offers, this controls whether THIS offer's own reward multiplies when
+   * the cart clears the threshold more than once (e.g. Buy 2 Get 1: qty 6
+   * in cart → 2 free instead of 1).
    */
   condition: jsonb("condition").notNull().$type<OfferCondition>(),
   /**
@@ -1566,7 +1572,14 @@ export const cartOffer = pgTable("cart_offer", {
 
 export type OfferCondition =
   | { type: "always" }
-  | { type: "quantity_threshold"; minQuantity: number; productIds?: string[]; categoryIds?: string[] }
+  | {
+      type: "quantity_threshold";
+      minQuantity: number;
+      productIds?: string[];
+      categoryIds?: string[];
+      /** Multiply the reward by how many times the threshold is met (e.g. Buy 2 Get 1: 6 in cart → 2x reward). Not related to offer-vs-offer stacking. */
+      repeatsPerMultiple?: boolean;
+    }
   | { type: "cart_total"; minTotal: number }
   | { type: "product_bundle"; requiredProductIds: string[] };
 

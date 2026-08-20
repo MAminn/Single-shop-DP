@@ -27,6 +27,7 @@ export default function CartPage() {
     clearPromoCodeNotice,
     shipping,
     appliedOffers,
+    freeQuantities,
   } = useCart();
   const { getTemplateId } = useTemplate();
   const [isLoading, setIsLoading] = useState(false);
@@ -43,11 +44,12 @@ export default function CartPage() {
 
   // Transform cart items to new template format
   const cartItems: CartPageCartItem[] = useMemo(() => {
-    return items.map((item) => ({
+    return items.map((item, index) => ({
       id: getCartItemKey(item),
       name: item.name,
       price: item.price,
       originalPrice: item.originalPrice ?? undefined,
+      freeQuantity: freeQuantities[index] ?? 0,
       quantity: item.quantity,
       imageUrl: item.imageUrl ?? undefined,
       variant: item.selectedOptions
@@ -58,7 +60,7 @@ export default function CartPage() {
       stock: item.stock || 0,
       available: (item.stock || 0) > 0,
     }));
-  }, [items]);
+  }, [items, freeQuantities]);
 
   // Find the original cart item by its composite key
   const findCartItem = (cartItemKey: string) => {

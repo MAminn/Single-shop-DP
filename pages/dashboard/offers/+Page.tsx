@@ -299,6 +299,22 @@ function ConditionFields({
               })
             }
           />
+          <div className="flex items-center justify-between pt-1">
+            <div>
+              <Label>Repeat reward per multiple</Label>
+              <p className="text-xs text-muted-foreground">
+                If the cart has 2x (or 3x, ...) the min quantity, multiply the
+                reward that many times too — e.g. Buy 2 Get 1 Free with 6 in
+                cart gives 2 free instead of 1. Not the same as the
+                Exclusive/Stackable setting below, which is about combining
+                with other offers.
+              </p>
+            </div>
+            <Switch
+              checked={condition.repeatsPerMultiple ?? false}
+              onCheckedChange={(v) => onChange({ ...condition, repeatsPerMultiple: v })}
+            />
+          </div>
         </div>
       )}
 
@@ -613,6 +629,12 @@ export function Page() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{CONDITION_LABELS[offer.condition.type]}</Badge>
+                      {offer.condition.type === "quantity_threshold" &&
+                        offer.condition.repeatsPerMultiple && (
+                          <Badge variant="secondary" className="ml-1">
+                            Repeats per multiple
+                          </Badge>
+                        )}
                     </TableCell>
                     <TableCell>{describeReward(offer.reward)}</TableCell>
                     <TableCell>{offer.priority}</TableCell>

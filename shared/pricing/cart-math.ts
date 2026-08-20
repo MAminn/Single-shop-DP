@@ -39,3 +39,54 @@ export function deriveEffectiveShipping(
 ): number {
   return appliedOffers.some((o) => o.freeShipping) ? 0 : baseShippingFee;
 }
+
+interface FreeQuantityCartItem {
+  price: number;
+  quantity: number;
+}
+
+interface FreeItemsOffer {
+  reward: {
+    type: string;
+    quantity?: number;
+    which?: "cheapest" | "most_expensive";
+  };
+}
+
+/**
+ * Mirrors backend/offers/service.ts's computeDiscount "free_items" case, but
+ * tracks WHICH cart line each free unit lands on (by array index) instead of
+ * just a flat discount total — lets the cart/checkout UI show a "FREE" badge
+ * on the exact item(s) an offer gave away. Must be called with the same
+ * items array (same order) that was sent to the offer-evaluation endpoint,
+ * so index positions line up.
+ */
+export function computeFreeItemQuantities(
+  items: readonly FreeQuantityCartItem[],
+  appliedOffers: readonly FreeItemsOffer[],
+): number[] {
+  const freeByIndex = new Array(items.length).fill(0) as number[];
+
+  for (const offer of appliedOffers) {
+    if (offer.reward.type !== "free_items") continue;
+    const quantity = offer.reward.quantity ?? 0;
+    const which = offer.reward.which ?? "cheapest";
+
+    const units: { index: number; price: number }[] = [];
+    items.forEach((item, index) => {
+      for (let i = 0; i < item.quantity; i++) {
+        units.push({ index, price: item.price });
+      }
+    });
+
+    units.sort((a, b) =>
+      which === "cheapest" ? a.price - b.price : b.price - a.price,
+    );
+
+    for (const unit of units.slice(0, quantity)) {
+      freeByIndex[unit.index]! += 1;
+    }
+  }
+
+  return freeByIndex;
+}

@@ -29,6 +29,8 @@ export interface CartPageCartItem {
   price: number;
   /** Original price before discount — present only when the item was discounted */
   originalPrice?: number | null;
+  /** How many units of this line an offer made free (e.g. "Buy 2 Get 1") */
+  freeQuantity?: number;
   quantity: number;
   imageUrl?: string | null;
   variant?: string | null;
@@ -301,9 +303,22 @@ export function CartPageModernTemplate({
                           <span className='text-xs text-muted-foreground'>
                             {t("cart.total") || "Total"}
                           </span>
-                          <p className='font-bold'>
-                            {currency}{(item.price * item.quantity).toFixed(2)}
-                          </p>
+                          {item.freeQuantity && item.freeQuantity >= item.quantity ? (
+                            <p className='font-bold text-emerald-600 uppercase tracking-wide'>
+                              {t("cart.free") || "Free"}
+                            </p>
+                          ) : item.freeQuantity && item.freeQuantity > 0 ? (
+                            <p className='font-bold'>
+                              {currency}{(item.price * (item.quantity - item.freeQuantity)).toFixed(2)}
+                              <span className='ms-1 text-[10px] text-emerald-600 font-semibold'>
+                                ({item.freeQuantity} {t("cart.free") || "free"})
+                              </span>
+                            </p>
+                          ) : (
+                            <p className='font-bold'>
+                              {currency}{(item.price * item.quantity).toFixed(2)}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -388,14 +403,38 @@ export function CartPageModernTemplate({
 
                     {/* Line total */}
                     <div className='text-right'>
-                      {item.originalPrice != null && item.originalPrice > item.price && (
-                        <p className='text-xs text-muted-foreground line-through'>
-                          {currency}{(item.originalPrice * item.quantity).toFixed(2)}
-                        </p>
+                      {item.freeQuantity && item.freeQuantity > 0 ? (
+                        <>
+                          <p className='text-xs text-muted-foreground line-through'>
+                            {currency}{(item.price * item.quantity).toFixed(2)}
+                          </p>
+                          {item.freeQuantity >= item.quantity ? (
+                            <p className='font-bold text-emerald-600 uppercase tracking-wide'>
+                              {t("cart.free") || "Free"}
+                            </p>
+                          ) : (
+                            <>
+                              <p className='font-bold'>
+                                {currency}{(item.price * (item.quantity - item.freeQuantity)).toFixed(2)}
+                              </p>
+                              <p className='text-[10px] text-emerald-600 font-semibold'>
+                                {item.freeQuantity} {t("cart.free") || "free"}
+                              </p>
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {item.originalPrice != null && item.originalPrice > item.price && (
+                            <p className='text-xs text-muted-foreground line-through'>
+                              {currency}{(item.originalPrice * item.quantity).toFixed(2)}
+                            </p>
+                          )}
+                          <p className={`font-bold ${item.originalPrice != null && item.originalPrice > item.price ? "text-red-500" : ""}`}>
+                            {currency}{(item.price * item.quantity).toFixed(2)}
+                          </p>
+                        </>
                       )}
-                      <p className={`font-bold ${item.originalPrice != null && item.originalPrice > item.price ? "text-red-500" : ""}`}>
-                        {currency}{(item.price * item.quantity).toFixed(2)}
-                      </p>
                     </div>
 
                     {/* Remove */}
