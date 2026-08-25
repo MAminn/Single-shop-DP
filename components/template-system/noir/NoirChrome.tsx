@@ -40,12 +40,15 @@ function NoirAnnouncementBar({ text }: { text?: string }) {
     text || (isAr ? "شحن وإرجاع مجاني" : "Free shipping & returns");
 
   return (
-    <div className='w-full bg-[#E8112D] text-white'>
+    <div className='w-full bg-black text-white'>
       <p
         className={cn(
-          "text-center text-[10px] uppercase font-medium py-1.5 px-4",
+          // Reference: 10.5px label on a 19px-tall bar (10.5 + 2 x 4.25). The
+          // bar sets the frame's y origin, so rounding it to 18.5 shifted every
+          // box in the frame up by exactly 0.5px.
+          "px-4 py-[4.25px] text-center text-[10.5px] font-semibold uppercase leading-none",
           // Letter-spacing gated off for Arabic (rule 8)
-          isAr ? "" : "tracking-[0.28em]",
+          isAr ? "" : "tracking-[0.14em]",
           NOIR_DISPLAY_FONT_CLASSES,
         )}>
         {effectiveText}

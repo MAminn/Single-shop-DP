@@ -36,6 +36,11 @@ const HomepageContentSchema = z.object({
         }),
       )
       .nullish(),
+    // Optional hero overline + secondary CTA (Noir). Declared explicitly so
+    // z.object's default key-stripping does not drop them on updateContent.
+    eyebrow: z.string().nullish(),
+    secondaryCtaText: z.string().nullish(),
+    secondaryCtaLink: z.string().nullish(),
   }),
   brandStatement: z.object({
     enabled: z.boolean(),

@@ -87,7 +87,7 @@ export const NOIR_CARD_HOVER_GLOW =
 /** Small red over-line accent used above section headings. */
 export const NOIR_ACCENT_LINE = "w-10 h-0.5 bg-[#E8112D]";
 
-/** Condensed display font (Oswald) — variable defined in the scoped Noir CSS block. */
+/** Condensed display font (Antonio) — variable defined in the scoped Noir CSS block. */
 export const NOIR_DISPLAY_FONT_CLASSES =
   "[font-family:var(--noir-font-display)]";
 

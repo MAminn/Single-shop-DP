@@ -39,6 +39,15 @@ export interface HomepageHeroContent {
   mobileBackgroundImage?: string;
   /** Multiple hero carousel slides (takes priority over backgroundImage if non-empty) */
   heroSlides?: HeroSlideContent[];
+  /**
+   * Small overline label rendered above the hero title (e.g. "Solid perfume").
+   * Consumed by the Noir template; other landing templates ignore it.
+   */
+  eyebrow?: string;
+  /** Label for the secondary CTA shown beside the primary hero CTA. */
+  secondaryCtaText?: string;
+  /** Destination for the secondary hero CTA. */
+  secondaryCtaLink?: string;
 }
 
 /**
@@ -342,6 +351,9 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
     backgroundImage: undefined,
     mobileBackgroundImage: undefined,
     heroSlides: [],
+    eyebrow: "SOLID PERFUME",
+    secondaryCtaText: "TAKE THE QUIZ",
+    secondaryCtaLink: "/quiz",
   },
   brandStatement: {
     enabled: true,

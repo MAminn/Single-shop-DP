@@ -46,20 +46,29 @@ export function NoirTopExperience({
   const hasAtmosphere = Boolean(atmosphereImage);
 
   return (
-    <div className='px-3 md:px-8 pt-2 md:pt-4'>
+    <div className='px-3 md:px-4 pt-1'>
       <div
         className={cn(
           "relative mx-auto max-w-350",
           "rounded-2xl md:rounded-3xl border border-white/10 overflow-hidden",
           NOIR_FRAME_SHADOW_CLASSES,
-          // L0 base floor: solid #0a0a0a under the atmosphere image; when no
-          // hero image exists, keep the original gradient surface as fallback.
-          hasAtmosphere ? "bg-[#0a0a0a]" : NOIR_FRAME_SURFACE_CLASSES,
+          // L0 base floor: solid #0d0d0d under the atmosphere image. Sits one
+          // step above the page's pure black so the frame's rounded top edge
+          // stays legible against the canvas (the reference frame reads as a
+          // slightly lifted surface, not as page background). Below the navbar
+          // the atmosphere + scrim dominate, so this is only visible up top.
+          // When no hero image exists, keep the original gradient fallback.
+          hasAtmosphere ? "bg-[#0d0d0d]" : NOIR_FRAME_SURFACE_CLASSES,
         )}>
-        {/* L1 — atmosphere image: the CMS hero image, heavily blurred + dimmed
-            (scale-110 hides the blurred edges), supplying all the frame's
-            warmth/tint. Lazy + decorative so it never competes with the
-            hero's sharp LCP image. Only rendered when a hero image exists. */}
+        {/* L1 — CONTINUOUS ATMOSPHERE. One blurred image layer owned by the
+            frame, spanning the ENTIRE framed box: navbar band, hero, and the
+            Best Sellers section beneath it. Source is the same CMS hero image
+            the sharp hero artwork uses (getNoirHeroImage), so the continuation
+            below the hero panel is literally the same picture — that shared
+            source is what connects the top and bottom of the frame while the
+            hero keeps its own bordered panel, exactly as the reference does.
+            Lazy + decorative so it never competes with the hero's sharp LCP
+            image. */}
         {hasAtmosphere && (
           <div
             className='absolute inset-0 z-0 overflow-hidden pointer-events-none'
@@ -69,26 +78,22 @@ export function NoirTopExperience({
               alt=''
               aria-hidden='true'
               loading='lazy'
-              className='absolute inset-0 w-full h-full object-cover blur-[44px] scale-110 opacity-55 saturate-[1.15]'
+              className='absolute inset-0 w-full h-full object-cover blur-[44px] scale-110 opacity-65 saturate-[1.2]'
             />
           </div>
         )}
 
-        {/* L2 — dark scrim: keeps the atmosphere faint behind the navbar,
-            subtle behind the hero text, and barely-there behind the Best
-            Sellers cards. */}
+        {/* L2 — vertical scrim shaping how much atmosphere reads at each band.
+            Dark at 0% so the navbar sits flat and legible, opening up through
+            the hero, staying open across the lower section so the blurred
+            continuation is visible behind Best Sellers, then closing down at
+            the frame's bottom edge toward the reference's near-black. */}
         <div
           className='absolute inset-0 z-0 pointer-events-none'
           style={{
             background:
-              "linear-gradient(to bottom, rgba(10,10,10,0.25) 0%, rgba(10,10,10,0.45) 50%, rgba(10,10,10,0.70) 100%)",
+              "linear-gradient(to bottom, rgba(10,10,10,0.90) 0%, rgba(10,10,10,0.72) 8%, rgba(10,10,10,0.40) 52%, rgba(10,10,10,0.80) 100%)",
           }}
-          aria-hidden='true'
-        />
-
-        {/* L3 — top-edge hairline highlight (frame catchlight) */}
-        <div
-          className='absolute inset-x-0 top-0 h-px z-20 pointer-events-none bg-linear-to-r from-transparent via-white/25 to-transparent'
           aria-hidden='true'
         />
 
@@ -96,13 +101,35 @@ export function NoirTopExperience({
         <div className='relative z-10'>
           <NoirNavbar variant='embedded' />
 
-          <NoirHero hero={hero} onCtaClick={onCtaClick} embedded />
+          {/* Hero sits in its OWN rounded panel, inset inside the frame
+              (reference: ~13px each side) — the frame and the panel are two
+              nested containers, not one. Horizontal inset only: adding bottom
+              padding here would push the Best Sellers section down, so the gap
+              below the panel stays owned by NoirProductSection as before. */}
+          <div className='px-3 md:px-3.5'>
+            <NoirHero hero={hero} onCtaClick={onCtaClick} embedded />
+          </div>
 
-          <NoirBestSellers
-            content={bestSellersContent}
-            products={featuredProducts}
-            embedded
-          />
+          {/* GLASS SHELF — the lower section sits on a translucent, blurred
+              surface so the shared atmosphere behind it reads THROUGH glass:
+              backdrop-blur softens the already-blurred atmosphere further, the
+              faint white fill lifts the surface off the frame, and the top
+              hairline is the sheen where the glass edge catches light.
+
+              The shelf itself contributes no box metrics — no padding, no
+              margin, no border-width — so the row's own reference geometry
+              (gutter, gap, bottom flush) is owned entirely by
+              NoirBestSellers. */}
+          <div className='relative backdrop-blur-xl bg-white/2'>
+            <div
+              className='absolute inset-x-0 top-0 h-px z-10 pointer-events-none bg-linear-to-r from-transparent via-white/10 to-transparent'
+              aria-hidden='true'
+            />
+            <NoirBestSellers
+              content={bestSellersContent}
+              products={featuredProducts}
+            />
+          </div>
         </div>
       </div>
     </div>

@@ -550,7 +550,7 @@ html[data-noir-chrome="true"] {
   --noir-accent: #e8112d;
   --noir-card: #141414;
   --noir-border: rgba(255, 255, 255, 0.1);
-  --noir-font-display: "Oswald", "Poppins", sans-serif;
+  --noir-font-display: "Antonio", "Poppins", sans-serif;
   --noir-font-mono: "IBM Plex Mono", monospace;
   background-color: #000000;
   color: #ffffff;
