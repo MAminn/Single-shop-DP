@@ -874,9 +874,11 @@ export function CheckoutPageModernTemplate({
                   {renderItemsList()}
                   <div className='border-t' />
                   {renderTotalsBreakdown()}
-                  {renderCouponBlock()}
                 </div>
               )}
+
+              {/* Always visible on mobile, not tucked behind the collapse toggle */}
+              <div className='mt-4 pt-4 border-t'>{renderCouponBlock()}</div>
             </div>
 
             <div className='lg:hidden space-y-3'>

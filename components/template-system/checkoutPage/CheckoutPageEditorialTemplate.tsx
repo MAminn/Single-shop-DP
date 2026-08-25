@@ -632,9 +632,13 @@ export function CheckoutPageEditorialTemplate({
                       {renderItemsList()}
                       <div className='mt-4 h-px w-full bg-stone-200' />
                       {renderTotalsBreakdown()}
-                      {renderCouponBlock()}
                     </div>
                   )}
+
+                  {/* Always visible on mobile, not tucked behind the collapse toggle */}
+                  <div className='mt-4 pt-4 border-t border-stone-200'>
+                    {renderCouponBlock()}
+                  </div>
                 </div>
 
                 <div className='lg:hidden'>
