@@ -34,6 +34,13 @@ export interface CheckoutPageEditorialTemplateProps {
   currency?: string;
   paymentMethods?: PaymentMethodOption[];
   paymentMethodsLoading?: boolean;
+  onApplyCoupon?: (
+    code: string,
+  ) => Promise<{ success: boolean; message: string }> | { success: boolean; message: string };
+  appliedCoupon?: { code: string; discountLabel?: string } | null;
+  onRemoveCoupon?: () => void;
+  couponNotice?: string | null;
+  onDismissCouponNotice?: () => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -60,6 +67,11 @@ export function CheckoutPageEditorialTemplate({
   currency = "EGP",
   paymentMethods,
   paymentMethodsLoading = false,
+  onApplyCoupon,
+  appliedCoupon,
+  onRemoveCoupon,
+  couponNotice,
+  onDismissCouponNotice,
 }: CheckoutPageEditorialTemplateProps) {
   /* Internal form state — field names match the Modern template so
      pages/checkout/+Page.tsx's submit handler works for either template. */
@@ -92,6 +104,33 @@ export function CheckoutPageEditorialTemplate({
     "h-11 rounded-full border-stone-200 bg-white text-sm px-5 focus-visible:ring-2 focus-visible:ring-stone-900/15 focus-visible:ring-offset-0";
 
   const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [couponFeedback, setCouponFeedback] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
+
+  const handleApplyCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code || !onApplyCoupon || isApplyingCoupon) return;
+    setCouponFeedback(null);
+    onDismissCouponNotice?.();
+    setIsApplyingCoupon(true);
+    try {
+      const result = await onApplyCoupon(code);
+      setCouponFeedback(result);
+      if (result.success) setCouponCode("");
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponFeedback(null);
+    onDismissCouponNotice?.();
+    onRemoveCoupon?.();
+  };
   const cartQuantity = items.reduce((s, i) => s + i.quantity, 0);
   const originalCartTotal = items.reduce(
     (s, i) => s + (i.originalPrice ?? i.price) * i.quantity,
@@ -172,6 +211,77 @@ export function CheckoutPageEditorialTemplate({
       )}
     </div>
   );
+
+  // Shared coupon box — used by both the desktop card and the mobile expanded panel
+  const renderCouponBlock = () =>
+    onApplyCoupon ? (
+      <div className='mt-4 space-y-2'>
+        <div className='flex gap-2'>
+          <Input
+            placeholder='Enter coupon code'
+            value={couponCode}
+            onChange={(e) => {
+              setCouponCode(e.target.value);
+              if (couponFeedback) setCouponFeedback(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleApplyCoupon();
+            }}
+            disabled={isApplyingCoupon}
+            aria-invalid={couponFeedback?.success === false}
+            aria-describedby='checkout-promo-code-feedback'
+            className={cn(
+              inputCls,
+              "flex-1",
+              couponFeedback?.success === false &&
+                "border-red-300 focus-visible:ring-red-300",
+            )}
+          />
+          <Button
+            type='button'
+            variant='outline'
+            onClick={handleApplyCoupon}
+            disabled={isApplyingCoupon || !couponCode.trim()}
+            className='h-11 shrink-0 rounded-full px-5 text-xs tracking-wide border-stone-200'>
+            {isApplyingCoupon ? "Checking…" : "Apply"}
+          </Button>
+        </div>
+
+        <div id='checkout-promo-code-feedback' aria-live='polite'>
+          {couponNotice && (
+            <p className='text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-3 py-2'>
+              {couponNotice}
+            </p>
+          )}
+          {couponFeedback && (
+            <p
+              className={cn(
+                "text-xs",
+                couponFeedback.success ? "text-green-700" : "text-red-600",
+              )}>
+              {couponFeedback.message}
+            </p>
+          )}
+        </div>
+
+        {appliedCoupon && (
+          <div className='flex items-center justify-between gap-3 px-3 py-2 rounded-md bg-green-50 border border-green-100'>
+            <p className='text-xs text-green-700 min-w-0'>
+              <span className='font-semibold'>{appliedCoupon.code}</span>
+              {appliedCoupon.discountLabel ? ` — ${appliedCoupon.discountLabel}` : ""}
+            </p>
+            {onRemoveCoupon && (
+              <button
+                type='button'
+                onClick={handleRemoveCoupon}
+                className='text-[11px] font-medium uppercase tracking-wide text-green-700 hover:text-green-900 underline shrink-0'>
+                Remove
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    ) : null;
 
   return (
     <EditorialChrome>
@@ -449,6 +559,8 @@ export function CheckoutPageEditorialTemplate({
 
                   {renderTotalsBreakdown()}
 
+                  {renderCouponBlock()}
+
                   <div className='mt-4 h-px w-full bg-stone-200' />
 
                   <div className='mt-4 flex justify-between text-base font-semibold text-stone-900'>
@@ -520,6 +632,7 @@ export function CheckoutPageEditorialTemplate({
                       {renderItemsList()}
                       <div className='mt-4 h-px w-full bg-stone-200' />
                       {renderTotalsBreakdown()}
+                      {renderCouponBlock()}
                     </div>
                   )}
                 </div>

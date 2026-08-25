@@ -71,6 +71,10 @@ export default function CheckoutPage() {
     promoCode,
     clearCart,
     appliedOffers,
+    applyPromoCode,
+    removePromoCode,
+    promoCodeNotice,
+    clearPromoCodeNotice,
   } = useCart();
   const { getTemplateId } = useTemplate();
   const { trackEvent } = useTracking();
@@ -336,6 +340,12 @@ export default function CheckoutPage() {
     navigate("/cart");
   };
 
+  const handleApplyCoupon = async (
+    code: string,
+  ): Promise<{ success: boolean; message: string }> => {
+    return await applyPromoCode(code);
+  };
+
   // Get template component
   const templateId = getTemplateId("checkoutPage");
   const Template = getTemplateComponent(
@@ -357,6 +367,20 @@ export default function CheckoutPage() {
     currency: STORE_CURRENCY,
     paymentMethods,
     paymentMethodsLoading,
+    onApplyCoupon: handleApplyCoupon,
+    appliedCoupon: promoCode
+      ? {
+          code: promoCode.code,
+          discountLabel:
+            promoCode.discountLabel ??
+            (promoCode.discountType === "percentage"
+              ? `${promoCode.discountValue}% off`
+              : `${promoCode.discountValue.toFixed(2)} EGP off`),
+        }
+      : null,
+    onRemoveCoupon: removePromoCode,
+    couponNotice: promoCodeNotice,
+    onDismissCouponNotice: clearPromoCodeNotice,
   };
 
   return <Template.component {...templateProps} />;
