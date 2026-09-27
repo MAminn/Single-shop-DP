@@ -48,6 +48,7 @@ export default function OrderConfirmationPage() {
   const orderId = searchParams?.get("id") ?? "";
   const orderTotal = searchParams?.get("total") ?? "";
   const customerEmail = searchParams?.get("email") ?? "";
+  const isCod = searchParams?.get("method") === "cod";
   const paymentState = getPaymentState(searchParams?.get("payment") ?? null);
   const shortId = orderId ? orderId.substring(0, 8).toUpperCase() : "";
   const [verifiedPaymentStatus, setVerifiedPaymentStatus] = useState<
@@ -139,6 +140,12 @@ export default function OrderConfirmationPage() {
 
   useEffect(() => {
     if (!orderId || !isPaymentSuccess) return;
+    // COD orders are never verified at this point — anyone can land here by
+    // just submitting the checkout form. Firing Purchase here would let
+    // fake orders poison ad-platform optimization for free. This event is
+    // relayed later, server-side only, once an admin confirms the order
+    // (see backend/orders/update-order-status/deferred-cod-purchase.ts).
+    if (isCod) return;
     if (hasTrackedCompletion.current === orderId) return;
 
     // Persist guard: prevent re-firing on page refresh

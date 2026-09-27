@@ -30,6 +30,7 @@ import { createBostaDelivery, isBostaEnabled } from "#root/backend/orders/bosta/
 import { persistBostaSyncStatus } from "#root/backend/orders/bosta/sync-status";
 import { isFincartEnabled } from "#root/backend/orders/fincart/config";
 import { logOrderEvent } from "#root/backend/orders/order-log";
+import { isOrderRateLimited } from "#root/backend/orders/create-order/rate-limit";
 
 const OrderItemSchema = z.object({
   productId: z.string().uuid(),
@@ -366,8 +367,23 @@ async function autoSendOrderToBosta(orderData: CreatedOrder): Promise<void> {
 export const createOrder = (
   input: z.infer<typeof createOrderSchema>,
   session?: ClientSession,
+  ipAddress?: string,
 ) =>
   Effect.gen(function* ($) {
+    if (isOrderRateLimited(ipAddress)) {
+      return yield* $(
+        Effect.fail(
+          new ServerError({
+            tag: "RateLimited",
+            message: `Order rate limit exceeded for IP ${ipAddress}`,
+            statusCode: 429,
+            clientMessage:
+              "Too many orders placed too quickly. Please wait a few minutes and try again.",
+          }),
+        ),
+      );
+    }
+
     // We no longer require a session for ordering
     const result = yield* $(
       query(async (db) => {

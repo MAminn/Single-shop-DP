@@ -12,6 +12,7 @@ import type { ClientSession } from "#root/backend/auth/shared/entities";
 import { ServerError } from "#root/shared/error/server";
 import { eq, sql } from "drizzle-orm";
 import { enqueueReviewCheckForOrder } from "#root/backend/email-automations/triggers/order-delivered";
+import { sendDeferredCodPurchaseEvent } from "#root/backend/orders/update-order-status/deferred-cod-purchase";
 
 export const updateOrderStatusSchema = z.object({
   orderId: z.string().uuid(),
@@ -61,15 +62,27 @@ export const updateOrderStatus = (
       );
     }
 
+    let deferredCodPurchase: {
+      order: {
+        id: string;
+        customerName: string;
+        customerEmail: string;
+        customerPhone: string;
+        shippingCountry: string;
+        total: string;
+      };
+    } | null = null;
+
     return yield* $(
       query(async (db) => {
-        return await db.transaction(async (tx) => {
+        const updated = await db.transaction(async (tx) => {
           // Get current order data including old status
           const currentOrder = await tx
             .select({
               id: order.id,
               status: order.status,
               stockRestored: order.stockRestored,
+              paymentMethod: order.paymentMethod,
             })
             .from(order)
             .where(eq(order.id, orderId))
@@ -154,8 +167,34 @@ export const updateOrderStatus = (
             });
           }
 
+          // COD orders never fire the Purchase pixel on the confirmation
+          // page (nothing to verify at that point — see order-confirmation
+          // +Page.tsx). The first time one leaves "pending" is the point an
+          // admin has actually looked at it instead of cancelling it as
+          // spam, so that's when we relay the one-and-only Purchase signal.
+          if (
+            updateResult[0]!.paymentMethod === "cod" &&
+            status === "processing" &&
+            oldStatus === "pending"
+          ) {
+            deferredCodPurchase = { order: updateResult[0]! };
+          }
+
           return updateResult[0];
         });
+
+        if (deferredCodPurchase) {
+          sendDeferredCodPurchaseEvent(db, deferredCodPurchase.order).catch(
+            (err) => {
+              console.error(
+                `[Order ${orderId}] Failed to relay deferred COD purchase event:`,
+                err,
+              );
+            },
+          );
+        }
+
+        return updated;
       }),
     );
   });

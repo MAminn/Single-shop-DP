@@ -337,9 +337,13 @@ export default function CheckoutPage() {
       }
 
       // ─── COD flow: just navigate to confirmation ──────────────────────
+      // No payment gateway verifies a COD order, so we never fire the
+      // Purchase pixel here — `method=cod` tells the confirmation page to
+      // skip it. It's relayed later, server-side only, once an admin
+      // actually moves the order past "pending" (see deferred-cod-purchase.ts).
       clearCart();
       navigate(
-        `/order-confirmation?id=${orderId}&total=${orderTotal}&email=${email}`,
+        `/order-confirmation?id=${orderId}&total=${orderTotal}&email=${email}&method=cod`,
       );
     } catch (error) {
       console.error("[Checkout] Order submission failed:", error);
