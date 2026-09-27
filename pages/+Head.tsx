@@ -127,9 +127,21 @@ export default function HeadDefault() {
       />
 
       {/* Noir (Demo 5) fonts — usage stays scoped to html[data-noir-chrome] via --noir-font-* vars */}
+      {/* Loaded non-blocking: a plain rel=stylesheet to another origin holds
+          first paint until it downloads (measured: ~2s of FCP on slow 4G).
+          media=print keeps it off the render path; the inline script below
+          flips it to "all" once it has loaded, so the fonts apply exactly as
+          before — display=swap already means text never waits on them. */}
       <link
         rel='stylesheet'
+        media='print'
+        data-async-css
         href='https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap'
+      />
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `(function(){var l=document.querySelector('link[data-async-css]');if(!l)return;function on(){l.media='all'}if(l.sheet){on()}else{l.addEventListener('load',on)}})();`,
+        }}
       />
 
       {/* Meta tags for performance */}
