@@ -6,26 +6,31 @@
  * - Used as a design asset library
  */
 
-import DefaultHomeTemplate from "./templates/home/DefaultHomeTemplate";
-import ModernHomeTemplate from "./templates/home/ModernHomeTemplate";
-import DefaultMenTemplate from "./templates/men/DefaultMenTemplate";
-import DefaultWomenTemplate from "./templates/women/DefaultWomenTemplate";
-import DefaultBrandsTemplate from "./templates/brands/DefaultBrandsTemplate";
-import DefaultProductsTemplate from "./templates/products/DefaultProductsTemplate";
-import ModernMenTemplate from "./templates/men/ModernMenTemplate";
-import ModernWomenTemplate from "./templates/women/ModernWomenTemplate";
-import ModernBrandsTemplate from "./templates/brands/ModernBrandsTemplate";
-import ModernProductsTemplate from "./templates/products/ModernProductsTemplate";
-import DefaultCartTemplate from "./templates/cart/DefaultCartTemplate";
-import ModernCartTemplate from "./templates/cart/ModernCartTemplate";
-import DefaultCheckoutTemplate from "./templates/checkout/DefaultCheckoutTemplate";
-import ModernCheckoutTemplate from "./templates/checkout/ModernCheckoutTemplate";
-import DefaultProductTemplate from "./templates/product/DefaultProductTemplate";
-import ModernProductTemplate from "./templates/product/ModernProductTemplate";
+import { lazy } from "react";
 import DefaultProductCardTemplate from "./templates/productCard/DefaultProductCardTemplate";
 import ModernProductCardTemplate from "./templates/productCard/ModernProductCardTemplate";
 import DefaultSortingTemplate from "./templates/sorting/DefaultSortingTemplate";
 import ModernSortingTemplate from "./templates/sorting/ModernSortingTemplate";
+
+// Legacy v1 templates are only used by the admin preview screens. They are
+// lazy so the storefront (which only needs the productCard / sorting
+// templates above, via ProductCard and Sorting) does not download them.
+const DefaultHomeTemplate = lazy(() => import("./templates/home/DefaultHomeTemplate"));
+const ModernHomeTemplate = lazy(() => import("./templates/home/ModernHomeTemplate"));
+const DefaultMenTemplate = lazy(() => import("./templates/men/DefaultMenTemplate"));
+const DefaultWomenTemplate = lazy(() => import("./templates/women/DefaultWomenTemplate"));
+const DefaultBrandsTemplate = lazy(() => import("./templates/brands/DefaultBrandsTemplate"));
+const DefaultProductsTemplate = lazy(() => import("./templates/products/DefaultProductsTemplate"));
+const ModernMenTemplate = lazy(() => import("./templates/men/ModernMenTemplate"));
+const ModernWomenTemplate = lazy(() => import("./templates/women/ModernWomenTemplate"));
+const ModernBrandsTemplate = lazy(() => import("./templates/brands/ModernBrandsTemplate"));
+const ModernProductsTemplate = lazy(() => import("./templates/products/ModernProductsTemplate"));
+const DefaultCartTemplate = lazy(() => import("./templates/cart/DefaultCartTemplate"));
+const ModernCartTemplate = lazy(() => import("./templates/cart/ModernCartTemplate"));
+const DefaultCheckoutTemplate = lazy(() => import("./templates/checkout/DefaultCheckoutTemplate"));
+const ModernCheckoutTemplate = lazy(() => import("./templates/checkout/ModernCheckoutTemplate"));
+const DefaultProductTemplate = lazy(() => import("./templates/product/DefaultProductTemplate"));
+const ModernProductTemplate = lazy(() => import("./templates/product/ModernProductTemplate"));
 
 export type TemplateCategory =
   | "home"
