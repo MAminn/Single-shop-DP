@@ -17,6 +17,19 @@ const beaconBodySchema = z.object({
       referrer: z.string().optional(),
       sessionId: z.string(),
       userId: z.string().uuid().optional(),
+      userData: z
+        .object({
+          email: z.string().max(254).optional(),
+          phone: z.string().max(30).optional(),
+          firstName: z.string().max(100).optional(),
+          lastName: z.string().max(100).optional(),
+          city: z.string().max(100).optional(),
+          state: z.string().max(100).optional(),
+          zip: z.string().max(20).optional(),
+          country: z.string().max(60).optional(),
+          externalId: z.string().max(100).optional(),
+        })
+        .optional(),
       utmSource: z.string().optional(),
       utmMedium: z.string().optional(),
       utmCampaign: z.string().optional(),

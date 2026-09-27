@@ -9,6 +9,7 @@ import React, {
   type ReactNode,
 } from "react";
 import { v7 } from "uuid";
+import { usePageContext } from "vike-react/usePageContext";
 import {
   TrackingEventName,
   type TrackingEvent,
@@ -18,6 +19,10 @@ import {
 } from "#root/shared/types/pixel-tracking";
 import { trackingEventBus } from "#root/shared/utils/tracking-event-bus";
 import { getSessionId } from "#root/shared/utils/session-id";
+import {
+  getTrackingUserData,
+  saveCustomerIdentity,
+} from "#root/shared/utils/customer-identity";
 import { trpc } from "#root/shared/trpc/client";
 import { PixelAdapterRegistry } from "#root/frontend/pixel-adapters/registry";
 import { createAdapterForPlatform } from "#root/frontend/pixel-adapters/factory";
@@ -73,6 +78,8 @@ const TrackingContext = createContext<TrackingContextValue | undefined>(
 export function TrackingProvider({ children }: { children: ReactNode }) {
   const [sessionId, setSessionId] = useState<string>("");
   const utmRef = useRef<UtmParams>({});
+  const pageContext = usePageContext();
+  const lastPathnameRef = useRef<string | null>(null);
 
   // Initialize session ID and UTM params once
   useEffect(() => {
@@ -200,6 +207,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
         referrer:
           typeof document !== "undefined" ? document.referrer : undefined,
         sessionId: sessionId || getSessionId(),
+        userData: getTrackingUserData(),
         ...utmRef.current,
         ecommerce: data?.ecommerce,
         customProperties: data?.customProperties,
@@ -345,6 +353,44 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       engagementRef.current = null;
     };
   }, [trackEvent]);
+
+  // Reset per-page engagement state (scroll-depth sentinels, product
+  // impression tracking) on Vike client-side navigation. Without this the
+  // tracker created above lives for the whole SPA session: its scroll
+  // sentinels stay pinned to the first page's height and its product
+  // MutationObserver just keeps accumulating watched state across every
+  // page the visitor ever navigates to.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const pathname = pageContext.urlPathname;
+    if (lastPathnameRef.current === null) {
+      // Initial mount — the tracker-creation effect above already called
+      // start() for this first page.
+      lastPathnameRef.current = pathname;
+      return;
+    }
+    if (lastPathnameRef.current === pathname) return;
+    lastPathnameRef.current = pathname;
+    engagementRef.current?.onPageChange();
+  }, [pageContext.urlPathname]);
+
+  // Remember email / phone as soon as a visitor types them into any form
+  // (checkout, popup, newsletter, login) so later events can be matched.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const handleFocusOut = (e: FocusEvent) => {
+      const el = e.target;
+      if (!(el instanceof HTMLInputElement) || !el.value) return;
+      const hint = `${el.type} ${el.name} ${el.autocomplete}`.toLowerCase();
+      if (el.type === "email" || /email/.test(hint)) {
+        saveCustomerIdentity({ email: el.value });
+      } else if (el.type === "tel" || /phone|mobile/.test(hint)) {
+        saveCustomerIdentity({ phone: el.value });
+      }
+    };
+    document.addEventListener("focusout", handleFocusOut);
+    return () => document.removeEventListener("focusout", handleFocusOut);
+  }, []);
 
   const value = useMemo<TrackingContextValue>(
     () => ({ trackEvent, sessionId }),

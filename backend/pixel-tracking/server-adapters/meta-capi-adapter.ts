@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { normalizeUserData } from "#root/shared/utils/user-data";
 import {
   PixelPlatform,
   PLATFORM_EVENT_MAP,
@@ -22,6 +24,20 @@ const BASE_DELAY_MS = 500;
 /**
  * Build the Meta CAPI `user_data` object from server context.
  */
+function sha256(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+/** Derive fbc from an fbclid in the page URL when the _fbc cookie is missing. */
+function fbcFromUrl(event: EnrichedTrackingEvent): string | undefined {
+  try {
+    const fbclid = new URL(event.pageUrl).searchParams.get("fbclid");
+    return fbclid ? `fb.1.${event.timestamp}.${fbclid}` : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function buildUserData(event: EnrichedTrackingEvent): Record<string, unknown> {
   const userData: Record<string, unknown> = {};
   const ctx = event.serverContext;
@@ -29,7 +45,25 @@ function buildUserData(event: EnrichedTrackingEvent): Record<string, unknown> {
   if (ctx.ip) userData.client_ip_address = ctx.ip;
   if (ctx.userAgent) userData.client_user_agent = ctx.userAgent;
   if (ctx.fbp) userData.fbp = ctx.fbp;
-  if (ctx.fbc) userData.fbc = ctx.fbc;
+  const fbc = ctx.fbc ?? fbcFromUrl(event);
+  if (fbc) userData.fbc = fbc;
+
+  // Customer information parameters — normalized, then SHA-256 hashed.
+  const u = normalizeUserData(event.userData ?? {});
+  const hashed: Array<[string, string | undefined]> = [
+    ["em", u.email],
+    ["ph", u.phone],
+    ["fn", u.firstName],
+    ["ln", u.lastName],
+    ["ct", u.city],
+    ["st", u.state],
+    ["zp", u.zip],
+    ["country", u.country],
+    ["external_id", u.externalId],
+  ];
+  for (const [key, value] of hashed) {
+    if (value) userData[key] = [sha256(value)];
+  }
 
   return userData;
 }
@@ -53,8 +87,12 @@ function buildCustomData(
     customData.contents = ecom.items.map((item) => ({
       id: item.itemId,
       quantity: item.quantity ?? 1,
+      ...(item.price !== undefined ? { item_price: item.price } : {}),
     }));
     customData.content_type = "product";
+    const first = ecom.items[0];
+    if (first?.itemName) customData.content_name = first.itemName;
+    if (first?.category) customData.content_category = first.category;
     customData.num_items = ecom.items.reduce(
       (sum, item) => sum + (item.quantity ?? 1),
       0,

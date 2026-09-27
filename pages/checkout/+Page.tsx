@@ -19,6 +19,8 @@ import type {
 import { STORE_CURRENCY } from "#root/shared/config/branding";
 import { navigate } from "vike/client/router";
 import { useTracking } from "#root/frontend/contexts/TrackingContext";
+import { saveCustomerIdentity } from "#root/shared/utils/customer-identity";
+import { splitFullName } from "#root/shared/utils/user-data";
 import { TrackingEventName } from "#root/shared/types/pixel-tracking";
 import { getCartSessionToken } from "#root/lib/cart-session";
 
@@ -248,6 +250,18 @@ export default function CheckoutPage() {
       if (!result.success) {
         throw new Error(result.error || "Failed to create order");
       }
+
+      // Remember the customer so the Purchase event (and every later event)
+      // carries matchable identity data.
+      saveCustomerIdentity({
+        email: formValues.email,
+        phone: formValues.phoneNumber,
+        ...splitFullName(formValues.fullName),
+        city: formValues.city,
+        state: formValues.state,
+        zip: formValues.postalCode,
+        country: formValues.country || "Egypt",
+      });
 
       const orderId = result.result?.id ?? "";
       const orderTotal = result.result?.total ?? "";

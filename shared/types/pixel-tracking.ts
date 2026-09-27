@@ -72,6 +72,11 @@ export interface TrackingEvent {
   referrer?: string;
   sessionId: string;
   userId?: string;
+  /**
+   * Normalized (not hashed) customer identity for ad-platform matching.
+   * Hashed server-side before leaving for Meta CAPI; never persisted to DB.
+   */
+  userData?: import("#root/shared/utils/user-data").TrackingUserData;
   // UTM parameters
   utmSource?: string;
   utmMedium?: string;

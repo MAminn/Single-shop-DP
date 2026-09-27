@@ -64,6 +64,7 @@ export class EngagementTracker {
   private seenProductIds: Set<string> = new Set();
   private impressionBatch: Array<{ productId: string; productName?: string }> = [];
   private impressionBatchTimer: ReturnType<typeof setTimeout> | null = null;
+  private mutationScanTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     fireCallback: EngagementEventCallback,
@@ -138,6 +139,10 @@ export class EngagementTracker {
       // Flush remaining batch
       this.flushImpressionBatch();
       this.impressionBatchTimer = null;
+    }
+    if (this.mutationScanTimer) {
+      clearTimeout(this.mutationScanTimer);
+      this.mutationScanTimer = null;
     }
   }
 
@@ -261,16 +266,31 @@ export class EngagementTracker {
     // Observe existing product cards
     this.observeProductCards();
 
-    // Watch for dynamically added product cards via MutationObserver
+    // Watch for dynamically added product cards via MutationObserver.
+    // Debounced (trailing) — the page can mutate many times per second
+    // (animations, hover states, cart toasts, carousel ticks), and each
+    // observeProductCards() call re-scans the whole document, so coalesce
+    // bursts into a single scan instead of one full-document query per
+    // mutation.
     if (typeof MutationObserver !== "undefined") {
       const mutationObserver = new MutationObserver(() => {
-        this.observeProductCards();
+        if (this.mutationScanTimer) clearTimeout(this.mutationScanTimer);
+        this.mutationScanTimer = setTimeout(() => {
+          this.mutationScanTimer = null;
+          this.observeProductCards();
+        }, 200);
       });
       mutationObserver.observe(document.body, {
         childList: true,
         subtree: true,
       });
-      this.cleanupFns.push(() => mutationObserver.disconnect());
+      this.cleanupFns.push(() => {
+        mutationObserver.disconnect();
+        if (this.mutationScanTimer) {
+          clearTimeout(this.mutationScanTimer);
+          this.mutationScanTimer = null;
+        }
+      });
     }
   }
 

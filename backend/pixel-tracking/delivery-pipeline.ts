@@ -49,13 +49,18 @@ async function persistEvents(
 ): Promise<{ id: string; eventId: string }[]> {
   if (events.length === 0) return [];
 
-  const rows = events.map((event) => ({
+  const rows = events.map((event) => {
+    // Raw customer PII (email/phone/…) is only for relaying to ad platforms —
+    // never store it in the events table.
+    const { userData: _userData, ...storable } = event;
+    return { event, storable };
+  }).map(({ event, storable }) => ({
     id: v7(),
     sessionId: event.sessionId,
     userId: event.userId ?? null,
     eventName: event.eventName,
     eventId: event.eventId,
-    eventData: event as unknown as Record<string, unknown>,
+    eventData: storable as unknown as Record<string, unknown>,
     pageUrl: event.pageUrl,
     referrer: event.referrer ?? null,
     utmSource: event.utmSource ?? null,

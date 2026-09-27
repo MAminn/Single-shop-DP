@@ -120,7 +120,10 @@ describe("Meta CAPI Adapter — server-adapters/meta-capi-adapter.ts", () => {
       expect(customData.value).toBe(99.99);
       expect(customData.currency).toBe("USD");
       expect(customData.content_ids).toEqual(["SKU-001"]);
-      expect(customData.contents).toEqual([{ id: "SKU-001", quantity: 2 }]);
+      expect(customData.contents).toEqual([
+        { id: "SKU-001", quantity: 2, item_price: 99.99 },
+      ]);
+      expect(customData.content_name).toBe("Widget");
       expect(customData.content_type).toBe("product");
       expect(customData.num_items).toBe(2);
       expect(customData.order_id).toBe("T-001");

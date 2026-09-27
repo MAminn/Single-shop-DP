@@ -6,7 +6,27 @@ import {
   type TrackingEvent,
   type TrackingProductItem,
 } from "#root/shared/types/pixel-tracking";
+import { getTrackingUserData } from "#root/shared/utils/customer-identity";
+import type { TrackingUserData } from "#root/shared/utils/user-data";
 import type { PixelAdapter } from "./types";
+
+/** Map our normalized user data to fbq advanced-matching keys. */
+function toAdvancedMatching(u: TrackingUserData): Record<string, string> {
+  const map: Record<string, string | undefined> = {
+    em: u.email,
+    ph: u.phone,
+    fn: u.firstName,
+    ln: u.lastName,
+    ct: u.city,
+    st: u.state,
+    zp: u.zip,
+    country: u.country,
+    external_id: u.externalId,
+  };
+  return Object.fromEntries(
+    Object.entries(map).filter(([, v]) => !!v),
+  ) as Record<string, string>;
+}
 
 // ─── Window augmentation for fbq ────────────────────────────────────────────
 
@@ -69,6 +89,7 @@ export class MetaPixelAdapter implements PixelAdapter {
   private enabled = false;
   private pixelId = "";
   private scriptElement: HTMLScriptElement | null = null;
+  private lastMatchKey: string | null = null;
 
   initialize(config: PixelConfig): void {
     if (typeof window === "undefined") return;
@@ -78,10 +99,24 @@ export class MetaPixelAdapter implements PixelAdapter {
     // Inject Meta's fbevents.js snippet
     this.injectSdk();
 
-    // Init the pixel
-    window.fbq("init", this.pixelId);
+    // Init the pixel (with advanced matching data when we already know the
+    // visitor — Meta hashes these client-side)
+    this.applyAdvancedMatching(getTrackingUserData());
 
     this.loaded = true;
+  }
+
+  /** (Re)init the pixel with advanced matching when identity data changes. */
+  private applyAdvancedMatching(userData: TrackingUserData): void {
+    const am = toAdvancedMatching(userData);
+    const key = JSON.stringify(am);
+    if (this.lastMatchKey === key) return;
+    this.lastMatchKey = key;
+    if (Object.keys(am).length > 0) {
+      window.fbq("init", this.pixelId, am);
+    } else {
+      window.fbq("init", this.pixelId);
+    }
   }
 
   destroy(): void {
@@ -97,6 +132,8 @@ export class MetaPixelAdapter implements PixelAdapter {
   trackEvent(event: TrackingEvent): void {
     if (!this.loaded || !this.enabled) return;
     if (typeof window === "undefined" || typeof window.fbq !== "function") return;
+
+    if (event.userData) this.applyAdvancedMatching(event.userData);
 
     const metaEventName = META_EVENT_MAP[event.eventName as TrackingEventName];
     const params = buildMetaParams(event);

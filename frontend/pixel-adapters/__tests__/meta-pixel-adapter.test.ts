@@ -71,7 +71,12 @@ describe("MetaPixelAdapter", () => {
   it("should initialize and call fbq init", () => {
     adapter.initialize(makeConfig());
 
-    expect(mockFbq).toHaveBeenCalledWith("init", "123456789");
+    // Advanced matching: always carries external_id + default country
+    expect(mockFbq).toHaveBeenCalledWith(
+      "init",
+      "123456789",
+      expect.objectContaining({ country: "eg", external_id: expect.any(String) }),
+    );
     expect(adapter.isLoaded()).toBe(true);
     expect(adapter.isEnabled()).toBe(true);
   });
