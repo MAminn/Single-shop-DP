@@ -51,6 +51,13 @@ export default function HeadDefault() {
       ? `${siteOrigin}${pageContext.urlPathname}`
       : siteOrigin;
 
+  // Routes whose sorting template renders /assets/landing.webp as its hero
+  const landingHeroPreloadRoute =
+    typeof pageContext.urlPathname === "string" &&
+    /^\/(featured\/(products|men|women|brands)|categories\/[^/]+)\/?$/.test(
+      pageContext.urlPathname,
+    );
+
   // Dynamic document title from layout settings (client-side only)
   useEffect(() => {
     if (layoutSettings?.siteTitle) {
@@ -109,14 +116,18 @@ export default function HeadDefault() {
         crossOrigin='anonymous'
       />
 
-      {/* Preload critical assets - only preload landing.webp */}
-      <link
-        rel='preload'
-        href='/assets/landing.webp'
-        as='image'
-        type='image/webp'
-        fetchPriority='high'
-      />
+      {/* landing.webp is the hero of the sorting/listing pages only. Preloading
+          it on every page (incl. the homepage, which never renders it) put a
+          57KB high-priority download in front of the real LCP image. */}
+      {landingHeroPreloadRoute && (
+        <link
+          rel='preload'
+          href='/assets/landing.webp'
+          as='image'
+          type='image/webp'
+          fetchPriority='high'
+        />
+      )}
 
       {/* Font display optimization with React-friendly approach */}
       <link
