@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { createHash } from "node:crypto";
 import {
   buildUserData,
   buildCustomData,
@@ -101,6 +102,29 @@ describe("Meta CAPI Adapter — server-adapters/meta-capi-adapter.ts", () => {
       const userData = buildUserData(event);
       expect(userData).not.toHaveProperty("fbp");
       expect(userData).not.toHaveProperty("fbc");
+    });
+
+    it("falls back to sessionId as external_id when no userData is present", () => {
+      const event = makeEvent({
+        sessionId: "sess-fallback-1",
+        userData: undefined,
+        serverContext: makeServerContext({ ip: undefined, userAgent: undefined }),
+      });
+      const userData = buildUserData(event);
+      expect(userData.external_id).toEqual([
+        createHash("sha256").update("sess-fallback-1").digest("hex"),
+      ]);
+    });
+
+    it("prefers the client-supplied externalId over sessionId when both exist", () => {
+      const event = makeEvent({
+        sessionId: "sess-2",
+        userData: { externalId: "visitor-abc" },
+      });
+      const userData = buildUserData(event);
+      expect(userData.external_id).toEqual([
+        createHash("sha256").update("visitor-abc").digest("hex"),
+      ]);
     });
   });
 

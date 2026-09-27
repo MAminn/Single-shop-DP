@@ -59,7 +59,10 @@ function buildUserData(event: EnrichedTrackingEvent): Record<string, unknown> {
     ["st", u.state],
     ["zp", u.zip],
     ["country", u.country],
-    ["external_id", u.externalId],
+    // Fall back to the (always-present) session ID so an event never leaves
+    // with zero user_data keys, even if the client's identity payload was
+    // dropped or never set (e.g. very first event of a session).
+    ["external_id", u.externalId ?? event.sessionId],
   ];
   for (const [key, value] of hashed) {
     if (value) userData[key] = [sha256(value)];
