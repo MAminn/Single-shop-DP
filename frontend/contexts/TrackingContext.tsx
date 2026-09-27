@@ -19,6 +19,7 @@ import {
 } from "#root/shared/types/pixel-tracking";
 import { trackingEventBus } from "#root/shared/utils/tracking-event-bus";
 import { getSessionId } from "#root/shared/utils/session-id";
+import { ensureMetaCookies } from "#root/shared/utils/meta-cookies";
 import {
   getTrackingUserData,
   saveCustomerIdentity,
@@ -83,6 +84,8 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
 
   // Initialize session ID and UTM params once
   useEffect(() => {
+    // Must run before any event fires so _fbp/_fbc ride along on every beacon.
+    ensureMetaCookies();
     setSessionId(getSessionId());
     utmRef.current = parseUtmParams();
   }, []);
