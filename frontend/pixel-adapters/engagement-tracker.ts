@@ -175,11 +175,31 @@ export class EngagementTracker {
       sentinel.style.cssText =
         "position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;";
       sentinel.dataset.scrollDepth = String(threshold);
-      sentinel.style.top = `${threshold}%`;
-      // Place sentinels relative to the document body
       document.body.appendChild(sentinel);
       this.scrollSentinels.push(sentinel);
       this.scrollObserver.observe(sentinel);
+    }
+
+    // A percentage `top` on an absolutely-positioned element resolves against
+    // the first viewport, not the document — every sentinel would be on screen
+    // at load and all thresholds would fire without any scrolling. Position in
+    // px against the real document height, and keep it current as content
+    // loads or the window resizes.
+    this.positionScrollSentinels();
+    const reposition = () => this.positionScrollSentinels();
+    window.addEventListener("resize", reposition);
+    window.addEventListener("load", reposition);
+    this.cleanupFns.push(() => {
+      window.removeEventListener("resize", reposition);
+      window.removeEventListener("load", reposition);
+    });
+  }
+
+  private positionScrollSentinels(): void {
+    const height = document.documentElement?.scrollHeight ?? 0;
+    for (const sentinel of this.scrollSentinels) {
+      const threshold = Number(sentinel.dataset.scrollDepth);
+      sentinel.style.top = `${Math.floor((height * threshold) / 100)}px`;
     }
   }
 
@@ -278,6 +298,8 @@ export class EngagementTracker {
         this.mutationScanTimer = setTimeout(() => {
           this.mutationScanTimer = null;
           this.observeProductCards();
+          // Content changed — the document may have grown or shrunk.
+          this.positionScrollSentinels();
         }, 200);
       });
       mutationObserver.observe(document.body, {

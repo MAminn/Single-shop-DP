@@ -8,6 +8,11 @@ function setupDomMocks() {
     (globalThis as unknown as Record<string, unknown>).window = globalThis;
   }
 
+  // Scroll sentinels register resize/load listeners on window
+  const win = window as unknown as Record<string, unknown>;
+  win.addEventListener = vi.fn();
+  win.removeEventListener = vi.fn();
+
   // Mock document
   const listeners: Record<string, Array<(...args: unknown[]) => void>> = {};
   const elements: HTMLElement[] = [];
@@ -36,6 +41,7 @@ function setupDomMocks() {
     body: {
       appendChild: vi.fn(),
     },
+    documentElement: { scrollHeight: 5000 },
     querySelectorAll: vi.fn(() => []),
     _listeners: listeners,
     _elements: elements,

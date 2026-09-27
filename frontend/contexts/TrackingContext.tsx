@@ -296,7 +296,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     const manager = new CustomEventTriggerManager(
       (eventName, customProperties) => {
-        trackEvent(eventName, { customProperties });
+        trackEventRef.current(eventName, { customProperties });
       },
     );
     customTriggerRef.current = manager;
@@ -323,7 +323,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     const handleTestEvent = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail?.eventName) {
-        trackEvent(detail.eventName, {
+        trackEventRef.current(detail.eventName, {
           customProperties: detail.eventData ?? {},
         });
       }
@@ -336,14 +336,17 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       manager.destroyAll();
       customTriggerRef.current = null;
     };
-  }, [trackEvent]);
+  }, []);
 
   // ── Engagement Tracker Initialization ──────────────────────────────────
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    // Create once. Depending on `trackEvent` here would rebuild the tracker
+    // (and wipe its fired-threshold memory) when the session id populates,
+    // re-firing scroll_depth / time_on_page events.
     const tracker = new EngagementTracker((eventName, customProperties) => {
-      trackEvent(eventName, { customProperties });
+      trackEventRef.current(eventName, { customProperties });
     });
     engagementRef.current = tracker;
     tracker.start();
@@ -352,7 +355,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       tracker.destroy();
       engagementRef.current = null;
     };
-  }, [trackEvent]);
+  }, []);
 
   // Reset per-page engagement state (scroll-depth sentinels, product
   // impression tracking) on Vike client-side navigation. Without this the
