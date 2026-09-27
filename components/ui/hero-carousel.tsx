@@ -38,6 +38,24 @@ export function HeroCarousel({
 
   const total = slides.length;
 
+  // Only load the slide on screen, ones already shown, and the next slide
+  // (armed half an interval before it's needed, so it never competes with the
+  // first slide — the LCP image — on a slow connection).
+  const [visited, setVisited] = useState<Set<number>>(() => new Set([0]));
+  const [preloadNext, setPreloadNext] = useState(false);
+  const shouldLoad = (i: number) =>
+    i === current ||
+    visited.has(i) ||
+    (preloadNext && i === (current + 1) % total);
+
+  useEffect(() => {
+    setVisited((prev) => (prev.has(current) ? prev : new Set(prev).add(current)));
+    setPreloadNext(false);
+    if (total <= 1) return;
+    const t = setTimeout(() => setPreloadNext(true), interval / 2);
+    return () => clearTimeout(t);
+  }, [current, interval, total]);
+
   const goTo = useCallback(
     (index: number) => {
       setCurrent(((index % total) + total) % total);
@@ -99,32 +117,37 @@ export function HeroCarousel({
             const innerProps = slide.linkUrl ? { href: slide.linkUrl } : {};
             return (
               <Inner {...innerProps} className={cn('block w-full', !autoHeight && 'h-full')}>
-                {/* Desktop image */}
-                <img
-                  src={slide.imageUrl}
-                  alt={slide.alt || `Slide ${i + 1}`}
-                  className={cn(
-                    "w-full",
-                    autoHeight ? "" : "h-full",
-                    !autoHeight && (contain ? "object-contain" : "object-cover"),
-                    slide.mobileImageUrl ? "!hidden md:!block" : "",
-                  )}
-                  style={autoHeight ? { display: 'block', width: '100%', height: 'auto' } : undefined}
-                  loading={i === 0 ? "eager" : "lazy"}
-                />
-                {/* Mobile image (fallback to desktop) */}
-                {slide.mobileImageUrl && (
-                  <img
-                    src={slide.mobileImageUrl}
-                    alt={slide.alt || `Slide ${i + 1}`}
-                    className={cn(
-                      "w-full block md:!hidden",
-                      autoHeight ? "" : "h-full",
-                      !autoHeight && (contain ? "object-contain" : "object-cover"),
+                {/*
+                  One <picture> so the browser downloads ONLY the variant for
+                  its viewport (two <img>s with one CSS-hidden still download
+                  both). Slides that aren't current/next don't render an image
+                  at all: they sit absolute at opacity-0 *inside* the viewport,
+                  so loading="lazy" never defers them.
+                */}
+                {shouldLoad(i) ? (
+                  <picture>
+                    {slide.mobileImageUrl && (
+                      <source
+                        media='(max-width: 767px)'
+                        srcSet={slide.mobileImageUrl}
+                      />
                     )}
-                    style={autoHeight ? { display: 'block', width: '100%', height: 'auto' } : undefined}
-                    loading={i === 0 ? "eager" : "lazy"}
-                  />
+                    <img
+                      src={slide.imageUrl}
+                      alt={slide.alt || `Slide ${i + 1}`}
+                      className={cn(
+                        "w-full block",
+                        autoHeight ? "" : "h-full",
+                        !autoHeight && (contain ? "object-contain" : "object-cover"),
+                      )}
+                      style={autoHeight ? { display: 'block', width: '100%', height: 'auto' } : undefined}
+                      loading={i === 0 ? "eager" : "lazy"}
+                      fetchPriority={i === 0 ? "high" : "auto"}
+                      decoding={i === 0 ? "sync" : "async"}
+                    />
+                  </picture>
+                ) : (
+                  <div className='w-full h-full' />
                 )}
               </Inner>
             );

@@ -248,21 +248,65 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       trackEventRef.current(TrackingEventName.PAGE_VIEWED);
     };
 
-    // Fetch enabled client-side configs and bootstrap adapters
+    // The ad/analytics SDKs (fbevents, gtag, Clarity, …) are ~800ms of main-
+    // thread script time and ~600KB on the wire. Loading them at startup
+    // competes with the hero image and blocks input, so hold them until the
+    // visitor first interacts — or 4s after the page has loaded — and queue
+    // any events fired meanwhile so nothing is lost. The server-side (CAPI)
+    // copy of each event is sent immediately regardless.
+    let sdkReady = false;
+    const queued: TrackingEvent[] = [];
+    let pendingConfigs: PixelConfig[] | null = null;
+    let detachTriggers: (() => void) | null = null;
+
+    const bootAdapters = () => {
+      if (cancelled || sdkReady || !pendingConfigs) return;
+      detachTriggers?.();
+      detachTriggers = null;
+      for (const config of pendingConfigs) {
+        const adapter = createAdapterForPlatform(config.platform);
+        if (adapter) {
+          adapter.initialize(config);
+          registry.register(adapter);
+        }
+      }
+      sdkReady = true;
+      for (const event of queued.splice(0)) registry.broadcastEvent(event);
+    };
+
+    const scheduleBoot = () => {
+      const events = ["pointerdown", "keydown", "scroll", "touchstart"] as const;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const trigger = () => bootAdapters();
+      const arm = () => {
+        timer = setTimeout(trigger, 4000);
+      };
+      for (const name of events) {
+        window.addEventListener(name, trigger, { once: true, passive: true });
+      }
+      if (document.readyState === "complete") arm();
+      else window.addEventListener("load", arm, { once: true });
+      detachTriggers = () => {
+        if (timer) clearTimeout(timer);
+        for (const name of events) window.removeEventListener(name, trigger);
+        window.removeEventListener("load", arm);
+      };
+    };
+
+    // Subscribe before any event can fire so early events are queued, not lost
+    const unsubscribe = trackingEventBus.subscribe((event) => {
+      if (sdkReady) registry.broadcastEvent(event);
+      else queued.push(event);
+    });
+
+    // Fetch enabled client-side configs, then boot adapters lazily
     trpc.pixelTracking.config.listActive
       .query()
       .then((result) => {
         if (cancelled) return;
         if (result.success) {
-          const configs = result.result as PixelConfig[];
-
-          for (const config of configs) {
-            const adapter = createAdapterForPlatform(config.platform);
-            if (adapter) {
-              adapter.initialize(config);
-              registry.register(adapter);
-            }
-          }
+          pendingConfigs = result.result as PixelConfig[];
+          scheduleBoot();
         }
 
         fireInitialPageView();
@@ -280,13 +324,9 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
         }
       });
 
-    // Subscribe registry.broadcastEvent to the event bus
-    const unsubscribe = trackingEventBus.subscribe((event) => {
-      registry.broadcastEvent(event);
-    });
-
     return () => {
       cancelled = true;
+      detachTriggers?.();
       unsubscribe();
       registry.destroyAll();
       registryRef.current = null;
