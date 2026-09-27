@@ -158,8 +158,12 @@ async function sendToMetaCAPI(
   }
 
   const url = `https://graph.facebook.com/${META_API_VERSION}/${config.pixelId}/events`;
+  // Optional: set META_TEST_EVENT_CODE (from Events Manager → Test events) to
+  // route server events into the Test events tab. Leave unset in normal use.
+  const testEventCode = process.env.META_TEST_EVENT_CODE?.trim();
   const body = JSON.stringify({
     data: events.map(buildMetaEvent),
+    ...(testEventCode ? { test_event_code: testEventCode } : {}),
   });
 
   let lastError: string | undefined;
