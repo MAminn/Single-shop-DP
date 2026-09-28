@@ -507,6 +507,11 @@ export const order = pgTable("order", {
   }),
   /** True once the reserved stock for this order's items has been restored (on cancel/delete), so it's never restored twice */
   stockRestored: boolean("stock_restored").notNull().default(false),
+  /** Heuristic-flagged at checkout — see shared/utils/suspicious-order-detection.ts.
+   * Never blocks the order; just surfaces it for an admin to glance at
+   * before confirming. */
+  suspicious: boolean("suspicious").notNull().default(false),
+  suspiciousReasons: jsonb("suspicious_reasons").$type<string[]>(),
 });
 
 export const orderItem = pgTable("order_item", {
@@ -1414,6 +1419,13 @@ export const storeSettings = pgTable("store_settings", {
     .default([])
     .$type<Array<{ id: string; name: string; values: Array<{ value: string; priceModifier?: number }>; defaultValue?: string; strikethroughValues?: string[] }>>(),
   comingSoonMode: boolean("coming_soon_mode").notNull().default(false),
+  /** When on, pending COD orders auto-advance to "processing" (and relay
+   * their Purchase pixel) after CoD_AUTO_CONFIRM_DELAY_MS untouched — see
+   * backend/orders/cod-auto-confirm/worker.ts. Off by default: an admin
+   * must confirm each COD order manually before it counts as a sale. */
+  codAutoConfirmEnabled: boolean("cod_auto_confirm_enabled")
+    .notNull()
+    .default(false),
   productPageContent: jsonb("product_page_content")
     .default({})
     .$type<{

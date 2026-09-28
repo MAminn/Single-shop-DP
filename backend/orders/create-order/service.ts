@@ -31,6 +31,10 @@ import { persistBostaSyncStatus } from "#root/backend/orders/bosta/sync-status";
 import { isFincartEnabled } from "#root/backend/orders/fincart/config";
 import { logOrderEvent } from "#root/backend/orders/order-log";
 import { isOrderRateLimited } from "#root/backend/orders/create-order/rate-limit";
+import {
+  detectSuspiciousSignals,
+  isOrderSuspicious,
+} from "#root/shared/utils/suspicious-order-detection";
 
 const OrderItemSchema = z.object({
   productId: z.string().uuid(),
@@ -690,6 +694,12 @@ export const createOrder = (
           const isOnlinePayment =
             input.paymentMethod === "stripe" ||
             input.paymentMethod === "paymob";
+          const suspiciousReasons = detectSuspiciousSignals({
+            customerName: input.customerName,
+            customerEmail: input.customerEmail,
+            customerPhone: input.customerPhone,
+          });
+
           const insertData = {
             userId: userId,
             customerName: input.customerName,
@@ -714,6 +724,9 @@ export const createOrder = (
             notes: input.notes,
             paymentMethod: input.paymentMethod ?? "cod",
             paymentStatus: isOnlinePayment ? "pending" : "not_required",
+            suspicious: isOrderSuspicious(suspiciousReasons),
+            suspiciousReasons:
+              suspiciousReasons.length > 0 ? suspiciousReasons : null,
           };
 
           const definedInsertData = Object.fromEntries(

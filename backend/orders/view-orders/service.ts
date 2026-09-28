@@ -41,6 +41,9 @@ export const viewOrdersSchema = z.object({
    * anything already in that state, or a regression, immediately.
    */
   paymentIssueOnly: z.boolean().optional(),
+  /** Orders whose name/email/phone tripped the checkout gibberish heuristic
+   * — see shared/utils/suspicious-order-detection.ts. */
+  suspiciousOnly: z.boolean().optional(),
 });
 
 export const viewOrders = (
@@ -64,7 +67,8 @@ export const viewOrders = (
     // Admin can view all orders, users can view their own orders
     // No special authentication needed beyond session check
 
-    const { limit, offset, status, dateFrom, dateTo, paymentIssueOnly } = input;
+    const { limit, offset, status, dateFrom, dateTo, paymentIssueOnly, suspiciousOnly } =
+      input;
     const isAdmin = session.role === "admin" || session.role === "superadmin";
 
     return yield* $(
@@ -94,6 +98,10 @@ export const viewOrders = (
                 )!,
               )!,
             );
+          }
+
+          if (suspiciousOnly) {
+            conditions.push(eq(order.suspicious, true));
           }
 
           // Users (non-admins) only see their own orders
@@ -151,6 +159,8 @@ export const viewOrders = (
               notes: order.notes,
               paymentMethod: order.paymentMethod,
               paymentStatus: order.paymentStatus,
+              suspicious: order.suspicious,
+              suspiciousReasons: order.suspiciousReasons,
               createdAt: order.createdAt,
               updatedAt: order.updatedAt,
               bostaDeliveryId: order.bostaDeliveryId,

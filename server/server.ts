@@ -31,6 +31,7 @@ import { trackBeaconPlugin } from "#root/server/routes/track.js";
 import { envSyncApiPlugin } from "#root/backend/env-sync/api.js";
 import { bootstrapSuperadmin } from "#root/backend/auth/superadmin-bootstrap.js";
 import { startEmailAutomationWorker } from "#root/backend/email-automations/worker.js";
+import { startCodAutoConfirmWorker } from "#root/backend/orders/cod-auto-confirm/worker.js";
 import { emailUnsubscribeApiPlugin } from "#root/backend/email-subscription/api.js";
 
 // Normalize env vars — Coolify sometimes injects a leading '=' into values
@@ -477,6 +478,7 @@ async function main() {
   const fastify = await buildServer();
 
   await startEmailAutomationWorker();
+  startCodAutoConfirmWorker();
 
   fastify.listen({ port: port, host: "0.0.0.0" }, (err) => {
     console.info(`Server running at http://localhost:${port}`);

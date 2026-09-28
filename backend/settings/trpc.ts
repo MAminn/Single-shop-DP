@@ -19,6 +19,10 @@ import { getVariantPresets } from "./get-variant-presets";
 import { updateVariantPresets } from "./update-variant-presets";
 import { getComingSoonMode } from "./get-coming-soon";
 import { setComingSoonMode } from "./set-coming-soon";
+import {
+  getCodAutoConfirmEnabled,
+  setCodAutoConfirmEnabled,
+} from "./cod-auto-confirm";
 import { getProductPageContent } from "./get-product-page-content";
 import { updateProductPageContent } from "./update-product-page-content";
 import { linkTreeConfigSchema } from "#root/shared/types/link-tree";
@@ -125,6 +129,22 @@ export const settingsRouter = router({
     .mutation(async ({ ctx, input }) => {
       return runBackendEffect(
         setComingSoonMode(input.enabled).pipe(provideDatabase(ctx)),
+      ).then(serializeBackendEffectResult);
+    }),
+
+  /** Admin-only: whether pending COD orders auto-confirm after the delay */
+  getCodAutoConfirmEnabled: adminProcedure.query(async ({ ctx }) => {
+    return runBackendEffect(
+      getCodAutoConfirmEnabled().pipe(provideDatabase(ctx)),
+    ).then(serializeBackendEffectResult);
+  }),
+
+  /** Admin-only: toggle COD auto-confirm */
+  setCodAutoConfirmEnabled: adminProcedure
+    .input(z.object({ enabled: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      return runBackendEffect(
+        setCodAutoConfirmEnabled(input.enabled).pipe(provideDatabase(ctx)),
       ).then(serializeBackendEffectResult);
     }),
 

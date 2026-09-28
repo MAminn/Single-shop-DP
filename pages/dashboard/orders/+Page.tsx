@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "#root/components/ui/table";
 import { Button } from "#root/components/ui/button";
+import { Switch } from "#root/components/ui/switch";
 import { Input } from "#root/components/ui/input";
 import {
   Select,
@@ -127,6 +128,10 @@ interface Order {
   bostaSyncAttemptedAt?: Date | null;
   /** Online-payment order that reached (or is mid-flight to) Bosta without a confirmed "paid" status */
   hasPaymentIssue?: boolean;
+  /** Flagged at checkout by the name/email/phone gibberish heuristic — never
+   * blocks the order, just surfaces it for review. See suspiciousReasons. */
+  suspicious?: boolean;
+  suspiciousReasons?: string[] | null;
 }
 
 export default function Orders() {
@@ -136,6 +141,7 @@ export default function Orders() {
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [paymentIssueOnly, setPaymentIssueOnly] = useState(false);
+  const [suspiciousOnly, setSuspiciousOnly] = useState(false);
   const [dateFilter, setDateFilter] = useState<
     "all" | "today" | "yesterday" | "custom"
   >("all");
@@ -154,6 +160,9 @@ export default function Orders() {
   const [orderToDeleteId, setOrderToDeleteId] = useState<string | null>(null);
   const [bostaActionLoading, setBostaActionLoading] = useState<string | null>(null); // orderId being acted on
   const [bostaEnabled, setBostaEnabled] = useState(false);
+  const [codAutoConfirmEnabled, setCodAutoConfirmEnabled] = useState(false);
+  const [isTogglingCodAutoConfirm, setIsTogglingCodAutoConfirm] = useState(false);
+  const [isBulkConfirmingCod, setIsBulkConfirmingCod] = useState(false);
 
   const pageSize = 20;
   const [page, setPage] = useState(1);
@@ -178,11 +187,88 @@ export default function Orders() {
       .catch(() => setBostaEnabled(false));
   }, [isAdmin]);
 
+  useEffect(() => {
+    if (!isAdmin) return;
+    trpc.settings.getCodAutoConfirmEnabled
+      .query()
+      .then((res) => {
+        if (res.success) setCodAutoConfirmEnabled(!!res.result);
+      })
+      .catch(() => {});
+  }, [isAdmin]);
+
+  const handleToggleCodAutoConfirm = async (next: boolean) => {
+    setIsTogglingCodAutoConfirm(true);
+    try {
+      const result = await trpc.settings.setCodAutoConfirmEnabled.mutate({
+        enabled: next,
+      });
+      if (result.success) {
+        setCodAutoConfirmEnabled(!!result.result);
+        toast({
+          title: next
+            ? "Auto-confirm turned on"
+            : "Auto-confirm turned off",
+          description: next
+            ? "Pending COD orders untouched for 1 hour will auto-move to Processing."
+            : "COD orders now require manual confirmation, as before.",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Could not update the setting",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "Could not update the setting",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTogglingCodAutoConfirm(false);
+    }
+  };
+
+  const handleBulkConfirmCod = async () => {
+    setIsBulkConfirmingCod(true);
+    try {
+      const result = await trpc.order.bulkConfirmCod.mutate();
+      if (result.success) {
+        const count = (result.result as { confirmedCount: number })
+          .confirmedCount;
+        toast({
+          title: "Orders confirmed",
+          description:
+            count > 0
+              ? `${count} pending COD order${count === 1 ? "" : "s"} moved to Processing.`
+              : "No pending COD orders to confirm.",
+        });
+        fetchOrders();
+      } else {
+        toast({
+          title: "Error",
+          description: "Could not confirm pending COD orders",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "Could not confirm pending COD orders",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBulkConfirmingCod(false);
+    }
+  };
+
   // Reset to page 1 when filters change
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional
   useEffect(() => {
     setPage(1);
-  }, [statusFilter, searchQuery, dateFilter, customDate, paymentIssueOnly]);
+  }, [statusFilter, searchQuery, dateFilter, customDate, paymentIssueOnly, suspiciousOnly]);
 
   /** Resolves the active date filter into a [from, to) local-day range. */
   const getDateRange = useCallback((): { from?: string; to?: string } => {
@@ -230,6 +316,7 @@ export default function Orders() {
         dateFrom?: string;
         dateTo?: string;
         paymentIssueOnly?: boolean;
+        suspiciousOnly?: boolean;
       } = {
         limit: pageSize,
         offset: (page - 1) * pageSize,
@@ -248,6 +335,7 @@ export default function Orders() {
       if (from) params.dateFrom = from;
       if (to) params.dateTo = to;
       if (paymentIssueOnly) params.paymentIssueOnly = true;
+      if (suspiciousOnly) params.suspiciousOnly = true;
 
       const result = await trpc.order.view.query(params);
 
@@ -279,7 +367,7 @@ export default function Orders() {
     } finally {
       setIsLoading(false);
     }
-  }, [statusFilter, page, getDateRange, paymentIssueOnly]);
+  }, [statusFilter, page, getDateRange, paymentIssueOnly, suspiciousOnly]);
 
   useEffect(() => {
     fetchOrders();
@@ -696,8 +784,55 @@ export default function Orders() {
                   <AlertTriangle className='h-3.5 w-3.5' />
                   Payment Issues
                 </Button>
+                <Button
+                  type='button'
+                  size='sm'
+                  variant={suspiciousOnly ? "destructive" : "outline"}
+                  className='h-9 gap-1.5'
+                  title='Orders whose name/email/phone tripped the checkout gibberish heuristic — worth a glance before confirming'
+                  onClick={() => setSuspiciousOnly((v) => !v)}>
+                  <AlertTriangle className='h-3.5 w-3.5' />
+                  Suspicious
+                </Button>
+                {isAdmin && (
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant='outline'
+                    className='h-9 gap-1.5'
+                    disabled={isBulkConfirmingCod}
+                    title='Move every pending COD order to Processing and relay its Purchase event'
+                    onClick={handleBulkConfirmCod}>
+                    {isBulkConfirmingCod ? (
+                      <Loader2 className='h-3.5 w-3.5 animate-spin' />
+                    ) : null}
+                    Confirm all pending COD
+                  </Button>
+                )}
               </div>
             </div>
+            {isAdmin && (
+              <div className='flex items-center gap-2 pt-2'>
+                <Switch
+                  id='cod-auto-confirm'
+                  checked={codAutoConfirmEnabled}
+                  disabled={isTogglingCodAutoConfirm}
+                  onCheckedChange={handleToggleCodAutoConfirm}
+                />
+                <label
+                  htmlFor='cod-auto-confirm'
+                  className='text-sm text-muted-foreground cursor-pointer'>
+                  Auto-confirm COD orders left pending for over an hour
+                </label>
+              </div>
+            )}
+            {suspiciousOnly && (
+              <p className='text-sm text-muted-foreground pt-2'>
+                Showing orders flagged by the checkout gibberish heuristic —{" "}
+                <span className='font-semibold text-foreground'>{total}</span>{" "}
+                found. This never blocked the order — just worth a glance.
+              </p>
+            )}
             {paymentIssueOnly && (
               <p className='text-sm text-muted-foreground pt-2'>
                 Showing online-payment orders sent to Bosta (or mid-send)
@@ -771,7 +906,7 @@ export default function Orders() {
                       {filteredOrders.map((order) => (
                         <TableRow
                           key={order.id}
-                          className={`hover:bg-muted/50 ${order.hasPaymentIssue ? "bg-red-50/60" : ""}`}>
+                          className={`hover:bg-muted/50 ${order.hasPaymentIssue ? "bg-red-50/60" : order.suspicious ? "bg-amber-50/60" : ""}`}>
                           <TableCell className='font-mono text-xs py-2'>
                             <div className='flex items-center gap-1.5'>
                               {order.hasPaymentIssue && (
@@ -787,7 +922,21 @@ export default function Orders() {
                             {formatDate(order.createdAt)}
                           </TableCell>
                           <TableCell className='py-2'>
-                            {order.customerName}
+                            <div className='flex items-center gap-1.5'>
+                              {order.suspicious && (
+                                <span
+                                  title={
+                                    order.suspiciousReasons?.join("; ") ??
+                                    "Flagged by the checkout gibberish heuristic"
+                                  }>
+                                  <AlertTriangle
+                                    className='h-3.5 w-3.5 text-amber-600 shrink-0'
+                                    aria-label='Suspicious'
+                                  />
+                                </span>
+                              )}
+                              {order.customerName}
+                            </div>
                           </TableCell>
                           <TableCell className='py-2'>
                             {renderItemThumbStack(order.items)}
@@ -859,7 +1008,7 @@ export default function Orders() {
                   {filteredOrders.map((order) => (
                     <div
                       key={order.id}
-                      className={`rounded-lg border bg-card p-4 shadow-sm ${order.hasPaymentIssue ? "bg-red-50/60 border-red-200" : ""}`}>
+                      className={`rounded-lg border bg-card p-4 shadow-sm ${order.hasPaymentIssue ? "bg-red-50/60 border-red-200" : order.suspicious ? "bg-amber-50/60 border-amber-200" : ""}`}>
                       <div className='flex items-center justify-between'>
                         <span className='font-mono text-xs text-muted-foreground flex items-center gap-1.5'>
                           {order.hasPaymentIssue && (
@@ -874,7 +1023,19 @@ export default function Orders() {
                           {formatRelativeDate(order.createdAt)}
                         </span>
                       </div>
-                      <div className='mt-2 font-medium'>
+                      <div className='mt-2 font-medium flex items-center gap-1.5'>
+                        {order.suspicious && (
+                          <span
+                            title={
+                              order.suspiciousReasons?.join("; ") ??
+                              "Flagged by the checkout gibberish heuristic"
+                            }>
+                            <AlertTriangle
+                              className='h-3.5 w-3.5 text-amber-600 shrink-0'
+                              aria-label='Suspicious'
+                            />
+                          </span>
+                        )}
                         {order.customerName}
                       </div>
                       <div className='mt-1 text-sm text-muted-foreground'>
@@ -982,6 +1143,18 @@ export default function Orders() {
                         {selectedOrder.paymentStatus}
                       </span>
                       . Check the Activity Log below for how this happened.
+                    </p>
+                  </div>
+                )}
+                {selectedOrder.suspicious && (
+                  <div className='flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800'>
+                    <AlertTriangle className='h-4 w-4 mt-0.5 shrink-0' />
+                    <p>
+                      This order's name/email/phone tripped the checkout
+                      gibberish heuristic — worth a glance before confirming,
+                      but not a guaranteed fake:
+                      <br />
+                      {selectedOrder.suspiciousReasons?.join("; ")}
                     </p>
                   </div>
                 )}
@@ -1415,6 +1588,18 @@ export default function Orders() {
                           {selectedOrder.paymentStatus}
                         </span>
                         . Check the Activity Log below.
+                      </p>
+                    </div>
+                  )}
+                  {selectedOrder.suspicious && (
+                    <div className='flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800'>
+                      <AlertTriangle className='h-4 w-4 mt-0.5 shrink-0' />
+                      <p>
+                        This order's name/email/phone tripped the checkout
+                        gibberish heuristic — worth a glance, not a guaranteed
+                        fake:
+                        <br />
+                        {selectedOrder.suspiciousReasons?.join("; ")}
                       </p>
                     </div>
                   )}
