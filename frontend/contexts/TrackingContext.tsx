@@ -254,6 +254,17 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     // visitor first interacts — or 4s after the page has loaded — and queue
     // any events fired meanwhile so nothing is lost. The server-side (CAPI)
     // copy of each event is sent immediately regardless.
+    //
+    // Exception: /checkout and /order-confirmation boot immediately, no
+    // defer. Stripe/Paymob redirect back to /order-confirmation as a hard
+    // browser navigation (this provider remounts fresh), and that page fires
+    // Purchase right on mount — if the visitor leaves before the 4s timer or
+    // an interaction, the queued Purchase is dropped for good. This is the
+    // one event set we can't afford to lose to a speed optimization.
+    const criticalRoutes = ["/checkout", "/order-confirmation"];
+    const isCriticalRoute = criticalRoutes.some((route) =>
+      pageContext.urlPathname?.startsWith(route),
+    );
     let sdkReady = false;
     const queued: TrackingEvent[] = [];
     let pendingConfigs: PixelConfig[] | null = null;
@@ -306,7 +317,11 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         if (result.success) {
           pendingConfigs = result.result as PixelConfig[];
-          scheduleBoot();
+          if (isCriticalRoute) {
+            bootAdapters();
+          } else {
+            scheduleBoot();
+          }
         }
 
         fireInitialPageView();
