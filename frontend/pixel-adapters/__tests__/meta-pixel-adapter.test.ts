@@ -191,37 +191,6 @@ describe("MetaPixelAdapter", () => {
     expect(mockFbq).not.toHaveBeenCalled();
   });
 
-  it("should defer tracking until the real fbevents.js script has attached", () => {
-    // Regression test: fbq's own stub queues calls made before the real
-    // script attaches (callMethod unset) and processes them as a batch —
-    // live-tested, that batch path silently dropped standard conversion
-    // events (AddToCart, Purchase) carrying currency data. Defer on our
-    // side instead of trusting fbq's stub queue to handle it correctly.
-    adapter.initialize(makeConfig());
-    mockFbq.mockClear();
-    (mockFbq as unknown as { callMethod: unknown }).callMethod = undefined;
-
-    adapter.trackEvent(makeEvent({ eventName: TrackingEventName.PRODUCT_ADDED_TO_CART }));
-
-    // Not sent yet — script hasn't "attached"
-    expect(mockFbq).not.toHaveBeenCalled();
-
-    // Script attaches
-    (mockFbq as unknown as { callMethod: unknown }).callMethod = vi.fn();
-
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        expect(mockFbq).toHaveBeenCalledWith(
-          "track",
-          "AddToCart",
-          expect.anything(),
-          expect.anything(),
-        );
-        resolve();
-      }, 150);
-    });
-  });
-
   it("should use 'set userData' (not a second 'init') when tracking an event with new identity data", () => {
     // Regression test: repeatedly calling fbq('init', pixelId, ...) for an
     // already-initialized pixel triggers Meta's "Duplicate Pixel ID"

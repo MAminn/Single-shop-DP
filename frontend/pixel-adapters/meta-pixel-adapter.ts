@@ -151,61 +151,20 @@ export class MetaPixelAdapter implements PixelAdapter {
     if (!this.loaded || !this.enabled) return;
     if (typeof window === "undefined" || typeof window.fbq !== "function") return;
 
-    const send = () => {
-      if (event.userData) this.applyAdvancedMatching(event.userData);
+    if (event.userData) this.applyAdvancedMatching(event.userData);
 
-      const metaEventName = META_EVENT_MAP[event.eventName as TrackingEventName];
-      const params = buildMetaParams(event);
+    const metaEventName = META_EVENT_MAP[event.eventName as TrackingEventName];
+    const params = buildMetaParams(event);
 
-      // Attach eventId for server-side deduplication (Conversions API Phase 3)
-      const options: Record<string, unknown> = { eventID: event.eventId };
+    // Attach eventId for server-side deduplication (Conversions API Phase 3)
+    const options: Record<string, unknown> = { eventID: event.eventId };
 
-      if (metaEventName) {
-        // Standard Meta event
-        window.fbq("track", metaEventName, params, options);
-      } else {
-        // Custom event — use trackCustom
-        window.fbq("trackCustom", event.eventName, params, options);
-      }
-    };
-
-    // fbq's own stub queues calls made before fbevents.js finishes loading
-    // (fbq.callMethod is unset until then) and processes them as a batch
-    // once it attaches. Live-tested: standard conversion events (AddToCart,
-    // Purchase) with currency data sent through that queued-batch path can
-    // silently fail to reach the network — Meta logs an "Invalid parameter
-    // format for currency" diagnostic and the event never fires — while the
-    // exact same event sent after the real script has attached works fine.
-    // Deferring on our own side instead of relying on fbq's stub sidesteps
-    // that entirely.
-    // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
-    console.log("[PIXEL DEBUG] trackEvent", {
-      eventName: event.eventName,
-      hasCallMethod: !!window.fbq.callMethod,
-      queueLength: window.fbq.queue?.length,
-    });
-
-    if (window.fbq.callMethod) {
-      send();
-      // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
-      console.log("[PIXEL DEBUG] sent immediately", event.eventName);
+    if (metaEventName) {
+      // Standard Meta event
+      window.fbq("track", metaEventName, params, options);
     } else {
-      let attempts = 0;
-      const poll = () => {
-        if (!this.loaded) return; // destroyed while waiting
-        attempts++;
-        if (window.fbq.callMethod) {
-          send();
-          // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
-          console.log("[PIXEL DEBUG] sent after polling", event.eventName, "attempts:", attempts);
-        } else if (attempts > 100) {
-          // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
-          console.error("[PIXEL DEBUG] gave up polling for callMethod", event.eventName);
-        } else {
-          setTimeout(poll, 100);
-        }
-      };
-      poll();
+      // Custom event — use trackCustom
+      window.fbq("trackCustom", event.eventName, params, options);
     }
   }
 
