@@ -151,7 +151,14 @@ export class MetaPixelAdapter implements PixelAdapter {
     if (!this.loaded || !this.enabled) return;
     if (typeof window === "undefined" || typeof window.fbq !== "function") return;
 
-    if (event.userData) this.applyAdvancedMatching(event.userData);
+    if (event.userData) {
+      try {
+        this.applyAdvancedMatching(event.userData);
+      } catch (err) {
+        // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
+        console.error("[PIXEL DEBUG] applyAdvancedMatching threw", err);
+      }
+    }
 
     const metaEventName = META_EVENT_MAP[event.eventName as TrackingEventName];
     const params = buildMetaParams(event);
@@ -159,12 +166,26 @@ export class MetaPixelAdapter implements PixelAdapter {
     // Attach eventId for server-side deduplication (Conversions API Phase 3)
     const options: Record<string, unknown> = { eventID: event.eventId };
 
-    if (metaEventName) {
-      // Standard Meta event
-      window.fbq("track", metaEventName, params, options);
-    } else {
-      // Custom event — use trackCustom
-      window.fbq("trackCustom", event.eventName, params, options);
+    // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
+    console.log("[PIXEL DEBUG] calling fbq", {
+      command: metaEventName ? "track" : "trackCustom",
+      metaEventName: metaEventName ?? event.eventName,
+      params,
+    });
+
+    try {
+      if (metaEventName) {
+        // Standard Meta event
+        window.fbq("track", metaEventName, params, options);
+      } else {
+        // Custom event — use trackCustom
+        window.fbq("trackCustom", event.eventName, params, options);
+      }
+      // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
+      console.log("[PIXEL DEBUG] fbq call returned normally, fbq.queue length:", window.fbq.queue?.length);
+    } catch (err) {
+      // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
+      console.error("[PIXEL DEBUG] fbq() call THREW", err);
     }
   }
 
