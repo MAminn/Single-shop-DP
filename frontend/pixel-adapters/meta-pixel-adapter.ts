@@ -178,13 +178,32 @@ export class MetaPixelAdapter implements PixelAdapter {
     // exact same event sent after the real script has attached works fine.
     // Deferring on our own side instead of relying on fbq's stub sidesteps
     // that entirely.
+    // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
+    console.log("[PIXEL DEBUG] trackEvent", {
+      eventName: event.eventName,
+      hasCallMethod: !!window.fbq.callMethod,
+      queueLength: window.fbq.queue?.length,
+    });
+
     if (window.fbq.callMethod) {
       send();
+      // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
+      console.log("[PIXEL DEBUG] sent immediately", event.eventName);
     } else {
+      let attempts = 0;
       const poll = () => {
         if (!this.loaded) return; // destroyed while waiting
-        if (window.fbq.callMethod) send();
-        else setTimeout(poll, 100);
+        attempts++;
+        if (window.fbq.callMethod) {
+          send();
+          // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
+          console.log("[PIXEL DEBUG] sent after polling", event.eventName, "attempts:", attempts);
+        } else if (attempts > 100) {
+          // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
+          console.error("[PIXEL DEBUG] gave up polling for callMethod", event.eventName);
+        } else {
+          setTimeout(poll, 100);
+        }
       };
       poll();
     }
