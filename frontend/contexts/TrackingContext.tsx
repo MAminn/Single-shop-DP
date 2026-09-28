@@ -266,6 +266,10 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       pageContext.urlPathname?.startsWith(route),
     );
     let sdkReady = false;
+    // True once the visitor has interacted (or the 4s fallback elapsed),
+    // independent of whether the config fetch has resolved yet — so a fast
+    // early interaction is never silently missed while we wait on the network.
+    let readyToBoot = false;
     const queued: TrackingEvent[] = [];
     let pendingConfigs: PixelConfig[] | null = null;
     let detachTriggers: (() => void) | null = null;
@@ -285,10 +289,22 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       for (const event of queued.splice(0)) registry.broadcastEvent(event);
     };
 
-    const scheduleBoot = () => {
+    // Arm interaction/timer triggers immediately at mount — do NOT wait for
+    // the config fetch first. Previously these listeners were only attached
+    // inside the config .then(), so any interaction before that fetch
+    // resolved (a fast "Add to Cart" click, say) went completely unobserved:
+    // nothing was listening yet, and once config did arrive, fresh listeners
+    // started the wait over from zero, needing a *second* interaction (or the
+    // full 4s again) before anything could flush. Arming up front means the
+    // first interaction is captured no matter how the config fetch and the
+    // click race, and bootAdapters() fires the instant both are ready.
+    const armTriggers = () => {
       const events = ["pointerdown", "keydown", "scroll", "touchstart"] as const;
       let timer: ReturnType<typeof setTimeout> | undefined;
-      const trigger = () => bootAdapters();
+      const trigger = () => {
+        readyToBoot = true;
+        bootAdapters();
+      };
       const arm = () => {
         timer = setTimeout(trigger, 4000);
       };
@@ -310,6 +326,8 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       else queued.push(event);
     });
 
+    if (!isCriticalRoute) armTriggers();
+
     // Fetch enabled client-side configs, then boot adapters lazily
     trpc.pixelTracking.config.listActive
       .query()
@@ -317,11 +335,11 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         if (result.success) {
           pendingConfigs = result.result as PixelConfig[];
-          if (isCriticalRoute) {
+          if (isCriticalRoute || readyToBoot) {
             bootAdapters();
-          } else {
-            scheduleBoot();
           }
+          // Otherwise armTriggers() (called above, at mount) is already
+          // listening — boot happens on the next interaction or its timer.
         }
 
         fireInitialPageView();
