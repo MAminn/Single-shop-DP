@@ -90,6 +90,7 @@ export class MetaPixelAdapter implements PixelAdapter {
   private pixelId = "";
   private scriptElement: HTMLScriptElement | null = null;
   private lastMatchKey: string | null = null;
+  private hasInitialized = false;
 
   initialize(config: PixelConfig): void {
     if (typeof window === "undefined") return;
@@ -106,16 +107,33 @@ export class MetaPixelAdapter implements PixelAdapter {
     this.loaded = true;
   }
 
-  /** (Re)init the pixel with advanced matching when identity data changes. */
+  /**
+   * Set advanced matching data, initializing the pixel on the first call
+   * only. Re-calling `fbq('init', pixelId, ...)` for an already-initialized
+   * pixel ID triggers Meta's "Duplicate Pixel ID" warning and was silently
+   * suppressing standard conversion events (AddToCart, InitiateCheckout,
+   * Purchase) that followed it — confirmed via Meta's own diagnostics.
+   * Meta's documented way to update matching data afterward is
+   * `fbq('set', 'userData', ...)`, which doesn't re-initialize anything.
+   */
   private applyAdvancedMatching(userData: TrackingUserData): void {
     const am = toAdvancedMatching(userData);
     const key = JSON.stringify(am);
     if (this.lastMatchKey === key) return;
     this.lastMatchKey = key;
+
+    if (!this.hasInitialized) {
+      this.hasInitialized = true;
+      if (Object.keys(am).length > 0) {
+        window.fbq("init", this.pixelId, am);
+      } else {
+        window.fbq("init", this.pixelId);
+      }
+      return;
+    }
+
     if (Object.keys(am).length > 0) {
-      window.fbq("init", this.pixelId, am);
-    } else {
-      window.fbq("init", this.pixelId);
+      window.fbq("set", "userData", am);
     }
   }
 
@@ -130,13 +148,6 @@ export class MetaPixelAdapter implements PixelAdapter {
   }
 
   trackEvent(event: TrackingEvent): void {
-    // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
-    console.log("[PIXEL DEBUG] MetaPixelAdapter.trackEvent called", {
-      eventName: event.eventName,
-      loaded: this.loaded,
-      enabled: this.enabled,
-      hasFbq: typeof window !== "undefined" && typeof window.fbq === "function",
-    });
     if (!this.loaded || !this.enabled) return;
     if (typeof window === "undefined" || typeof window.fbq !== "function") return;
 
@@ -147,14 +158,6 @@ export class MetaPixelAdapter implements PixelAdapter {
 
     // Attach eventId for server-side deduplication (Conversions API Phase 3)
     const options: Record<string, unknown> = { eventID: event.eventId };
-
-    // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
-    console.log("[PIXEL DEBUG] About to call fbq", {
-      command: metaEventName ? "track" : "trackCustom",
-      metaEventName: metaEventName ?? event.eventName,
-      params,
-      options,
-    });
 
     if (metaEventName) {
       // Standard Meta event

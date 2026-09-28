@@ -187,6 +187,43 @@ describe("MetaPixelAdapter", () => {
     expect(mockFbq).not.toHaveBeenCalled();
   });
 
+  it("should use 'set userData' (not a second 'init') when tracking an event with new identity data", () => {
+    // Regression test: repeatedly calling fbq('init', pixelId, ...) for an
+    // already-initialized pixel triggers Meta's "Duplicate Pixel ID"
+    // warning and was silently suppressing standard conversion events
+    // (AddToCart, Purchase) that followed it in production.
+    adapter.initialize(makeConfig());
+    mockFbq.mockClear();
+
+    adapter.trackEvent(
+      makeEvent({
+        eventName: TrackingEventName.PRODUCT_ADDED_TO_CART,
+        userData: { email: "shopper@example.com" },
+      }),
+    );
+
+    const initCalls = mockFbq.mock.calls.filter((c) => c[0] === "init");
+    expect(initCalls).toHaveLength(0);
+
+    expect(mockFbq).toHaveBeenCalledWith(
+      "set",
+      "userData",
+      expect.objectContaining({ em: "shopper@example.com" }),
+    );
+  });
+
+  it("should not re-apply 'set userData' when identity data is unchanged", () => {
+    adapter.initialize(makeConfig());
+    mockFbq.mockClear();
+
+    const userData = { email: "shopper@example.com" };
+    adapter.trackEvent(makeEvent({ userData }));
+    adapter.trackEvent(makeEvent({ eventId: "evt-002", userData }));
+
+    const setCalls = mockFbq.mock.calls.filter((c) => c[0] === "set");
+    expect(setCalls).toHaveLength(1);
+  });
+
   it("should clean up on destroy", () => {
     adapter.initialize(makeConfig());
     adapter.destroy();
