@@ -38,6 +38,12 @@ export class PixelAdapterRegistry {
 
   /** Fan-out: send an event to every enabled & loaded adapter. */
   broadcastEvent(event: TrackingEvent): void {
+    // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
+    console.log("[PIXEL DEBUG] registry.broadcastEvent", {
+      eventName: event.eventName,
+      adapterCount: this.adapters.size,
+      platforms: Array.from(this.adapters.keys()),
+    });
     for (const adapter of this.adapters.values()) {
       if (adapter.isEnabled() && adapter.isLoaded()) {
         try {

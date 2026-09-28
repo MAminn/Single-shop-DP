@@ -130,6 +130,13 @@ export class MetaPixelAdapter implements PixelAdapter {
   }
 
   trackEvent(event: TrackingEvent): void {
+    // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
+    console.log("[PIXEL DEBUG] MetaPixelAdapter.trackEvent called", {
+      eventName: event.eventName,
+      loaded: this.loaded,
+      enabled: this.enabled,
+      hasFbq: typeof window !== "undefined" && typeof window.fbq === "function",
+    });
     if (!this.loaded || !this.enabled) return;
     if (typeof window === "undefined" || typeof window.fbq !== "function") return;
 
@@ -140,6 +147,14 @@ export class MetaPixelAdapter implements PixelAdapter {
 
     // Attach eventId for server-side deduplication (Conversions API Phase 3)
     const options: Record<string, unknown> = { eventID: event.eventId };
+
+    // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
+    console.log("[PIXEL DEBUG] About to call fbq", {
+      command: metaEventName ? "track" : "trackCustom",
+      metaEventName: metaEventName ?? event.eventName,
+      params,
+      options,
+    });
 
     if (metaEventName) {
       // Standard Meta event

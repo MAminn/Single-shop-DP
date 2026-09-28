@@ -322,6 +322,12 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
 
     // Subscribe before any event can fire so early events are queued, not lost
     const unsubscribe = trackingEventBus.subscribe((event) => {
+      // TEMP DEBUG — remove after diagnosing missing AddToCart/Checkout events
+      console.log("[PIXEL DEBUG] bus event received", {
+        eventName: event.eventName,
+        sdkReady,
+        isCriticalRoute,
+      });
       if (sdkReady) registry.broadcastEvent(event);
       else queued.push(event);
     });
