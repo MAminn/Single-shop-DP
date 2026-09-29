@@ -512,6 +512,13 @@ export const order = pgTable("order", {
    * before confirming. */
   suspicious: boolean("suspicious").notNull().default(false),
   suspiciousReasons: jsonb("suspicious_reasons").$type<string[]>(),
+  /** Meta click-id/browser-id cookies + IP/UA captured from the real checkout
+   * request, so a deferred COD Purchase event (fired later from an admin
+   * action with no live request) can still carry real ad-attribution data. */
+  checkoutFbp: text("checkout_fbp"),
+  checkoutFbc: text("checkout_fbc"),
+  checkoutIp: text("checkout_ip"),
+  checkoutUserAgent: text("checkout_user_agent"),
 });
 
 export const orderItem = pgTable("order_item", {

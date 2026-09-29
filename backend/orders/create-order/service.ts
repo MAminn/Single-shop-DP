@@ -372,6 +372,11 @@ export const createOrder = (
   input: z.infer<typeof createOrderSchema>,
   session?: ClientSession,
   ipAddress?: string,
+  checkoutContext?: {
+    userAgent?: string;
+    fbp?: string;
+    fbc?: string;
+  },
 ) =>
   Effect.gen(function* ($) {
     if (isOrderRateLimited(ipAddress)) {
@@ -727,6 +732,10 @@ export const createOrder = (
             suspicious: isOrderSuspicious(suspiciousReasons),
             suspiciousReasons:
               suspiciousReasons.length > 0 ? suspiciousReasons : null,
+            checkoutFbp: checkoutContext?.fbp || null,
+            checkoutFbc: checkoutContext?.fbc || null,
+            checkoutIp: ipAddress || null,
+            checkoutUserAgent: checkoutContext?.userAgent || null,
           };
 
           const definedInsertData = Object.fromEntries(

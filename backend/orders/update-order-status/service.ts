@@ -70,6 +70,10 @@ export const updateOrderStatus = (
         customerPhone: string;
         shippingCountry: string;
         total: string;
+        checkoutFbp: string | null;
+        checkoutFbc: string | null;
+        checkoutIp: string | null;
+        checkoutUserAgent: string | null;
       };
     } | null = null;
 

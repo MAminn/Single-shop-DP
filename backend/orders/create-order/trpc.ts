@@ -13,7 +13,11 @@ export const createOrderProcedure = publicProcedure
   .input(createOrderSchema)
   .mutation(async ({ ctx, input }) => {
     return await runBackendEffect(
-      createOrder(input, ctx.clientSession ?? undefined, ctx.ipAddress).pipe(
+      createOrder(input, ctx.clientSession ?? undefined, ctx.ipAddress, {
+        userAgent: ctx.userAgent,
+        fbp: ctx.fbp,
+        fbc: ctx.fbc,
+      }).pipe(
         provideDatabase(ctx),
         Effect.provideService(EmailService, ctx.emailService)
       )

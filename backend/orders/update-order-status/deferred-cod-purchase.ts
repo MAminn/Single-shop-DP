@@ -6,16 +6,17 @@ import { TrackingEventName, type TrackingEvent } from "#root/shared/types/pixel-
 import { STORE_CURRENCY } from "#root/shared/config/branding";
 import { toAbsoluteUrl } from "#root/shared/config/site-url";
 import { processTrackingBeacon } from "#root/backend/pixel-tracking/delivery-pipeline";
-import type { ServerContext } from "#root/server/routes/track";
+import { hashIp, type ServerContext } from "#root/server/routes/track";
 
 /**
  * Relay a Purchase event to the ad platforms for a COD order, but only once
  * it has left "pending" — i.e. a human has actually looked at it and chosen
  * to fulfill it, rather than cancel it as spam/fraud. COD checkout never
  * fires the client-side pixel (see pages/order-confirmation/+Page.tsx), so
- * this is the *only* Purchase signal these orders ever produce. Nothing here
- * fabricates data: fields not truly known at this point (client IP, browser
- * user agent, fbp/fbc) are simply omitted rather than guessed.
+ * this is the *only* Purchase signal these orders ever produce. This event
+ * fires from an admin action, not a live page load, so IP/UA/fbp/fbc are
+ * pulled from what was captured on the real checkout request (order.checkout*
+ * columns, set in create-order/service.ts) rather than fabricated here.
  *
  * Never throws — best-effort, logged by the caller.
  */
@@ -28,6 +29,10 @@ export async function sendDeferredCodPurchaseEvent(
     customerPhone: string;
     shippingCountry: string;
     total: string;
+    checkoutFbp: string | null;
+    checkoutFbc: string | null;
+    checkoutIp: string | null;
+    checkoutUserAgent: string | null;
   },
 ): Promise<void> {
   const items = await db
@@ -71,11 +76,19 @@ export async function sendDeferredCodPurchaseEvent(
     },
   };
 
-  // No live request to extract IP/UA/cookies from — this fires from an admin
-  // action, not a page load. Server adapters already skip fields that are
-  // empty/falsy, so this degrades gracefully to whatever identifiers
-  // (email/phone/external_id) we do have.
-  const serverContext: ServerContext = { ip: "", ipHash: "", userAgent: "" };
+  // No live request here — this fires from an admin action, not a page
+  // load — so IP/UA/fbp/fbc come from what checkout captured at order-creation
+  // time. Server adapters already skip fields that are empty/falsy, so this
+  // still degrades gracefully to whatever identifiers we do have if checkout
+  // didn't capture them (e.g. orders placed before this column existed).
+  const ip = order.checkoutIp ?? "";
+  const serverContext: ServerContext = {
+    ip,
+    ipHash: ip ? hashIp(ip) : "",
+    userAgent: order.checkoutUserAgent ?? "",
+    fbp: order.checkoutFbp ?? undefined,
+    fbc: order.checkoutFbc ?? undefined,
+  };
 
   await processTrackingBeacon([event], serverContext, db);
 }

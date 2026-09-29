@@ -10,6 +10,10 @@ export interface ConfirmedCodOrder {
   customerPhone: string;
   shippingCountry: string;
   total: string;
+  checkoutFbp: string | null;
+  checkoutFbc: string | null;
+  checkoutIp: string | null;
+  checkoutUserAgent: string | null;
 }
 
 /**
@@ -45,6 +49,10 @@ export async function confirmPendingCodOrders(
         customerPhone: order.customerPhone,
         shippingCountry: order.shippingCountry,
         total: order.total,
+        checkoutFbp: order.checkoutFbp,
+        checkoutFbc: order.checkoutFbc,
+        checkoutIp: order.checkoutIp,
+        checkoutUserAgent: order.checkoutUserAgent,
       })
       .from(order)
       .where(whereClause)
