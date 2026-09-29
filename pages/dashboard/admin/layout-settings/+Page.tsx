@@ -45,6 +45,21 @@ import {
 import { usePageContext } from "vike-react/usePageContext";
 import { v7 as uuidv7 } from "uuid";
 import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   templateConfig,
 } from "#root/components/template-system/templateConfig";
 import { useTemplate } from "#root/frontend/contexts/TemplateContext";
@@ -309,6 +324,20 @@ export default function LayoutSettingsPage() {
         l.id === id ? { ...l, [field]: value } : l,
       ),
     );
+  };
+
+  const navLinkSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+  );
+
+  const handleNavLinkDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const links = settings.header.navigationLinks;
+    const oldIndex = links.findIndex((l) => l.id === active.id);
+    const newIndex = links.findIndex((l) => l.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    updateHeader("navigationLinks", arrayMove(links, oldIndex, newIndex));
   };
 
   // ─── Footer helpers ────────────────────────────────────────────────────
@@ -990,92 +1019,25 @@ export default function LayoutSettingsPage() {
                   No navigation links. Add one to get started.
                 </p>
               )}
-              {settings.header.navigationLinks.map((link) => (
-                <div
-                  key={link.id}
-                  className='flex flex-col gap-2 p-3 rounded-lg border bg-muted/30'>
-                  <div className='flex items-center gap-2'>
-                    <GripVertical className='w-4 h-4 text-muted-foreground shrink-0' />
-                    <Input
-                      value={link.label}
-                      onChange={(e) =>
-                        updateNavLink(link.id, "label", e.target.value)
-                      }
-                      placeholder='Label'
-                      className='flex-1'
+              <DndContext
+                sensors={navLinkSensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleNavLinkDragEnd}>
+                <SortableContext
+                  items={settings.header.navigationLinks.map((l) => l.id)}
+                  strategy={verticalListSortingStrategy}>
+                  {settings.header.navigationLinks.map((link) => (
+                    <SortableNavLinkRow
+                      key={link.id}
+                      link={link}
+                      navbarStyle={settings.header.navbarStyle}
+                      categories={categories}
+                      updateNavLink={updateNavLink}
+                      removeNavLink={removeNavLink}
                     />
-                    <Input
-                      value={link.url}
-                      onChange={(e) =>
-                        updateNavLink(link.id, "url", e.target.value)
-                      }
-                      placeholder='/path'
-                      className='flex-1'
-                    />
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className='shrink-0 text-destructive hover:text-destructive'
-                      onClick={() => removeNavLink(link.id)}>
-                      <Trash2 className='w-4 h-4' />
-                    </Button>
-                  </div>
-                  {settings.header.navbarStyle === "minimal" && (
-                    <div className='flex items-center gap-2 pl-6'>
-                      <Languages className='w-3.5 h-3.5 text-muted-foreground shrink-0' />
-                      <Input
-                        dir='rtl'
-                        value={link.labelAr ?? ""}
-                        onChange={(e) =>
-                          updateNavLink(link.id, "labelAr", e.target.value)
-                        }
-                        placeholder='Arabic label'
-                        className='flex-1'
-                      />
-                    </div>
-                  )}
-                  {/* Dropdown toggle + category picker */}
-                  {settings.header.navbarStyle === "minimal" && (
-                    <div className='pl-6 space-y-2'>
-                      <div className='flex items-center gap-2'>
-                        <Switch
-                          checked={link.isDropdown ?? false}
-                          onCheckedChange={(v) =>
-                            updateNavLink(link.id, "isDropdown", v)
-                          }
-                        />
-                        <Label className='text-xs text-muted-foreground'>
-                          Show as dropdown with categories
-                        </Label>
-                      </div>
-                      {link.isDropdown && categories.length > 0 && (
-                        <div className='grid grid-cols-2 sm:grid-cols-3 gap-1.5 rounded border p-2 bg-background max-h-48 overflow-y-auto'>
-                          {categories.map((cat) => {
-                            const selected = link.categoryIds?.includes(cat.id) ?? false;
-                            return (
-                              <label key={cat.id} className='flex items-center gap-1.5 text-xs cursor-pointer'>
-                                <input
-                                  type='checkbox'
-                                  className='accent-stone-900'
-                                  checked={selected}
-                                  onChange={(e) => {
-                                    const current = link.categoryIds ?? [];
-                                    const next = e.target.checked
-                                      ? [...current, cat.id]
-                                      : current.filter((id) => id !== cat.id);
-                                    updateNavLink(link.id, "categoryIds", next);
-                                  }}
-                                />
-                                {cat.name}
-                              </label>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
+                  ))}
+                </SortableContext>
+              </DndContext>
             </CardContent>
           </Card>
         </div>
@@ -1607,6 +1569,124 @@ export default function LayoutSettingsPage() {
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Sortable Navigation Link Row ──────────────────────────────────────────
+
+function SortableNavLinkRow({
+  link,
+  navbarStyle,
+  categories,
+  updateNavLink,
+  removeNavLink,
+}: {
+  link: NavigationLink;
+  navbarStyle: NavbarStyle;
+  categories: { id: string; name: string }[];
+  updateNavLink: (
+    id: string,
+    field: keyof NavigationLink,
+    value: string | boolean | string[],
+  ) => void;
+  removeNavLink: (id: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: link.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className='flex flex-col gap-2 p-3 rounded-lg border bg-muted/30'>
+      <div className='flex items-center gap-2'>
+        <button
+          type='button'
+          {...attributes}
+          {...listeners}
+          className='shrink-0 cursor-grab active:cursor-grabbing touch-none'
+          aria-label='Drag to reorder'>
+          <GripVertical className='w-4 h-4 text-muted-foreground' />
+        </button>
+        <Input
+          value={link.label}
+          onChange={(e) => updateNavLink(link.id, "label", e.target.value)}
+          placeholder='Label'
+          className='flex-1'
+        />
+        <Input
+          value={link.url}
+          onChange={(e) => updateNavLink(link.id, "url", e.target.value)}
+          placeholder='/path'
+          className='flex-1'
+        />
+        <Button
+          variant='ghost'
+          size='icon'
+          className='shrink-0 text-destructive hover:text-destructive'
+          onClick={() => removeNavLink(link.id)}>
+          <Trash2 className='w-4 h-4' />
+        </Button>
+      </div>
+      {navbarStyle === "minimal" && (
+        <div className='flex items-center gap-2 pl-6'>
+          <Languages className='w-3.5 h-3.5 text-muted-foreground shrink-0' />
+          <Input
+            dir='rtl'
+            value={link.labelAr ?? ""}
+            onChange={(e) => updateNavLink(link.id, "labelAr", e.target.value)}
+            placeholder='Arabic label'
+            className='flex-1'
+          />
+        </div>
+      )}
+      {/* Dropdown toggle + category picker */}
+      {navbarStyle === "minimal" && (
+        <div className='pl-6 space-y-2'>
+          <div className='flex items-center gap-2'>
+            <Switch
+              checked={link.isDropdown ?? false}
+              onCheckedChange={(v) => updateNavLink(link.id, "isDropdown", v)}
+            />
+            <Label className='text-xs text-muted-foreground'>
+              Show as dropdown with categories
+            </Label>
+          </div>
+          {link.isDropdown && categories.length > 0 && (
+            <div className='grid grid-cols-2 sm:grid-cols-3 gap-1.5 rounded border p-2 bg-background max-h-48 overflow-y-auto'>
+              {categories.map((cat) => {
+                const selected = link.categoryIds?.includes(cat.id) ?? false;
+                return (
+                  <label
+                    key={cat.id}
+                    className='flex items-center gap-1.5 text-xs cursor-pointer'>
+                    <input
+                      type='checkbox'
+                      className='accent-stone-900'
+                      checked={selected}
+                      onChange={(e) => {
+                        const current = link.categoryIds ?? [];
+                        const next = e.target.checked
+                          ? [...current, cat.id]
+                          : current.filter((id) => id !== cat.id);
+                        updateNavLink(link.id, "categoryIds", next);
+                      }}
+                    />
+                    {cat.name}
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

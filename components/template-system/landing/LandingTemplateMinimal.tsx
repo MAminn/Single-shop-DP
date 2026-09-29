@@ -7,6 +7,8 @@ import type { HeroSlide } from "#root/components/ui/hero-carousel";
 import { MinimalProductCarousel } from "#root/components/template-system/minimal/MinimalProductCarousel";
 import { QuickViewDialog } from "#root/components/template-system/minimal/QuickViewDialog";
 import { TestimonialsSection } from "#root/components/template-system/shared/TestimonialsSection";
+import { ScrollingTextSection } from "#root/components/template-system/shared/ScrollingTextSection";
+import { ComparisonSection } from "#root/components/template-system/shared/ComparisonSection";
 import type { MinimalProduct } from "#root/components/template-system/minimal/MinimalProductCard";
 import { HomeFeaturedProducts } from "../home/HomeFeaturedProducts";
 import { ScrollToProductsButton } from "#root/components/template-system/minimal/ScrollToProductsButton";
@@ -431,6 +433,16 @@ export function LandingTemplateMinimal({
           </div>
         ) : null;
       })()}
+
+      {/* ═══════════════════════════════════════════════
+          SCROLLING TEXT BANNER
+          ═══════════════════════════════════════════════ */}
+      <ScrollingTextSection content={content.scrollingText} locale={locale} />
+
+      {/* ═══════════════════════════════════════════════
+          BRAND VS OTHERS COMPARISON
+          ═══════════════════════════════════════════════ */}
+      <ComparisonSection content={content.comparison} locale={locale} />
 
       {/* ═══════════════════════════════════════════════
           8. TESTIMONIALS

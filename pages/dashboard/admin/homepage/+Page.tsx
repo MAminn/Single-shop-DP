@@ -3934,6 +3934,501 @@ export default function HomepageAdminPage() {
           </CardContent>
         </Card>
 
+        {/* ── Scrolling Text Banner (Minimal only) ──────────── */}
+        {isMinimal && (
+        <Card>
+          <CardHeader>
+            <div className='flex items-center justify-between'>
+              <CardTitle className='text-base'>
+                Scrolling Text Banner
+              </CardTitle>
+              <Switch
+                checked={content.scrollingText?.enabled ?? false}
+                onCheckedChange={(checked) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    scrollingText: {
+                      ...prev.scrollingText!,
+                      enabled: checked,
+                      items: prev.scrollingText?.items ?? [],
+                    },
+                  }))
+                }
+              />
+            </div>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <div>
+              <Label className='text-xs'>Loop Duration (seconds)</Label>
+              <Input
+                type='number'
+                min={5}
+                value={content.scrollingText?.speedSeconds ?? 20}
+                onChange={(e) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    scrollingText: {
+                      ...prev.scrollingText!,
+                      enabled: prev.scrollingText?.enabled ?? false,
+                      items: prev.scrollingText?.items ?? [],
+                      speedSeconds: Number(e.target.value) || 20,
+                    },
+                  }))
+                }
+                disabled={!(content.scrollingText?.enabled ?? false)}
+              />
+            </div>
+
+            <div className='space-y-3'>
+              {(content.scrollingText?.items ?? []).map((item, idx) => (
+                <div
+                  key={item.id}
+                  className='border rounded-lg p-3 space-y-2 bg-gray-50'>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm font-medium'>Line #{idx + 1}</span>
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='sm'
+                      className='text-red-500 hover:text-red-700'
+                      disabled={!(content.scrollingText?.enabled ?? false)}
+                      onClick={() =>
+                        setContent((prev) => ({
+                          ...prev,
+                          scrollingText: {
+                            ...prev.scrollingText!,
+                            enabled: prev.scrollingText?.enabled ?? false,
+                            items: (prev.scrollingText?.items ?? []).filter(
+                              (_, i) => i !== idx,
+                            ),
+                          },
+                        }))
+                      }>
+                      Remove
+                    </Button>
+                  </div>
+                  <div className='grid grid-cols-2 gap-3'>
+                    <div>
+                      <Label className='text-xs'>Text (English)</Label>
+                      <Input
+                        value={item.text}
+                        onChange={(e) =>
+                          setContent((prev) => {
+                            const items = [...(prev.scrollingText?.items ?? [])];
+                            items[idx] = { ...items[idx], text: e.target.value } as (typeof items)[number];
+                            return {
+                              ...prev,
+                              scrollingText: {
+                                ...prev.scrollingText!,
+                                enabled: prev.scrollingText?.enabled ?? false,
+                                items,
+                              },
+                            };
+                          })
+                        }
+                        placeholder='Premium Fragrance Oils'
+                        disabled={!(content.scrollingText?.enabled ?? false)}
+                      />
+                    </div>
+                    <div>
+                      <Label className='text-xs'>Text (Arabic)</Label>
+                      <Input
+                        dir='rtl'
+                        value={item.textAr ?? ""}
+                        onChange={(e) =>
+                          setContent((prev) => {
+                            const items = [...(prev.scrollingText?.items ?? [])];
+                            items[idx] = { ...items[idx], textAr: e.target.value } as (typeof items)[number];
+                            return {
+                              ...prev,
+                              scrollingText: {
+                                ...prev.scrollingText!,
+                                enabled: prev.scrollingText?.enabled ?? false,
+                                items,
+                              },
+                            };
+                          })
+                        }
+                        placeholder='زيوت عطرية فاخرة'
+                        disabled={!(content.scrollingText?.enabled ?? false)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              disabled={!(content.scrollingText?.enabled ?? false)}
+              onClick={() =>
+                setContent((prev) => ({
+                  ...prev,
+                  scrollingText: {
+                    ...prev.scrollingText!,
+                    enabled: prev.scrollingText?.enabled ?? false,
+                    items: [
+                      ...(prev.scrollingText?.items ?? []),
+                      { id: crypto.randomUUID(), text: "", textAr: "" },
+                    ],
+                  },
+                }))
+              }>
+              + Add Line
+            </Button>
+          </CardContent>
+        </Card>
+        )}
+
+        {/* ── Brand vs Others Comparison (Minimal only) ──────────── */}
+        {isMinimal && (
+        <Card>
+          <CardHeader>
+            <div className='flex items-center justify-between'>
+              <CardTitle className='text-base'>
+                Brand vs Others Comparison
+              </CardTitle>
+              <Switch
+                checked={content.comparison?.enabled ?? false}
+                onCheckedChange={(checked) =>
+                  setContent((prev) => ({
+                    ...prev,
+                    comparison: {
+                      ...prev.comparison!,
+                      enabled: checked,
+                      features: prev.comparison?.features ?? [],
+                    },
+                  }))
+                }
+              />
+            </div>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <div className='grid grid-cols-2 gap-4'>
+              <div>
+                <Label className='text-xs'>Title (English)</Label>
+                <Input
+                  value={content.comparison?.title ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      comparison: {
+                        ...prev.comparison!,
+                        enabled: prev.comparison?.enabled ?? false,
+                        features: prev.comparison?.features ?? [],
+                        title: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='Synt vs Others'
+                  disabled={!(content.comparison?.enabled ?? false)}
+                />
+              </div>
+              <div>
+                <Label className='text-xs'>Title (Arabic)</Label>
+                <Input
+                  dir='rtl'
+                  value={content.comparison?.titleAr ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      comparison: {
+                        ...prev.comparison!,
+                        enabled: prev.comparison?.enabled ?? false,
+                        features: prev.comparison?.features ?? [],
+                        titleAr: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='سينت مقابل الآخرين'
+                  disabled={!(content.comparison?.enabled ?? false)}
+                />
+              </div>
+              <div>
+                <Label className='text-xs'>Subtitle (English)</Label>
+                <Input
+                  value={content.comparison?.subtitle ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      comparison: {
+                        ...prev.comparison!,
+                        enabled: prev.comparison?.enabled ?? false,
+                        features: prev.comparison?.features ?? [],
+                        subtitle: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='Inspired by Icons, Designed for You.'
+                  disabled={!(content.comparison?.enabled ?? false)}
+                />
+              </div>
+              <div>
+                <Label className='text-xs'>Subtitle (Arabic)</Label>
+                <Input
+                  dir='rtl'
+                  value={content.comparison?.subtitleAr ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      comparison: {
+                        ...prev.comparison!,
+                        enabled: prev.comparison?.enabled ?? false,
+                        features: prev.comparison?.features ?? [],
+                        subtitleAr: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='مستوحى من الأيقونات، مصمم من أجلك.'
+                  disabled={!(content.comparison?.enabled ?? false)}
+                />
+              </div>
+              <div>
+                <Label className='text-xs'>Button Text (English)</Label>
+                <Input
+                  value={content.comparison?.ctaText ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      comparison: {
+                        ...prev.comparison!,
+                        enabled: prev.comparison?.enabled ?? false,
+                        features: prev.comparison?.features ?? [],
+                        ctaText: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='Get Mine Now'
+                  disabled={!(content.comparison?.enabled ?? false)}
+                />
+              </div>
+              <div>
+                <Label className='text-xs'>Button Text (Arabic)</Label>
+                <Input
+                  dir='rtl'
+                  value={content.comparison?.ctaTextAr ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      comparison: {
+                        ...prev.comparison!,
+                        enabled: prev.comparison?.enabled ?? false,
+                        features: prev.comparison?.features ?? [],
+                        ctaTextAr: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='اطلب الآن'
+                  disabled={!(content.comparison?.enabled ?? false)}
+                />
+              </div>
+              <div>
+                <Label className='text-xs'>Button Link</Label>
+                <Input
+                  value={content.comparison?.ctaLink ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      comparison: {
+                        ...prev.comparison!,
+                        enabled: prev.comparison?.enabled ?? false,
+                        features: prev.comparison?.features ?? [],
+                        ctaLink: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='/shop'
+                  disabled={!(content.comparison?.enabled ?? false)}
+                />
+              </div>
+              <div />
+              <div>
+                <Label className='text-xs'>Brand Column Label (English)</Label>
+                <Input
+                  value={content.comparison?.brandName ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      comparison: {
+                        ...prev.comparison!,
+                        enabled: prev.comparison?.enabled ?? false,
+                        features: prev.comparison?.features ?? [],
+                        brandName: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='SYNT'
+                  disabled={!(content.comparison?.enabled ?? false)}
+                />
+              </div>
+              <div>
+                <Label className='text-xs'>Brand Column Label (Arabic)</Label>
+                <Input
+                  dir='rtl'
+                  value={content.comparison?.brandNameAr ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      comparison: {
+                        ...prev.comparison!,
+                        enabled: prev.comparison?.enabled ?? false,
+                        features: prev.comparison?.features ?? [],
+                        brandNameAr: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='سينت'
+                  disabled={!(content.comparison?.enabled ?? false)}
+                />
+              </div>
+              <div>
+                <Label className='text-xs'>Others Column Label (English)</Label>
+                <Input
+                  value={content.comparison?.othersLabel ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      comparison: {
+                        ...prev.comparison!,
+                        enabled: prev.comparison?.enabled ?? false,
+                        features: prev.comparison?.features ?? [],
+                        othersLabel: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='Others'
+                  disabled={!(content.comparison?.enabled ?? false)}
+                />
+              </div>
+              <div>
+                <Label className='text-xs'>Others Column Label (Arabic)</Label>
+                <Input
+                  dir='rtl'
+                  value={content.comparison?.othersLabelAr ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      comparison: {
+                        ...prev.comparison!,
+                        enabled: prev.comparison?.enabled ?? false,
+                        features: prev.comparison?.features ?? [],
+                        othersLabelAr: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='الآخرون'
+                  disabled={!(content.comparison?.enabled ?? false)}
+                />
+              </div>
+            </div>
+
+            <div className='space-y-3'>
+              {(content.comparison?.features ?? []).map((feature, idx) => (
+                <div
+                  key={feature.id}
+                  className='border rounded-lg p-3 space-y-2 bg-gray-50'>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm font-medium'>
+                      Feature #{idx + 1}
+                    </span>
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='sm'
+                      className='text-red-500 hover:text-red-700'
+                      disabled={!(content.comparison?.enabled ?? false)}
+                      onClick={() =>
+                        setContent((prev) => ({
+                          ...prev,
+                          comparison: {
+                            ...prev.comparison!,
+                            enabled: prev.comparison?.enabled ?? false,
+                            features: (prev.comparison?.features ?? []).filter(
+                              (_, i) => i !== idx,
+                            ),
+                          },
+                        }))
+                      }>
+                      Remove
+                    </Button>
+                  </div>
+                  <div className='grid grid-cols-2 gap-3'>
+                    <div>
+                      <Label className='text-xs'>Label (English)</Label>
+                      <Input
+                        value={feature.label}
+                        onChange={(e) =>
+                          setContent((prev) => {
+                            const features = [...(prev.comparison?.features ?? [])];
+                            features[idx] = { ...features[idx], label: e.target.value } as (typeof features)[number];
+                            return {
+                              ...prev,
+                              comparison: {
+                                ...prev.comparison!,
+                                enabled: prev.comparison?.enabled ?? false,
+                                features,
+                              },
+                            };
+                          })
+                        }
+                        placeholder='Premium Fragrance'
+                        disabled={!(content.comparison?.enabled ?? false)}
+                      />
+                    </div>
+                    <div>
+                      <Label className='text-xs'>Label (Arabic)</Label>
+                      <Input
+                        dir='rtl'
+                        value={feature.labelAr ?? ""}
+                        onChange={(e) =>
+                          setContent((prev) => {
+                            const features = [...(prev.comparison?.features ?? [])];
+                            features[idx] = { ...features[idx], labelAr: e.target.value } as (typeof features)[number];
+                            return {
+                              ...prev,
+                              comparison: {
+                                ...prev.comparison!,
+                                enabled: prev.comparison?.enabled ?? false,
+                                features,
+                              },
+                            };
+                          })
+                        }
+                        placeholder='عطر فاخر'
+                        disabled={!(content.comparison?.enabled ?? false)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              disabled={!(content.comparison?.enabled ?? false)}
+              onClick={() =>
+                setContent((prev) => ({
+                  ...prev,
+                  comparison: {
+                    ...prev.comparison!,
+                    enabled: prev.comparison?.enabled ?? false,
+                    features: [
+                      ...(prev.comparison?.features ?? []),
+                      { id: crypto.randomUUID(), label: "", labelAr: "" },
+                    ],
+                  },
+                }))
+              }>
+              + Add Feature
+            </Button>
+          </CardContent>
+        </Card>
+        )}
+
         {/* ── About Us Section (Minimal only) ──────────── */}
         {isMinimal && (
           <Card>

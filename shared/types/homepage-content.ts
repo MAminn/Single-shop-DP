@@ -271,6 +271,53 @@ export interface HomepageReturnPolicyContent {
 }
 
 /**
+ * A single line in the looping scrolling-text banner
+ */
+export interface ScrollingTextItem {
+  id: string;
+  text: string;
+  textAr?: string;
+}
+
+/**
+ * Infinitely-looping vertical scrolling text banner content
+ */
+export interface HomepageScrollingTextContent {
+  enabled: boolean;
+  items: ScrollingTextItem[];
+  /** Seconds for one full loop cycle through the (doubled) list */
+  speedSeconds?: number;
+}
+
+/**
+ * A single feature row in the brand-vs-others comparison table
+ */
+export interface ComparisonFeatureItem {
+  id: string;
+  label: string;
+  labelAr?: string;
+}
+
+/**
+ * "[Brand] vs Others" comparison section content
+ */
+export interface HomepageComparisonContent {
+  enabled: boolean;
+  title: string;
+  titleAr?: string;
+  subtitle: string;
+  subtitleAr?: string;
+  ctaText: string;
+  ctaTextAr?: string;
+  ctaLink: string;
+  brandName: string;
+  brandNameAr?: string;
+  othersLabel: string;
+  othersLabelAr?: string;
+  features: ComparisonFeatureItem[];
+}
+
+/**
  * Complete homepage content structure
  */
 export interface HomepageContent {
@@ -313,6 +360,10 @@ export interface HomepageContent {
       reviewAr?: string;
     }[];
   };
+  /** Infinitely-looping vertical scrolling text banner */
+  scrollingText?: HomepageScrollingTextContent;
+  /** "[Brand] vs Others" comparison section */
+  comparison?: HomepageComparisonContent;
 }
 
 /**
@@ -570,6 +621,37 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
         reviewAr:
           "قيمة ممتازة مقابل السعر، الشحن أسرع من المتوقع والمنتج مطابق تماماً للصور.",
       },
+    ],
+  },
+  scrollingText: {
+    enabled: false,
+    speedSeconds: 20,
+    items: [
+      { id: "1", text: "Premium Fragrance Oils", textAr: "زيوت عطرية فاخرة" },
+      { id: "2", text: "Affordable Luxury", textAr: "رفاهية بأسعار مناسبة" },
+      { id: "3", text: "Long-Lasting Scents", textAr: "عطور تدوم طويلاً" },
+      { id: "4", text: "Cruelty-Free", textAr: "خالي من القسوة على الحيوان" },
+      { id: "5", text: "Variety of Options", textAr: "تشكيلة متنوعة" },
+    ],
+  },
+  comparison: {
+    enabled: false,
+    title: "Synt vs Others",
+    titleAr: "سينت مقابل الآخرين",
+    subtitle: "Inspired by Icons, Designed for You.",
+    subtitleAr: "مستوحى من الأيقونات، مصمم من أجلك.",
+    ctaText: "Get Mine Now",
+    ctaTextAr: "اطلب الآن",
+    ctaLink: "/shop",
+    brandName: "SYNT",
+    brandNameAr: "سينت",
+    othersLabel: "Others",
+    othersLabelAr: "الآخرون",
+    features: [
+      { id: "1", label: "Premium Fragrance", labelAr: "عطر فاخر" },
+      { id: "2", label: "Lasts All Day", labelAr: "يدوم طوال اليوم" },
+      { id: "3", label: "Skin Friendly", labelAr: "لطيف على البشرة" },
+      { id: "4", label: "Affordable Luxury", labelAr: "رفاهية بأسعار مناسبة" },
     ],
   },
 };

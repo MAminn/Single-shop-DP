@@ -219,6 +219,34 @@ const HomepageContentSchema = z.object({
       reviewAr: z.string().nullish(),
     })),
   }).nullish(),
+  scrollingText: z.object({
+    enabled: z.boolean(),
+    speedSeconds: z.number().nullish(),
+    items: z.array(z.object({
+      id: z.string(),
+      text: z.string(),
+      textAr: z.string().nullish(),
+    })),
+  }).nullish(),
+  comparison: z.object({
+    enabled: z.boolean(),
+    title: z.string(),
+    titleAr: z.string().nullish(),
+    subtitle: z.string(),
+    subtitleAr: z.string().nullish(),
+    ctaText: z.string(),
+    ctaTextAr: z.string().nullish(),
+    ctaLink: z.string(),
+    brandName: z.string(),
+    brandNameAr: z.string().nullish(),
+    othersLabel: z.string(),
+    othersLabelAr: z.string().nullish(),
+    features: z.array(z.object({
+      id: z.string(),
+      label: z.string(),
+      labelAr: z.string().nullish(),
+    })),
+  }).nullish(),
 });
 
 export const homepageRouter = router({

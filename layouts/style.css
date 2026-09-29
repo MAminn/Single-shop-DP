@@ -449,6 +449,19 @@ html[data-has-template-newsletter] [data-footer-newsletter] {
   animation: marquee-half var(--marquee-duration, 240s) linear infinite;
 }
 
+/* ── Vertical marquee — doubled list scrolling upward, seamless loop ── */
+@keyframes marquee-vertical-half {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+.animate-marquee-vertical-half {
+  animation: marquee-vertical-half var(--marquee-duration, 20s) linear infinite;
+}
+
 /* ── Hero carousel fade ── */
 @keyframes hero-fade-in {
   from {
