@@ -19,6 +19,13 @@ function resolveLocalized(
   return primary || arVariant || "";
 }
 
+function resolveImageUrl(url?: string | null): string | undefined {
+  if (!url) return undefined;
+  if (url.startsWith("http")) return url;
+  if (url.startsWith("/")) return url;
+  return `/uploads/${url}`;
+}
+
 /**
  * "[Brand] vs Others" comparison section. Returns null when CMS content is
  * absent, disabled, or has no feature rows — no hard-coded fallback lives here.
@@ -34,6 +41,7 @@ export function ComparisonSection({
   const subtitle = resolveLocalized(locale, content.subtitle, content.subtitleAr);
   const ctaText = resolveLocalized(locale, content.ctaText, content.ctaTextAr);
   const brandName = resolveLocalized(locale, content.brandName, content.brandNameAr);
+  const brandLogoUrl = resolveImageUrl(content.brandLogoUrl);
   const othersLabel = resolveLocalized(
     locale,
     content.othersLabel,
@@ -63,10 +71,18 @@ export function ComparisonSection({
 
         <div className='border border-stone-200 rounded-lg overflow-hidden'>
           <div className='grid grid-cols-2 px-6 py-3 border-b border-stone-200 bg-stone-50'>
-            <span className='font-mono text-sm font-bold tracking-wide text-stone-900'>
-              {brandName}
-            </span>
-            <span className='font-mono text-sm text-stone-400 text-end'>
+            {brandLogoUrl ? (
+              <img
+                src={brandLogoUrl}
+                alt={brandName}
+                className='h-6 w-auto object-contain'
+              />
+            ) : (
+              <span className='font-mono text-sm font-bold tracking-wide text-stone-900'>
+                {brandName}
+              </span>
+            )}
+            <span className='font-mono text-sm font-bold tracking-wide text-stone-900 text-end'>
               {othersLabel}
             </span>
           </div>
@@ -83,8 +99,8 @@ export function ComparisonSection({
                 </span>
               </div>
               <div className='flex justify-end'>
-                <span className='flex items-center justify-center w-6 h-6 rounded-full bg-stone-200 shrink-0'>
-                  <X className='w-4 h-4 text-stone-500' strokeWidth={3} />
+                <span className='flex items-center justify-center w-6 h-6 rounded-full bg-stone-100 shrink-0'>
+                  <X className='w-4 h-4 text-stone-900' strokeWidth={3} />
                 </span>
               </div>
             </div>

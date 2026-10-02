@@ -239,6 +239,7 @@ const HomepageContentSchema = z.object({
     ctaLink: z.string(),
     brandName: z.string(),
     brandNameAr: z.string().nullish(),
+    brandLogoUrl: z.string().nullish(),
     othersLabel: z.string(),
     othersLabelAr: z.string().nullish(),
     features: z.array(z.object({

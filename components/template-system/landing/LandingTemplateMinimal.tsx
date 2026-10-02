@@ -293,6 +293,11 @@ export function LandingTemplateMinimal({
       ) : null}
 
       {/* ═══════════════════════════════════════════════
+          SCROLLING TEXT BANNER
+          ═══════════════════════════════════════════════ */}
+      <ScrollingTextSection content={content.scrollingText} locale={locale} />
+
+      {/* ═══════════════════════════════════════════════
           3. CATEGORY GRID — Clean image + title (matchperfumes style)
           ═══════════════════════════════════════════════ */}
       {content.categories.enabled && (
@@ -433,11 +438,6 @@ export function LandingTemplateMinimal({
           </div>
         ) : null;
       })()}
-
-      {/* ═══════════════════════════════════════════════
-          SCROLLING TEXT BANNER
-          ═══════════════════════════════════════════════ */}
-      <ScrollingTextSection content={content.scrollingText} locale={locale} />
 
       {/* ═══════════════════════════════════════════════
           BRAND VS OTHERS COMPARISON

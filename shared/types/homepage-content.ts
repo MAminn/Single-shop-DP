@@ -312,6 +312,8 @@ export interface HomepageComparisonContent {
   ctaLink: string;
   brandName: string;
   brandNameAr?: string;
+  /** Small brand logo shown in place of the brand-name text column header */
+  brandLogoUrl?: string;
   othersLabel: string;
   othersLabelAr?: string;
   features: ComparisonFeatureItem[];
@@ -645,6 +647,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
     ctaLink: "/shop",
     brandName: "SYNT",
     brandNameAr: "سينت",
+    brandLogoUrl: "",
     othersLabel: "Others",
     othersLabelAr: "الآخرون",
     features: [

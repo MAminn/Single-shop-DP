@@ -4283,6 +4283,88 @@ export default function HomepageAdminPage() {
                   disabled={!(content.comparison?.enabled ?? false)}
                 />
               </div>
+              <div className='col-span-2'>
+                <Label className='text-xs'>Brand Logo (shown instead of the label above)</Label>
+                <div className='flex gap-2 mt-1 items-center'>
+                  <input
+                    type='file'
+                    id='comparison-logo-upload'
+                    accept='image/jpeg,image/jpg,image/png,image/webp,image/svg+xml'
+                    className='hidden'
+                    disabled={!(content.comparison?.enabled ?? false)}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 5 * 1024 * 1024) {
+                        toast.error("File too large. Max 5MB.");
+                        return;
+                      }
+                      try {
+                        const buffer = new Uint8Array(await file.arrayBuffer());
+                        const result = await trpc.homepage.uploadHeroImage.mutate({
+                          file: { name: file.name, type: file.type, buffer },
+                          preserveAspect: true,
+                        });
+                        if (result.success && result.data) {
+                          setContent((prev) => ({
+                            ...prev,
+                            comparison: {
+                              ...prev.comparison!,
+                              enabled: prev.comparison?.enabled ?? false,
+                              features: prev.comparison?.features ?? [],
+                              brandLogoUrl: result.data.url,
+                            },
+                          }));
+                          toast.success("Logo uploaded!");
+                        }
+                      } catch {
+                        toast.error("Upload failed");
+                      }
+                      e.target.value = "";
+                    }}
+                  />
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    disabled={!(content.comparison?.enabled ?? false)}
+                    onClick={() =>
+                      document.getElementById("comparison-logo-upload")?.click()
+                    }>
+                    <Upload className='w-4 h-4 mr-1' />
+                    Upload Logo
+                  </Button>
+                  {content.comparison?.brandLogoUrl && (
+                    <>
+                      <div className='h-8 px-3 rounded border bg-muted flex items-center'>
+                        <img
+                          src={content.comparison.brandLogoUrl}
+                          alt='Brand logo'
+                          className='h-6 w-auto object-contain'
+                        />
+                      </div>
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='sm'
+                        disabled={!(content.comparison?.enabled ?? false)}
+                        onClick={() =>
+                          setContent((prev) => ({
+                            ...prev,
+                            comparison: {
+                              ...prev.comparison!,
+                              enabled: prev.comparison?.enabled ?? false,
+                              features: prev.comparison?.features ?? [],
+                              brandLogoUrl: "",
+                            },
+                          }))
+                        }>
+                        Remove
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
               <div>
                 <Label className='text-xs'>Others Column Label (English)</Label>
                 <Input

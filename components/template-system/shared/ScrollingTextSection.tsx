@@ -57,7 +57,7 @@ export function ScrollingTextSection({
           {loopItems.map((item, i) => (
             <p
               key={i}
-              className='font-mono text-2xl sm:text-4xl font-medium tracking-wide text-stone-300/80 py-4 sm:py-6 whitespace-nowrap'>
+              className='font-mono text-2xl sm:text-4xl font-medium tracking-wide text-stone-300/80 py-0.5 sm:py-1 whitespace-nowrap'>
               {resolveLocalized(locale, item.text, item.textAr)}
             </p>
           ))}
