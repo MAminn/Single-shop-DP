@@ -2242,6 +2242,162 @@ export default function HomepageAdminPage() {
           </Card>
         )}
 
+        {/* Hero Marquee — separate scrolling bar under the hero, minimal only */}
+        {isMinimal && (
+          <Card>
+            <CardHeader>
+              <div className='flex items-center justify-between'>
+                <CardTitle>Hero Marquee</CardTitle>
+                <div className='flex items-center gap-2'>
+                  <Label htmlFor='hero-marquee-enabled'>Enabled</Label>
+                  <Switch
+                    id='hero-marquee-enabled'
+                    checked={content.heroMarquee?.enabled ?? false}
+                    onCheckedChange={(checked) =>
+                      setContent((prev) => ({
+                        ...prev,
+                        heroMarquee: {
+                          ...prev.heroMarquee,
+                          enabled: checked,
+                          text: prev.heroMarquee?.text ?? "",
+                        },
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <div>
+                <Label htmlFor='hero-marquee-text'>Marquee Text (English)</Label>
+                <Input
+                  id='hero-marquee-text'
+                  value={content.heroMarquee?.text ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      heroMarquee: {
+                        enabled: prev.heroMarquee?.enabled ?? false,
+                        ...prev.heroMarquee,
+                        text: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='Luxury Scents, Without the Price Tag'
+                  disabled={!content.heroMarquee?.enabled}
+                />
+              </div>
+              <div>
+                <Label htmlFor='hero-marquee-text-ar'>Marquee Text (Arabic)</Label>
+                <Input
+                  id='hero-marquee-text-ar'
+                  dir='rtl'
+                  value={content.heroMarquee?.textAr ?? ""}
+                  onChange={(e) =>
+                    setContent((prev) => ({
+                      ...prev,
+                      heroMarquee: {
+                        enabled: prev.heroMarquee?.enabled ?? false,
+                        text: prev.heroMarquee?.text ?? "",
+                        ...prev.heroMarquee,
+                        textAr: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder='عطور فاخرة بدون السعر الفاخر'
+                  disabled={!content.heroMarquee?.enabled}
+                />
+              </div>
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <Label htmlFor='hero-marquee-bg-color'>Background Color</Label>
+                  <div className='flex items-center gap-2'>
+                    <Input
+                      id='hero-marquee-bg-color'
+                      type='color'
+                      className='w-14 p-1 h-9'
+                      value={content.heroMarquee?.backgroundColor || "#ffffff"}
+                      onChange={(e) =>
+                        setContent((prev) => ({
+                          ...prev,
+                          heroMarquee: {
+                            enabled: prev.heroMarquee?.enabled ?? false,
+                            text: prev.heroMarquee?.text ?? "",
+                            ...prev.heroMarquee,
+                            backgroundColor: e.target.value,
+                          },
+                        }))
+                      }
+                      disabled={!content.heroMarquee?.enabled}
+                    />
+                    <Input
+                      value={content.heroMarquee?.backgroundColor ?? ""}
+                      onChange={(e) =>
+                        setContent((prev) => ({
+                          ...prev,
+                          heroMarquee: {
+                            enabled: prev.heroMarquee?.enabled ?? false,
+                            text: prev.heroMarquee?.text ?? "",
+                            ...prev.heroMarquee,
+                            backgroundColor: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder='#ffffff'
+                      disabled={!content.heroMarquee?.enabled}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor='hero-marquee-text-color'>Text Color</Label>
+                  <div className='flex items-center gap-2'>
+                    <Input
+                      id='hero-marquee-text-color'
+                      type='color'
+                      className='w-14 p-1 h-9'
+                      value={content.heroMarquee?.textColor || "#000000"}
+                      onChange={(e) =>
+                        setContent((prev) => ({
+                          ...prev,
+                          heroMarquee: {
+                            enabled: prev.heroMarquee?.enabled ?? false,
+                            text: prev.heroMarquee?.text ?? "",
+                            ...prev.heroMarquee,
+                            textColor: e.target.value,
+                          },
+                        }))
+                      }
+                      disabled={!content.heroMarquee?.enabled}
+                    />
+                    <Input
+                      value={content.heroMarquee?.textColor ?? ""}
+                      onChange={(e) =>
+                        setContent((prev) => ({
+                          ...prev,
+                          heroMarquee: {
+                            enabled: prev.heroMarquee?.enabled ?? false,
+                            text: prev.heroMarquee?.text ?? "",
+                            ...prev.heroMarquee,
+                            textColor: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder='#000000'
+                      disabled={!content.heroMarquee?.enabled}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className='bg-muted p-3 rounded-md'>
+                <p className='text-sm text-muted-foreground'>
+                  A separate scrolling bar shown right under the hero —
+                  independent of the marquee above the navigation bar.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Product Page Promo Line — minimal only */}
         {isMinimal && (
           <Card>
@@ -3977,6 +4133,94 @@ export default function HomepageAdminPage() {
                 }
                 disabled={!(content.scrollingText?.enabled ?? false)}
               />
+            </div>
+
+            <div>
+              <Label className='text-xs'>Custom Font (this section only — never affects any other text on the site)</Label>
+              <div className='flex gap-2 mt-1 items-center'>
+                <input
+                  type='file'
+                  id='scrolling-text-font-upload'
+                  accept='.woff2,.woff,.ttf'
+                  className='hidden'
+                  disabled={!(content.scrollingText?.enabled ?? false)}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 2 * 1024 * 1024) {
+                      toast.error("File too large. Max 2MB.");
+                      return;
+                    }
+                    try {
+                      const buffer = new Uint8Array(await file.arrayBuffer());
+                      const result = await trpc.typography.uploadFontFile.mutate({
+                        file: { name: file.name, type: file.type, buffer },
+                        familyName: `scrolling-text-${Date.now()}`,
+                        weight: 400,
+                        style: "normal",
+                      });
+                      const uploadedRow = result.success
+                        ? result.result?.[0]
+                        : undefined;
+                      if (uploadedRow) {
+                        setContent((prev) => ({
+                          ...prev,
+                          scrollingText: {
+                            ...prev.scrollingText!,
+                            enabled: prev.scrollingText?.enabled ?? false,
+                            items: prev.scrollingText?.items ?? [],
+                            fontUrl: uploadedRow.fileUrl,
+                            fontName: file.name,
+                          },
+                        }));
+                        toast.success("Font uploaded!");
+                      } else {
+                        toast.error("Upload failed");
+                      }
+                    } catch {
+                      toast.error("Upload failed");
+                    }
+                    e.target.value = "";
+                  }}
+                />
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  disabled={!(content.scrollingText?.enabled ?? false)}
+                  onClick={() =>
+                    document.getElementById("scrolling-text-font-upload")?.click()
+                  }>
+                  <Upload className='w-4 h-4 mr-1' />
+                  Upload Font
+                </Button>
+                {content.scrollingText?.fontName && (
+                  <>
+                    <span className='text-sm text-muted-foreground'>
+                      {content.scrollingText.fontName}
+                    </span>
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='sm'
+                      disabled={!(content.scrollingText?.enabled ?? false)}
+                      onClick={() =>
+                        setContent((prev) => ({
+                          ...prev,
+                          scrollingText: {
+                            ...prev.scrollingText!,
+                            enabled: prev.scrollingText?.enabled ?? false,
+                            items: prev.scrollingText?.items ?? [],
+                            fontUrl: "",
+                            fontName: "",
+                          },
+                        }))
+                      }>
+                      Remove
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
 
             <div className='space-y-3'>

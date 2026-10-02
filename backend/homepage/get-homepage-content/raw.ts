@@ -143,6 +143,7 @@ function mergeWithDefaults(
       clean.productCarouselTitleAr ?? DEFAULT_HOMEPAGE_CONTENT.productCarouselTitleAr,
     testimonials:
       clean.testimonials ?? DEFAULT_HOMEPAGE_CONTENT.testimonials,
+    heroMarquee: clean.heroMarquee ?? DEFAULT_HOMEPAGE_CONTENT.heroMarquee,
     scrollingText:
       clean.scrollingText ?? DEFAULT_HOMEPAGE_CONTENT.scrollingText,
     comparison: clean.comparison ?? DEFAULT_HOMEPAGE_CONTENT.comparison,

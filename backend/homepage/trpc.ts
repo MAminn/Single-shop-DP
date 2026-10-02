@@ -219,9 +219,20 @@ const HomepageContentSchema = z.object({
       reviewAr: z.string().nullish(),
     })),
   }).nullish(),
+  heroMarquee: z
+    .object({
+      enabled: z.boolean(),
+      text: z.string(),
+      textAr: z.string().nullish(),
+      backgroundColor: z.string().nullish(),
+      textColor: z.string().nullish(),
+    })
+    .nullish(),
   scrollingText: z.object({
     enabled: z.boolean(),
     speedSeconds: z.number().nullish(),
+    fontUrl: z.string().nullish(),
+    fontName: z.string().nullish(),
     items: z.array(z.object({
       id: z.string(),
       text: z.string(),

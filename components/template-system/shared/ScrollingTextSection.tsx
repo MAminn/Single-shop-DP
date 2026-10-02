@@ -18,6 +18,15 @@ function resolveLocalized(
   return primary || arVariant || "";
 }
 
+const CUSTOM_FONT_FAMILY = "synt-scrolling-text-custom-font";
+
+function fontFormatOf(url: string): string {
+  const ext = url.split(".").pop()?.toLowerCase();
+  if (ext === "woff2") return "woff2";
+  if (ext === "woff") return "woff";
+  return "truetype";
+}
+
 /**
  * Infinitely-looping vertical scrolling text banner. Returns null when CMS
  * content is absent, disabled, or empty — no hard-coded fallback lives here.
@@ -39,10 +48,24 @@ export function ScrollingTextSection({
 
   const duration = content.speedSeconds ?? singleSet.length * 4;
 
+  // Custom font is scoped to this section only: a scoped @font-face + an
+  // inline fontFamily override on just these <p> tags, never a global class
+  // or Tailwind config change, so no other text on the site is affected.
+  const fontUrl = content.fontUrl;
+
   return (
     <section
       dir={locale === "ar" ? "rtl" : "ltr"}
       className={`bg-stone-950 overflow-hidden ${className}`.trim()}>
+      {fontUrl && (
+        <style>{`
+          @font-face {
+            font-family: "${CUSTOM_FONT_FAMILY}";
+            src: url("${fontUrl}") format("${fontFormatOf(fontUrl)}");
+            font-display: swap;
+          }
+        `}</style>
+      )}
       <div
         className='relative h-[110px] sm:h-[150px]'
         style={{
@@ -57,7 +80,8 @@ export function ScrollingTextSection({
           {loopItems.map((item, i) => (
             <p
               key={i}
-              className='font-mono text-2xl sm:text-4xl font-medium tracking-wide text-stone-300/80 py-0.5 sm:py-1 whitespace-nowrap'>
+              className={`text-2xl sm:text-4xl font-medium tracking-wide text-stone-300/80 py-0.5 sm:py-1 whitespace-nowrap ${fontUrl ? "" : "font-mono"}`}
+              style={fontUrl ? { fontFamily: CUSTOM_FONT_FAMILY } : undefined}>
               {resolveLocalized(locale, item.text, item.textAr)}
             </p>
           ))}

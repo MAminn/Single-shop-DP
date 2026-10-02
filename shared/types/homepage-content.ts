@@ -287,6 +287,11 @@ export interface HomepageScrollingTextContent {
   items: ScrollingTextItem[];
   /** Seconds for one full loop cycle through the (doubled) list */
   speedSeconds?: number;
+  /** Custom @font-face file for this section only — never affects any other
+   * section's typography. Falls back to the default font-mono when unset. */
+  fontUrl?: string;
+  /** Original uploaded filename, shown back to the admin as a label */
+  fontName?: string;
 }
 
 /**
@@ -362,6 +367,9 @@ export interface HomepageContent {
       reviewAr?: string;
     }[];
   };
+  /** Second scrolling marquee, shown under the hero — separate from the
+   * navbar `marquee` above, with its own copy/colors/toggle. */
+  heroMarquee?: HomepageMarqueeContent;
   /** Infinitely-looping vertical scrolling text banner */
   scrollingText?: HomepageScrollingTextContent;
   /** "[Brand] vs Others" comparison section */
@@ -625,9 +633,18 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
       },
     ],
   },
+  heroMarquee: {
+    enabled: false,
+    text: "",
+    textAr: "",
+    backgroundColor: "",
+    textColor: "",
+  },
   scrollingText: {
     enabled: false,
     speedSeconds: 20,
+    fontUrl: "",
+    fontName: "",
     items: [
       { id: "1", text: "Premium Fragrance Oils", textAr: "زيوت عطرية فاخرة" },
       { id: "2", text: "Affordable Luxury", textAr: "رفاهية بأسعار مناسبة" },

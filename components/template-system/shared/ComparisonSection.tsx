@@ -62,7 +62,7 @@ export function ComparisonSection({
           )}
           {ctaText && (
             <Link href={content.ctaLink || "/shop"}>
-              <span className='inline-block mt-6 px-6 py-3 bg-orange-500 hover:bg-orange-600 transition-colors text-white font-mono text-sm font-bold tracking-wide'>
+              <span className='inline-block mt-6 px-6 py-3 bg-stone-900 hover:bg-stone-800 transition-colors text-white font-mono text-sm font-bold tracking-wide'>
                 {ctaText}
               </span>
             </Link>

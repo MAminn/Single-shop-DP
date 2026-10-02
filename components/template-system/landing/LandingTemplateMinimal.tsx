@@ -8,6 +8,7 @@ import { MinimalProductCarousel } from "#root/components/template-system/minimal
 import { QuickViewDialog } from "#root/components/template-system/minimal/QuickViewDialog";
 import { TestimonialsSection } from "#root/components/template-system/shared/TestimonialsSection";
 import { ScrollingTextSection } from "#root/components/template-system/shared/ScrollingTextSection";
+import { Marquee } from "#root/components/ui/marquee";
 import { ComparisonSection } from "#root/components/template-system/shared/ComparisonSection";
 import type { MinimalProduct } from "#root/components/template-system/minimal/MinimalProductCard";
 import { HomeFeaturedProducts } from "../home/HomeFeaturedProducts";
@@ -291,6 +292,28 @@ export function LandingTemplateMinimal({
           </div>
         </section>
       ) : null}
+
+      {/* ═══════════════════════════════════════════════
+          HERO MARQUEE — separate from the navbar marquee above
+          ═══════════════════════════════════════════════ */}
+      {content.heroMarquee?.enabled && content.heroMarquee.text && (
+        <Marquee
+          key={content.heroMarquee.text}
+          text={
+            locale === "ar" && content.heroMarquee.textAr
+              ? content.heroMarquee.textAr
+              : content.heroMarquee.text
+          }
+          style={{
+            ...(content.heroMarquee.backgroundColor
+              ? { backgroundColor: content.heroMarquee.backgroundColor }
+              : {}),
+            ...(content.heroMarquee.textColor
+              ? { color: content.heroMarquee.textColor }
+              : {}),
+          }}
+        />
+      )}
 
       {/* ═══════════════════════════════════════════════
           SCROLLING TEXT BANNER
