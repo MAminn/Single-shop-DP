@@ -44,7 +44,7 @@ export function ScrollingTextSection({
       dir={locale === "ar" ? "rtl" : "ltr"}
       className={`bg-stone-950 overflow-hidden ${className}`.trim()}>
       <div
-        className='relative h-[420px] sm:h-[560px]'
+        className='relative h-[220px] sm:h-[300px]'
         style={{
           maskImage:
             "linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)",
