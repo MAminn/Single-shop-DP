@@ -20,6 +20,8 @@ interface FeaturedProduct {
   discountPrice?: number | string | null;
   retailPrice?: number | string | null;
   badgeText?: string | null;
+  badgeColor?: string | null;
+  badgeTextColor?: string | null;
   stock: number;
   imageUrl?: string;
   images?: { url: string; isPrimary?: boolean }[];
@@ -89,6 +91,8 @@ function Page() {
                 ? Number(item.retailPrice)
                 : null,
               badgeText: item.badgeText ?? null,
+              badgeColor: item.badgeColor ?? null,
+              badgeTextColor: item.badgeTextColor ?? null,
               stock: item.stock,
               imageUrl: item.imageUrl
                 ? item.imageUrl.startsWith("http")
@@ -205,6 +209,8 @@ function Page() {
                 ? Number(item.retailPrice)
                 : null,
               badgeText: item.badgeText ?? null,
+              badgeColor: item.badgeColor ?? null,
+              badgeTextColor: item.badgeTextColor ?? null,
               stock: item.stock,
               imageUrl: item.imageUrl
                 ? item.imageUrl.startsWith("http")
@@ -257,6 +263,8 @@ function Page() {
                 ? Number(item.retailPrice)
                 : null,
               badgeText: item.badgeText ?? null,
+              badgeColor: item.badgeColor ?? null,
+              badgeTextColor: item.badgeTextColor ?? null,
               stock: item.stock,
               imageUrl: item.imageUrl
                 ? item.imageUrl.startsWith("http")

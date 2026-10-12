@@ -466,7 +466,19 @@ export function ProductPageMinimal({
             <div className='flex-1'>
               <div className='overflow-hidden bg-stone-50 relative'>
                 {product.available && (
-                  <span className='absolute top-3 start-3 z-10 bg-stone-900 text-white text-xs font-medium px-3 py-1'>
+                  <span
+                    className={cn(
+                      "absolute top-3 start-3 z-10 bg-stone-900 text-white text-xs font-medium px-3 py-1",
+                      product.badgeText && "animate-badge-pop",
+                    )}
+                    style={
+                      product.badgeText
+                        ? {
+                            backgroundColor: product.badgeColor || undefined,
+                            color: product.badgeTextColor || undefined,
+                          }
+                        : undefined
+                    }>
                     {product.badgeText || t("new") || "New"}
                   </span>
                 )}
@@ -597,6 +609,27 @@ export function ProductPageMinimal({
               />
             </button>
 
+            {/* Inspired By — directly under the rating */}
+            {product.inspiredBy && (
+              <div>
+                <p className='text-[10px] text-gray-500 uppercase tracking-wide mb-0.5'>Inspired by</p>
+                <ColoredDescription
+                  text={product.inspiredBy}
+                  className='text-sm font-semibold text-gray-800 italic'
+                />
+              </div>
+            )}
+
+            {/* Retail price — shown as its own line under Inspired By, not as a strike-through */}
+            {!hasDiscount &&
+              product.retailPrice &&
+              Number(product.retailPrice) > product.price && (
+                <p className='text-sm text-gray-500'>
+                  {t("retail_price") || "Retail price"}:{" "}
+                  {Number(product.retailPrice).toFixed(2)} {STORE_CURRENCY}
+                </p>
+              )}
+
             {/* Price */}
             <div>
               {hasDiscount ? (
@@ -609,16 +642,6 @@ export function ProductPageMinimal({
                     {product.price.toFixed(2)} {STORE_CURRENCY}
                   </span>
                 </div>
-              ) : product.retailPrice &&
-                Number(product.retailPrice) > product.price ? (
-                <div className='flex items-baseline gap-2'>
-                  <span className='text-lg font-semibold text-gray-900'>
-                    {product.price.toFixed(2)} {STORE_CURRENCY}
-                  </span>
-                  <span className='text-sm text-gray-400 line-through'>
-                    {Number(product.retailPrice).toFixed(2)} {STORE_CURRENCY}
-                  </span>
-                </div>
               ) : (
                 <span className='text-lg font-semibold text-gray-900'>
                   {product.price.toFixed(2)} {STORE_CURRENCY}
@@ -628,17 +651,6 @@ export function ProductPageMinimal({
                 {t("price_includes_tax")}
               </p> */}
             </div>
-
-            {/* Inspired By — directly under price */}
-            {product.inspiredBy && (
-              <div>
-                <p className='text-[10px] text-gray-500 uppercase tracking-wide mb-0.5'>Inspired by</p>
-                <ColoredDescription
-                  text={product.inspiredBy}
-                  className='text-sm font-semibold text-gray-800 italic'
-                />
-              </div>
-            )}
 
             {/* Stock status */}
             {product.available ? (
@@ -1638,11 +1650,8 @@ function BottomProductCard({
   const displayPrice = hasDiscount
     ? Number(product.discountPrice)
     : product.price;
-  const hasRetailPrice =
-    !hasDiscount &&
-    product.retailPrice !== undefined &&
-    product.retailPrice !== null &&
-    Number(product.retailPrice) > product.price;
+  // Retail price is intentionally not shown on this related-products card —
+  // only on the dedicated product detail page (client request).
   const productUrl = getProductUrl(product);
   const wishlisted = isWishlisted(product.id);
 
@@ -1686,7 +1695,12 @@ function BottomProductCard({
           </Link>
         </div>
         {product.badgeText && !hasDiscount && (
-          <span className='absolute top-3 start-3 bg-stone-900 text-white text-[10px] font-semibold px-2 py-0.5'>
+          <span
+            className='absolute top-3 start-3 bg-stone-900 text-white text-[10px] font-semibold px-2 py-0.5 animate-badge-pop'
+            style={{
+              backgroundColor: product.badgeColor || undefined,
+              color: product.badgeTextColor || undefined,
+            }}>
             {product.badgeText}
           </span>
         )}
@@ -1709,9 +1723,9 @@ function BottomProductCard({
           </h3>
         </Link>
         <div className='flex items-center justify-center gap-2 mt-1'>
-          {(hasDiscount || hasRetailPrice) && (
+          {hasDiscount && (
             <span className='text-xs text-stone-400 line-through'>
-              {hasDiscount ? product.price : Number(product.retailPrice)} {STORE_CURRENCY}
+              {product.price} {STORE_CURRENCY}
             </span>
           )}
           <span

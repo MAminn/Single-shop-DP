@@ -12,6 +12,8 @@ export interface FeaturedProduct {
   discountPrice?: number | string | null;
   retailPrice?: number | string | null;
   badgeText?: string | null;
+  badgeColor?: string | null;
+  badgeTextColor?: string | null;
   stock: number;
   imageUrl?: string;
   images?: { url: string; isPrimary?: boolean }[];

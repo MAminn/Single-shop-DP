@@ -135,6 +135,8 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
             discountPrice: product.discountPrice,
             retailPrice: product.retailPrice,
             badgeText: product.badgeText,
+            badgeColor: product.badgeColor,
+            badgeTextColor: product.badgeTextColor,
             stock: product.stock,
             imageUrl: file.diskname,
             categoryId: product.categoryId,

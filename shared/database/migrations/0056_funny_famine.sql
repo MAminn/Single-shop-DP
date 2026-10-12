@@ -1,0 +1,1 @@
+ALTER TABLE "product" ADD COLUMN "badge_text_color" text;

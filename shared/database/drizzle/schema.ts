@@ -314,6 +314,10 @@ export const product = pgTable("product", {
   }),
   /** Free-text marketing badge (e.g. "Best Seller", "Limited Edition") shown on product cards. Null/empty = no badge. */
   badgeText: text("badge_text"),
+  /** Hex background color for the badge above (e.g. "#1c1917"). Null = default dark background. */
+  badgeColor: text("badge_color"),
+  /** Hex text color for the badge above (e.g. "#ffffff"). Null = default white text. */
+  badgeTextColor: text("badge_text_color"),
   createdAt: timestamp("created_at", {
     withTimezone: true,
     mode: "date",

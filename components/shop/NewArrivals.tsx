@@ -14,6 +14,8 @@ export interface NewArrivalProduct {
   discountPrice?: number | null;
   retailPrice?: number | null;
   badgeText?: string | null;
+  badgeColor?: string | null;
+  badgeTextColor?: string | null;
   stock: number;
   imageUrl?: string;
   images?: { url: string; isPrimary?: boolean }[];

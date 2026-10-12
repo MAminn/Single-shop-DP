@@ -123,6 +123,8 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
                   discountPrice: product.discountPrice,
                   retailPrice: product.retailPrice,
                   badgeText: product.badgeText,
+                  badgeColor: product.badgeColor,
+                  badgeTextColor: product.badgeTextColor,
                   stock: product.stock,
                   imageUrl: file.diskname,
                   categoryName: category.name,
@@ -192,6 +194,8 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
             discountPrice: p.discountPrice ? Number(p.discountPrice) : null,
             retailPrice: p.retailPrice ? Number(p.retailPrice) : null,
             badgeText: p.badgeText,
+            badgeColor: p.badgeColor,
+            badgeTextColor: p.badgeTextColor,
             stock: p.stock,
             available: p.stock > 0,
             imageUrl: p.imageUrl ? `/uploads/${p.imageUrl}` : undefined,
@@ -235,6 +239,8 @@ export type ProductByIdResult = {
   discountPrice: number | null;
   retailPrice: number | null;
   badgeText: string | null;
+  badgeColor: string | null;
+  badgeTextColor: string | null;
   createdAt: Date;
   updatedAt: Date | null;
   stock: number;
@@ -279,6 +285,8 @@ export type ProductByIdResult = {
     discountPrice: number | null;
     retailPrice: number | null;
     badgeText: string | null;
+    badgeColor: string | null;
+    badgeTextColor: string | null;
     stock: number;
     available: boolean;
     imageUrl?: string;

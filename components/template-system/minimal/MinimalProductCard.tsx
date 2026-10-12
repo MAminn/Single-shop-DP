@@ -23,6 +23,8 @@ export interface MinimalProduct {
   discountPrice?: number | string | null;
   retailPrice?: number | string | null;
   badgeText?: string | null;
+  badgeColor?: string | null;
+  badgeTextColor?: string | null;
   stock: number;
   imageUrl?: string | null;
   images?: ProductImage[];
@@ -76,14 +78,8 @@ export function MinimalProductCard({
 
   const displayPrice = hasDiscount ? Number(product.discountPrice) : product.price;
   const originalPrice = hasDiscount ? product.price : null;
-
-  const hasRetailPrice =
-    !hasDiscount &&
-    product.retailPrice !== undefined &&
-    product.retailPrice !== null &&
-    product.retailPrice !== "" &&
-    Number(product.retailPrice) > product.price;
-  const retailPrice = hasRetailPrice ? Number(product.retailPrice) : null;
+  // Retail price is intentionally not shown on product cards — only on the
+  // dedicated product detail page (client request).
 
   const handleAddToCart = useCallback(
     (e: React.MouseEvent) => {
@@ -131,6 +127,7 @@ export function MinimalProductCard({
   // Determine tag text — admin-controlled badge wins over automatic new/sale tags
   const tagText =
     product.badgeText || product.tag || (product.isNew ? t("new") : hasDiscount ? t("sale") : null);
+  const isCustomBadge = Boolean(product.badgeText);
 
   const wishlisted = isWishlisted(product.id);
   const productUrl = getProductUrl(product);
@@ -155,7 +152,19 @@ export function MinimalProductCard({
 
         {/* Tag badge (top-right) */}
         {tagText && (
-          <span className='absolute top-3 end-3 bg-stone-900 text-white text-[10px] font-medium px-2.5 py-1 tracking-wide'>
+          <span
+            className={cn(
+              "absolute top-3 end-3 bg-stone-900 text-white text-[10px] font-medium px-2.5 py-1 tracking-wide",
+              isCustomBadge && "animate-badge-pop",
+            )}
+            style={
+              isCustomBadge
+                ? {
+                    backgroundColor: product.badgeColor || undefined,
+                    color: product.badgeTextColor || undefined,
+                  }
+                : undefined
+            }>
             {tagText}
           </span>
         )}
@@ -204,11 +213,11 @@ export function MinimalProductCard({
           </h3>
         </Link>
         <div className='mt-1 flex items-center justify-center gap-2'>
-          {(originalPrice !== null || retailPrice !== null) && (
+          {originalPrice !== null && (
             <span
               style={{ fontFamily: "var(--font-price)" }}
               className='text-sm text-stone-400 line-through'>
-              {originalPrice ?? retailPrice} {t("currency")}
+              {originalPrice} {t("currency")}
             </span>
           )}
           <span

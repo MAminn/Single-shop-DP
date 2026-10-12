@@ -25,6 +25,8 @@ export const editProductSchema = z.object({
   discountPrice: z.number().min(0).max(10000).optional(),
   retailPrice: z.number().min(0).max(10000).optional(),
   badgeText: z.string().max(40).optional(),
+  badgeColor: z.string().max(20).optional(),
+  badgeTextColor: z.string().max(20).optional(),
   stock: z.number().min(0).max(10000),
   variants: z
     .array(
@@ -107,6 +109,8 @@ export const editProduct = (
                 ? data.retailPrice.toString()
                 : null,
               badgeText: data.badgeText || null,
+              badgeColor: data.badgeColor || null,
+              badgeTextColor: data.badgeTextColor || null,
               stock: data.stock,
               inspiredBy: data.inspiredBy || null,
               sortOrder: data.sortOrder ?? 0,

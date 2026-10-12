@@ -228,6 +228,8 @@ export function ProductForm({
     discountPrice?: number | null;
     retailPrice?: number | null;
     badgeText?: string | null;
+    badgeColor?: string | null;
+    badgeTextColor?: string | null;
     stock: number;
     imageId: string;
     productImages: FileMetadata[];
@@ -286,6 +288,8 @@ export function ProductForm({
       .nullable()
       .optional(),
     badgeText: z.string().max(40, "Badge text must be 40 characters or less").optional(),
+    badgeColor: z.string().max(20).optional(),
+    badgeTextColor: z.string().max(20).optional(),
     stock: z.coerce.number().int().min(0, "Stock must be greater than 0"),
     imageId: z.string().default(""),
     productImages: z
@@ -364,6 +368,8 @@ export function ProductForm({
       discountPrice: initialValues?.discountPrice || null,
       retailPrice: initialValues?.retailPrice || null,
       badgeText: initialValues?.badgeText || "",
+      badgeColor: initialValues?.badgeColor || "",
+      badgeTextColor: initialValues?.badgeTextColor || "",
       stock: initialValues?.stock || 0,
       // Use the primary image ID as the main imageId
       imageId: initialValues?.imageId || "",
@@ -921,6 +927,62 @@ export function ProductForm({
               </FormItem>
             )}
           />
+
+          <div className='grid grid-cols-2 gap-4'>
+            <FormField
+              control={form.control}
+              name='badgeColor'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Badge Background Color</FormLabel>
+                  <div className='flex items-center gap-2'>
+                    <FormControl>
+                      <Input
+                        type='color'
+                        className='w-14 p-1 h-9'
+                        value={field.value || "#1c1917"}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                    </FormControl>
+                    <Input
+                      placeholder='#1c1917'
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value)}
+                    />
+                  </div>
+                  <p className='text-xs text-muted-foreground'>Leave blank for the default dark background.</p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='badgeTextColor'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Badge Text Color</FormLabel>
+                  <div className='flex items-center gap-2'>
+                    <FormControl>
+                      <Input
+                        type='color'
+                        className='w-14 p-1 h-9'
+                        value={field.value || "#ffffff"}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                    </FormControl>
+                    <Input
+                      placeholder='#ffffff'
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value)}
+                    />
+                  </div>
+                  <p className='text-xs text-muted-foreground'>Leave blank for the default white text.</p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <FormField
             control={form.control}

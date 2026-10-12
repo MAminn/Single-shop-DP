@@ -576,7 +576,12 @@ function ProductCard({ product, formatPrice, getImageUrl }: ProductCardProps) {
         )}
 
         {product.badgeText && (
-          <div className='absolute top-3 right-3 px-2 py-1 text-xs font-medium text-white bg-neutral-900 rounded'>
+          <div
+            className='absolute top-3 right-3 px-2 py-1 text-xs font-medium text-white bg-neutral-900 rounded animate-badge-pop'
+            style={{
+              backgroundColor: product.badgeColor || undefined,
+              color: product.badgeTextColor || undefined,
+            }}>
             {product.badgeText}
           </div>
         )}
@@ -609,16 +614,6 @@ function ProductCard({ product, formatPrice, getImageUrl }: ProductCardProps) {
               </span>
               <span className='text-sm text-neutral-500 line-through'>
                 {formatPrice(product.price)}
-              </span>
-            </>
-          ) : product.retailPrice &&
-            Number(product.retailPrice) > Number(product.price) ? (
-            <>
-              <span className='text-base font-semibold text-neutral-900'>
-                {formatPrice(product.price)}
-              </span>
-              <span className='text-sm text-neutral-500 line-through'>
-                {formatPrice(product.retailPrice)}
               </span>
             </>
           ) : (

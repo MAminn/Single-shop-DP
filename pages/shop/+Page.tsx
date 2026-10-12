@@ -201,6 +201,8 @@ export default function ShopPage() {
             discountPrice: p.discountPrice ? Number(p.discountPrice) : null,
             retailPrice: p.retailPrice ? Number(p.retailPrice) : null,
             badgeText: p.badgeText ?? null,
+            badgeColor: p.badgeColor ?? null,
+            badgeTextColor: p.badgeTextColor ?? null,
             stock: p.stock,
             imageUrl: p.imageUrl ?? undefined,
             images: p.images,
