@@ -10,6 +10,8 @@ export interface FeaturedProduct {
   name: string;
   price: number;
   discountPrice?: number | string | null;
+  retailPrice?: number | string | null;
+  badgeText?: string | null;
   stock: number;
   imageUrl?: string;
   images?: { url: string; isPrimary?: boolean }[];

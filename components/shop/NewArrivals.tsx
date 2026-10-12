@@ -12,6 +12,8 @@ export interface NewArrivalProduct {
   name: string;
   price: number;
   discountPrice?: number | null;
+  retailPrice?: number | null;
+  badgeText?: string | null;
   stock: number;
   imageUrl?: string;
   images?: { url: string; isPrimary?: boolean }[];

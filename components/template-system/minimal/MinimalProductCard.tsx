@@ -21,6 +21,8 @@ export interface MinimalProduct {
   name: string;
   price: number;
   discountPrice?: number | string | null;
+  retailPrice?: number | string | null;
+  badgeText?: string | null;
   stock: number;
   imageUrl?: string | null;
   images?: ProductImage[];
@@ -75,6 +77,14 @@ export function MinimalProductCard({
   const displayPrice = hasDiscount ? Number(product.discountPrice) : product.price;
   const originalPrice = hasDiscount ? product.price : null;
 
+  const hasRetailPrice =
+    !hasDiscount &&
+    product.retailPrice !== undefined &&
+    product.retailPrice !== null &&
+    product.retailPrice !== "" &&
+    Number(product.retailPrice) > product.price;
+  const retailPrice = hasRetailPrice ? Number(product.retailPrice) : null;
+
   const handleAddToCart = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
@@ -118,8 +128,9 @@ export function MinimalProductCard({
     [product, displayPrice, displayImageUrl, addItem, trackEvent, hasDiscount],
   );
 
-  // Determine tag text
-  const tagText = product.tag || (product.isNew ? t("new") : hasDiscount ? t("sale") : null);
+  // Determine tag text — admin-controlled badge wins over automatic new/sale tags
+  const tagText =
+    product.badgeText || product.tag || (product.isNew ? t("new") : hasDiscount ? t("sale") : null);
 
   const wishlisted = isWishlisted(product.id);
   const productUrl = getProductUrl(product);
@@ -193,11 +204,11 @@ export function MinimalProductCard({
           </h3>
         </Link>
         <div className='mt-1 flex items-center justify-center gap-2'>
-          {originalPrice !== null && (
+          {(originalPrice !== null || retailPrice !== null) && (
             <span
               style={{ fontFamily: "var(--font-price)" }}
               className='text-sm text-stone-400 line-through'>
-              {originalPrice} {t("currency")}
+              {originalPrice ?? retailPrice} {t("currency")}
             </span>
           )}
           <span

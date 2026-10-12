@@ -18,6 +18,8 @@ interface FeaturedProduct {
   name: string;
   price: number;
   discountPrice?: number | string | null;
+  retailPrice?: number | string | null;
+  badgeText?: string | null;
   stock: number;
   imageUrl?: string;
   images?: { url: string; isPrimary?: boolean }[];
@@ -83,6 +85,10 @@ function Page() {
               discountPrice: item.discountPrice
                 ? Number(item.discountPrice)
                 : null,
+              retailPrice: item.retailPrice
+                ? Number(item.retailPrice)
+                : null,
+              badgeText: item.badgeText ?? null,
               stock: item.stock,
               imageUrl: item.imageUrl
                 ? item.imageUrl.startsWith("http")
@@ -195,6 +201,10 @@ function Page() {
               discountPrice: item.discountPrice
                 ? Number(item.discountPrice)
                 : null,
+              retailPrice: item.retailPrice
+                ? Number(item.retailPrice)
+                : null,
+              badgeText: item.badgeText ?? null,
               stock: item.stock,
               imageUrl: item.imageUrl
                 ? item.imageUrl.startsWith("http")
@@ -243,6 +253,10 @@ function Page() {
               discountPrice: item.discountPrice
                 ? Number(item.discountPrice)
                 : null,
+              retailPrice: item.retailPrice
+                ? Number(item.retailPrice)
+                : null,
+              badgeText: item.badgeText ?? null,
               stock: item.stock,
               imageUrl: item.imageUrl
                 ? item.imageUrl.startsWith("http")

@@ -50,6 +50,14 @@ export function QuickViewDialog({ product, open, onClose }: QuickViewDialogProps
       : product.price
     : 0;
 
+  const hasRetailPrice =
+    product &&
+    !hasDiscount &&
+    product.retailPrice !== undefined &&
+    product.retailPrice !== null &&
+    product.retailPrice !== "" &&
+    Number(product.retailPrice) > product.price;
+
   const handleAddToCart = useCallback(() => {
     if (!product || !product.available) return;
     const success = addItem(
@@ -139,9 +147,9 @@ export function QuickViewDialog({ product, open, onClose }: QuickViewDialogProps
             )}
 
             {/* Tag */}
-            {product.tag || product.isNew ? (
+            {product.badgeText || product.tag || product.isNew ? (
               <span className='absolute top-3 start-3 bg-stone-900 text-white text-[10px] font-medium px-2.5 py-1 tracking-wide'>
-                {product.tag || t("new")}
+                {product.badgeText || product.tag || t("new")}
               </span>
             ) : null}
           </div>
@@ -184,6 +192,11 @@ export function QuickViewDialog({ product, open, onClose }: QuickViewDialogProps
               {hasDiscount && (
                 <span className='text-base text-stone-400 line-through'>
                   {product.price} {t("currency")}
+                </span>
+              )}
+              {hasRetailPrice && (
+                <span className='text-base text-stone-400 line-through'>
+                  {Number(product!.retailPrice)} {t("currency")}
                 </span>
               )}
               <span className={cn("text-base font-semibold", hasDiscount ? "text-red-600" : "text-stone-900")}>

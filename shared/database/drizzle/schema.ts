@@ -307,6 +307,13 @@ export const product = pgTable("product", {
     precision: 10,
     scale: 2,
   }),
+  /** Reference "retail"/MSRP price shown struck-through next to the regular price, independent of the discountPrice sale mechanic. Null = don't show one. */
+  retailPrice: decimal("retail_price", {
+    precision: 10,
+    scale: 2,
+  }),
+  /** Free-text marketing badge (e.g. "Best Seller", "Limited Edition") shown on product cards. Null/empty = no badge. */
+  badgeText: text("badge_text"),
   createdAt: timestamp("created_at", {
     withTimezone: true,
     mode: "date",

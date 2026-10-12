@@ -114,6 +114,8 @@ export default function CategoryPage() {
             name: p.name,
             price: Number(p.price),
             discountPrice: p.discountPrice ? Number(p.discountPrice) : null,
+            retailPrice: p.retailPrice ? Number(p.retailPrice) : null,
+            badgeText: p.badgeText ?? null,
             stock: p.stock,
             imageUrl: p.imageUrl ?? undefined,
             images: p.images,

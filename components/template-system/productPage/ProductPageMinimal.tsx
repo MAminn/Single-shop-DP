@@ -467,7 +467,7 @@ export function ProductPageMinimal({
               <div className='overflow-hidden bg-stone-50 relative'>
                 {product.available && (
                   <span className='absolute top-3 start-3 z-10 bg-stone-900 text-white text-xs font-medium px-3 py-1'>
-                    {t("new") || "New"}
+                    {product.badgeText || t("new") || "New"}
                   </span>
                 )}
                 <img
@@ -607,6 +607,16 @@ export function ProductPageMinimal({
                   </span>
                   <span className='text-sm text-gray-400 line-through'>
                     {product.price.toFixed(2)} {STORE_CURRENCY}
+                  </span>
+                </div>
+              ) : product.retailPrice &&
+                Number(product.retailPrice) > product.price ? (
+                <div className='flex items-baseline gap-2'>
+                  <span className='text-lg font-semibold text-gray-900'>
+                    {product.price.toFixed(2)} {STORE_CURRENCY}
+                  </span>
+                  <span className='text-sm text-gray-400 line-through'>
+                    {Number(product.retailPrice).toFixed(2)} {STORE_CURRENCY}
                   </span>
                 </div>
               ) : (
@@ -1628,6 +1638,11 @@ function BottomProductCard({
   const displayPrice = hasDiscount
     ? Number(product.discountPrice)
     : product.price;
+  const hasRetailPrice =
+    !hasDiscount &&
+    product.retailPrice !== undefined &&
+    product.retailPrice !== null &&
+    Number(product.retailPrice) > product.price;
   const productUrl = getProductUrl(product);
   const wishlisted = isWishlisted(product.id);
 
@@ -1670,7 +1685,12 @@ function BottomProductCard({
             <Eye className='w-4 h-4' />
           </Link>
         </div>
-        {product.available && !hasDiscount && (
+        {product.badgeText && !hasDiscount && (
+          <span className='absolute top-3 start-3 bg-stone-900 text-white text-[10px] font-semibold px-2 py-0.5'>
+            {product.badgeText}
+          </span>
+        )}
+        {product.available && !hasDiscount && !product.badgeText && (
           <span className='absolute top-3 start-3 bg-stone-900 text-white text-[10px] font-semibold px-2 py-0.5'>
             {t("new") || "New"}
           </span>
@@ -1689,9 +1709,9 @@ function BottomProductCard({
           </h3>
         </Link>
         <div className='flex items-center justify-center gap-2 mt-1'>
-          {hasDiscount && (
+          {(hasDiscount || hasRetailPrice) && (
             <span className='text-xs text-stone-400 line-through'>
-              {product.price} {STORE_CURRENCY}
+              {hasDiscount ? product.price : Number(product.retailPrice)} {STORE_CURRENCY}
             </span>
           )}
           <span

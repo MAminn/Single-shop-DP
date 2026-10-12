@@ -82,6 +82,10 @@ export default function ProductDetailPage() {
           discountPrice: rp.product.discountPrice
             ? Number(rp.product.discountPrice)
             : null,
+          retailPrice: rp.product.retailPrice
+            ? Number(rp.product.retailPrice)
+            : null,
+          badgeText: rp.product.badgeText ?? null,
           imageUrl: rp.file?.diskname
             ? `/uploads/${rp.file.diskname}`
             : undefined,
@@ -100,6 +104,8 @@ export default function ProductDetailPage() {
           name: item.name,
           price: Number(item.price),
           discountPrice: item.discountPrice ? Number(item.discountPrice) : null,
+          retailPrice: item.retailPrice ? Number(item.retailPrice) : null,
+          badgeText: item.badgeText ?? null,
           imageUrl: item.imageUrl ? `/uploads/${item.imageUrl}` : undefined,
           images: item.imageUrl
             ? [{ url: `/uploads/${item.imageUrl}`, isPrimary: true }]
@@ -176,6 +182,10 @@ export default function ProductDetailPage() {
         discountPrice: product.discountPrice
           ? Number(product.discountPrice)
           : null,
+        retailPrice: product.retailPrice
+          ? Number(product.retailPrice)
+          : null,
+        badgeText: product.badgeText ?? null,
         stock: product.stock || 0,
         description: product.description ?? "No description available.",
         inspiredBy: product.inspiredBy || undefined,

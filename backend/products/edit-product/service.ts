@@ -23,6 +23,8 @@ export const editProductSchema = z.object({
     .min(1, "At least one category is required"),
   price: z.number().min(0).max(10000),
   discountPrice: z.number().min(0).max(10000).optional(),
+  retailPrice: z.number().min(0).max(10000).optional(),
+  badgeText: z.string().max(40).optional(),
   stock: z.number().min(0).max(10000),
   variants: z
     .array(
@@ -101,6 +103,10 @@ export const editProduct = (
               discountPrice: data.discountPrice
                 ? data.discountPrice.toString()
                 : null,
+              retailPrice: data.retailPrice
+                ? data.retailPrice.toString()
+                : null,
+              badgeText: data.badgeText || null,
               stock: data.stock,
               inspiredBy: data.inspiredBy || null,
               sortOrder: data.sortOrder ?? 0,

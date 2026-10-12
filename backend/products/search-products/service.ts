@@ -133,6 +133,8 @@ export const searchProducts = (input: z.infer<typeof searchProductsSchema>) =>
             description: product.description,
             price: product.price,
             discountPrice: product.discountPrice,
+            retailPrice: product.retailPrice,
+            badgeText: product.badgeText,
             stock: product.stock,
             imageUrl: file.diskname,
             categoryId: product.categoryId,

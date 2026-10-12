@@ -226,6 +226,8 @@ export function ProductForm({
     description: string;
     price: number;
     discountPrice?: number | null;
+    retailPrice?: number | null;
+    badgeText?: string | null;
     stock: number;
     imageId: string;
     productImages: FileMetadata[];
@@ -278,6 +280,12 @@ export function ProductForm({
       .min(0, "Discount price must be greater than 0")
       .nullable()
       .optional(),
+    retailPrice: z.coerce
+      .number()
+      .min(0, "Retail price must be greater than 0")
+      .nullable()
+      .optional(),
+    badgeText: z.string().max(40, "Badge text must be 40 characters or less").optional(),
     stock: z.coerce.number().int().min(0, "Stock must be greater than 0"),
     imageId: z.string().default(""),
     productImages: z
@@ -354,6 +362,8 @@ export function ProductForm({
       sortOrder: initialValues?.sortOrder || 0,
       price: initialValues?.price || 0,
       discountPrice: initialValues?.discountPrice || null,
+      retailPrice: initialValues?.retailPrice || null,
+      badgeText: initialValues?.badgeText || "",
       stock: initialValues?.stock || 0,
       // Use the primary image ID as the main imageId
       imageId: initialValues?.imageId || "",
@@ -502,6 +512,7 @@ export function ProductForm({
           variants: values.variants || [],
           // Convert null to undefined for type compatibility
           discountPrice: values.discountPrice ?? undefined,
+          retailPrice: values.retailPrice ?? undefined,
         };
         result = await trpc.product.edit.mutate(payload);
       } else {
@@ -511,6 +522,7 @@ export function ProductForm({
           imageId: values.imageId,
           // Convert null to undefined for type compatibility
           discountPrice: values.discountPrice ?? undefined,
+          retailPrice: values.retailPrice ?? undefined,
         });
       }
 
@@ -845,6 +857,30 @@ export function ProductForm({
 
             <FormField
               control={form.control}
+              name='retailPrice'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Retail Price</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='number'
+                      placeholder='149.99'
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        field.onChange(e.target.valueAsNumber);
+                      }}
+                    />
+                  </FormControl>
+                  <p className='text-xs text-muted-foreground'>
+                    Optional reference/MSRP price shown struck-through next to the regular price. Leave blank to not show one.
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name='stock'
               render={({ field }) => (
                 <FormItem>
@@ -864,6 +900,27 @@ export function ProductForm({
               )}
             />
           </div>
+
+          <FormField
+            control={form.control}
+            name='badgeText'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Badge Text</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder='e.g. Best Seller, New, Limited Edition'
+                    maxLength={40}
+                    {...field}
+                  />
+                </FormControl>
+                <p className='text-xs text-muted-foreground'>
+                  Shown as a small label on this product's card. Leave blank for no badge.
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}

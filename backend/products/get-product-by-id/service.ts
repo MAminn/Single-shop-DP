@@ -121,6 +121,8 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
                   name: product.name,
                   price: product.price,
                   discountPrice: product.discountPrice,
+                  retailPrice: product.retailPrice,
+                  badgeText: product.badgeText,
                   stock: product.stock,
                   imageUrl: file.diskname,
                   categoryName: category.name,
@@ -143,6 +145,9 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
           price: Number(foundProduct.price),
           discountPrice: foundProduct.discountPrice
             ? Number(foundProduct.discountPrice)
+            : null,
+          retailPrice: foundProduct.retailPrice
+            ? Number(foundProduct.retailPrice)
             : null,
           imageUrl: primaryImageFile?.diskname || null,
           categoryName: formatCategoryName(primaryCategory.name),
@@ -185,6 +190,8 @@ export const getProductById = (input: z.infer<typeof getProductByIdSchema>) =>
             name: p.name,
             price: Number(p.price),
             discountPrice: p.discountPrice ? Number(p.discountPrice) : null,
+            retailPrice: p.retailPrice ? Number(p.retailPrice) : null,
+            badgeText: p.badgeText,
             stock: p.stock,
             available: p.stock > 0,
             imageUrl: p.imageUrl ? `/uploads/${p.imageUrl}` : undefined,
@@ -226,6 +233,8 @@ export type ProductByIdResult = {
   categoryId: string;
   price: number;
   discountPrice: number | null;
+  retailPrice: number | null;
+  badgeText: string | null;
   createdAt: Date;
   updatedAt: Date | null;
   stock: number;
@@ -268,6 +277,8 @@ export type ProductByIdResult = {
     name: string;
     price: number;
     discountPrice: number | null;
+    retailPrice: number | null;
+    badgeText: string | null;
     stock: number;
     available: boolean;
     imageUrl?: string;
