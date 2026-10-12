@@ -23,7 +23,7 @@ export const editProductSchema = z.object({
     .min(1, "At least one category is required"),
   price: z.number().min(0).max(10000),
   discountPrice: z.number().min(0).max(10000).optional(),
-  retailPrice: z.number().min(0).max(10000).optional(),
+  retailPrice: z.number().min(0).max(100000).optional(),
   badgeText: z.string().max(40).optional(),
   badgeColor: z.string().max(20).optional(),
   badgeTextColor: z.string().max(20).optional(),
